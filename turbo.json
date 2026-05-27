@@ -3,12 +3,12 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**/*.js", "dist/**/*.js.map"]
+      "outputs": ["dist/**"]
     },
     "typecheck": {
-      "dependsOn": ["^typecheck"],
+      "dependsOn": ["build"],
       "inputs": ["src/**/*.{ts,tsx}", "tsconfig.json", "../../tsconfig.base.json"],
-      "outputs": ["dist/**/*.d.ts", "dist/**/*.d.ts.map", "dist/.tsbuildinfo"]
+      "outputs": []
     },
     "test": {
       "dependsOn": ["^build"]

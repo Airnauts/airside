@@ -8,7 +8,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "turbo run typecheck build",
+    "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "lint": "biome ci",
