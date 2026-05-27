@@ -264,7 +264,9 @@ export type Email = z.infer<typeof Email>
 export const IsoTimestamp = z.iso.datetime().meta({ id: 'IsoTimestamp' })
 export type IsoTimestamp = z.infer<typeof IsoTimestamp>
 
-export const Cursor = z.string().min(1).meta({ id: 'Cursor' })
+// Opaque pagination token — intentionally NOT registered as a named component
+// (the spec treats the cursor as an opaque string; its codec lives server-side in M3).
+export const Cursor = z.string().min(1)
 export type Cursor = z.infer<typeof Cursor>
 ```
 
@@ -644,8 +646,8 @@ import { z } from 'zod'
 import { ThreadId } from '../ids'
 import { Anchor } from './anchor'
 import { CaptureContext, Provenance } from './capture'
-import { Comment } from './comment'
-import { Email, IsoTimestamp } from './common'
+import { Author, Comment } from './comment'
+import { IsoTimestamp } from './common'
 
 export const ThreadStatus = z.enum(['open', 'resolved'])
 export type ThreadStatus = z.infer<typeof ThreadStatus>
@@ -665,7 +667,7 @@ const ThreadBase = z.object({
   selectionLost: z.boolean().optional(),
   commentCount: z.number().int().nonnegative(),
   unresolvedCount: z.number().int().nonnegative(),
-  createdBy: z.object({ email: Email, name: z.string().optional() }),
+  createdBy: Author,
   createdAt: IsoTimestamp,
   updatedAt: IsoTimestamp,
   lastActivityAt: IsoTimestamp,

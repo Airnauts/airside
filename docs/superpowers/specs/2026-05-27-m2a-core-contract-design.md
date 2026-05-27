@@ -182,7 +182,7 @@ ThreadListItem = {                           // list rows: on-page + panel; NO e
   id: ThreadId, scope: 'page', pageKey: string | null, pageUrl: string, pageTitle?: string,
   anchor: Anchor, status, anchorState, selectionLost?: boolean,
   commentCount: number, unresolvedCount: number,
-  createdBy: { email: Email, name?: string },
+  createdBy: Author,                          // one 'who' shape everywhere (see note)
   createdAt, updatedAt, lastActivityAt, schemaVersion,
 }
 
@@ -197,7 +197,10 @@ Rationale: the on-page list (`?pageKey=`) and the panel (all-pages) both return
 `ThreadListItem[]` — enough to re-match (the anchor is present) and render pins/
 rows, without shipping every embedded comment. The full `Thread` (with comments)
 comes from `GET /threads/:id` and is what create returns. `scope` + a nullable
-`pageKey` are retained as the ADR-0009 global-scope seam.
+`pageKey` are retained as the ADR-0009 global-scope seam. `createdBy` reuses the
+`Author` schema so there is a **single "who" shape** across the contract;
+`Author.id` is optional in request bodies (the client doesn't know it) and is
+**always populated in responses** — M3's responsibility, not a schema variant.
 
 ## 10. `pageKey` normalization (`pageKey.ts`)
 
