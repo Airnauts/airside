@@ -21,6 +21,13 @@ In particular, `core`'s pure logic (zod schemas, `pageKey` normalization, the
 scoring/threshold policy) and the shared adapter contract suite are authored as the
 executable spec first. Client/widget testing follows architecture §9, not strict TDD.
 
+### Branching: develop on `main` until beta
+
+Until the beta release, commit development work **directly to `main`** — no
+feature-branch or pull-request workflow is required. Milestones are still built one
+at a time (brainstorm → spec → plan → implement); they just land on `main`.
+Revisit this once we cut the beta.
+
 ## Architecture decision records
 
 `docs/adr.md` is the running log of architecture decisions for this project. Whenever an architecturally significant choice is made or changed.
