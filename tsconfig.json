@@ -1,0 +1,11 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/core" },
+    { "path": "packages/client" },
+    { "path": "packages/server" },
+    { "path": "packages/adapter-mongo" },
+    { "path": "packages/storage-vercel-blob" },
+    { "path": "packages/storage-fs" }
+  ]
+}
