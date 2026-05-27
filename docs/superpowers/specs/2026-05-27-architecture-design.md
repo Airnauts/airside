@@ -139,6 +139,11 @@ auth**: one shared secret per mount, sent as the `x-comments-key` **header**
 with a configurable **origin allowlist** so a leaked link can't post from
 arbitrary sites. Basic per-key/IP rate limiting (429).
 
+The same secret value flows through three transports: `init({ key })`
+(integrator config) → the **URL parameter** the client activation gate checks
+(parameter name configurable) → the **`x-comments-key` header** the server
+validates. One value, three places — not three different secrets.
+
 ---
 
 ## 5. Data model (MongoDB, document-first)
@@ -270,9 +275,12 @@ capture context (viewport, DPR, UA).
    `selectionLost` (not orphaned).
 
 **Scoring weights (defaults, normalized 0..1, tunable):** stable attr exact
-(id/data-testid/data-*) +0.40 (near-decisive); text-snippet similarity (Dice)
-+0.25; class token overlap (Jaccard) +0.15; role +0.10; sibling-index proximity
-+0.05; ancestor-trail overlap +0.05. Tag mismatch excludes a candidate.
+(id/data-testid/data-*) +0.40; text-snippet similarity (Dice) +0.25; class token
+overlap (Jaccard) +0.15; role +0.10; sibling-index proximity +0.05;
+ancestor-trail overlap +0.05. Tag mismatch excludes a candidate. Note the numbers
+and the `accept ≈ 0.60` threshold are consistent by design: a stable attribute is
+the strongest single signal but, on its own (+0.40), still needs at least one
+corroborating signal to clear the threshold — no single signal auto-anchors.
 
 **Positioning:** pin = rect + offset; highlight = Range rects; recomputed on
 scroll · resize · `ResizeObserver`(target) · throttled `MutationObserver`.
