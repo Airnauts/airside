@@ -11,6 +11,24 @@ importers:
       '@biomejs/biome':
         specifier: ^2.0.0
         version: 2.4.15
+      '@comments/adapter-mongo':
+        specifier: workspace:*
+        version: link:packages/adapter-mongo
+      '@comments/client':
+        specifier: workspace:*
+        version: link:packages/client
+      '@comments/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@comments/server':
+        specifier: workspace:*
+        version: link:packages/server
+      '@comments/storage-fs':
+        specifier: workspace:*
+        version: link:packages/storage-fs
+      '@comments/storage-vercel-blob':
+        specifier: workspace:*
+        version: link:packages/storage-vercel-blob
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.19
