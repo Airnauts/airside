@@ -312,3 +312,51 @@ mocked-rect positioning tests, Playwright e2e); this record governs the backend.
   durable contract; mitigated because `core` is pure and cheap to test.
 - The CI order already in §9 (unit → integration → e2e) is unchanged; TDD only
   fixes the authoring order — tests precede the code they cover.
+
+---
+
+## ADR-0011 — Monorepo tooling stack
+
+- **Date:** 2026-05-27
+- **Status:** accepted
+
+**Context.** Architecture §2 fixed pnpm workspaces, TypeScript project
+references, tsup, and ESM-first, but left the surrounding tooling open: task
+orchestration, lint/format, the test runner, the bundle-size budget tool, the
+module format, and version pins. `CLAUDE.md` requires an ADR when we choose a
+framework or establish coding standards — this records those choices for M1.
+
+**Decision.**
+- **Task orchestration: Turborepo.** Vercel-native (matches the v1 deployment
+  target, ADR-0001), dependency-aware task graph + caching across the six
+  packages. `turbo.json` defines `build` · `typecheck` · `test` · `size`.
+- **Lint + format: Biome.** One fast tool, one config. Its React Hooks rules
+  (`useExhaustiveDependencies`, `useHookAtTopLevel`) cover the cases that matter;
+  if a later frontend milestone needs a rule Biome lacks, ESLint can be added for
+  the `client` package only.
+- **Test runner: Vitest.** ESM-native, jsdom/RTL-ready, the TDD loop for M2+
+  (ADR-0010). Each package owns a `vitest.config.ts`; Turbo fans the `test` task
+  out (the deprecated `vitest.workspace.ts` file is intentionally avoided).
+- **Bundle-size budget: size-limit.** Brotli budget per entry, run in CI. M1
+  wires it against `@comments/client` with a placeholder limit; real budgets are
+  calibrated in M9.
+- **Module format: pure ESM only.** Every package is `type: module`, tsup emits
+  `format: ['esm']`. No dual CJS in v1; a CJS build is a documented later seam.
+- **Build-tool split.** `tsc --build` (project references, `composite`,
+  `emitDeclarationOnly`) owns type-checking and `.d.ts` emit; tsup (esbuild) owns
+  JS bundling (`dts: false`). They write non-overlapping outputs into one `dist/`.
+- **Version pins: Node 22, pnpm 10.17.0** (`engines`, `packageManager`,
+  `.node-version`/`.nvmrc`).
+
+**Consequences.**
+- A single, fast, cached toolchain; `pnpm build/test/lint` fan out across packages
+  with minimal config.
+- Pure ESM halves the build matrix and avoids the dual-package hazard, at the cost
+  of dropping CJS consumers in v1 (accepted; seam preserved).
+- The `tsc`/tsup split avoids two generators racing on `.d.ts`, but means a build
+  is "complete" only after both tasks run (the root `build` script runs both).
+- Biome's smaller rule ecosystem vs. ESLint is an accepted trade-off with a
+  contained fallback.
+- Choosing Turborepo + Biome over the heavier Nx / ESLint+Prettier stacks keeps a
+  six-package repo lightweight; revisiting is cheap (these are dev-time tools, not
+  runtime contracts).
