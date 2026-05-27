@@ -1,0 +1,8 @@
+import { describe, expect, it } from 'vitest'
+import { packageName } from './index'
+
+describe('@comments/core', () => {
+  it('exposes its package name (M1 shell smoke test)', () => {
+    expect(packageName).toBe('@comments/core')
+  })
+})
