@@ -995,7 +995,12 @@ Expected: prints `✓` for all 8 entries, including `@comments/client/react` and
 - [ ] **Step 4: Confirm it actually catches a broken export (one-time sanity, then revert)**
 
 Run: temporarily rename `packages/client/package.json`'s `"./react"` export key to `"./reactX"`, then `pnpm install && pnpm build && pnpm check:exports`
-Expected: FAILS at `@comments/client/react` with an unresolved-module error — proving the check has teeth. **Revert the rename**, then `pnpm install && pnpm build && pnpm check:exports` and confirm it passes again.
+Expected: FAILS at `@comments/client/react` with an unresolved-module error — proving the check has teeth.
+
+Then **revert the rename** and confirm the working tree is clean before continuing:
+
+Run: `git checkout -- packages/client/package.json && git diff --exit-code packages/client/package.json && pnpm install && pnpm build && pnpm check:exports`
+Expected: `git diff --exit-code` produces no output and exits 0 (the deliberate break is fully reverted), then `pnpm check:exports` passes all 8 entries again.
 
 - [ ] **Step 5: Format, lint, commit**
 
@@ -1122,12 +1127,17 @@ jobs:
         run: pnpm check:exports
 ```
 
-- [ ] **Step 2: Dry-run the exact CI sequence locally**
+- [ ] **Step 2: Format, then eyeball Biome's effect on the workflow YAML**
+
+Run: `pnpm format && git diff .github/workflows/ci.yml`
+Expected: Biome 2.x formats YAML, so `ci.yml` may be reindented/requoted. Confirm the diff is cosmetic only (no changed keys/values — e.g. `node-version: 22` and `version: 10.17.0` still intact). `pnpm lint` will then pass on the formatted file.
+
+- [ ] **Step 3: Dry-run the exact CI sequence locally**
 
 Run: `pnpm install --frozen-lockfile && pnpm lint && pnpm typecheck && pnpm build && pnpm test && pnpm size && pnpm check:exports`
 Expected: every step exits 0 — this is precisely what CI will run. If `--frozen-lockfile` errors, the lockfile is out of date: run `pnpm install`, commit the updated `pnpm-lock.yaml`, and retry.
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
 git add .github/workflows/ci.yml
