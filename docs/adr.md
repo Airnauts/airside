@@ -360,3 +360,40 @@ framework or establish coding standards — this records those choices for M1.
 - Choosing Turborepo + Biome over the heavier Nx / ESLint+Prettier stacks keeps a
   six-package repo lightweight; revisiting is cheap (these are dev-time tools, not
   runtime contracts).
+
+---
+
+## ADR-0012 — Contract source of truth: Zod 4 + operation table, OpenAPI via zod-openapi
+
+- **Date:** 2026-05-27
+- **Status:** accepted
+
+**Context.** M2a freezes the HTTP contract that is the only coupling between client
+and server (ADR-0001) and the single source that also generates OpenAPI (ADR-0007).
+ADR-0007 deliberately left the Zod version and OpenAPI tool open ("tool chosen to
+match the Zod version"). Both tracks import these schemas, so the expression of the
+contract — and the way components are registered for OpenAPI — must be settled once.
+
+**Decision.**
+- **Zod 4** is the schema/validation library (native `z.toJSONSchema()` + `.meta()`
+  global registry; the current default).
+- **zod-openapi 5** (samchungy) generates the OpenAPI 3.1 document; entity schemas
+  carry `.meta({ id })` to register as reusable components, and `createDocument`
+  assembles paths from the operation table.
+- The contract is expressed as **Zod schemas + a declarative `operations` table**
+  (plain data referencing the schemas). One artifact drives runtime validation,
+  inferred types, OpenAPI generation, and — later — M3's router; no contract
+  framework is placed on the boundary.
+- **Branded ID types** (`ThreadId`, `CommentId`, `AuthorId`, `AttachmentId`) via
+  Zod 4 `.brand()` prevent cross-mixing id kinds across both tracks.
+- A single **`KEY_HEADER_NAME`** constant (`x-comments-key`) is the shared source
+  for the client header, the server check, and the OpenAPI security scheme.
+
+**Consequences.**
+- Docs, validation, types, and routing share one source and cannot drift.
+- zod-openapi 5 tracks Zod 4's `.meta()`/JSON-Schema surface; both are pinned and a
+  major bump is treated as a contract-review event.
+- Branded ids cost a small cast at the wire boundary, paid once where raw strings
+  are parsed into branded types.
+- The operation table is a lightweight, framework-free convention M3 is expected
+  (but not forced) to consume for routing + validation.
