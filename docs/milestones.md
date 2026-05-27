@@ -14,26 +14,31 @@ the detail here — that belongs in each milestone's own spec.
 **Track separation:** every milestone belongs to exactly one track —
 `Infra`, `Shared`, `Backend`, `Frontend`, or `Integration`. No milestone mixes
 backend and frontend *feature* development. Backend (M3–M4) and Frontend (M5–M8)
-can proceed **in parallel** once the foundation (M1–M2) is done, because they meet
-only through the HTTP contract frozen in M2.
+can proceed **in parallel** once the foundation (M1–M2a) is done, because they meet
+only through the HTTP contract frozen in M2a.
 
 ## Dependency graph
 
 ```
 M1 Monorepo & tooling  (Infra)
         │
-M2 Core: domain, contracts & anchoring policy  (Shared)   ← freezes the HTTP contract + anchor schema
+M2a Core: domain & HTTP contract  (Shared)   ← freezes the HTTP contract + anchor schema
         ├──────────────────────────────┐
         ▼                               ▼
   BACKEND track                   FRONTEND track
   M3 API core, security,          M5 Widget shell, isolation & identity
-     storage                      M6 Anchoring runtime
-  M4 MongoDB adapter &            M7 Commenting UI
-     Next.js deployment           M8 Cross-page panel
+     storage                      M2b Core: anchoring scoring policy & fixture corpus  (Shared)
+  M4 MongoDB adapter &            M6 Anchoring runtime   (needs M2b + M5)
+     Next.js deployment           M7 Commenting UI
+                                  M8 Cross-page panel
         └──────────────┬───────────────┘
                        ▼
         M9 Integration, E2E & dogfooding  (Integration)
 ```
+
+M2b (the pure scoring policy + jsdom fixture corpus) depends only on M2a's frozen
+`signals` shape and gates **M6 alone**, so it sits on the frontend track and need
+not block the backend track or M5.
 
 Sizes are rough: **S** ≈ a few days, **M** ≈ ~1 week, **L** ≈ 1½–2 weeks.
 
@@ -60,28 +65,57 @@ packages; subpath exports resolve (`@comments/client/react`, `@comments/server/n
 
 ---
 
-## M2 — Core: domain, contracts & anchoring policy  ·  Shared  ·  L
+## M2a — Core: domain & HTTP contract  ·  Shared  ·  M
 
-**Goal.** The isomorphic foundation both tracks import — and the place the riskiest
-pure logic (fingerprint scoring) is nailed and regression-guarded first.
+**Goal.** The isomorphic foundation both tracks import — freeze the HTTP contract +
+anchor schema here so the backend and frontend tracks can then proceed in parallel.
 
-**In scope.** `@comments/core`: domain types; **zod schemas + the full HTTP
-contract** (the boundary both tracks code against — freeze it here); the **anchor
-fingerprint schema + `schemaVersion`**; the **pure scoring + threshold policy**
-(weights, accept/margin) and **`pageKey` normalization**; the
-**anchoring fixture-corpus harness** (original-DOM → mutated-DOM pairs in jsdom)
-to calibrate and lock scoring behavior.
+**In scope.** `@comments/core`: branded ID types; domain entity **zod schemas**;
+the **anchor fingerprint schema + `schemaVersion`** (`selectors`/`signals`/`offset`/
+optional `selection`); the **full HTTP contract** as a declarative operation table +
+request/response schemas + error model (the boundary both tracks code against —
+freeze it here); **OpenAPI generation** (`buildOpenApiDocument()` + static artifact
++ smoke test); **`pageKey` normalization** (pure, isomorphic, overridable). The
+zod/OpenAPI toolchain + contract pattern is recorded as **ADR-0012**.
 
-**Out of scope.** Any DOM access (that's M6); any DB/HTTP I/O (that's M3).
+**Out of scope.** The scoring/threshold policy + fixture corpus (M2b); any DOM
+access (M6); any DB/HTTP I/O, the adapter interfaces, the cursor codec, request
+validation, and serving `/openapi.json` + `/docs` (M3/M4).
 
 **Depends on.** M1.
 
-**Exit criteria.** Contract + schemas published from `core`; scoring policy passes
-the fixture corpus across all mutation classes (wrapper/reorder/rename/text/attr/
-remove/duplicate) with documented default thresholds; OpenAPI can be generated
-from the schemas (smoke test).
+**Exit criteria.** Schemas + inferred types + branded IDs published from `core`;
+`pageKey` normalization tested; anchor schema + `schemaVersion` frozen; all seven
+§6 data endpoints present with request **and** response schemas; OpenAPI 3.1 doc
+generates from the schemas (smoke test) + static artifact emits; ADR-0012 added.
 
-**Refs.** Spec §5–§7; ADR-0004, ADR-0007, ADR-0008.
+**Refs.** Design [`specs/2026-05-27-m2a-core-contract-design.md`](../superpowers/specs/2026-05-27-m2a-core-contract-design.md);
+Spec §5–§7; ADR-0004, ADR-0007, ADR-0008, ADR-0009.
+
+---
+
+## M2b — Core: anchoring scoring policy & fixture corpus  ·  Shared  ·  M
+
+**Goal.** Nail and regression-guard the riskiest pure logic — fingerprint scoring —
+against a calibrated corpus, before the M6 runtime consumes it.
+
+**In scope.** `@comments/core` (over the M2a-frozen `signals` shape): the **pure
+scoring weights + threshold policy** (`score()`/`decide()`, accept/margin); the
+**DOM→`signals` extraction** (exact shape decided in M2b's own brainstorm — the
+goal is that M2a's jsdom fixtures and M6's real DOM exercise identical code); the
+**anchoring fixture-corpus harness** (original-DOM → mutated-DOM pairs in jsdom) to
+calibrate and lock scoring behavior.
+
+**Out of scope.** Any DOM positioning/overlay or live re-match runtime (M6); any
+DB/HTTP I/O (M3).
+
+**Depends on.** M2a (the frozen anchor `signals` shape).
+
+**Exit criteria.** Scoring policy passes the fixture corpus across all mutation
+classes (wrapper/reorder/rename/text/attr/remove/duplicate) with documented default
+thresholds; the extraction + scoring functions are pure and headless-testable.
+
+**Refs.** Spec §7, §9; ADR-0004, ADR-0008.
 
 ---
 
@@ -98,7 +132,7 @@ plus the **shared adapter contract suite**; rate limiting; typed error shapes.
 
 **Out of scope.** MongoDB, Next.js glue, OpenAPI serving (M4). Frontend.
 
-**Depends on.** M2 (contract).
+**Depends on.** M2a (contract).
 
 **Exit criteria.** Every endpoint works against the in-memory repo; contract tests
 pass against zod schemas; security tests (bad key 401, bad origin 403) pass;
@@ -145,7 +179,7 @@ backend round-trip end to end.
 
 **Out of scope.** Real anchoring (M6); thread/composer/panel UI (M7–M8).
 
-**Depends on.** M2 (contract/types); a running backend (M3/M4) or its in-memory
+**Depends on.** M2a (contract/types); a running backend (M3/M4) or its in-memory
 dev server.
 
 **Exit criteria.** Widget mounts only with a valid key; host styles don't bleed in/
@@ -162,14 +196,14 @@ against the live API.
 
 **In scope.** **Capture** (build dual selectors + signals + offset from real nodes;
 text-selection range + quote/prefix/suffix); **re-match** (fast path + scored
-search using the M2 policy); **positioning engine** (overlay layer, pin coords,
+search using the M2b policy); **positioning engine** (overlay layer, pin coords,
 `ResizeObserver`/scroll/resize/throttled `MutationObserver`, SPA route detection);
 **orphan + `selectionLost`** handling; **self-heal** via `PATCH …/anchor`.
 
 **Out of scope.** Thread/composer visual UI (M7) — this milestone renders only the
 positioned pin dot + highlight rect needed to prove anchoring.
 
-**Depends on.** M2 (scoring policy), M5 (shell + API client).
+**Depends on.** M2b (scoring policy), M5 (shell + API client).
 
 **Exit criteria.** Place element pin + text selection → reload → both re-anchor;
 mutate the DOM (reorder/rename/wrap) → re-anchors per the fixture-corpus
@@ -248,10 +282,12 @@ our team adopts it on at least one real project in place of Vercel Comments.
 
 ## Suggested sequence
 
-1. **M1 → M2** (foundation, sequential — M2 freezes the contract).
+1. **M1 → M2a** (foundation, sequential — M2a freezes the contract).
 2. Then **Backend track (M3 → M4)** and **Frontend track (M5 → M6 → M7 → M8)** in
    parallel. Frontend can develop against M3's in-memory dev server before M4 lands.
-3. **M9** once both tracks complete.
+3. **M2b** (scoring policy + corpus) is pure and gates **M6 only** — slot it on the
+   frontend track any time after M2a and before M6 (e.g. alongside M5).
+4. **M9** once both tracks complete.
 
 If you'd rather get a thin end-to-end slice earliest, an alternative is to pull a
 minimal vertical (M3 in-memory + M5 + a stripped M6 element-pin loop) forward —
