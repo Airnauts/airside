@@ -19,12 +19,22 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "size": "size-limit"
   },
   "dependencies": {
     "@comments/core": "workspace:*"
   },
   "devDependencies": {
-    "jsdom": "^26.0.0"
-  }
+    "@size-limit/preset-small-lib": "^11.1.6",
+    "jsdom": "^26.0.0",
+    "size-limit": "^11.1.6"
+  },
+  "size-limit": [
+    {
+      "name": "@comments/client (esm, brotli)",
+      "path": "dist/index.js",
+      "limit": "10 kB"
+    }
+  ]
 }
