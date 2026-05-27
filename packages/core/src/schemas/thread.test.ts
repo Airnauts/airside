@@ -1,0 +1,43 @@
+import { describe, expect, it } from 'vitest'
+import { Thread, ThreadListItem } from './thread'
+
+const base = {
+  id: 't1',
+  scope: 'page' as const,
+  pageKey: 'https://x.com/a',
+  pageUrl: 'https://x.com/a',
+  anchor: {
+    schemaVersion: 1,
+    selectors: ['body>div', 'body>div.flex'] as [string, string],
+    signals: { tag: 'div', classes: [], siblingIndex: 0, ancestorTrail: [] },
+    offset: { fx: 0.1, fy: 0.2 },
+  },
+  status: 'open' as const,
+  anchorState: 'anchored' as const,
+  commentCount: 1,
+  unresolvedCount: 1,
+  createdBy: { email: 'a@b.com' },
+  createdAt: '2026-05-27T11:47:26.611Z',
+  updatedAt: '2026-05-27T11:47:26.611Z',
+  lastActivityAt: '2026-05-27T11:47:26.611Z',
+  schemaVersion: 1,
+}
+
+describe('thread schemas', () => {
+  it('ThreadListItem parses without comments and allows a null pageKey', () => {
+    expect(ThreadListItem.parse(base).status).toBe('open')
+    expect(ThreadListItem.parse({ ...base, pageKey: null }).pageKey).toBeNull()
+  })
+  it('Thread requires comments + captureContext', () => {
+    const full = {
+      ...base,
+      comments: [],
+      captureContext: { viewportW: 1, viewportH: 1, devicePixelRatio: 1, userAgent: 'x' },
+    }
+    expect(Thread.parse(full).comments).toEqual([])
+    expect(() => Thread.parse(base)).toThrow()
+  })
+  it('rejects an unknown status', () => {
+    expect(() => ThreadListItem.parse({ ...base, status: 'archived' })).toThrow()
+  })
+})
