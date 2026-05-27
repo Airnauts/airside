@@ -1,0 +1,9 @@
+# Brainstorming visual-companion scratch (not part of the repo)
+.superpowers/
+
+# Dependencies / build
+node_modules/
+dist/
+
+# OS / editor
+.DS_Store
