@@ -1,0 +1,4 @@
+packages:
+  - 'packages/*'
+  # examples/* reserved for the sample Next.js host app — first scaffolded in M4.
+  # - 'examples/*'

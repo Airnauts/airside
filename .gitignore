@@ -7,3 +7,8 @@ dist/
 
 # OS / editor
 .DS_Store
+
+# Build tooling
+.turbo/
+*.tsbuildinfo
+coverage/
