@@ -15,6 +15,15 @@
   "scripts": {
     "build": "tsup && tsc --build",
     "typecheck": "tsc --build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "emit:openapi": "tsx scripts/emit-openapi.ts"
+  },
+  "dependencies": {
+    "zod": "^4.4.3",
+    "zod-openapi": "^5.4.6"
+  },
+  "devDependencies": {
+    "@scalar/openapi-parser": "^0.28.5",
+    "tsx": "^4.22.3"
   }
 }
