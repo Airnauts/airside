@@ -3,7 +3,7 @@
 - **Status:** Approved (brainstorm complete)
 - **Date:** 2026-05-27
 - **Inputs:** [`docs/prd.md`](prd.md) · [`docs/adr.md`](adr.md) · reference: [`docs/reference/vercel-comments-payloads.md`](reference/vercel-comments-payloads.md), [`docs/reference/vercel-widget-dom.md`](reference/vercel-widget-dom.md)
-- **Scope:** the v1 system architecture. Product requirements are in the PRD; this document is the system shape that realizes them. Decision rationale is captured per-decision in `adr.md` (ADR-0001…0009); this spec is the integrated picture.
+- **Scope:** the v1 system architecture. Product requirements are in the PRD; this document is the system shape that realizes them. Decision rationale is captured per-decision in `adr.md` (ADR-0001…0010); this spec is the integrated picture.
 
 ---
 
@@ -20,6 +20,7 @@
 | 7 | **API docs:** zod-first contract in `core`, OpenAPI generated from it, served via Scalar + static artifact. | ADR-0007 |
 | 8 | **Data model & scoping:** Mongo document model; `projectId`(+`env`) scope from a bearer-capability secret key + origin allowlist; `pageKey` page identity. | ADR-0008 |
 | 9 | **Comment scope:** page-scoped in v1; global/component scope is a designed-in seam. | ADR-0009 |
+| 10 | **Backend development:** built test-first (TDD) — `core`, `server`, and the adapters; the shared contract suite doubles as the adapter conformance gate. | ADR-0010 |
 
 ---
 
@@ -311,6 +312,9 @@ not by scope.
 ---
 
 ## 9. Testing strategy
+
+The backend packages (`core`, `server`, adapters) are built **test-first (TDD)** —
+the test/fixture precedes the code it covers (ADR-0010).
 
 - **`core` (pure):** unit tests for fingerprint building, scoring, threshold
   decisions, `pageKey` normalization, and zod schemas.

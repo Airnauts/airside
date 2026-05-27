@@ -265,3 +265,50 @@ snippet, click offset), not by scoping.
 - Predictable, no accidental cross-page leakage; re-match cost stays bounded to one page.
 - Shared-element feedback must be repeated per page in v1 (accepted trade-off).
 - Global/component scope is a clean post-v1 addition behind the existing seam.
+
+---
+
+## ADR-0010 — Backend built test-first (TDD)
+
+- **Date:** 2026-05-27
+- **Status:** accepted
+
+**Context.** The backend is the durable contract of the system: the HTTP boundary
+is the only coupling between client and server (ADR-0001), the zod contract is the
+single source of truth that also generates OpenAPI (ADR-0007), and the
+scoring/threshold policy in `@comments/core` is a *measurable property* whose
+calibration must not silently regress (architecture §9 calls its fixture corpus
+"the linchpin"). Adapters must be interchangeable behind one interface (ADR-0003).
+These are exactly the forces where tests-as-specification pays off: pure logic with
+defined inputs/outputs, a contract that must stay honest, and behavior that needs
+regression safety while thresholds are tuned.
+
+**Decision.** Build the **backend packages test-first** — red → green → refactor,
+a failing test before each unit of behavior:
+
+- **`@comments/core`** (the prime target): zod schemas, `pageKey` normalization,
+  fingerprint building, scoring weights, and threshold decisions are written
+  test-first. The anchoring **fixture corpus** (§9) is authored as the executable
+  spec *before* the policy it pins down.
+- **`@comments/server`**: each use case and the security pipeline (key header ·
+  origin allowlist · CORS · validation) gets a failing test against the
+  Web-standard `Request → Response` core before implementation; integration tests
+  run on `mongodb-memory-server`.
+- **`@comments/adapter-mongo` and the storage adapters**: implemented against the
+  **shared contract suite** (ADR-0003), which is itself written first as the spec
+  every implementation must satisfy.
+
+Client/widget testing is unchanged from architecture §9 (RTL component tests,
+mocked-rect positioning tests, Playwright e2e); this record governs the backend.
+
+**Consequences.**
+- Tests are the executable spec for the boundary — together with the zod/OpenAPI
+  contract, the server's behavior can't drift from what's documented.
+- The threshold/scoring calibration (the §9 linchpin) gains a regression net: any
+  change that moves a re-anchor/orphan/`selectionLost` outcome is caught.
+- The shared contract suite does double duty — TDD spec *and* adapter conformance
+  gate — so a future second DB/storage concrete is correct-by-construction.
+- Slower initial velocity and upfront test-design cost, accepted as the price of a
+  durable contract; mitigated because `core` is pure and cheap to test.
+- The CI order already in §9 (unit → integration → e2e) is unchanged; TDD only
+  fixes the authoring order — tests precede the code they cover.
