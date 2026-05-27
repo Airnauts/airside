@@ -397,3 +397,6 @@ contract — and the way components are registered for OpenAPI — must be settl
   are parsed into branded types.
 - The operation table is a lightweight, framework-free convention M3 is expected
   (but not forced) to consume for routing + validation.
+- zod-openapi emits a `…Output` component twin for any registered schema used in
+  both a request body and a response; with no transforms in v1 these are
+  structurally identical to their inputs (expected library behavior, not a defect).

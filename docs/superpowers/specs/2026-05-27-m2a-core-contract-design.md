@@ -284,9 +284,11 @@ Notes that keep the freeze honest:
   `Attachment` *response* and the `attachmentIds` reference used by
   `createThread`/`addComment` (the two-step upload, architecture §6).
 - **`GET /openapi.json` and `/docs`** (the eighth/ninth §6 endpoints) are **server
-  meta-routes (M3/M4)** that serve the artifact `core` produces. They appear in the
-  generated OpenAPI document but are **not** validated entries in the operation
-  table.
+  meta-routes (M3/M4)** that serve the artifact `core` produces. They are **not**
+  entries in the operation table and the generated document keeps `paths` to the
+  seven data operations — self-referential doc/spec routes carry no zod
+  request/response and are wired up at serve time by M3/M4, not described in the
+  contract.
 
 ## 13. OpenAPI generation (`contract/openapi.ts`)
 
@@ -367,5 +369,11 @@ Replace the single **M2** node with **M2a** and **M2b**:
 - **zod-openapi pinning.** zod-openapi 5 tracks Zod 4's `.meta()`/JSON-Schema
   surface; pin both and treat a major bump as a contract-review event.
 - **`getOpenApi`/`/docs` placement.** Intentionally *not* in the validated
-  operation table — they are server meta-routes (M3/M4) that render the `core`
-  artifact, present in the OpenAPI doc but carrying no zod request/response.
+  operation table and *not* in the generated document's `paths` — they are server
+  meta-routes (M3/M4) that render the `core` artifact, carrying no zod
+  request/response.
+- **Input/output component twins.** zod-openapi emits a `…Output` component for any
+  `.meta({ id })` schema used in **both** a request body and a response (e.g.
+  `AnchorOutput`, `AuthorOutput`). With no transforms/defaults in v1 these twins are
+  structurally identical to their inputs — expected library behavior, not a defect;
+  consumers that codegen from the doc should expect the suffixed duplicates.
