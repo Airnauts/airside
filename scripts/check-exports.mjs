@@ -1,10 +1,12 @@
 // scripts/check-exports.mjs
 import assert from 'node:assert/strict'
 
-// Every package entry + subpath that must resolve through its package.json `exports`,
-// paired with a named export that proves the module actually loaded.
+// Every package entry + subpath integrators may import must resolve through its
+// package.json `exports`, paired with a named export that proves the module loaded.
 // Shell packages still expose `packageName` (M1 placeholder) except @comments/server
 // which now exports VERSION; @comments/core exposes its real contract surface.
+// @comments/test-support is deliberately excluded — it's `private: true` and its
+// contract suites import vitest at module load, which crashes outside the runner.
 const entries = [
   ['@comments/core', 'normalizePageKey'],
   ['@comments/client', 'packageName'],
@@ -13,7 +15,6 @@ const entries = [
   ['@comments/server/dev', 'createDevServer'],
   ['@comments/adapter-mongo', 'packageName'],
   ['@comments/storage-vercel-blob', 'packageName'],
-  ['@comments/test-support', 'TEST_SUPPORT_VERSION'],
   ['@comments/storage-fs', 'packageName'],
 ]
 
