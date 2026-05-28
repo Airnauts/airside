@@ -2,7 +2,8 @@ import { KEY_HEADER_NAME, operations } from '@comments/core'
 import { makeCreateThreadBody } from '@comments/test-support'
 import { describe, expect, it } from 'vitest'
 import { InMemoryRepository } from '../repository/in-memory'
-import { createCommentsServer } from '../server'
+import type { UseCaseMap } from '../router'
+import { assertUseCasesCoverOperations, createCommentsServer } from '../server'
 import type { StorageAdapter } from '../storage/types'
 
 const stubStorage: StorageAdapter = {
@@ -72,6 +73,9 @@ describe('pipeline — security', () => {
     )
     expect(res.status).toBe(401)
     expect((await res.json()).error.code).toBe('AUTH_INVALID_KEY')
+    // Error responses must still carry CORS headers so the browser can read the body.
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example.com')
+    expect(res.headers.get('vary')).toBe('Origin')
   })
 
   it('401 on wrong key', async () => {
@@ -124,7 +128,17 @@ describe('pipeline — router', () => {
     expect(res.status).toBe(404)
   })
 
-  it('every operation in the table has a handler (sanity guard)', () => {
+  it('boot-time guard throws when a use-case is missing', () => {
+    const incomplete = {
+      // intentionally missing createThread
+      listThreads: async () => ({ threads: [], nextCursor: null }),
+    } as unknown as UseCaseMap
+    expect(() => assertUseCasesCoverOperations(incomplete, operations)).toThrowError(
+      /missing use-case for 'createThread'/,
+    )
+  })
+
+  it('boot-time guard passes when every operationId has a function handler', () => {
     expect(() => build()).not.toThrow()
     expect(operations.length).toBeGreaterThan(0)
   })
@@ -142,6 +156,9 @@ describe('pipeline — router', () => {
     expect(createRes.status).toBe(201)
     const created = await createRes.json()
     expect(created.id).toBeDefined()
+    // Success responses also carry CORS headers (addCorsHeaders wraps both branches).
+    expect(createRes.headers.get('access-control-allow-origin')).toBe('https://app.example.com')
+    expect(createRes.headers.get('vary')).toBe('Origin')
 
     const getRes = await server.handle(
       new Request(`http://x/threads/${created.id}`, { headers: allowedHeaders }),
@@ -149,5 +166,6 @@ describe('pipeline — router', () => {
     expect(getRes.status).toBe(200)
     const fetched = await getRes.json()
     expect(fetched.id).toBe(created.id)
+    expect(getRes.headers.get('access-control-allow-origin')).toBe('https://app.example.com')
   })
 })

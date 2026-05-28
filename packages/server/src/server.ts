@@ -1,4 +1,4 @@
-import { operations } from '@comments/core'
+import { type Operation, operations } from '@comments/core'
 import { buildCorsHeaders, isPreflight, preflightResponse } from './cors'
 import type { Ctx, IdFactory } from './ctx'
 import { defaultIds, makeCtx } from './ctx'
@@ -63,6 +63,21 @@ function addCorsHeaders(
   return new Response(res.body, { status: res.status, headers })
 }
 
+/**
+ * Boot-time guard: every Operation in the table must have a callable handler in `useCases`.
+ * Uses `typeof === 'function'` (not `in`) so explicit `undefined`/`null` entries also fail loudly.
+ */
+export function assertUseCasesCoverOperations(
+  useCases: UseCaseMap,
+  ops: readonly Operation[],
+): void {
+  for (const op of ops) {
+    if (typeof useCases[op.operationId] !== 'function') {
+      throw new Error(`createCommentsServer: missing use-case for '${op.operationId}'`)
+    }
+  }
+}
+
 export function createCommentsServer(opts: CreateCommentsServerOptions): CommentsServer {
   const ids = opts.ids ?? defaultIds()
   const now = opts.now ?? (() => new Date())
@@ -90,11 +105,7 @@ export function createCommentsServer(opts: CreateCommentsServerOptions): Comment
   }
 
   // Boot-time sanity: every operationId has a handler.
-  for (const op of operations) {
-    if (!(op.operationId in useCases)) {
-      throw new Error(`createCommentsServer: missing use-case for '${op.operationId}'`)
-    }
-  }
+  assertUseCasesCoverOperations(useCases, operations)
 
   const routes = compileRoutes(operations)
 
