@@ -88,5 +88,8 @@ describe('extractSignals — stableAttrs', () => {
     const s = extractSignals(el).stableAttrs!
     expect(Object.keys(s).length).toBe(12)
     expect(s.id).toBe('h')
+    expect(s['data-k0']).toBe('0')
+    expect(s['data-k10']).toBe('10')
+    expect(s['data-k11']).toBeUndefined()
   })
 })
