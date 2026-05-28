@@ -54,7 +54,7 @@ export function createDevServer(
   let server: Server | null = null
   return {
     async listen() {
-      server = createServer(async (req, res) => {
+      const httpServer = createServer(async (req, res) => {
         try {
           const webReq = await nodeToWeb(req)
           const webRes = await handler(webReq)
@@ -65,18 +65,20 @@ export function createDevServer(
           res.end(JSON.stringify({ error: { code: 'INTERNAL', message: 'dev-server-error' } }))
         }
       })
+      server = httpServer
       return new Promise<{ port: number }>((resolve, reject) => {
-        server!.on('error', reject)
-        server!.listen(opts.port ?? 4321, '127.0.0.1', () => {
-          const addr = server!.address() as AddressInfo
+        httpServer.on('error', reject)
+        httpServer.listen(opts.port ?? 4321, '127.0.0.1', () => {
+          const addr = httpServer.address() as AddressInfo
           resolve({ port: addr.port })
         })
       })
     },
     async close() {
-      if (!server) return
+      const httpServer = server
+      if (!httpServer) return
       await new Promise<void>((resolve, reject) => {
-        server!.close((err) => (err ? reject(err) : resolve()))
+        httpServer.close((err) => (err ? reject(err) : resolve()))
       })
       server = null
     },

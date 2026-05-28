@@ -63,4 +63,11 @@ describe('router', () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ threads: [], nextCursor: null })
   })
+
+  it('disambiguates PATCH /threads/:id vs PATCH /threads/:id/anchor by path depth', () => {
+    const setStatusReq = new Request('http://x/threads/abc', { method: 'PATCH' })
+    const refreshReq = new Request('http://x/threads/abc/anchor', { method: 'PATCH' })
+    expect(match(setStatusReq, routes)?.op.operationId).toBe('setThreadStatus')
+    expect(match(refreshReq, routes)?.op.operationId).toBe('refreshAnchor')
+  })
 })

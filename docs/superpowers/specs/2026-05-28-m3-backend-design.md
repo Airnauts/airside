@@ -1,6 +1,6 @@
 # M3 — Backend: API core, security & storage
 
-- **Status:** Proposed
+- **Status:** Implemented
 - **Date:** 2026-05-28
 - **Milestone:** [M3](../../milestones.md#m3--backend-api-core-security--storage--backend--m)
 - **Track:** Backend

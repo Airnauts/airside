@@ -2,6 +2,7 @@ import type { ThreadId } from '@comments/core'
 import { makeNewThread } from '@comments/test-support'
 import { describe, expect, it } from 'vitest'
 import { makeCtx } from '../ctx'
+import { ValidationError } from '../errors'
 import { InMemoryRepository } from '../repository/in-memory'
 import { listThreads } from './list-threads'
 
@@ -67,11 +68,23 @@ describe('listThreads use-case', () => {
     )
     expect(first.threads).toHaveLength(10)
     expect(first.nextCursor).not.toBeNull()
+    const cursor = first.nextCursor
+    if (cursor === null) throw new Error('expected cursor')
     const second = await listThreads(
-      { ctx, params: undefined, query: { cursor: first.nextCursor! }, body: undefined },
+      { ctx, params: undefined, query: { cursor }, body: undefined },
       { repo, defaultLimit: 10 },
     )
     expect(second.threads).toHaveLength(10)
     expect(second.threads.find((t) => first.threads.some((x) => x.id === t.id))).toBeUndefined()
+  })
+
+  it('throws ValidationError when the cursor is malformed', async () => {
+    const repo = new InMemoryRepository()
+    await expect(
+      listThreads(
+        { ctx, params: undefined, query: { cursor: '!!!not-base64!!!' }, body: undefined },
+        { repo },
+      ),
+    ).rejects.toBeInstanceOf(ValidationError)
   })
 })

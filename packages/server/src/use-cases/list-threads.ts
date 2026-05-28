@@ -1,5 +1,7 @@
 import type { ListThreadsQuery } from '@comments/core'
 import type { Ctx } from '../ctx'
+import { decodeCursor } from '../cursor'
+import { ValidationError } from '../errors'
 import type { ListResult, Repository } from '../repository/types'
 
 export type ListThreadsDeps = {
@@ -13,6 +15,10 @@ export async function listThreads(
   deps: ListThreadsDeps,
 ): Promise<ListResult> {
   const limit = Math.min(deps.maxLimit ?? 200, deps.defaultLimit ?? 50)
+  const cursor = input.query.cursor ?? null
+  if (cursor !== null && decodeCursor(cursor) === undefined) {
+    throw new ValidationError('invalid cursor')
+  }
   return deps.repo.listThreads({
     projectId: input.ctx.projectId,
     env: input.ctx.env,
@@ -20,6 +26,6 @@ export async function listThreads(
     status: input.query.status,
     sort: 'updatedAt',
     limit,
-    cursor: input.query.cursor ?? null,
+    cursor,
   })
 }
