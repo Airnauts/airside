@@ -44,8 +44,11 @@ export class UploadTooLargeError extends DomainError {
 
 export class RateLimitedError extends DomainError {
   readonly code = 'RATE_LIMITED' as const
-  constructor(public readonly retryAfterSec: number) {
-    super('rate limited')
+  constructor(
+    public readonly retryAfterSec: number,
+    message = 'rate limited',
+  ) {
+    super(message)
   }
 }
 

@@ -34,6 +34,7 @@ describe('toResponse', () => {
     const { status, body } = await read(toResponse(new AuthInvalidKeyError()))
     expect(status).toBe(401)
     expect(body.error.code).toBe('AUTH_INVALID_KEY')
+    expect('details' in body.error).toBe(false)
   })
 
   it('maps OriginNotAllowedError to 403 ORIGIN_NOT_ALLOWED', async () => {
