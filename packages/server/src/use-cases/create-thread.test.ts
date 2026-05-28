@@ -25,6 +25,7 @@ describe('createThread use-case', () => {
     expect(thread.anchorState).toBe('anchored')
     expect(thread.createdAt).toBe(now.toISOString())
     expect(thread.updatedAt).toBe(now.toISOString())
+    expect(thread.lastActivityAt).toBe(now.toISOString())
     expect(thread.schemaVersion).toBe(ANCHOR_SCHEMA_VERSION)
     expect(thread.comments).toHaveLength(1)
     expect(thread.comments[0]?.id).toBe('c_fixed')
