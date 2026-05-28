@@ -11,7 +11,7 @@ function normalizeWithMap(s: string): { normalized: string; toOriginal: number[]
   let out = ''
   let prevSpace = true // collapse leading whitespace
   for (let i = 0; i < s.length; i++) {
-    const ch = s[i] as string
+    const ch = s.charAt(i)
     const isWs = /\s/.test(ch)
     if (isWs) {
       if (prevSpace) continue
@@ -58,7 +58,6 @@ function indexOfUnique(haystack: string, needle: string): number | null {
 }
 
 export function locateQuote(haystack: string, ctx: QuoteContext): QuoteOffsets | null {
-  if (ctx.quote.length === 0) return null
   const { normalized, toOriginal } = normalizeWithMap(haystack)
   const nQuote = normalizeNeedle(ctx.quote)
   const nPrefix = normalizeNeedle(ctx.prefix)
