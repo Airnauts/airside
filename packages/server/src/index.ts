@@ -1,1 +1,1 @@
-export const packageName = '@comments/server'
+export const VERSION = '0.0.0'
