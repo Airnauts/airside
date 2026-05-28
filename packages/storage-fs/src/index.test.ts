@@ -1,8 +1,16 @@
-import { describe, expect, it } from 'vitest'
-import { packageName } from './index'
+import { mkdtempSync } from 'node:fs'
+import { readFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { storageContract } from '@comments/test-support'
+import { FileSystemStorage } from './index'
 
-describe('@comments/storage-fs', () => {
-  it('exposes its package name (M1 shell smoke test)', () => {
-    expect(packageName).toBe('@comments/storage-fs')
-  })
-})
+storageContract(
+  'fs',
+  async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'comments-storage-fs-'))
+    return new FileSystemStorage({ rootDir: dir })
+  },
+  async (url) => new Uint8Array(await readFile(fileURLToPath(url))),
+)

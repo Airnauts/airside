@@ -107,6 +107,10 @@ importers:
       '@comments/server':
         specifier: workspace:*
         version: link:../server
+    devDependencies:
+      '@comments/test-support':
+        specifier: workspace:*
+        version: link:../test-support
 
   packages/storage-vercel-blob:
     dependencies:
