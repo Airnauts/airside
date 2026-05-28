@@ -11,3 +11,4 @@ export type {
   Repository,
   Scope,
 } from './repository/types'
+export type { PutBlob, PutResult, StorageAdapter } from './storage/types'

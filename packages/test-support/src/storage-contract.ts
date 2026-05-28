@@ -1,9 +1,45 @@
-// packages/test-support/src/storage-contract.ts — placeholder until Task 8
+import type { StorageAdapter } from '@comments/server'
+import { beforeEach, describe, expect, it } from 'vitest'
+
+const PNG_PIXEL = new Uint8Array([
+  // a 1x1 transparent PNG (minimal valid file)
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+  0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
+  0x89, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
+  0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
+  0x42, 0x60, 0x82,
+])
+
 export type ReadBackFn = (url: string) => Promise<Uint8Array>
+
 export function storageContract(
-  _name: string,
-  _make: () => Promise<unknown>,
-  _readBack: ReadBackFn,
+  name: string,
+  makeStorage: () => Promise<StorageAdapter>,
+  readBack: ReadBackFn,
 ): void {
-  // intentionally empty until Task 8 fills this in
+  describe(`StorageAdapter contract — ${name}`, () => {
+    let storage: StorageAdapter
+
+    beforeEach(async () => {
+      storage = await makeStorage()
+    })
+
+    it('put() returns a URL whose contents round-trip the input bytes', async () => {
+      const result = await storage.put({
+        data: PNG_PIXEL,
+        contentType: 'image/png',
+        name: 'pixel.png',
+      })
+      expect(result.size).toBe(PNG_PIXEL.byteLength)
+      expect(result.url.length).toBeGreaterThan(0)
+      const bytes = await readBack(result.url)
+      expect(bytes).toEqual(PNG_PIXEL)
+    })
+
+    it('two puts of the same name yield distinct keys', async () => {
+      const a = await storage.put({ data: PNG_PIXEL, contentType: 'image/png', name: 'x.png' })
+      const b = await storage.put({ data: PNG_PIXEL, contentType: 'image/png', name: 'x.png' })
+      expect(a.key).not.toBe(b.key)
+    })
+  })
 }
