@@ -6,11 +6,11 @@ import {
   type Comment,
   type CommentId,
   type CreateThreadBody,
-  type Thread,
   type ThreadId,
 } from '@comments/core'
 import type { NewComment, NewThread } from '@comments/server'
 
+// Counter is module-scoped — Vitest resets it per test file (one worker per file by default).
 let counter = 0
 const seq = () => `${++counter}`
 
@@ -45,7 +45,7 @@ export function makeAnchor(overrides: Partial<Anchor> = {}): Anchor {
 
 export function makeCreateThreadBody(overrides: Partial<CreateThreadBody> = {}): CreateThreadBody {
   return {
-    pageKey: 'https://example.com/about',
+    pageKey: 'example.com/about',
     pageUrl: 'https://example.com/about',
     pageTitle: 'About',
     anchor: makeAnchor(),
@@ -72,7 +72,9 @@ export function makeComment(overrides: Partial<Comment> = {}): Comment {
  * `projectId` defaults to 'proj_test'; pass `overrides` to vary scope or content.
  */
 export function makeNewThread(
-  overrides: Partial<NewThread> & { firstComment?: Partial<NewComment> } = {},
+  overrides: Omit<Partial<NewThread>, 'firstComment'> & {
+    firstComment?: Partial<NewComment>
+  } = {},
 ): NewThread {
   const id = (overrides.id ?? `t_${seq()}`) as ThreadId
   const now = overrides.createdAt ?? '2026-05-28T10:00:00.000Z'
@@ -81,7 +83,7 @@ export function makeNewThread(
     projectId: 'proj_test',
     id,
     scope: 'page',
-    pageKey: 'https://example.com/about',
+    pageKey: 'example.com/about',
     pageUrl: 'https://example.com/about',
     anchor: makeAnchor(),
     status: 'open',
@@ -91,10 +93,8 @@ export function makeNewThread(
     createdAt: now,
     updatedAt: now,
     lastActivityAt: now,
-    schemaVersion: ANCHOR_SCHEMA_VERSION,
+    schemaVersion: 1,
     firstComment: makeComment({ createdAt: now, ...firstOverride }),
     ...rest,
   }
 }
-
-export type MaterializedThread = Thread

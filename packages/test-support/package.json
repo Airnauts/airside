@@ -14,7 +14,8 @@
   ],
   "scripts": {
     "build": "tsup && tsc --build",
-    "typecheck": "tsc --build"
+    "typecheck": "tsc --build",
+    "test": "vitest run"
   },
   "dependencies": {
     "@comments/core": "workspace:*",
