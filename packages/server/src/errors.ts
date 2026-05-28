@@ -56,13 +56,13 @@ function jsonResponse(
   code: ErrorCode,
   message: string,
   details: unknown,
-  extraHeaders?: HeadersInit,
+  extraHeaders?: Record<string, string>,
 ) {
   const headers = new Headers({ 'content-type': 'application/json; charset=utf-8' })
   if (extraHeaders) {
-    new Headers(extraHeaders).forEach((value, key) => {
+    for (const [key, value] of Object.entries(extraHeaders)) {
       headers.set(key, value)
-    })
+    }
   }
   const body = JSON.stringify(
     details !== undefined ? { error: { code, message, details } } : { error: { code, message } },
