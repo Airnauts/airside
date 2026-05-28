@@ -12,6 +12,7 @@ const entries = [
   ['@comments/server', 'VERSION'],
   ['@comments/adapter-mongo', 'packageName'],
   ['@comments/storage-vercel-blob', 'packageName'],
+  ['@comments/test-support', 'TEST_SUPPORT_VERSION'],
   ['@comments/storage-fs', 'packageName'],
 ]
 
