@@ -1,0 +1,8 @@
+export type { Decision } from './decide'
+export { decide } from './decide'
+export type { QuoteContext, QuoteOffsets } from './locate-quote'
+export { locateQuote } from './locate-quote'
+export type { ScoreComponents, ScoreResult } from './score'
+export { scoreCandidate } from './score'
+export type { Thresholds, WeightKey } from './weights'
+export { DEFAULT_THRESHOLDS, DEFAULT_WEIGHTS } from './weights'
