@@ -4,7 +4,11 @@ import { put } from '@vercel/blob'
 export type VercelBlobStorageOptions = {
   /** `BLOB_READ_WRITE_TOKEN`. If omitted, `@vercel/blob` reads it from `process.env`. */
   token?: string
-  /** Optional prefix (e.g. 'staging/') applied to every key. */
+  /**
+   * Optional prefix (e.g. 'staging/') applied to every key. A trailing `/` is
+   * appended automatically if missing, so `'staging'` and `'staging/'` behave
+   * the same way.
+   */
   prefix?: string
 }
 
@@ -40,12 +44,17 @@ async function readAllBytes(data: Uint8Array | ReadableStream<Uint8Array>): Prom
 }
 
 export class VercelBlobStorage implements StorageAdapter {
-  constructor(private readonly opts: VercelBlobStorageOptions = {}) {}
+  private readonly prefix: string
+
+  constructor(private readonly opts: VercelBlobStorageOptions = {}) {
+    const raw = opts.prefix ?? ''
+    this.prefix = raw === '' || raw.endsWith('/') ? raw : `${raw}/`
+  }
 
   async put(blob: PutBlob): Promise<PutResult> {
     const bytes = await readAllBytes(blob.data)
     const body = new Blob([bytes], { type: blob.contentType })
-    const key = `${this.opts.prefix ?? ''}${sanitizeName(blob.name)}`
+    const key = `${this.prefix}${sanitizeName(blob.name)}`
     const result = await put(key, body, {
       access: 'public',
       contentType: blob.contentType,
