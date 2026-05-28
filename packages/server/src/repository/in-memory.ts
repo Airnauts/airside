@@ -55,7 +55,7 @@ export class InMemoryRepository implements Repository {
   private threads = new Map<string, StoredThread>()
 
   async createThread(input: NewThread): Promise<Thread> {
-    const stored: StoredThread = {
+    const stored: StoredThread = recomputeCounts({
       projectId: input.projectId,
       env: input.env,
       id: input.id,
@@ -74,10 +74,10 @@ export class InMemoryRepository implements Repository {
       updatedAt: input.updatedAt,
       lastActivityAt: input.lastActivityAt,
       schemaVersion: input.schemaVersion,
-      commentCount: 1,
-      unresolvedCount: 1,
+      commentCount: 0, // placeholder, overwritten by recomputeCounts
+      unresolvedCount: 0, // placeholder, overwritten by recomputeCounts
       comments: [clone(input.firstComment)],
-    }
+    })
     this.threads.set(input.id, stored)
     return toThread(clone(stored))
   }
@@ -99,7 +99,7 @@ export class InMemoryRepository implements Repository {
     }
     filtered.sort((a, b) => {
       if (a.updatedAt !== b.updatedAt) return a.updatedAt < b.updatedAt ? 1 : -1
-      return a.id < b.id ? 1 : -1
+      return a.id < b.id ? 1 : a.id > b.id ? -1 : 0
     })
 
     let start = 0
