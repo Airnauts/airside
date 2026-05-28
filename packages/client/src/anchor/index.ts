@@ -1,0 +1,1 @@
+export { extractSignals } from './extract'
