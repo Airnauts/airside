@@ -19,5 +19,8 @@
   },
   "dependencies": {
     "@comments/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@comments/test-support": "workspace:*"
   }
 }

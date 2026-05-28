@@ -94,6 +94,10 @@ importers:
       '@comments/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
+      '@comments/test-support':
+        specifier: workspace:*
+        version: link:../test-support
 
   packages/storage-fs:
     dependencies:
