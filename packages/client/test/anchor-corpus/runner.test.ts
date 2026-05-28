@@ -18,7 +18,7 @@ describe('findCandidates', () => {
   })
   it('scopes to the nearest surviving ancestor when present', () => {
     const body = parseBody('<main id="root"><section><span></span></section></main><span></span>')
-    // Stored trail mentions main#root → enumeration should only look inside main#root.
+    // trail[0] = 'section' is the first surviving ancestor; scopes candidates to the span inside it.
     const candidates = findCandidates(body, {
       tag: 'span',
       ancestorTrail: ['section', 'main#root'],

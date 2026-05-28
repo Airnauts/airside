@@ -8,6 +8,8 @@ export function parseBody(html: string): HTMLElement {
   return doc.body
 }
 
+// Label format emitted by extractSignals.ancestorLabel: 'tag', 'tag#id', or 'tag[data-testid=v]'.
+// These forms are mutually exclusive; id takes priority so the combined form is never produced.
 function parseAncestorLabel(label: string): { tag: string; id?: string; testid?: string } {
   const hash = label.indexOf('#')
   if (hash >= 0) return { tag: label.slice(0, hash), id: label.slice(hash + 1) }
@@ -47,6 +49,10 @@ export function findCandidates(
   return Array.from(root.querySelectorAll(stored.tag))
 }
 
+// Produces the selector returned as winnerSelector by runFixture.
+// Fixtures' expected.targetInAfter must match this form exactly: prefers id, then data-testid,
+// then bare tag (if only-of-type within parent), else nth-of-type. The selector is not globally
+// unique — fixture HTML should be authored so this form is unambiguous within the after-DOM.
 function cssSelectorFor(el: Element): string {
   if (el.id) return `#${el.id}`
   const testid = el.getAttribute('data-testid')
