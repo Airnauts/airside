@@ -12,6 +12,7 @@ export const Signals = z
     classes: z.array(z.string()),
     siblingIndex: z.number().int().nonnegative(),
     ancestorTrail: z.array(z.string()),
+    stableAttrs: z.record(z.string(), z.string()).optional(),
   })
   .meta({ id: 'Signals' })
 export type Signals = z.infer<typeof Signals>

@@ -240,6 +240,8 @@ base element first; a lost selection **degrades to the element pin
 - `schemaVersion` lets the fingerprint shape evolve without breaking old threads.
 - The capability-token + origin-allowlist model is explicitly not authentication; real identity/roles remain post-v1 (PRD §2).
 
+**Addendum (2026-05-28, M2b).** `Signals` grows by one optional field, `stableAttrs?: Record<string, string>`, so the §7 scoring weight of +0.40 ("stable attr exact") rides on a real signal rather than being parsed back out of the selector tuple. The change is additive: old anchors without `stableAttrs` simply contribute 0 on that axis. No `ANCHOR_SCHEMA_VERSION` bump (no live data; the parser is already forward-compatible). If the M2b calibration loop ever shifts the §7 default weights or thresholds, that warrants a second addendum recording the corpus evidence.
+
 ---
 
 ## ADR-0009 — Comment scope: page-scoped in v1, global/component as a seam
