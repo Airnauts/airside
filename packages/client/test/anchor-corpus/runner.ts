@@ -34,6 +34,8 @@ function findAncestorMatch(root: ParentNode, label: string): Element | null {
   return null
 }
 
+// M6 contract under test: duplicates the nearest-surviving-ancestor scoping M6 will own.
+// Replace with the production export when M6 lands.
 export function findCandidates(
   root: ParentNode,
   stored: { tag: string; ancestorTrail: string[] },
