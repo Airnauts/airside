@@ -54,7 +54,7 @@ function scoreStableAttrs(
   if (!stored) return 0
   const keys = Object.keys(stored)
   if (keys.length === 0) return 0
-  const otherCount = keys.filter((k) => k !== 'id' && k !== 'data-testid').length
+  const otherCount = keys.filter((k) => k.startsWith('data-') && k !== 'data-testid').length
   let max = 0
   let raw = 0
   for (const k of keys) {
