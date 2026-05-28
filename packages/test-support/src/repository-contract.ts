@@ -1,0 +1,276 @@
+import { ANCHOR_SCHEMA_VERSION, type ThreadId } from '@comments/core'
+import type { Repository } from '@comments/server'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { makeComment, makeNewThread } from './fixtures'
+
+export function repositoryContract(name: string, makeRepo: () => Promise<Repository>): void {
+  describe(`Repository contract — ${name}`, () => {
+    let repo: Repository
+
+    beforeEach(async () => {
+      repo = await makeRepo()
+    })
+
+    afterEach(async () => {
+      // No-op by default — implementations that need cleanup can wrap their factory.
+    })
+
+    describe('createThread + getThread', () => {
+      it('creates a thread that is readable by id', async () => {
+        const input = makeNewThread()
+        const created = await repo.createThread(input)
+        expect(created.id).toBe(input.id)
+        expect(created.comments).toHaveLength(1)
+        expect(created.comments[0]?.text).toBe(input.firstComment.text)
+
+        const fetched = await repo.getThread({ projectId: input.projectId }, input.id)
+        expect(fetched).not.toBeNull()
+        expect(fetched?.id).toBe(input.id)
+      })
+
+      it('returns null for a thread that does not exist', async () => {
+        const missing = await repo.getThread({ projectId: 'proj_test' }, 't_nope' as ThreadId)
+        expect(missing).toBeNull()
+      })
+
+      it('returns null when the thread exists but in a different projectId', async () => {
+        const input = makeNewThread({ projectId: 'proj_a' })
+        await repo.createThread(input)
+        const fromOther = await repo.getThread({ projectId: 'proj_b' }, input.id)
+        expect(fromOther).toBeNull()
+      })
+
+      it('returns null when env differs', async () => {
+        const input = makeNewThread({ projectId: 'proj_a', env: 'prod' })
+        await repo.createThread(input)
+        const fromOther = await repo.getThread({ projectId: 'proj_a', env: 'staging' }, input.id)
+        expect(fromOther).toBeNull()
+      })
+    })
+
+    describe('listThreads', () => {
+      it('on-page mode returns threads matching pageKey only', async () => {
+        await repo.createThread(makeNewThread({ pageKey: '/a' }))
+        await repo.createThread(makeNewThread({ pageKey: '/a' }))
+        await repo.createThread(makeNewThread({ pageKey: '/b' }))
+        const result = await repo.listThreads({
+          projectId: 'proj_test',
+          pageKey: '/a',
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(result.threads).toHaveLength(2)
+        expect(result.threads.every((t) => t.pageKey === '/a')).toBe(true)
+      })
+
+      it('panel mode (no pageKey) returns threads across all pages ordered updatedAt desc', async () => {
+        await repo.createThread(
+          makeNewThread({ id: 't_old' as ThreadId, updatedAt: '2026-01-01T00:00:00.000Z' }),
+        )
+        await repo.createThread(
+          makeNewThread({ id: 't_new' as ThreadId, updatedAt: '2026-05-01T00:00:00.000Z' }),
+        )
+        const result = await repo.listThreads({
+          projectId: 'proj_test',
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(result.threads.map((t) => t.id)).toEqual(['t_new', 't_old'])
+      })
+
+      it('breaks ties on (updatedAt desc, id desc)', async () => {
+        const sameTime = '2026-05-01T00:00:00.000Z'
+        await repo.createThread(makeNewThread({ id: 't_aaa' as ThreadId, updatedAt: sameTime }))
+        await repo.createThread(makeNewThread({ id: 't_zzz' as ThreadId, updatedAt: sameTime }))
+        const result = await repo.listThreads({
+          projectId: 'proj_test',
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(result.threads.map((t) => t.id)).toEqual(['t_zzz', 't_aaa'])
+      })
+
+      it('filters by status', async () => {
+        const open = await repo.createThread(makeNewThread({ id: 't_open' as ThreadId }))
+        const closed = await repo.createThread(makeNewThread({ id: 't_closed' as ThreadId }))
+        await repo.setStatus(
+          { projectId: 'proj_test' },
+          closed.id,
+          'resolved',
+          '2026-05-02T00:00:00.000Z',
+        )
+
+        const onlyOpen = await repo.listThreads({
+          projectId: 'proj_test',
+          sort: 'updatedAt',
+          limit: 50,
+          status: 'open',
+        })
+        expect(onlyOpen.threads.map((t) => t.id)).toEqual([open.id])
+
+        const onlyResolved = await repo.listThreads({
+          projectId: 'proj_test',
+          sort: 'updatedAt',
+          limit: 50,
+          status: 'resolved',
+        })
+        expect(onlyResolved.threads.map((t) => t.id)).toEqual([closed.id])
+      })
+
+      it('isolates scope between projects', async () => {
+        await repo.createThread(makeNewThread({ projectId: 'proj_a' }))
+        await repo.createThread(makeNewThread({ projectId: 'proj_b' }))
+        const onlyA = await repo.listThreads({
+          projectId: 'proj_a',
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(onlyA.threads).toHaveLength(1)
+      })
+
+      it('paginates with cursor: no overlap, no gap, nextCursor null on last page', async () => {
+        for (let i = 0; i < 25; i++) {
+          await repo.createThread(
+            makeNewThread({
+              id: `t_${String(i).padStart(2, '0')}` as ThreadId,
+              updatedAt: new Date(2026, 0, 1, 0, 0, i).toISOString(),
+            }),
+          )
+        }
+        const seen = new Set<string>()
+        let cursor: string | null = null
+        let pages = 0
+        for (;;) {
+          const page = await repo.listThreads({
+            projectId: 'proj_test',
+            sort: 'updatedAt',
+            limit: 10,
+            cursor,
+          })
+          pages++
+          for (const t of page.threads) {
+            expect(seen.has(t.id)).toBe(false)
+            seen.add(t.id)
+          }
+          cursor = page.nextCursor
+          if (cursor === null) break
+          expect(typeof cursor).toBe('string')
+          expect(cursor.length).toBeGreaterThan(0)
+        }
+        expect(seen.size).toBe(25)
+        expect(pages).toBe(3) // 10 + 10 + 5
+      })
+    })
+
+    describe('addComment', () => {
+      it('appends a comment and returns it', async () => {
+        const input = makeNewThread()
+        await repo.createThread(input)
+        const newComment = makeComment({ text: 'reply' })
+        const added = await repo.addComment({ projectId: input.projectId }, input.id, newComment)
+        expect(added.id).toBe(newComment.id)
+        const fetched = await repo.getThread({ projectId: input.projectId }, input.id)
+        expect(fetched?.comments).toHaveLength(2)
+      })
+
+      it('updates updatedAt on the thread', async () => {
+        const input = makeNewThread({ updatedAt: '2026-01-01T00:00:00.000Z' })
+        await repo.createThread(input)
+        const later = makeComment({ createdAt: '2026-06-01T00:00:00.000Z' })
+        await repo.addComment({ projectId: input.projectId }, input.id, later)
+        const fetched = await repo.getThread({ projectId: input.projectId }, input.id)
+        expect(fetched?.updatedAt).toBe(later.createdAt)
+      })
+    })
+
+    describe('setStatus', () => {
+      it('round-trips open ↔ resolved and bumps updatedAt', async () => {
+        const input = makeNewThread()
+        await repo.createThread(input)
+        const t1 = await repo.setStatus(
+          { projectId: input.projectId },
+          input.id,
+          'resolved',
+          '2026-06-01T00:00:00.000Z',
+        )
+        expect(t1.status).toBe('resolved')
+        expect(t1.updatedAt).toBe('2026-06-01T00:00:00.000Z')
+        const t2 = await repo.setStatus(
+          { projectId: input.projectId },
+          input.id,
+          'open',
+          '2026-06-02T00:00:00.000Z',
+        )
+        expect(t2.status).toBe('open')
+        expect(t2.updatedAt).toBe('2026-06-02T00:00:00.000Z')
+      })
+
+      it('treats no-op setStatus as a no-op that still bumps updatedAt', async () => {
+        const input = makeNewThread()
+        await repo.createThread(input)
+        const t = await repo.setStatus(
+          { projectId: input.projectId },
+          input.id,
+          'open',
+          '2026-06-01T00:00:00.000Z',
+        )
+        expect(t.status).toBe('open')
+        expect(t.updatedAt).toBe('2026-06-01T00:00:00.000Z')
+      })
+    })
+
+    describe('updateAnchor', () => {
+      it('flips anchorState and persists a new fingerprint', async () => {
+        const input = makeNewThread()
+        await repo.createThread(input)
+        const item = await repo.updateAnchor(
+          { projectId: input.projectId },
+          input.id,
+          {
+            anchorState: 'orphaned',
+            selectors: ['main > h2', '.hero > .subtitle'],
+            signals: {
+              tag: 'h2',
+              classes: ['subtitle'],
+              siblingIndex: 1,
+              ancestorTrail: ['main', 'section.hero'],
+            },
+          },
+          '2026-06-03T00:00:00.000Z',
+        )
+        expect(item.anchorState).toBe('orphaned')
+        expect(item.updatedAt).toBe('2026-06-03T00:00:00.000Z')
+
+        const refetched = await repo.getThread({ projectId: input.projectId }, input.id)
+        expect(refetched?.anchor.selectors).toEqual(['main > h2', '.hero > .subtitle'])
+      })
+
+      it('persists selectionLost without flipping anchorState', async () => {
+        const input = makeNewThread()
+        await repo.createThread(input)
+        const item = await repo.updateAnchor(
+          { projectId: input.projectId },
+          input.id,
+          { anchorState: 'anchored', selectionLost: true },
+          '2026-06-04T00:00:00.000Z',
+        )
+        expect(item.anchorState).toBe('anchored')
+        expect(item.selectionLost).toBe(true)
+      })
+    })
+
+    it('exposes schemaVersion on every persisted thread', async () => {
+      const input = makeNewThread()
+      const created = await repo.createThread(input)
+      expect(created.schemaVersion).toBe(ANCHOR_SCHEMA_VERSION)
+    })
+
+    it('does not leak mutations through getThread', async () => {
+      const input = makeNewThread()
+      const created = await repo.createThread(input)
+      created.pageUrl = 'https://attacker.example/'
+      const refetched = await repo.getThread({ projectId: input.projectId }, input.id)
+      expect(refetched?.pageUrl).toBe(input.pageUrl)
+    })
+  })
+}
