@@ -1,3 +1,4 @@
+import type { ThreadId } from '@comments/core'
 import { describe, expect, it } from 'vitest'
 import { defaultIds, makeCtx } from './ctx'
 
@@ -15,7 +16,7 @@ describe('ctx', () => {
     const ctx = makeCtx({
       projectId: 'p',
       now: () => fixed,
-      ids: { ...defaultIds(), thread: () => 't_fixed' as never },
+      ids: { ...defaultIds(), thread: () => 't_fixed' as ThreadId },
     })
     expect(ctx.now()).toBe(fixed)
     expect(ctx.ids.thread()).toBe('t_fixed')
