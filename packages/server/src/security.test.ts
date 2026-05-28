@@ -4,9 +4,9 @@ import { AuthInvalidKeyError, OriginNotAllowedError } from './errors'
 import { checkKey, checkOrigin } from './security'
 
 describe('security', () => {
-  it('checkOrigin passes when origin is allowed', () => {
+  it('checkOrigin passes when origin is allowed and returns the validated origin', () => {
     const req = new Request('http://x/', { headers: { origin: 'https://app.example.com' } })
-    expect(() => checkOrigin(req, ['https://app.example.com'])).not.toThrow()
+    expect(checkOrigin(req, ['https://app.example.com'])).toBe('https://app.example.com')
   })
 
   it('checkOrigin throws OriginNotAllowedError when origin is not in the list', () => {
@@ -24,10 +24,14 @@ describe('security', () => {
     expect(() => checkKey(req, 'sk_test')).not.toThrow()
   })
 
-  it('checkKey throws AuthInvalidKeyError when missing or wrong', () => {
+  it('checkKey throws AuthInvalidKeyError when missing, wrong-length, or same-length-wrong-value', () => {
     const missing = new Request('http://x/')
     expect(() => checkKey(missing, 'sk_test')).toThrowError(AuthInvalidKeyError)
-    const wrong = new Request('http://x/', { headers: { [KEY_HEADER_NAME]: 'nope' } })
-    expect(() => checkKey(wrong, 'sk_test')).toThrowError(AuthInvalidKeyError)
+
+    const wrongLength = new Request('http://x/', { headers: { [KEY_HEADER_NAME]: 'nope' } })
+    expect(() => checkKey(wrongLength, 'sk_test')).toThrowError(AuthInvalidKeyError)
+
+    const sameLength = new Request('http://x/', { headers: { [KEY_HEADER_NAME]: 'sk_xxxx' } })
+    expect(() => checkKey(sameLength, 'sk_test')).toThrowError(AuthInvalidKeyError)
   })
 })
