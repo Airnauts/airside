@@ -16,6 +16,7 @@ export {
 } from './errors'
 export type { CheckResult, RateLimitConfig, RateLimiter } from './rate-limit'
 export { InMemoryRateLimiter } from './rate-limit'
+
 export { InMemoryRepository } from './repository/in-memory'
 export type {
   AnchorPatch,
@@ -26,4 +27,9 @@ export type {
   Repository,
   Scope,
 } from './repository/types'
+export type { CommentsServer, CreateCommentsServerOptions } from './server'
+
+export { createCommentsServer } from './server'
 export type { PutBlob, PutResult, StorageAdapter } from './storage/types'
+
+export { ALLOWED_UPLOAD_TYPES } from './use-cases/upload-attachment'
