@@ -69,4 +69,20 @@ describe('decide', () => {
     const r = decide([{ ref: 'a', score: mkScore(0.55) }], { accept: 0.5, margin: 0.1 })
     expect(r.kind).toBe('anchored')
   })
+  it('anchors the highest scorer when input is unsorted', () => {
+    const r = decide([
+      { ref: 'low', score: mkScore(0.65) },
+      { ref: 'high', score: mkScore(0.8) },
+    ])
+    expect(r.kind).toBe('anchored')
+    if (r.kind === 'anchored') expect(r.winner).toBe('high')
+  })
+  it('ignores excluded entries even if their total is highest', () => {
+    const r = decide([
+      { ref: 'excluded', score: mkScore(0.9, 'tagMismatch') },
+      { ref: 'valid', score: mkScore(0.65) },
+    ])
+    expect(r.kind).toBe('anchored')
+    if (r.kind === 'anchored') expect(r.winner).toBe('valid')
+  })
 })
