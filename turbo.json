@@ -15,6 +15,27 @@
     },
     "size": {
       "dependsOn": ["build"]
+    },
+    "@comments/server#build": {
+      "dependsOn": ["@comments/core#build"],
+      "outputs": ["dist/**"]
+    },
+    "@comments/server#typecheck": {
+      "dependsOn": ["@comments/server#build", "@comments/core#build"],
+      "inputs": ["src/**/*.{ts,tsx}", "tsconfig.json", "../../tsconfig.base.json"],
+      "outputs": []
+    },
+    "@comments/server#test": {
+      "dependsOn": ["@comments/core#build", "@comments/test-support#build"]
+    },
+    "@comments/test-support#build": {
+      "dependsOn": ["@comments/core#build", "@comments/server#build"],
+      "outputs": ["dist/**"]
+    },
+    "@comments/test-support#typecheck": {
+      "dependsOn": ["@comments/test-support#build"],
+      "inputs": ["src/**/*.{ts,tsx}", "tsconfig.json", "../../tsconfig.base.json"],
+      "outputs": []
     }
   }
 }
