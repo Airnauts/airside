@@ -36,10 +36,30 @@ export function storageContract(
       expect(bytes).toEqual(PNG_PIXEL)
     })
 
-    it('two puts of the same name yield distinct keys', async () => {
+    it('put() accepts a ReadableStream<Uint8Array> input and round-trips the bytes', async () => {
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(PNG_PIXEL)
+          controller.close()
+        },
+      })
+      const result = await storage.put({
+        data: stream,
+        contentType: 'image/png',
+        name: 'streamed.png',
+      })
+      expect(result.size).toBe(PNG_PIXEL.byteLength)
+      const bytes = await readBack(result.url)
+      expect(bytes).toEqual(PNG_PIXEL)
+    })
+
+    it('two puts of the same name yield distinct keys and both are readable', async () => {
       const a = await storage.put({ data: PNG_PIXEL, contentType: 'image/png', name: 'x.png' })
       const b = await storage.put({ data: PNG_PIXEL, contentType: 'image/png', name: 'x.png' })
       expect(a.key).not.toBe(b.key)
+      expect(a.url).not.toBe(b.url)
+      expect(await readBack(a.url)).toEqual(PNG_PIXEL)
+      expect(await readBack(b.url)).toEqual(PNG_PIXEL)
     })
   })
 }
