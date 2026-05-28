@@ -1,6 +1,6 @@
 import type { Operation } from '@comments/core'
 import type { Ctx } from './ctx'
-import { ValidationError } from './errors'
+import { NotFoundError, ValidationError } from './errors'
 import { parseMultipart } from './multipart'
 
 export type UseCaseInput = {
@@ -86,10 +86,12 @@ export async function dispatch(
   req: Request,
 ): Promise<Response> {
   const found = match(req, routes)
-  if (!found) return json(404, { error: { code: 'NOT_FOUND', message: 'no route' } })
+  if (!found) throw new NotFoundError('no route')
   const { op, params } = found
   const handler = useCases[op.operationId]
   if (!handler) {
+    // Defensive — createCommentsServer (Task 25) verifies handler completeness at boot,
+    // so this should be unreachable in production. Kept for direct/test callers of dispatch.
     throw new Error(`no use-case registered for operationId '${op.operationId}'`)
   }
   const url = new URL(req.url)

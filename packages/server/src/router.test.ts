@@ -1,5 +1,6 @@
 import { operations } from '@comments/core'
 import { describe, expect, it } from 'vitest'
+import { NotFoundError } from './errors'
 import { compileRoutes, dispatch, match, type UseCaseMap } from './router'
 
 const routes = compileRoutes(operations)
@@ -35,10 +36,22 @@ describe('router', () => {
     expect(match(req, routes)).toBeNull()
   })
 
-  it('compileRoutes throws if any operationId has no handler', () => {
+  it('dispatch throws NotFoundError for an unmatched route', async () => {
+    const req = new Request('http://x/nope', { method: 'GET' })
+    await expect(dispatch(routes, noopUseCases, {} as never, req)).rejects.toThrow(NotFoundError)
+  })
+
+  it('dispatch throws if any operationId has no handler', async () => {
     const incomplete: UseCaseMap = { ...noopUseCases }
     delete (incomplete as Record<string, unknown>).createThread
-    expect(() => dispatch(routes, incomplete, {} as never, new Request('http://x/threads'))).rejects
+    await expect(
+      dispatch(
+        routes,
+        incomplete,
+        {} as never,
+        new Request('http://x/threads', { method: 'POST' }),
+      ),
+    ).rejects.toThrow("no use-case registered for operationId 'createThread'")
   })
 
   it('dispatch parses ?pageKey=… and 200s for listThreads', async () => {
