@@ -10,6 +10,7 @@ const entries = [
   ['@comments/client', 'packageName'],
   ['@comments/client/react', 'packageName'],
   ['@comments/server', 'VERSION'],
+  ['@comments/server/dev', 'createDevServer'],
   ['@comments/adapter-mongo', 'packageName'],
   ['@comments/storage-vercel-blob', 'packageName'],
   ['@comments/test-support', 'TEST_SUPPORT_VERSION'],
