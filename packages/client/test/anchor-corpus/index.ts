@@ -1,3 +1,4 @@
+import { attrFixtures } from './attr.fixtures'
 import { renameFixtures } from './rename.fixtures'
 import { reorderFixtures } from './reorder.fixtures'
 import { textFixtures } from './text.fixtures'
@@ -9,4 +10,5 @@ export const allFixtures: AnchorFixture[] = [
   ...reorderFixtures,
   ...renameFixtures,
   ...textFixtures,
+  ...attrFixtures,
 ]
