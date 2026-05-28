@@ -402,3 +402,56 @@ contract — and the way components are registered for OpenAPI — must be settl
 - zod-openapi emits a `…Output` component twin for any registered schema used in
   both a request body and a response; with no transforms in v1 these are
   structurally identical to their inputs (expected library behavior, not a defect).
+
+---
+
+## ADR-0013 — M3 dispatcher pattern + shared adapter contract package
+
+- **Date:** 2026-05-28
+- **Status:** accepted
+
+**Context.** M3 implements the server side of M2a's frozen HTTP contract. Two
+patterns emerged that M4 (`@comments/adapter-mongo`, Next.js glue, OpenAPI
+serving) will keep building on, and that future hosted-backend / second-DB
+work depends on:
+
+1. **Router shape.** ADR-0012 already specified that the contract is expressed
+   as Zod schemas + a declarative `operations` table and that "no contract
+   framework is placed on the boundary." M3 needed to decide *how* the table
+   becomes a runtime router.
+2. **Where adapter contract suites live.** The M3 spec calls
+   `Repository`/`StorageAdapter` "the only DB/IO seams" and names a shared
+   contract suite. That suite is consumed by both M3 (in-memory repo + two
+   storage concretes) and M4 (`@comments/adapter-mongo`), so its physical
+   location is itself an architecture decision.
+
+**Decision.**
+
+1. **One generic dispatcher walks the `operations` table.** `compileRoutes`
+   precompiles `{ op, regex, paramNames }` triples; `dispatch` matches the
+   request, parses `params`/`query`/`body` through the entry's Zod schemas,
+   looks up `useCases[op.operationId]`, and serializes the result at
+   `op.success.status`. The constructor refuses to boot if any
+   `operationId` has no matching handler, making "every endpoint exists" a
+   compile-time-ish guarantee. Multipart is the one special branch
+   (`body === 'multipart'`).
+2. **The shared contract suite lives in a new workspace package
+   `@comments/test-support`** (`private: true`, peer-dep on `vitest`). It
+   exports `repositoryContract(name, makeRepo)` and `storageContract(name,
+   makeStorage)`. `@comments/core` stays the wire-only layer (no server-only
+   types, no vitest dep); `@comments/server` owns the `Repository` and
+   `StorageAdapter` interfaces; `@comments/test-support` depends on both and
+   is consumed only as a `devDependency` by the implementations under test.
+
+**Consequences.**
+- Adding an endpoint is now a one-place change (add to `operations` + supply
+  a use-case); the dispatcher needs no modification.
+- The "boot fails if a handler is missing" guard means refactoring the
+  operation table can't accidentally drop endpoints at runtime.
+- M4's Mongo adapter is gated by the same `repositoryContract` suite the
+  in-memory repo passes, so a "Mongo is wire-equivalent to in-memory"
+  property comes for free.
+- A future hosted backend, additional DB adapter, or alternative storage
+  concrete just installs `@comments/test-support` as a dev-dep and re-runs
+  the suite — no duplication, no fragile cross-package test imports.
+- `@comments/core` remains DOM/Node-free and free of test-only types.
