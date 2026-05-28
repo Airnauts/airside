@@ -28,6 +28,16 @@ describe('cors helpers', () => {
     const allowed = ['https://app.example.com']
     const headers = buildCorsHeaders('https://attacker.example', allowed)
     expect(headers.get('access-control-allow-origin')).toBeNull()
+    expect(headers.get('access-control-allow-headers')).toBeNull()
+    expect(headers.get('access-control-allow-methods')).toBeNull()
+    expect(headers.get('vary')).toBe('Origin')
+  })
+
+  it('buildCorsHeaders with null origin sets only vary', () => {
+    const headers = buildCorsHeaders(null, ['https://app.example.com'])
+    expect(headers.get('access-control-allow-origin')).toBeNull()
+    expect(headers.get('access-control-allow-headers')).toBeNull()
+    expect(headers.get('access-control-allow-methods')).toBeNull()
     expect(headers.get('vary')).toBe('Origin')
   })
 
@@ -43,5 +53,18 @@ describe('cors helpers', () => {
     const res = preflightResponse('https://attacker.example', ['https://app.example.com'])
     expect(res.status).toBe(403)
     expect(res.headers.get('access-control-allow-origin')).toBeNull()
+  })
+
+  it('preflightResponse with null origin returns 403', () => {
+    const res = preflightResponse(null, ['https://app.example.com'])
+    expect(res.status).toBe(403)
+    expect(res.headers.get('access-control-allow-origin')).toBeNull()
+  })
+
+  it('preflightResponse sets full Vary for proxy/browser cache correctness', () => {
+    const res = preflightResponse('https://app.example.com', ['https://app.example.com'])
+    expect(res.headers.get('vary')).toBe(
+      'Origin, Access-Control-Request-Method, Access-Control-Request-Headers',
+    )
   })
 })

@@ -31,5 +31,6 @@ export function preflightResponse(
     return new Response(null, { status: 403, headers })
   }
   headers.set('access-control-max-age', MAX_AGE_SECONDS)
+  headers.set('vary', 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers')
   return new Response(null, { status: 204, headers })
 }
