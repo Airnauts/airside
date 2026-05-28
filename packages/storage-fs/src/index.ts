@@ -9,7 +9,7 @@ export type FileSystemStorageOptions = {
 }
 
 function sanitizeName(name: string): string {
-  const cleaned = name.replace(/[^A-Za-z0-9._-]/g, '_')
+  const cleaned = name.replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 200)
   return cleaned.length > 0 ? cleaned : 'file'
 }
 
@@ -25,13 +25,17 @@ async function readAllBytes(data: Uint8Array | ReadableStream<Uint8Array>): Prom
   const reader = data.getReader()
   const chunks: Uint8Array[] = []
   let total = 0
-  for (;;) {
-    const { value, done } = await reader.read()
-    if (done) break
-    if (value) {
-      chunks.push(value)
-      total += value.byteLength
+  try {
+    for (;;) {
+      const { value, done } = await reader.read()
+      if (done) break
+      if (value) {
+        chunks.push(value)
+        total += value.byteLength
+      }
     }
+  } finally {
+    reader.releaseLock()
   }
   const out = new Uint8Array(total)
   let offset = 0
