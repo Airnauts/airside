@@ -1,4 +1,5 @@
 import { KEY_HEADER_NAME } from '@comments/core'
+import { makeCreateThreadBody } from '@comments/test-support'
 import { describe, expect, it } from 'vitest'
 import { createDevServer } from './dev'
 import { InMemoryRepository } from './repository/in-memory'
@@ -31,6 +32,19 @@ describe('createDevServer', () => {
         headers: { origin: 'http://127.0.0.1', [KEY_HEADER_NAME]: 'sk_test' },
       })
       expect(ok.status).toBe(200)
+      const createBody = makeCreateThreadBody()
+      const createRes = await fetch(`http://127.0.0.1:${port}/threads`, {
+        method: 'POST',
+        headers: {
+          origin: 'http://127.0.0.1',
+          [KEY_HEADER_NAME]: 'sk_test',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify(createBody),
+      })
+      expect(createRes.status).toBe(201)
+      const created = await createRes.json()
+      expect(created.id).toBeDefined()
     } finally {
       await dev.close()
     }

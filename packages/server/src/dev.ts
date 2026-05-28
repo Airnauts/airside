@@ -65,7 +65,8 @@ export function createDevServer(
           res.end(JSON.stringify({ error: { code: 'INTERNAL', message: 'dev-server-error' } }))
         }
       })
-      return new Promise<{ port: number }>((resolve) => {
+      return new Promise<{ port: number }>((resolve, reject) => {
+        server!.on('error', reject)
         server!.listen(opts.port ?? 4321, '127.0.0.1', () => {
           const addr = server!.address() as AddressInfo
           resolve({ port: addr.port })
