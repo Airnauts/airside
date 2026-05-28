@@ -3,8 +3,8 @@ import assert from 'node:assert/strict'
 
 // Every package entry + subpath that must resolve through its package.json `exports`,
 // paired with a named export that proves the module actually loaded.
-// Shell packages still expose the M1 `packageName`; @comments/core now exposes the
-// real contract surface, so we probe one of its real exports instead.
+// Shell packages still expose `packageName` (M1 placeholder) except @comments/server
+// which now exports VERSION; @comments/core exposes its real contract surface.
 const entries = [
   ['@comments/core', 'normalizePageKey'],
   ['@comments/client', 'packageName'],
