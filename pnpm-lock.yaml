@@ -94,6 +94,9 @@ importers:
       '@comments/core':
         specifier: workspace:*
         version: link:../core
+      nanoid:
+        specifier: ^5.1.11
+        version: 5.1.11
     devDependencies:
       '@comments/test-support':
         specifier: workspace:*

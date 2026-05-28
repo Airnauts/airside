@@ -18,7 +18,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@comments/core": "workspace:*"
+    "@comments/core": "workspace:*",
+    "nanoid": "^5.1.11"
   },
   "devDependencies": {
     "@comments/test-support": "workspace:*"
