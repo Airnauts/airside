@@ -48,4 +48,19 @@ describe('Anchor schema', () => {
   it('rejects a negative siblingIndex', () => {
     expect(() => Signals.parse({ ...validSignals, siblingIndex: -1 })).toThrow()
   })
+  it('parses Signals with optional stableAttrs', () => {
+    const s = Signals.parse({
+      ...validSignals,
+      stableAttrs: { id: 'header', 'data-testid': 'cta' },
+    })
+    expect(s.stableAttrs?.id).toBe('header')
+    expect(s.stableAttrs?.['data-testid']).toBe('cta')
+  })
+  it('tolerates Signals without stableAttrs (backward compatible)', () => {
+    const s = Signals.parse(validSignals)
+    expect(s.stableAttrs).toBeUndefined()
+  })
+  it('rejects stableAttrs whose values are not strings', () => {
+    expect(() => Signals.parse({ ...validSignals, stableAttrs: { id: 123 } })).toThrow()
+  })
 })
