@@ -1,18 +1,20 @@
 import { ANCHOR_SCHEMA_VERSION, type ThreadId } from '@comments/core'
 import type { Repository } from '@comments/server'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { makeComment, makeNewThread } from './fixtures'
 
+/**
+ * Executable spec for `Repository` implementations.
+ *
+ * Implementations that need cleanup (DB truncation, etc.) should wrap their factory
+ * (`makeRepo`) — this suite intentionally registers no `afterEach` of its own.
+ */
 export function repositoryContract(name: string, makeRepo: () => Promise<Repository>): void {
   describe(`Repository contract — ${name}`, () => {
     let repo: Repository
 
     beforeEach(async () => {
       repo = await makeRepo()
-    })
-
-    afterEach(async () => {
-      // No-op by default — implementations that need cleanup can wrap their factory.
     })
 
     describe('createThread + getThread', () => {
@@ -128,6 +130,17 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
         expect(onlyA.threads).toHaveLength(1)
       })
 
+      it('isolates env scope', async () => {
+        await repo.createThread(makeNewThread({ projectId: 'proj_a', env: 'prod' }))
+        const result = await repo.listThreads({
+          projectId: 'proj_a',
+          env: 'staging',
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(result.threads).toHaveLength(0)
+      })
+
       it('paginates with cursor: no overlap, no gap, nextCursor null on last page', async () => {
         for (let i = 0; i < 25; i++) {
           await repo.createThread(
@@ -228,7 +241,7 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
           input.id,
           {
             anchorState: 'orphaned',
-            selectors: ['main > h2', '.hero > .subtitle'],
+            selectors: ['main > h2', '.hero > .subtitle'] as [string, string],
             signals: {
               tag: 'h2',
               classes: ['subtitle'],
@@ -256,6 +269,76 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
         )
         expect(item.anchorState).toBe('anchored')
         expect(item.selectionLost).toBe(true)
+      })
+    })
+
+    describe('derived counts on list items', () => {
+      it('tracks commentCount as comments are appended', async () => {
+        const input = makeNewThread()
+        await repo.createThread(input)
+        await repo.addComment({ projectId: input.projectId }, input.id, makeComment())
+        await repo.addComment({ projectId: input.projectId }, input.id, makeComment())
+        const result = await repo.listThreads({
+          projectId: input.projectId,
+          pageKey: input.pageKey ?? undefined,
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(result.threads[0]?.commentCount).toBe(3)
+      })
+
+      it('drops unresolvedCount to 0 when status flips to resolved', async () => {
+        const input = makeNewThread()
+        const t = await repo.createThread(input)
+        const before = await repo.listThreads({
+          projectId: input.projectId,
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(before.threads[0]?.unresolvedCount).toBeGreaterThan(0)
+        await repo.setStatus(
+          { projectId: input.projectId },
+          t.id,
+          'resolved',
+          '2026-06-01T00:00:00.000Z',
+        )
+        const after = await repo.listThreads({
+          projectId: input.projectId,
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(after.threads[0]?.unresolvedCount).toBe(0)
+      })
+    })
+
+    describe('scope mismatch', () => {
+      it('addComment rejects when scope does not match', async () => {
+        const input = makeNewThread({ projectId: 'proj_a' })
+        await repo.createThread(input)
+        await expect(
+          repo.addComment({ projectId: 'proj_b' }, input.id, makeComment()),
+        ).rejects.toThrow()
+      })
+
+      it('setStatus rejects when scope does not match', async () => {
+        const input = makeNewThread({ projectId: 'proj_a' })
+        await repo.createThread(input)
+        await expect(
+          repo.setStatus({ projectId: 'proj_b' }, input.id, 'resolved', '2026-06-01T00:00:00.000Z'),
+        ).rejects.toThrow()
+      })
+
+      it('updateAnchor rejects when scope does not match', async () => {
+        const input = makeNewThread({ projectId: 'proj_a' })
+        await repo.createThread(input)
+        await expect(
+          repo.updateAnchor(
+            { projectId: 'proj_b' },
+            input.id,
+            { anchorState: 'orphaned' },
+            '2026-06-01T00:00:00.000Z',
+          ),
+        ).rejects.toThrow()
       })
     })
 
