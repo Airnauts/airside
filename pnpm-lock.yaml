@@ -29,6 +29,9 @@ importers:
       '@comments/storage-vercel-blob':
         specifier: workspace:*
         version: link:packages/storage-vercel-blob
+      '@comments/test-support':
+        specifier: workspace:*
+        version: link:packages/test-support
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.19
@@ -109,6 +112,18 @@ importers:
       '@comments/server':
         specifier: workspace:*
         version: link:../server
+
+  packages/test-support:
+    dependencies:
+      '@comments/core':
+        specifier: workspace:*
+        version: link:../core
+      '@comments/server':
+        specifier: workspace:*
+        version: link:../server
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.4(@types/node@22.19.19)(jiti@2.7.0)(jsdom@26.1.0)(tsx@4.22.3)(yaml@2.9.0)
 
 packages:
 
