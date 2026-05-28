@@ -36,4 +36,16 @@ describe('parseMultipart', () => {
     form.append('extra', 'oops')
     await expect(parseMultipart(makeReq(form))).rejects.toBeInstanceOf(ValidationError)
   })
+
+  it('throws ValidationError when the form has no fields', async () => {
+    const form = new FormData()
+    await expect(parseMultipart(makeReq(form))).rejects.toBeInstanceOf(ValidationError)
+  })
+
+  it('throws ValidationError when `file` is repeated', async () => {
+    const form = new FormData()
+    form.append('file', new File([new Uint8Array([0])], 'a.png', { type: 'image/png' }))
+    form.append('file', new File([new Uint8Array([1])], 'b.png', { type: 'image/png' }))
+    await expect(parseMultipart(makeReq(form))).rejects.toBeInstanceOf(ValidationError)
+  })
 })
