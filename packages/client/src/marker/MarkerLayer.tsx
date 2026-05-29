@@ -6,7 +6,7 @@ import type { ApiClient } from '../api/client'
 import { ApiError } from '../api/errors'
 import { buildCaptureContext } from '../config'
 import type { Identity } from '../identity/storage'
-import { PinLayer, type Placement } from '../positioning/layer'
+import { PinLayer, type PlacedThread } from '../positioning/layer'
 import { observeReposition } from '../positioning/lifecycle'
 import { useToast } from '../ui/toast'
 
@@ -29,7 +29,7 @@ export function MarkerLayer({
   provenance,
   resolvePageKey,
 }: MarkerLayerProps) {
-  const [placements, setPlacements] = useState<Placement[]>([])
+  const [placements, setPlacements] = useState<PlacedThread[]>([])
   const [placing, setPlacing] = useState(false)
   const [activeKey, setActiveKey] = useState(pageKey)
   const toast = useToast()

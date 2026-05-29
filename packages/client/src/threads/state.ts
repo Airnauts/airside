@@ -120,7 +120,10 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
       }
     }
     case 'ADD_OPTIMISTIC_COMMENT':
-      return mapDetail(state, action.id, (t) => ({ ...t, comments: [...t.comments, action.comment] }))
+      return mapDetail(state, action.id, (t) => ({
+        ...t,
+        comments: [...t.comments, action.comment],
+      }))
     case 'REPLACE_OPTIMISTIC_COMMENT':
       return mapDetail(state, action.id, (t) => ({
         ...t,
@@ -134,7 +137,10 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
     case 'SET_STATUS': {
       const item = state.itemsById[action.id]
       const withItem = item
-        ? { ...state, itemsById: { ...state.itemsById, [action.id]: { ...item, status: action.status } } }
+        ? {
+            ...state,
+            itemsById: { ...state.itemsById, [action.id]: { ...item, status: action.status } },
+          }
         : state
       return mapDetail(withItem, action.id, (t) => ({ ...t, status: action.status }))
     }

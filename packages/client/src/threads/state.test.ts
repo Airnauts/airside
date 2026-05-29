@@ -1,8 +1,8 @@
 // packages/client/src/threads/state.test.ts
 import type { Comment, Thread, ThreadListItem } from '@comments/core'
 import { describe, expect, it } from 'vitest'
-import { initialState, reducer, visiblePlacements } from './state'
 import type { PlacedThread } from './state'
+import { initialState, reducer, visiblePlacements } from './state'
 
 const item = (id: string, status: 'open' | 'resolved' = 'open'): ThreadListItem =>
   ({
@@ -21,15 +21,23 @@ const placed = (id: string, status: 'open' | 'resolved' = 'open'): PlacedThread 
   highlight: [],
 })
 
-const thread = (id: string): Thread =>
-  ({ id, status: 'open', comments: [] }) as unknown as Thread
+const thread = (id: string): Thread => ({ id, status: 'open', comments: [] }) as unknown as Thread
 
 const comment = (id: string): Comment =>
-  ({ id, author: { email: 'a@b.c' }, text: 'hi', attachments: [], createdAt: 'x' }) as unknown as Comment
+  ({
+    id,
+    author: { email: 'a@b.c' },
+    text: 'hi',
+    attachments: [],
+    createdAt: 'x',
+  }) as unknown as Comment
 
 describe('threads reducer', () => {
   it('INGEST_PLACEMENTS populates items/placements/order', () => {
-    const s = reducer(initialState, { type: 'INGEST_PLACEMENTS', placements: [placed('a'), placed('b')] })
+    const s = reducer(initialState, {
+      type: 'INGEST_PLACEMENTS',
+      placements: [placed('a'), placed('b')],
+    })
     expect(s.order).toEqual(['a', 'b'])
     expect(s.itemsById.a.id).toBe('a')
     expect(s.placementsById.b.pin).toEqual({ x: 10, y: 20 })
@@ -73,10 +81,13 @@ describe('threads reducer', () => {
   })
 
   it('SET_DRAFT closes any open thread; CLEAR_DRAFT removes it', () => {
-    let s = reducer({ ...initialState, openId: 'a' }, {
-      type: 'SET_DRAFT',
-      draft: { anchor: {} as never, point: { x: 0, y: 0 }, pin: { x: 0, y: 0 } },
-    })
+    let s = reducer(
+      { ...initialState, openId: 'a' },
+      {
+        type: 'SET_DRAFT',
+        draft: { anchor: {} as never, point: { x: 0, y: 0 }, pin: { x: 0, y: 0 } },
+      },
+    )
     expect(s.openId).toBeNull()
     s = reducer(s, { type: 'CLEAR_DRAFT' })
     expect(s.draft).toBeNull()
@@ -94,7 +105,12 @@ describe('threads reducer', () => {
     let s = reducer(initialState, { type: 'DETAIL_LOADED', id: 'a', thread: thread('a') })
     s = reducer(s, { type: 'ADD_OPTIMISTIC_COMMENT', id: 'a', comment: comment('temp-1') })
     expect(s.detailById.a.comments.map((c) => c.id)).toEqual(['temp-1'])
-    s = reducer(s, { type: 'REPLACE_OPTIMISTIC_COMMENT', id: 'a', tempId: 'temp-1', comment: comment('real-1') })
+    s = reducer(s, {
+      type: 'REPLACE_OPTIMISTIC_COMMENT',
+      id: 'a',
+      tempId: 'temp-1',
+      comment: comment('real-1'),
+    })
     expect(s.detailById.a.comments.map((c) => c.id)).toEqual(['real-1'])
     s = reducer(s, { type: 'ADD_OPTIMISTIC_COMMENT', id: 'a', comment: comment('temp-2') })
     s = reducer(s, { type: 'REMOVE_OPTIMISTIC_COMMENT', id: 'a', tempId: 'temp-2' })
@@ -122,6 +138,9 @@ describe('visiblePlacements selector', () => {
       placements: [placed('a', 'open'), placed('b', 'resolved')],
     })
     expect(visiblePlacements(base).map((p) => p.item.id)).toEqual(['a'])
-    expect(visiblePlacements({ ...base, showResolved: true }).map((p) => p.item.id)).toEqual(['a', 'b'])
+    expect(visiblePlacements({ ...base, showResolved: true }).map((p) => p.item.id)).toEqual([
+      'a',
+      'b',
+    ])
   })
 })
