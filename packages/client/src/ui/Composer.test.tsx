@@ -97,4 +97,43 @@ describe('Composer', () => {
       }),
     )
   })
+
+  it('keeps Send disabled when the attachment upload errored', async () => {
+    const upload = vi.fn().mockRejectedValue(new Error('nope'))
+    render(
+      <Composer
+        mode="reply"
+        identity={identity}
+        onNeedIdentity={(r) => r(identity)}
+        onSubmit={vi.fn()}
+        upload={upload as never}
+      />,
+    )
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'see shot' } })
+    const file = new File(['x'], 'shot.png', { type: 'image/png' })
+    fireEvent.change(screen.getByTestId('composer-file'), { target: { files: [file] } })
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /retry upload/i })).toBeInTheDocument(),
+    )
+    expect(screen.getByRole('button', { name: /send/i })).toBeDisabled()
+  })
+
+  it('removing a pending attachment re-enables Send (text present)', async () => {
+    const upload = vi.fn().mockResolvedValue({ id: 'at1' })
+    render(
+      <Composer
+        mode="reply"
+        identity={identity}
+        onNeedIdentity={(r) => r(identity)}
+        onSubmit={vi.fn().mockResolvedValue(undefined)}
+        upload={upload as never}
+      />,
+    )
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'hi' } })
+    const file = new File(['x'], 'shot.png', { type: 'image/png' })
+    fireEvent.change(screen.getByTestId('composer-file'), { target: { files: [file] } })
+    await waitFor(() => expect(screen.getByRole('button', { name: /send/i })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: /remove attachment/i }))
+    expect(screen.getByRole('button', { name: /send/i })).toBeEnabled()
+  })
 })

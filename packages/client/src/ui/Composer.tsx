@@ -23,8 +23,8 @@ export function Composer({ mode, identity, onNeedIdentity, onSubmit, upload }: C
   const [sending, setSending] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const uploadInFlight = pending?.status === 'uploading'
-  const canSend = text.trim().length > 0 && !uploadInFlight && !sending
+  const attachmentReady = !pending || pending.status === 'ready'
+  const canSend = text.trim().length > 0 && attachmentReady && !sending
 
   function startUpload(file: File) {
     setPending({ name: file.name, status: 'uploading', file })
@@ -48,6 +48,9 @@ export function Composer({ mode, identity, onNeedIdentity, onSubmit, upload }: C
       .then(() => {
         setText('')
         setPending(null)
+      })
+      .catch(() => {
+        /* caller surfaces the error (toast); keep the draft so the user can retry */
       })
       .finally(() => setSending(false))
   }
