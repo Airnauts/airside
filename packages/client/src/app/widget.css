@@ -1,0 +1,12 @@
+/* Tailwind v4 entry for the widget.
+   - Preflight (base reset) is intentionally NOT imported: we live in the host's
+     light DOM and must not reset host elements.
+   - prefix(cmnt) namespaces every utility (cmnt:flex) and variable (--cmnt-*) so
+     our injected stylesheet cannot style the host page. */
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme) prefix(cmnt);
+@import "tailwindcss/utilities.css" layer(utilities) prefix(cmnt);
+
+/* Scan widget source (relative to this file = src/app) for prefixed classes. */
+@source "../**/*.{ts,tsx}";
