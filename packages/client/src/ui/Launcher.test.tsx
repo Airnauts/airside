@@ -15,6 +15,7 @@ describe('Launcher', () => {
         openCount={2}
       />,
     )
+    expect(screen.getByTestId('comments-place')).toHaveTextContent(/\+ Comment \(2\)/i)
     fireEvent.click(screen.getByTestId('comments-place'))
     expect(onTogglePlace).toHaveBeenCalled()
     rerender(
@@ -27,6 +28,7 @@ describe('Launcher', () => {
       />,
     )
     expect(screen.getByTestId('comments-place')).toHaveTextContent(/click/i)
+    expect(screen.getByTestId('comments-place')).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('toggles show-resolved via a labelled switch', () => {

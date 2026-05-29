@@ -27,7 +27,7 @@ export function Launcher({
         className="cmnt:inline-flex cmnt:items-center cmnt:gap-1.5 cmnt:bg-transparent cmnt:border-none cmnt:cursor-pointer cmnt:text-xs cmnt:text-gray-500"
       >
         <span
-          aria-hidden
+          aria-hidden={true}
           className={cn(
             'cmnt:w-7 cmnt:h-4 cmnt:rounded-full cmnt:relative cmnt:transition-colors',
             showResolved ? 'cmnt:bg-blue-600' : 'cmnt:bg-gray-300',
@@ -46,6 +46,7 @@ export function Launcher({
         type="button"
         data-comments-place
         data-testid="comments-place"
+        aria-pressed={placing}
         onClick={onTogglePlace}
         className={cn(
           'cmnt:rounded-full cmnt:px-3.5 cmnt:py-2 cmnt:text-white cmnt:border-none cmnt:cursor-pointer cmnt:text-[13px] cmnt:font-semibold',
