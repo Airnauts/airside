@@ -63,6 +63,26 @@ function client(over: Record<string, unknown> = {}) {
   } as never
 }
 
+function clientResolved(over: Record<string, unknown> = {}) {
+  return client({
+    getThread: vi.fn().mockResolvedValue({
+      id: 'a',
+      status: 'resolved',
+      comments: [
+        {
+          id: 'c1',
+          author: { email: 'a@b.c', name: 'Ann' },
+          text: 'first',
+          attachments: [],
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    }),
+    setThreadStatus: vi.fn().mockResolvedValue({ id: 'a', status: 'open' }),
+    ...over,
+  })
+}
+
 describe('ThreadPopover', () => {
   it('opens on controller.openThread, loads detail, and shows comments', async () => {
     const c = client()
@@ -108,5 +128,68 @@ describe('ThreadPopover', () => {
         (c as never as { setThreadStatus: ReturnType<typeof vi.fn> }).setThreadStatus,
       ).toHaveBeenCalledWith('a', { status: 'resolved' }),
     )
+  })
+
+  it('shows the reply after posting', async () => {
+    const c = client()
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'looks good' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(screen.getByText('looks good')).toBeInTheDocument())
+  })
+
+  it('removes the optimistic reply when addComment fails', async () => {
+    const addComment = vi.fn().mockRejectedValue(new Error('nope'))
+    const c = client({ addComment })
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'oops' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(addComment).toHaveBeenCalled())
+    await waitFor(() => expect(screen.queryByText('oops')).not.toBeInTheDocument())
+  })
+
+  it('replying to a resolved thread reopens it', async () => {
+    const c = clientResolved()
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'reopen please' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() =>
+      expect(
+        (c as never as { setThreadStatus: ReturnType<typeof vi.fn> }).setThreadStatus,
+      ).toHaveBeenCalledWith('a', { status: 'open' }),
+    )
+  })
+
+  it('rolls back status when resolve fails', async () => {
+    const setThreadStatus = vi.fn().mockRejectedValue(new Error('nope'))
+    const c = client({ setThreadStatus })
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
+    await waitFor(() => expect(setThreadStatus).toHaveBeenCalled())
+    await waitFor(() => expect(screen.getByText(/Open ·/)).toBeInTheDocument())
   })
 })

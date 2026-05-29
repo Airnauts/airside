@@ -46,19 +46,27 @@ export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: T
     } as unknown as Comment
     dispatch({ type: 'ADD_OPTIMISTIC_COMMENT', id, comment: optimistic })
     const wasResolved = resolved
-    if (wasResolved) dispatch({ type: 'SET_STATUS', id, status: 'open' }) // reply reopens
+    if (wasResolved) dispatch({ type: 'SET_STATUS', id, status: 'open' }) // reply reopens (optimistic)
+    let saved: Comment
     try {
-      const saved = await client.addComment(id, {
+      saved = await client.addComment(id, {
         text,
         attachmentIds: attachmentIds as AttachmentId[],
         author: { email: who.email, name: who.name },
       })
-      dispatch({ type: 'REPLACE_OPTIMISTIC_COMMENT', id, tempId, comment: saved })
-      if (wasResolved) await client.setThreadStatus(id, { status: 'open' })
     } catch {
       dispatch({ type: 'REMOVE_OPTIMISTIC_COMMENT', id, tempId })
       if (wasResolved) dispatch({ type: 'SET_STATUS', id, status: 'resolved' })
       toast('Failed to post reply')
+      return
+    }
+    dispatch({ type: 'REPLACE_OPTIMISTIC_COMMENT', id, tempId, comment: saved })
+    if (wasResolved) {
+      try {
+        await client.setThreadStatus(id, { status: 'open' })
+      } catch {
+        toast('Reply posted, but reopening the thread failed')
+      }
     }
   }
 
@@ -79,7 +87,7 @@ export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: T
       onOpenChange={(o) => (o ? controller.openThread(id) : controller.close())}
     >
       <Popover.Trigger asChild>
-        <Pin ref={pinRef} item={item} pin={pin} onOpen={() => controller.openThread(id)} />
+        <Pin ref={pinRef} item={item} pin={pin} onOpen={() => {}} />
       </Popover.Trigger>
       <Popover.Portal container={container ?? undefined}>
         <Popover.Content
@@ -127,13 +135,15 @@ export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: T
             error={error}
             onRetry={() => controller.openThread(id)}
           />
-          <Composer
-            mode="reply"
-            identity={identity}
-            onNeedIdentity={onNeedIdentity}
-            onSubmit={submitReply}
-            upload={client.upload}
-          />
+          {!loading && (
+            <Composer
+              mode="reply"
+              identity={identity}
+              onNeedIdentity={onNeedIdentity}
+              onSubmit={submitReply}
+              upload={client.upload}
+            />
+          )}
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
