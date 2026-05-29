@@ -68,4 +68,13 @@ describe('WidgetApp', () => {
     expect(screen.queryByLabelText('Email')).not.toBeInTheDocument()
     target.remove()
   })
+
+  it('re-lists threads when the SPA route changes the pageKey', async () => {
+    const client = mockClient()
+    render(<WidgetApp options={{ key: 'k', endpoint: 'https://api.test' }} client={client} />)
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalledTimes(1))
+    history.pushState({}, '', '/another-path')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await waitFor(() => expect(client.listThreads.mock.calls.length).toBeGreaterThanOrEqual(2))
+  })
 })

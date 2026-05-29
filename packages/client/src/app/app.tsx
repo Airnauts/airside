@@ -47,6 +47,7 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
             client={client}
             pageKey={pageKey}
             pageUrl={pageUrl}
+            resolvePageKey={(url) => resolvePageKey(options, url)}
             identity={identity}
             onNeedIdentity={onNeedIdentity}
             provenance={options.provenance}
