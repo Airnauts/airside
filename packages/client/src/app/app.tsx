@@ -49,7 +49,14 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
             onNeedIdentity={onNeedIdentity}
             provenance={options.provenance}
           />
-          <IdentityModal open={modalOpen} onOpenChange={setModalOpen} onSubmit={onSubmitIdentity} />
+          <IdentityModal
+            open={modalOpen}
+            onOpenChange={(open) => {
+              if (!open) resumeRef.current = null
+              setModalOpen(open)
+            }}
+            onSubmit={onSubmitIdentity}
+          />
         </ToastProvider>
       </WidgetProvider>
     </WidgetErrorBoundary>

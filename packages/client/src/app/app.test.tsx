@@ -29,6 +29,9 @@ describe('WidgetApp', () => {
 
     expect(await screen.findByTitle('real-1')).toBeInTheDocument()
     expect(client.createThread).toHaveBeenCalledOnce()
+    expect(client.createThread).toHaveBeenCalledWith(
+      expect.objectContaining({ author: expect.objectContaining({ email: 'rev@example.com' }) }),
+    )
     // Identity persisted for next time.
     expect(localStorage.getItem('comments:identity')).toContain('rev@example.com')
   })
@@ -40,6 +43,9 @@ describe('WidgetApp', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /comment/i }))
     expect(await screen.findByTitle('real-1')).toBeInTheDocument()
+    expect(client.createThread).toHaveBeenCalledWith(
+      expect.objectContaining({ author: expect.objectContaining({ email: 'known@example.com' }) }),
+    )
     expect(screen.queryByLabelText('Email')).not.toBeInTheDocument()
   })
 })
