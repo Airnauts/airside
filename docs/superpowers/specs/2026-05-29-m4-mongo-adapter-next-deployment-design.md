@@ -23,7 +23,7 @@ frozen HTTP contract (M2a) or the server core (M3).
   build so CI produces `core/dist/openapi.json`.
 - **Deploy recipe** — a `docs/` recipe for **Vercel + MongoDB Atlas + Vercel
   Blob**, including the one-line mount and the serverless connection-reuse note.
-- **ADR-0014** recording the two architecturally-significant boundary decisions
+- **ADR-0015** recording the two architecturally-significant boundary decisions
   (§9).
 
 **Out of scope — descoped this milestone (see §3).** Runtime serving of
@@ -64,7 +64,7 @@ Three forks were resolved during the brainstorm:
 
 Descoping the live `/openapi.json` + `/docs` is a deliberate narrowing of the M4
 exit criteria in `docs/milestones.md`; updating that line is a deliverable (§10).
-It is recorded in **ADR-0014** (§9), not a silent change.
+It is recorded in **ADR-0015** (§9), not a silent change.
 
 ## 4. `@comments/adapter-mongo`
 
@@ -220,7 +220,7 @@ implement until green.
 - **Artifact check.** A lightweight assertion (or CI step) that the build
   produces `core/dist/openapi.json`.
 
-## 9. ADR-0014 (added this milestone)
+## 9. ADR-0015 (added this milestone)
 
 **Title:** M4 deployment glue — Next.js path mapping & v1 OpenAPI delivery.
 **Status:** accepted.
@@ -245,7 +245,7 @@ The MongoDB document model needs no new ADR — ADR-0008 already decided it.
   `scripts/check-exports.mjs` updated.
 - Build wiring so CI emits `core/dist/openapi.json`.
 - `docs/` deploy recipe (Vercel + Atlas + Blob) + the one-line mount.
-- **ADR-0014** appended to `docs/adr.md`.
+- **ADR-0015** appended to `docs/adr.md`.
 - `docs/milestones.md` M4 exit criteria updated to reflect the static-only
   OpenAPI decision.
 

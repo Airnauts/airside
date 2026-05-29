@@ -4,7 +4,7 @@
 
 **Goal:** Put the M3 server core on the v1 target stack — a MongoDB `Repository`, a one-line Next.js App Router mount, and a static OpenAPI artifact + deploy recipe — without changing the frozen HTTP contract or the server core.
 
-**Architecture:** `@comments/adapter-mongo` implements the `Repository` interface (from `@comments/server`) against MongoDB, mirroring `InMemoryRepository`'s semantics exactly and gated by the shared `repositoryContract` suite on `mongodb-memory-server`. `@comments/server/next` adds `createNextHandler`, which reconstructs the operation-relative path from Next's `[...path]` catch-all and forwards a Web `Request` to `server.handle` (no `basePath`, no `next` dependency). The existing `emit:openapi` script is wired into the build so CI publishes `core/dist/openapi.json`; runtime serving + Scalar stay deferred (ADR-0014).
+**Architecture:** `@comments/adapter-mongo` implements the `Repository` interface (from `@comments/server`) against MongoDB, mirroring `InMemoryRepository`'s semantics exactly and gated by the shared `repositoryContract` suite on `mongodb-memory-server`. `@comments/server/next` adds `createNextHandler`, which reconstructs the operation-relative path from Next's `[...path]` catch-all and forwards a Web `Request` to `server.handle` (no `basePath`, no `next` dependency). The existing `emit:openapi` script is wired into the build so CI publishes `core/dist/openapi.json`; runtime serving + Scalar stay deferred (ADR-0015).
 
 **Tech Stack:** TypeScript (ESM), pnpm workspaces + Turborepo, tsup + `tsc --build`, Vitest, Zod 4, MongoDB Node driver v6, `mongodb-memory-server`, Biome.
 
@@ -33,7 +33,7 @@
 - Modify `scripts/check-exports.mjs` — change the adapter-mongo symbol; add `@comments/server/next`.
 - Modify `packages/core/package.json` — wire `emit:openapi` into `build`.
 - Create `docs/deploy-vercel-atlas-blob.md` — the deploy recipe.
-- Modify `docs/adr.md` — append ADR-0014.
+- Modify `docs/adr.md` — append ADR-0015.
 - Modify `docs/milestones.md` — narrow the M4 exit criteria (static-only OpenAPI).
 
 ---
@@ -870,13 +870,13 @@ git commit -m "M4: deploy recipe — Vercel + MongoDB Atlas + Vercel Blob"
 
 ---
 
-## Task 6: ADR-0014 + milestone exit-criteria update
+## Task 6: ADR-0015 + milestone exit-criteria update
 
 **Files:**
 - Modify: `docs/adr.md` (append, newest-last)
 - Modify: `docs/milestones.md` (M4 exit criteria)
 
-- [ ] **Step 1: Append ADR-0014**
+- [ ] **Step 1: Append ADR-0015**
 
 Add to the end of `docs/adr.md`:
 
@@ -884,7 +884,7 @@ Add to the end of `docs/adr.md`:
 
 ---
 
-## ADR-0014 — M4 deployment glue: Next.js path mapping & v1 OpenAPI delivery
+## ADR-0015 — M4 deployment glue: Next.js path mapping & v1 OpenAPI delivery
 
 - **Date:** 2026-05-29
 - **Status:** accepted
@@ -937,7 +937,7 @@ In `docs/milestones.md`, in the **M4** section, update the OpenAPI items to refl
 Change the **In scope** clause `**OpenAPI generation + Scalar docs** + static artifact` to:
 
 ```
-**static OpenAPI artifact** (runtime `/openapi.json` + Scalar `/docs` deferred — ADR-0014)
+**static OpenAPI artifact** (runtime `/openapi.json` + Scalar `/docs` deferred — ADR-0015)
 ```
 
 Change the **Exit criteria** clause `` `/openapi.json` + `/docs` serve; `` to:
@@ -950,7 +950,7 @@ the build emits the static `core/dist/openapi.json`;
 
 ```bash
 git add docs/adr.md docs/milestones.md
-git commit -m "M4: ADR-0014 (Next path mapping + static-only OpenAPI); narrow M4 exit criteria"
+git commit -m "M4: ADR-0015 (Next path mapping + static-only OpenAPI); narrow M4 exit criteria"
 ```
 
 ---
@@ -983,6 +983,6 @@ git commit -m "M4: lint/format pass"
 
 ## Self-review (completed)
 
-- **Spec coverage:** §4 adapter-mongo → Task 1; §5 Next glue → Task 2; §6 static artifact → Task 4; §7 deploy recipe → Task 5; §8 testing (contract + glue unit + integration) → Tasks 1–3; §9 ADR-0014 → Task 6; §10 milestone update → Task 6. All spec sections map to a task.
+- **Spec coverage:** §4 adapter-mongo → Task 1; §5 Next glue → Task 2; §6 static artifact → Task 4; §7 deploy recipe → Task 5; §8 testing (contract + glue unit + integration) → Tasks 1–3; §9 ADR-0015 → Task 6; §10 milestone update → Task 6. All spec sections map to a task.
 - **Placeholder scan:** no TBD/TODO; every code step shows complete code; every command shows expected output.
 - **Type consistency:** `createMongoRepository({ db })`, `ensureIndexes(db)`, and `createNextHandler(server)` are named identically across the repository, tests, integration test, recipe, and check-exports. The `Repository` method signatures match `@comments/server`'s interface (`Scope`/`ThreadId`/`ThreadStatus`/`AnchorPatch`/`NewThread`/`NewComment`/`ListQuery`/`ListResult`). Cursor helpers reuse the server's `encodeCursor`/`decodeCursor` (`{ updatedAt, id }`).
