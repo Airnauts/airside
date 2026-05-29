@@ -186,7 +186,8 @@ dev server.
 out; email captured + remembered; a hard-coded marker can create + read a thread
 against the live API.
 
-**Refs.** Spec §3, §8; ADR-0002, ADR-0005, ADR-0006.
+**Refs.** Design [`specs/2026-05-29-m5-widget-shell-design.md`](../superpowers/specs/2026-05-29-m5-widget-shell-design.md);
+Spec §3, §8; ADR-0002, ADR-0005, ADR-0006, ADR-0014.
 
 ---
 
