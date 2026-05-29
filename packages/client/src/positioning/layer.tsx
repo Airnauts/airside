@@ -6,9 +6,9 @@ export function PinLayer({ placements }: { placements: Placement[] }) {
   return (
     <div data-comments-overlay style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
       {placements.flatMap((p) =>
-        p.highlight.map((h, i) => (
+        p.highlight.map((h) => (
           <div
-            key={`${p.id}-hl-${i}`}
+            key={`${p.id}-hl-${h.x}-${h.y}-${h.width}-${h.height}`}
             data-testid="comments-highlight"
             data-comments-highlight
             style={{

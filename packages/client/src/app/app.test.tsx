@@ -23,7 +23,17 @@ function clickTarget() {
   target.id = 'place-target'
   document.body.appendChild(target)
   target.getBoundingClientRect = () =>
-    ({ left: 0, top: 0, width: 100, height: 20, x: 0, y: 0, right: 100, bottom: 20, toJSON: () => ({}) }) as DOMRect
+    ({
+      left: 0,
+      top: 0,
+      width: 100,
+      height: 20,
+      x: 0,
+      y: 0,
+      right: 100,
+      bottom: 20,
+      toJSON: () => ({}),
+    }) as DOMRect
   return target
 }
 
@@ -39,7 +49,9 @@ describe('WidgetApp', () => {
     // Now in place mode — click the target element to trigger onNeedIdentity.
     fireEvent.click(target, { clientX: 50, clientY: 10 })
     // Identity modal appears (no identity yet).
-    fireEvent.change(await screen.findByLabelText('Email'), { target: { value: 'rev@example.com' } })
+    fireEvent.change(await screen.findByLabelText('Email'), {
+      target: { value: 'rev@example.com' },
+    })
     fireEvent.click(screen.getByRole('button', { name: /start commenting/i }))
 
     await waitFor(() => expect(client.createThread).toHaveBeenCalledOnce())

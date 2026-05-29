@@ -35,6 +35,7 @@ export function MarkerLayer({
   const toast = useToast()
   const runtime = useRef<ReturnType<typeof createRuntime> | null>(null)
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: pageKey/resolvePageKey are read only inside onRouteChange which re-keys via functional setState; resolvePageKey is a fresh arrow per parent render, so listing it would re-list on every parent re-render — the runtime is keyed on the resolved activeKey instead.
   useEffect(() => {
     const rt = createRuntime({ client, pageKey: activeKey, onPlacements: setPlacements })
     runtime.current = rt
@@ -42,7 +43,6 @@ export function MarkerLayer({
     const stop = observeReposition({
       targets: [],
       onReposition: () => rt.reposition(),
-      // resolvePageKey and pageKey are stable props intentionally kept out of dep array
       onRouteChange: () => {
         const next = resolvePageKey ? resolvePageKey(window.location.href) : pageKey
         setActiveKey((prev) => (prev === next ? prev : next))
@@ -52,7 +52,6 @@ export function MarkerLayer({
       stop()
       runtime.current = null
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, activeKey])
 
   const createAt = useCallback(

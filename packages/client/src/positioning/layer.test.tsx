@@ -8,7 +8,12 @@ describe('PinLayer', () => {
       <PinLayer
         placements={[
           { id: 'a', pin: { x: 10, y: 20 }, highlight: [], pending: false },
-          { id: 'b', pin: { x: 30, y: 40 }, highlight: [{ x: 1, y: 2, width: 5, height: 6 }], pending: true },
+          {
+            id: 'b',
+            pin: { x: 30, y: 40 },
+            highlight: [{ x: 1, y: 2, width: 5, height: 6 }],
+            pending: true,
+          },
         ]}
       />,
     )
@@ -18,7 +23,18 @@ describe('PinLayer', () => {
   })
 
   it('renders highlight rects for selection anchors', () => {
-    render(<PinLayer placements={[{ id: 'a', pin: { x: 0, y: 0 }, highlight: [{ x: 1, y: 2, width: 5, height: 6 }], pending: false }]} />)
+    render(
+      <PinLayer
+        placements={[
+          {
+            id: 'a',
+            pin: { x: 0, y: 0 },
+            highlight: [{ x: 1, y: 2, width: 5, height: 6 }],
+            pending: false,
+          },
+        ]}
+      />,
+    )
     expect(screen.getAllByTestId('comments-highlight')).toHaveLength(1)
   })
 })

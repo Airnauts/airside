@@ -14,13 +14,17 @@ describe('installObserverSpies', () => {
     const spies = installObserverSpies()
     try {
       let resized = 0
-      const ro = new ResizeObserver(() => { resized++ })
+      const ro = new ResizeObserver(() => {
+        resized++
+      })
       ro.observe(document.body)
       spies.fireResize()
       expect(resized).toBe(1)
 
       let mutated = 0
-      const mo = new MutationObserver(() => { mutated++ })
+      const mo = new MutationObserver(() => {
+        mutated++
+      })
       mo.observe(document.body, { childList: true })
       spies.fireMutation()
       expect(mutated).toBe(1)

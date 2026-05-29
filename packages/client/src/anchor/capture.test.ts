@@ -4,7 +4,18 @@ import { captureElement, captureSelection, clamp01, offsetWithin } from './captu
 
 const withRect = (el: Element, r: Partial<DOMRect>): Element => {
   el.getBoundingClientRect = () =>
-    ({ x: 0, y: 0, top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, toJSON: () => ({}), ...r }) as DOMRect
+    ({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: 0,
+      height: 0,
+      toJSON: () => ({}),
+      ...r,
+    }) as DOMRect
   return el
 }
 
@@ -26,7 +37,12 @@ describe('clamp01 / offsetWithin', () => {
 describe('captureElement', () => {
   it('produces a schema-valid Anchor with dual selectors, signals, and offset', () => {
     document.body.innerHTML = '<main><p id="t" class="lead">hello world</p></main>'
-    const el = withRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    const el = withRect(document.querySelector('#t') as Element, {
+      left: 0,
+      top: 0,
+      width: 100,
+      height: 20,
+    })
     const anchor = captureElement(el, { x: 25, y: 10 })
     expect(() => Anchor.parse(anchor)).not.toThrow()
     expect(anchor.offset).toEqual({ fx: 0.25, fy: 0.5 })
@@ -45,7 +61,8 @@ describe('captureElement', () => {
 
 describe('captureSelection', () => {
   it('captures quote/prefix/suffix and a schema-valid anchor on the common-ancestor element', () => {
-    document.body.innerHTML = '<article id="a"><p>The quick brown fox jumps over the lazy dog.</p></article>'
+    document.body.innerHTML =
+      '<article id="a"><p>The quick brown fox jumps over the lazy dog.</p></article>'
     const textNode = document.querySelector('p')?.firstChild as Text
     const range = document.createRange()
     const full = textNode.textContent ?? ''

@@ -16,12 +16,14 @@ const props = (c: ReturnType<typeof client>) => ({
   pageKey: 'k',
   pageUrl: 'https://x.test/p',
   identity: { email: 'a@b.c', name: 'A' },
-  onNeedIdentity: (resume: (i: { email: string; name: string }) => void) => resume({ email: 'a@b.c', name: 'A' }),
+  onNeedIdentity: (resume: (i: { email: string; name: string }) => void) =>
+    resume({ email: 'a@b.c', name: 'A' }),
 })
 
 describe('MarkerLayer place mode', () => {
   it('enters place mode on + Comment, captures the clicked element, creates a thread', async () => {
-    document.body.innerHTML = '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
+    document.body.innerHTML =
+      '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
     mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 80, height: 16 })
     const c = client()
     render(<MarkerLayer {...props(c)} />)
@@ -49,11 +51,14 @@ describe('MarkerLayer place mode', () => {
     const tn = document.querySelector('#p')?.firstChild as Text
     const range = document.createRange()
     const s = (tn.textContent ?? '').indexOf('brown fox')
-    range.setStart(tn, s); range.setEnd(tn, s + 'brown fox'.length)
+    range.setStart(tn, s)
+    range.setEnd(tn, s + 'brown fox'.length)
     // jsdom's Selection is limited; if removeAllRanges/addRange don't reflect in getSelection(),
     // stub window.getSelection for this test to return a selection exposing this range.
     vi.spyOn(window, 'getSelection').mockReturnValue({
-      isCollapsed: false, rangeCount: 1, getRangeAt: () => range,
+      isCollapsed: false,
+      rangeCount: 1,
+      getRangeAt: () => range,
     } as unknown as Selection)
     const c = client()
     render(<MarkerLayer {...props(c)} />)

@@ -11,7 +11,11 @@ export function observeReposition(opts: ObserveOptions): () => void {
   const schedule = () => {
     if (pending) return
     pending = true
-    frame = requestAnimationFrame(() => { pending = false; frame = 0; opts.onReposition() })
+    frame = requestAnimationFrame(() => {
+      pending = false
+      frame = 0
+      opts.onReposition()
+    })
   }
 
   window.addEventListener('scroll', schedule, { passive: true, capture: true })
@@ -27,8 +31,14 @@ export function observeReposition(opts: ObserveOptions): () => void {
   window.addEventListener('popstate', route)
   const origPush = history.pushState.bind(history)
   const origReplace = history.replaceState.bind(history)
-  history.pushState = (...a: Parameters<History['pushState']>) => { origPush(...a); route() }
-  history.replaceState = (...a: Parameters<History['replaceState']>) => { origReplace(...a); route() }
+  history.pushState = (...a: Parameters<History['pushState']>) => {
+    origPush(...a)
+    route()
+  }
+  history.replaceState = (...a: Parameters<History['replaceState']>) => {
+    origReplace(...a)
+    route()
+  }
 
   return () => {
     if (frame) cancelAnimationFrame(frame)

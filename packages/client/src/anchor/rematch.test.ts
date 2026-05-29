@@ -1,8 +1,8 @@
 import { ANCHOR_SCHEMA_VERSION, type Anchor } from '@comments/core'
 import { describe, expect, it } from 'vitest'
 import { extractSignals } from './extract'
-import { buildSelectors } from './selectors'
 import { rematch } from './rematch'
+import { buildSelectors } from './selectors'
 
 const parse = (html: string): HTMLElement =>
   new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html').body
@@ -34,9 +34,13 @@ describe('rematch fast path', () => {
     // data-foo survives (a scored stableAttr worth +0.40) but is NOT used by the #id/[data-testid]
     // selector form; wrapper + class rename make BOTH fast-path selectors miss, so scoring must do
     // the work -> the match is "drifted" -> a healed payload is emitted. (Verified to score ~0.73.)
-    const before = parse('<section><p class="lead" data-foo="bar">unique alpha beta gamma delta</p></section>')
+    const before = parse(
+      '<section><p class="lead" data-foo="bar">unique alpha beta gamma delta</p></section>',
+    )
     const anchor = anchorFor(before, 'p')
-    const after = parse('<section><div class="wrap"><p class="renamed" data-foo="bar">unique alpha beta gamma delta</p></div></section>')
+    const after = parse(
+      '<section><div class="wrap"><p class="renamed" data-foo="bar">unique alpha beta gamma delta</p></div></section>',
+    )
     const res = rematch(anchor, after)
     expect(res.kind).toBe('anchored')
     if (res.kind === 'anchored') {
@@ -60,7 +64,13 @@ describe('rematch selection', () => {
   it('returns a range when the quote is found in the matched element', () => {
     const before = parse('<article id="a"><p>The quick brown fox jumps.</p></article>')
     const anchor = anchorFor(before, 'article')
-    anchor.selection = { start: ep, end: ep, quote: 'brown fox', prefix: 'quick ', suffix: ' jumps' }
+    anchor.selection = {
+      start: ep,
+      end: ep,
+      quote: 'brown fox',
+      prefix: 'quick ',
+      suffix: ' jumps',
+    }
     const after = parse('<article id="a"><p>The quick brown fox jumps.</p></article>')
     const res = rematch(anchor, after)
     expect(res.kind).toBe('anchored')
