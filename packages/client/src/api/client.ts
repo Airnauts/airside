@@ -53,7 +53,12 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     }
     const res = await doFetch(`${base}${path}`, { method, headers, body: payload })
     const text = await res.text()
-    const json: unknown = text ? JSON.parse(text) : undefined
+    let json: unknown
+    try {
+      json = text ? JSON.parse(text) : undefined
+    } catch {
+      /* non-JSON body (e.g. a proxy/gateway error page) */
+    }
     if (!res.ok) {
       const err = (json as { error?: { code?: string; message?: string; details?: unknown } } | undefined)?.error
       throw new ApiError(

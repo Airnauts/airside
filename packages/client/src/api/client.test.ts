@@ -42,7 +42,17 @@ describe('createApiClient', () => {
   it('maps a non-2xx response to ApiError', async () => {
     const fakeFetch: FetchLike = async () => jsonResponse({ error: { code: 'VALIDATION_FAILED', message: 'bad' } }, 400)
     const client = createApiClient({ endpoint: 'http://x', key: 'k', fetch: fakeFetch })
-    await expect(client.getThread('t1')).rejects.toBeInstanceOf(ApiError)
-    await expect(client.getThread('t1')).rejects.toMatchObject({ status: 400, code: 'VALIDATION_FAILED' })
+    const err = await client.getThread('t1').catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ApiError)
+    expect(err).toMatchObject({ status: 400, code: 'VALIDATION_FAILED' })
+  })
+
+  it('maps a non-JSON error body to ApiError(UNKNOWN) instead of throwing SyntaxError', async () => {
+    const fakeFetch: FetchLike = async () =>
+      new Response('<html>502 Bad Gateway</html>', { status: 502, statusText: 'Bad Gateway', headers: { 'content-type': 'text/html' } })
+    const client = createApiClient({ endpoint: 'http://x', key: 'k', fetch: fakeFetch })
+    const err = await client.getThread('t1').catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ApiError)
+    expect(err).toMatchObject({ status: 502, code: 'UNKNOWN' })
   })
 })
