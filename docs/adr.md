@@ -455,3 +455,49 @@ work depends on:
   concrete just installs `@comments/test-support` as a dev-dep and re-runs
   the suite — no duplication, no fragile cross-package test imports.
 - `@comments/core` remains DOM/Node-free and free of test-only types.
+
+---
+
+## ADR-0014 — Widget runtime delivery: bundled-React widget + peer-React wrapper, Tailwind precompiled to a string
+
+- **Date:** 2026-05-29
+- **Status:** accepted
+
+**Context.** M5 builds the widget runtime that realizes ADR-0002 (self-contained
+vanilla mount + own bundled React + thin React wrapper), ADR-0005 (shadcn/Radix),
+and ADR-0006 (light-DOM isolation). Three realization choices are hard to reverse
+and shape M6–M8: how React is bundled across the two entry points, how the
+widget's Tailwind CSS reaches the page, and the resulting dual-React boundary.
+
+**Decision.**
+- **Two tsup configs.** `@comments/client` (vanilla `comments.init()`) bundles its
+  **own React** and all UI deps into `dist/index.js` — host-agnostic.
+  `@comments/client/react` (`<CommentsLayer/>`) marks `react`/`react-dom`
+  **external** (the host's React) and references the sibling widget bundle at
+  runtime, so there is exactly one widget implementation. This is the **dual-React
+  boundary**: the wrapper's own hooks run on host React; the widget renders its own
+  React tree via a separate `createRoot`. They never share a tree, so two React
+  instances coexist safely. The wrapper's secret prop is `commentsKey` (React
+  reserves `key`).
+- **No code-splitting in M5.** `init()` keeps an **async signature** (so a future
+  lazy-download split can land without an API break), but the app + React are
+  statically bundled. The activation gate still makes the widget **inert** (never
+  mounts, renders, or fetches) when the URL key is absent. Splitting for download
+  savings is deferred to when bundle size is calibrated (M9).
+- **Tailwind v4 precompiled to a string.** A `build:css` step runs the Tailwind CLI
+  on a no-preflight, `cmnt`-prefixed entry and inlines the output into a generated
+  `.ts` module (`export const widgetCss`). `mount()` injects it into a `<style>` in
+  the light-DOM host root. A plain `.ts` string module resolves identically in the
+  tsup build and the jsdom tests — no esbuild/vitest CSS-loader config in two
+  places. The `cmnt:` prefix prevents our injected utilities (which live in the
+  host's light DOM) from styling host elements.
+
+**Consequences.**
+- Host-framework-agnostic vanilla widget and an ergonomic React wrapper, with no
+  "invalid hook call" risk from mixed React instances.
+- The generated CSS module is git-ignored and produced ahead of `tsup`/`tsc`/
+  `vitest`; running tests/builds requires the Tailwind dev dependency.
+- Bundle size is intentionally unoptimized in M5 (no split, widget carries React);
+  this is an accepted, documented deferral, not a regression.
+- Re-introducing a lazy-download split later is non-breaking because `init()` is
+  already async.
