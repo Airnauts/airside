@@ -1,10 +1,12 @@
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const SRC = 'src/app/widget.css'
-const OUT_TS = 'src/app/widget-css.generated.ts'
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..') // packages/client
+const SRC = resolve(ROOT, 'src/app/widget.css')
+const OUT_TS = resolve(ROOT, 'src/app/widget-css.generated.ts')
 
 const tmp = mkdtempSync(join(tmpdir(), 'cmnt-css-'))
 const outCss = join(tmp, 'widget.compiled.css')
@@ -12,6 +14,7 @@ const outCss = join(tmp, 'widget.compiled.css')
 try {
   // @tailwindcss/cli exposes the `tailwindcss` binary.
   execFileSync('pnpm', ['exec', 'tailwindcss', '-i', SRC, '-o', outCss, '--minify'], {
+    cwd: ROOT,
     stdio: 'inherit',
   })
   const css = readFileSync(outCss, 'utf8')
