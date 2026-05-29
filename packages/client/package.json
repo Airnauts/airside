@@ -32,6 +32,7 @@
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
+    "@comments/server": "workspace:*",
     "@size-limit/preset-small-lib": "^11.1.6",
     "@tailwindcss/cli": "^4.0.0",
     "@testing-library/jest-dom": "^6.6.3",
