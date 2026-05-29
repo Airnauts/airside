@@ -100,4 +100,11 @@ describe('WidgetApp', () => {
     window.dispatchEvent(new PopStateEvent('popstate'))
     await waitFor(() => expect(client.listThreads.mock.calls.length).toBeGreaterThanOrEqual(2))
   })
+
+  it('renders the launcher with accessible controls', async () => {
+    const client = mockClient()
+    render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
+    expect(await screen.findByTestId('comments-place')).toBeInTheDocument()
+    expect(screen.getByRole('switch', { name: /resolved/i })).toBeInTheDocument()
+  })
 })
