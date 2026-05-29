@@ -1,6 +1,6 @@
 import type { Anchor } from '@comments/core'
 import type { ApiClient } from '../api/client'
-import { type Box, mapRects, pinXY, type XY } from '../positioning/coords'
+import { type Box, mapRects, pinXY } from '../positioning/coords'
 import type { Placement } from '../positioning/layer'
 import { rematch } from './rematch'
 
@@ -11,11 +11,9 @@ export type RuntimeOptions = {
   root?: ParentNode
 }
 
-const scrollXY = (): XY => ({ x: window.scrollX, y: window.scrollY })
-
 function placementFor(id: string, el: Element, anchor: Anchor, highlight: Box[]): Placement {
   const rect = el.getBoundingClientRect()
-  return { id, pin: pinXY(rect, anchor.offset, scrollXY()), highlight, pending: false }
+  return { id, pin: pinXY(rect, anchor.offset), highlight, pending: false }
 }
 
 export function createRuntime(opts: RuntimeOptions) {
@@ -57,9 +55,7 @@ export function createRuntime(opts: RuntimeOptions) {
         .catch(() => {})
     }
     const highlight =
-      res.kind === 'anchored' && res.range
-        ? mapRects(Array.from(res.range.getClientRects()), { x: window.scrollX, y: window.scrollY })
-        : []
+      res.kind === 'anchored' && res.range ? mapRects(Array.from(res.range.getClientRects())) : []
     return { id, el: res.el, anchor: nextAnchor, highlight }
   }
 
