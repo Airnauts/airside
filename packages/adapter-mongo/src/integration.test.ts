@@ -1,7 +1,7 @@
 import { KEY_HEADER_NAME } from '@comments/core'
+import type { StorageAdapter } from '@comments/server'
 import { createCommentsServer } from '@comments/server'
 import { createNextHandler } from '@comments/server/next'
-import type { StorageAdapter } from '@comments/server'
 import { makeCreateThreadBody } from '@comments/test-support'
 import { type Db, MongoClient } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'

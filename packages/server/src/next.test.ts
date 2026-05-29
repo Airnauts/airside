@@ -46,10 +46,9 @@ describe('createNextHandler', () => {
     const { id } = await created.json()
     expect(typeof id).toBe('string')
 
-    const got = await GET(
-      new Request(`https://host/api/comments/threads/${id}`, { headers }),
-      { params: Promise.resolve({ path: ['threads', id] }) },
-    )
+    const got = await GET(new Request(`https://host/api/comments/threads/${id}`, { headers }), {
+      params: Promise.resolve({ path: ['threads', id] }),
+    })
     expect(got.status).toBe(200)
     expect((await got.json()).id).toBe(id)
   })
