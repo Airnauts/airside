@@ -17,6 +17,7 @@ export type MarkerLayerProps = {
   identity: Identity | null
   onNeedIdentity: (resume: (identity: Identity) => void) => void
   provenance?: Provenance
+  resolvePageKey?: (url: string) => string
 }
 
 export function MarkerLayer({
@@ -26,33 +27,40 @@ export function MarkerLayer({
   identity,
   onNeedIdentity,
   provenance,
+  resolvePageKey,
 }: MarkerLayerProps) {
   const [placements, setPlacements] = useState<Placement[]>([])
   const [placing, setPlacing] = useState(false)
+  const [activeKey, setActiveKey] = useState(pageKey)
   const toast = useToast()
   const runtime = useRef<ReturnType<typeof createRuntime> | null>(null)
 
   useEffect(() => {
-    const rt = createRuntime({ client, pageKey, onPlacements: setPlacements })
+    const rt = createRuntime({ client, pageKey: activeKey, onPlacements: setPlacements })
     runtime.current = rt
     void rt.refresh()
     const stop = observeReposition({
       targets: [],
       onReposition: () => rt.reposition(),
-      onRouteChange: () => {}, // pageKey re-key handled in a later task
+      // resolvePageKey and pageKey are stable props intentionally kept out of dep array
+      onRouteChange: () => {
+        const next = resolvePageKey ? resolvePageKey(window.location.href) : pageKey
+        setActiveKey((prev) => (prev === next ? prev : next))
+      },
     })
     return () => {
       stop()
       runtime.current = null
     }
-  }, [client, pageKey])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, activeKey])
 
   const createAt = useCallback(
     async (el: Element, point: { x: number; y: number }, who: Identity) => {
       try {
         await client.createThread({
           pageUrl,
-          pageKey,
+          pageKey: activeKey,
           anchor: captureElement(el, point),
           comment: { text: 'Placeholder comment' }, // composer is M7
           author: { email: who.email, name: who.name },
@@ -64,7 +72,7 @@ export function MarkerLayer({
         toast(err instanceof ApiError ? err.message : 'Failed to create comment')
       }
     },
-    [client, pageKey, pageUrl, provenance, toast],
+    [client, activeKey, pageUrl, provenance, toast],
   )
 
   const createSelectionThread = useCallback(
@@ -72,7 +80,7 @@ export function MarkerLayer({
       try {
         await client.createThread({
           pageUrl,
-          pageKey,
+          pageKey: activeKey,
           anchor: captureSelection(range),
           comment: { text: 'Placeholder comment' },
           author: { email: who.email, name: who.name },
@@ -84,7 +92,7 @@ export function MarkerLayer({
         toast(err instanceof ApiError ? err.message : 'Failed to create comment')
       }
     },
-    [client, pageKey, pageUrl, provenance, toast],
+    [client, activeKey, pageUrl, provenance, toast],
   )
 
   useEffect(() => {

@@ -64,3 +64,13 @@ describe('MarkerLayer place mode', () => {
     vi.restoreAllMocks()
   })
 })
+
+it('re-lists threads when the route changes to a new pageKey', async () => {
+  document.body.innerHTML = '<main><p id="t">x</p></main>'
+  const c = client()
+  render(<MarkerLayer {...props(c)} resolvePageKey={(url) => new URL(url).pathname} />)
+  await waitFor(() => expect(c.listThreads).toHaveBeenCalledTimes(1))
+  history.pushState({}, '', '/page-b')
+  window.dispatchEvent(new PopStateEvent('popstate'))
+  await waitFor(() => expect(c.listThreads.mock.calls.length).toBeGreaterThanOrEqual(2))
+})
