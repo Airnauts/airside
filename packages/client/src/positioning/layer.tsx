@@ -1,43 +1,30 @@
-import type { Box, XY } from './coords'
+// packages/client/src/positioning/layer.tsx
+import type { PlacedThread } from '../threads/state'
 
-export type Placement = { id: string; pin: XY; highlight: Box[]; pending: boolean }
+export type { PlacedThread } from '../threads/state'
 
-export function PinLayer({ placements }: { placements: Placement[] }) {
+export function PinLayer({ placements }: { placements: PlacedThread[] }) {
   return (
-    <div data-comments-overlay style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+    <div data-comments-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
       {placements.flatMap((p) =>
         p.highlight.map((h) => (
           <div
-            key={`${p.id}-hl-${h.x}-${h.y}-${h.width}-${h.height}`}
+            key={`${p.item.id}-hl-${h.x}-${h.y}-${h.width}-${h.height}`}
             data-testid="comments-highlight"
             data-comments-highlight
-            style={{
-              position: 'absolute',
-              transform: `translate(${h.x}px, ${h.y}px)`,
-              width: h.width,
-              height: h.height,
-              background: 'rgba(37,99,235,0.18)',
-              pointerEvents: 'none',
-            }}
+            className="cmnt:absolute cmnt:bg-blue-600/20 cmnt:pointer-events-none"
+            // transform + dims are computed → inline
+            style={{ transform: `translate(${h.x}px, ${h.y}px)`, width: h.width, height: h.height }}
           />
         )),
       )}
       {placements.map((p) => (
         <div
-          key={p.id}
+          key={p.item.id}
           data-testid="comments-pin"
           data-comments-pin
-          style={{
-            position: 'absolute',
-            transform: `translate(${p.pin.x}px, ${p.pin.y}px)`,
-            width: 20,
-            height: 20,
-            marginLeft: -10,
-            marginTop: -10,
-            borderRadius: '9999px',
-            background: p.pending ? '#9ca3af' : '#2563eb',
-            pointerEvents: 'auto',
-          }}
+          className="cmnt:absolute cmnt:w-5 cmnt:h-5 cmnt:-ml-2.5 cmnt:-mt-2.5 cmnt:rounded-full cmnt:bg-blue-600 cmnt:pointer-events-auto"
+          style={{ transform: `translate(${p.pin.x}px, ${p.pin.y}px)` }}
         />
       ))}
     </div>

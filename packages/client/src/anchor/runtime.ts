@@ -1,62 +1,60 @@
-import type { Anchor } from '@comments/core'
+// packages/client/src/anchor/runtime.ts
+import type { Anchor, ThreadListItem } from '@comments/core'
 import type { ApiClient } from '../api/client'
 import { type Box, mapRects, pinXY } from '../positioning/coords'
-import type { Placement } from '../positioning/layer'
+import type { PlacedThread } from '../threads/state'
 import { rematch } from './rematch'
 
 export type RuntimeOptions = {
   client: Pick<ApiClient, 'listThreads' | 'refreshAnchor'>
   pageKey: string
-  onPlacements: (placements: Placement[]) => void
+  onPlacements: (placements: PlacedThread[]) => void
   root?: ParentNode
 }
 
-function placementFor(id: string, el: Element, anchor: Anchor, highlight: Box[]): Placement {
-  const rect = el.getBoundingClientRect()
-  return { id, pin: pinXY(rect, anchor.offset), highlight, pending: false }
+type Placed = { item: ThreadListItem; el: Element; anchor: Anchor; highlight: Box[] }
+
+function placedToPlacement(p: Placed): PlacedThread {
+  const rect = p.el.getBoundingClientRect()
+  return { item: p.item, pin: pinXY(rect, p.anchor.offset), highlight: p.highlight }
 }
 
 export function createRuntime(opts: RuntimeOptions) {
   const root = opts.root ?? document
-  // Each placed thread keeps its winner element so we can reposition without re-matching.
-  let placed: Array<{ id: string; el: Element; anchor: Anchor; highlight: Box[] }> = []
+  let placed: Placed[] = []
 
   function emit() {
-    opts.onPlacements(placed.map((p) => placementFor(p.id, p.el, p.anchor, p.highlight)))
+    opts.onPlacements(placed.map(placedToPlacement))
   }
 
-  // returns the retained record for a matched thread, or null if orphaned (already reported + dropped)
-  function matchAndReport(
-    id: string,
-    anchor: Anchor,
-  ): { id: string; el: Element; anchor: Anchor; highlight: Box[] } | null {
+  // returns the retained record for a matched thread, or null if orphaned (already reported + dropped).
+  // `anchor` is the fingerprint to match against: the list item's anchor on the first pass,
+  // or the retained (possibly self-healed) anchor on a re-match pass.
+  function matchAndReport(item: ThreadListItem, anchor: Anchor): Placed | null {
     const res = rematch(anchor, root)
     if (res.kind === 'orphaned') {
-      void opts.client.refreshAnchor(id, { anchorState: 'orphaned' }).catch(() => {})
+      void opts.client.refreshAnchor(item.id, { anchorState: 'orphaned' }).catch(() => {})
       return null
     }
-    // Heal payload may accompany BOTH anchored and selectionLost (drifted element).
     let nextAnchor = anchor
     if (res.healed) {
       void opts.client
-        .refreshAnchor(id, {
+        .refreshAnchor(item.id, {
           anchorState: 'anchored',
           selectors: res.healed.selectors,
           signals: res.healed.signals,
           ...(res.kind === 'selectionLost' ? { selectionLost: true } : {}),
         })
         .catch(() => {})
-      // Update the retained anchor to the healed fingerprint so future re-matches fast-path
-      // instead of re-detecting drift and re-POSTing a heal on every mutation frame.
       nextAnchor = { ...anchor, selectors: res.healed.selectors, signals: res.healed.signals }
     } else if (res.kind === 'selectionLost') {
       void opts.client
-        .refreshAnchor(id, { anchorState: 'anchored', selectionLost: true })
+        .refreshAnchor(item.id, { anchorState: 'anchored', selectionLost: true })
         .catch(() => {})
     }
     const highlight =
       res.kind === 'anchored' && res.range ? mapRects(Array.from(res.range.getClientRects())) : []
-    return { id, el: res.el, anchor: nextAnchor, highlight }
+    return { item, el: res.el, anchor: nextAnchor, highlight }
   }
 
   const resizeObs = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => emit()) : null
@@ -68,17 +66,17 @@ export function createRuntime(opts: RuntimeOptions) {
 
   async function refresh() {
     const { threads } = await opts.client.listThreads({ pageKey: opts.pageKey })
-    placed = threads
-      .map((t) => matchAndReport(t.id, t.anchor))
-      .filter((p): p is NonNullable<typeof p> => p !== null)
+    placed = threads.map((t) => matchAndReport(t, t.anchor)).filter((p): p is Placed => p !== null)
     observeWinners()
     emit()
   }
 
   function rematchAll() {
+    // Re-match from the RETAINED anchor (p.anchor), which may already be self-healed —
+    // matching M6 semantics so drift isn't re-detected (and re-POSTed) every mutation frame.
     placed = placed
-      .map((p) => matchAndReport(p.id, p.anchor))
-      .filter((p): p is NonNullable<typeof p> => p !== null)
+      .map((p) => matchAndReport(p.item, p.anchor))
+      .filter((p): p is Placed => p !== null)
     observeWinners()
     emit()
   }

@@ -1,4 +1,4 @@
-import { ANCHOR_SCHEMA_VERSION, type Anchor } from '@comments/core'
+import { ANCHOR_SCHEMA_VERSION, type Anchor, type ThreadListItem } from '@comments/core'
 import { describe, expect, it, vi } from 'vitest'
 import { mockRect } from '../../test/test-helpers/dom'
 import { extractSignals } from './extract'
@@ -15,7 +15,18 @@ const anchorFor = (sel: string): Anchor => {
   }
 }
 
-function fakeClient(threads: Array<{ id: string; anchor: Anchor }>) {
+const li = (id: string, anchor: Anchor): ThreadListItem =>
+  ({
+    id,
+    status: 'open',
+    anchorState: 'anchored',
+    unresolvedCount: 1,
+    commentCount: 1,
+    createdBy: { email: 'a@b.c' },
+    anchor,
+  }) as unknown as ThreadListItem
+
+function fakeClient(threads: ThreadListItem[]) {
   return {
     listThreads: vi.fn().mockResolvedValue({ threads, nextCursor: null }),
     refreshAnchor: vi.fn().mockResolvedValue({}),
@@ -26,13 +37,13 @@ describe('createRuntime.refresh', () => {
   it('places anchored threads and emits placements', async () => {
     document.body.innerHTML = '<main><p id="t" class="lead">hello world</p></main>'
     mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 100, height: 20 })
-    const client = fakeClient([{ id: 'th1', anchor: anchorFor('#t') }])
+    const client = fakeClient([li('th1', anchorFor('#t'))])
     const onPlacements = vi.fn()
     const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
     await rt.refresh()
     const last = onPlacements.mock.calls.at(-1)?.[0]
     expect(last).toHaveLength(1)
-    expect(last[0].id).toBe('th1')
+    expect(last[0].item.id).toBe('th1')
   })
 
   it('reports orphans via refreshAnchor and drops them from placements', async () => {
@@ -49,7 +60,7 @@ describe('createRuntime.refresh', () => {
       },
       offset: { fx: 0.5, fy: 0.5 },
     }
-    const client = fakeClient([{ id: 'th2', anchor: orphanAnchor }])
+    const client = fakeClient([li('th2', orphanAnchor)])
     const onPlacements = vi.fn()
     const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
     await rt.refresh()
@@ -66,7 +77,7 @@ describe('createRuntime.refresh', () => {
     document.body.innerHTML =
       '<section><div class="wrap"><p class="renamed" data-foo="bar">unique alpha beta gamma delta</p></div></section>'
     mockRect(document.querySelector('p') as Element, { left: 0, top: 0, width: 50, height: 10 })
-    const client = fakeClient([{ id: 'th3', anchor: stored }])
+    const client = fakeClient([li('th3', stored)])
     const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements: vi.fn() })
     await rt.refresh()
     expect(client.refreshAnchor).toHaveBeenCalledWith(
@@ -86,7 +97,7 @@ describe('createRuntime.refresh', () => {
       prefix: '',
       suffix: '',
     }
-    const client = fakeClient([{ id: 'th4', anchor }])
+    const client = fakeClient([li('th4', anchor)])
     const onPlacements = vi.fn()
     const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
     await rt.refresh()
@@ -114,7 +125,7 @@ describe('createRuntime.refresh', () => {
     document.body.innerHTML =
       '<section><div class="wrap"><p class="renamed" data-foo="bar">unique alpha beta gamma delta</p></div></section>'
     mockRect(document.querySelector('p') as Element, { left: 0, top: 0, width: 50, height: 10 })
-    const client = fakeClient([{ id: 'th5', anchor: stored }])
+    const client = fakeClient([li('th5', stored)])
     const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements: vi.fn() })
     await rt.refresh()
     expect(client.refreshAnchor).toHaveBeenCalledWith(
@@ -134,7 +145,7 @@ describe('createRuntime.rematchAll', () => {
     document.body.innerHTML = '<main><p id="rm1" class="lead">rematch target text</p></main>'
     mockRect(document.querySelector('#rm1') as Element, { left: 0, top: 0, width: 100, height: 20 })
     const anchor = anchorFor('#rm1')
-    const client = fakeClient([{ id: 'thrm', anchor }])
+    const client = fakeClient([li('thrm', anchor)])
     const onPlacements = vi.fn()
     const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
     await rt.refresh()

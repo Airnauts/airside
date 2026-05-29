@@ -1,18 +1,29 @@
+import type { ThreadListItem } from '@comments/core'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { PinLayer } from './layer'
+
+const item = (id: string): ThreadListItem =>
+  ({
+    id,
+    status: 'open',
+    anchorState: 'anchored',
+    unresolvedCount: 0,
+    commentCount: 0,
+    createdBy: { email: 'a@b.c' },
+    anchor: { offset: { fx: 0.5, fy: 0.5 } },
+  }) as unknown as ThreadListItem
 
 describe('PinLayer', () => {
   it('renders a pin dot per placement at its document coords', () => {
     render(
       <PinLayer
         placements={[
-          { id: 'a', pin: { x: 10, y: 20 }, highlight: [], pending: false },
+          { item: item('a'), pin: { x: 10, y: 20 }, highlight: [] },
           {
-            id: 'b',
+            item: item('b'),
             pin: { x: 30, y: 40 },
             highlight: [{ x: 1, y: 2, width: 5, height: 6 }],
-            pending: true,
           },
         ]}
       />,
@@ -27,10 +38,9 @@ describe('PinLayer', () => {
       <PinLayer
         placements={[
           {
-            id: 'a',
+            item: item('a'),
             pin: { x: 0, y: 0 },
             highlight: [{ x: 1, y: 2, width: 5, height: 6 }],
-            pending: false,
           },
         ]}
       />,
