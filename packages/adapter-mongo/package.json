@@ -9,9 +9,7 @@
       "import": "./dist/index.js"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsup && tsc --build",
     "typecheck": "tsc --build",
@@ -19,6 +17,11 @@
   },
   "dependencies": {
     "@comments/core": "workspace:*",
-    "@comments/server": "workspace:*"
+    "@comments/server": "workspace:*",
+    "mongodb": "^6.12.0"
+  },
+  "devDependencies": {
+    "@comments/test-support": "workspace:*",
+    "mongodb-memory-server": "^10.1.2"
   }
 }

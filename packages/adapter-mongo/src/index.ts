@@ -1,1 +1,2 @@
-export const packageName = '@comments/adapter-mongo'
+export { ensureIndexes } from './indexes'
+export { createMongoRepository } from './repository'

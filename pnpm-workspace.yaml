@@ -3,3 +3,10 @@ packages:
   # examples/* holds dev-only demos. M5 adds a throwaway widget playground;
   # M9 replaces it with the real sample Next.js host app.
   - 'examples/*'
+
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - esbuild
+  - mongodb-memory-server
+
+onlyBuiltDependenciesFile: pnpm-approved-builds.json

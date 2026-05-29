@@ -13,7 +13,7 @@ const entries = [
   ['@comments/client/react', 'packageName'],
   ['@comments/server', 'VERSION'],
   ['@comments/server/dev', 'createDevServer'],
-  ['@comments/adapter-mongo', 'packageName'],
+  ['@comments/adapter-mongo', 'createMongoRepository'],
   ['@comments/storage-vercel-blob', 'packageName'],
   ['@comments/storage-fs', 'packageName'],
 ]
