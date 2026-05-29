@@ -1,0 +1,100 @@
+// packages/client/src/ui/Composer.test.tsx
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { Composer } from './Composer'
+
+const identity = { email: 'a@b.c', name: 'Ann' }
+
+describe('Composer', () => {
+  it('disables Send when empty and enables it with text', () => {
+    render(
+      <Composer
+        mode="reply"
+        identity={identity}
+        onNeedIdentity={(r) => r(identity)}
+        onSubmit={vi.fn()}
+        upload={vi.fn()}
+      />,
+    )
+    const send = screen.getByRole('button', { name: /send/i })
+    expect(send).toBeDisabled()
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'hi' } })
+    expect(send).toBeEnabled()
+  })
+
+  it('submits text + attachmentIds', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(
+      <Composer
+        mode="reply"
+        identity={identity}
+        onNeedIdentity={(r) => r(identity)}
+        onSubmit={onSubmit}
+        upload={vi.fn()}
+      />,
+    )
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'looks good' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({
+        text: 'looks good',
+        attachmentIds: [],
+        who: identity,
+      }),
+    )
+  })
+
+  it('prompts for identity when none is set, then resumes the send', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    const onNeedIdentity = vi.fn((resume: (i: typeof identity) => void) => resume(identity))
+    render(
+      <Composer
+        mode="newThread"
+        identity={null}
+        onNeedIdentity={onNeedIdentity}
+        onSubmit={onSubmit}
+        upload={vi.fn()}
+      />,
+    )
+    fireEvent.change(screen.getByPlaceholderText(/add a comment/i), { target: { value: 'first' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(onNeedIdentity).toHaveBeenCalled())
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({ text: 'first', attachmentIds: [], who: identity }),
+    )
+  })
+
+  it('uploads an attached file and gates Send until the upload resolves', async () => {
+    let resolveUpload: (a: { id: string }) => void = () => {}
+    const upload = vi.fn(
+      () =>
+        new Promise((res) => {
+          resolveUpload = res as never
+        }),
+    )
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(
+      <Composer
+        mode="reply"
+        identity={identity}
+        onNeedIdentity={(r) => r(identity)}
+        onSubmit={onSubmit}
+        upload={upload as never}
+      />,
+    )
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'see shot' } })
+    const file = new File(['x'], 'shot.png', { type: 'image/png' })
+    fireEvent.change(screen.getByTestId('composer-file'), { target: { files: [file] } })
+    expect(screen.getByRole('button', { name: /send/i })).toBeDisabled() // upload in flight
+    resolveUpload({ id: 'at1' })
+    await waitFor(() => expect(screen.getByRole('button', { name: /send/i })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({
+        text: 'see shot',
+        attachmentIds: ['at1'],
+        who: identity,
+      }),
+    )
+  })
+})
