@@ -1,0 +1,57 @@
+import { useRef, useState } from 'react'
+import { type ApiClient, createApiClient } from '../api/client'
+import { type InitOptions, resolvePageKey } from '../config'
+import { WidgetErrorBoundary } from '../error-boundary'
+import { IdentityModal } from '../identity/IdentityModal'
+import { type Identity, loadIdentity, saveIdentity } from '../identity/storage'
+import { MarkerLayer } from '../marker/MarkerLayer'
+import { ToastProvider } from '../ui/toast'
+import { WidgetProvider } from './providers'
+
+export type WidgetAppProps = {
+  options: InitOptions
+  /** Test seam: inject a client instead of constructing one from `options`. */
+  client?: ApiClient
+}
+
+export function WidgetApp({ options, client: injected }: WidgetAppProps) {
+  const [client] = useState<ApiClient>(() => injected ?? createApiClient({ endpoint: options.endpoint, key: options.key }))
+  const [identity, setIdentity] = useState<Identity | null>(() => loadIdentity())
+  const [modalOpen, setModalOpen] = useState(false)
+  const resumeRef = useRef<((identity: Identity) => void) | null>(null)
+
+  const pageUrl = window.location.href
+  const pageKey = resolvePageKey(options, pageUrl)
+
+  function onNeedIdentity(resume: (identity: Identity) => void) {
+    resumeRef.current = resume
+    setModalOpen(true)
+  }
+
+  function onSubmitIdentity(who: Identity) {
+    saveIdentity(who)
+    setIdentity(who)
+    setModalOpen(false)
+    const resume = resumeRef.current
+    resumeRef.current = null
+    resume?.(who)
+  }
+
+  return (
+    <WidgetErrorBoundary>
+      <WidgetProvider>
+        <ToastProvider>
+          <MarkerLayer
+            client={client}
+            pageKey={pageKey}
+            pageUrl={pageUrl}
+            identity={identity}
+            onNeedIdentity={onNeedIdentity}
+            provenance={options.provenance}
+          />
+          <IdentityModal open={modalOpen} onOpenChange={setModalOpen} onSubmit={onSubmitIdentity} />
+        </ToastProvider>
+      </WidgetProvider>
+    </WidgetErrorBoundary>
+  )
+}
