@@ -1,6 +1,6 @@
 // packages/client/src/ui/Pin.tsx
 import type { ThreadListItem } from '@comments/core'
-import { forwardRef } from 'react'
+import { type ComponentPropsWithoutRef, forwardRef } from 'react'
 import { cn } from '../lib/cn'
 import type { XY } from '../positioning/coords'
 import { initials } from './avatar'
@@ -8,12 +8,12 @@ import { initials } from './avatar'
 export type PinProps = {
   item: ThreadListItem
   pin: XY
-  onOpen: () => void
-}
+  onOpen?: () => void
+} & ComponentPropsWithoutRef<'button'>
 
 /** The teardrop pin: solid-blue avatar, white ring, dark count pill. Resolved → grey + check. */
 export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
-  { item, pin, onOpen },
+  { item, pin, onOpen, onClick, className, style, ...rest },
   ref,
 ) {
   const resolved = item.status === 'resolved'
@@ -22,16 +22,26 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
     : `Comment thread by ${item.createdBy.name ?? item.createdBy.email}, ${item.unresolvedCount} unresolved`
   return (
     <button
+      // Radix's <Popover.Trigger asChild> injects its own onClick/aria/data-state/ref here.
+      // Spread those first, then set our explicit attributes so they win.
+      {...rest}
       ref={ref}
       type="button"
       data-comments-pin
       data-comments-pin-id={item.id}
       data-testid="comments-pin"
       aria-label={label}
-      onClick={onOpen}
+      // compose: Radix's toggle (onClick) AND the optional onOpen both fire
+      onClick={(e) => {
+        onClick?.(e)
+        onOpen?.()
+      }}
       // tip of the teardrop points at the anchor (-mt-[42px]); transform is computed → inline
-      className="cmnt:absolute cmnt:w-[42px] cmnt:h-[42px] cmnt:-ml-[21px] cmnt:-mt-[42px] cmnt:p-0 cmnt:border-none cmnt:bg-transparent cmnt:cursor-pointer cmnt:pointer-events-auto"
-      style={{ transform: `translate(${pin.x}px, ${pin.y}px)` }}
+      className={cn(
+        'cmnt:absolute cmnt:w-[42px] cmnt:h-[42px] cmnt:-ml-[21px] cmnt:-mt-[42px] cmnt:p-0 cmnt:border-none cmnt:bg-transparent cmnt:cursor-pointer cmnt:pointer-events-auto',
+        className,
+      )}
+      style={{ transform: `translate(${pin.x}px, ${pin.y}px)`, ...style }}
     >
       <span
         aria-hidden={true}

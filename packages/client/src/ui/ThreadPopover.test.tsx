@@ -95,6 +95,20 @@ describe('ThreadPopover', () => {
     await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
   })
 
+  it('opens the popover when the pin itself is clicked', async () => {
+    const c = client()
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByTestId('comments-pin'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    expect((c as never as { getThread: ReturnType<typeof vi.fn> }).getThread).toHaveBeenCalledWith(
+      'a',
+    )
+  })
+
   it('posts a reply via addComment (optimistic)', async () => {
     const c = client()
     render(
