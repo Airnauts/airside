@@ -12,3 +12,6 @@ dist/
 .turbo/
 *.tsbuildinfo
 coverage/
+
+# M5 widget: precompiled Tailwind inlined as a TS string module
+packages/client/src/app/widget-css.generated.ts

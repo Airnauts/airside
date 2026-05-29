@@ -17,24 +17,37 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup && tsc --build",
+    "build:css": "node scripts/build-css.mjs",
+    "build": "pnpm build:css && rm -rf dist && tsup && tsc --build",
     "typecheck": "tsc --build",
-    "test": "vitest run",
+    "test": "pnpm build:css && vitest run",
     "size": "size-limit"
   },
   "dependencies": {
-    "@comments/core": "workspace:*"
+    "@comments/core": "workspace:*",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "clsx": "^2.1.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
     "@size-limit/preset-small-lib": "^11.1.6",
+    "@tailwindcss/cli": "^4.0.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "jsdom": "^26.0.0",
-    "size-limit": "^11.1.6"
+    "size-limit": "^11.1.6",
+    "tailwindcss": "^4.0.0"
   },
   "size-limit": [
     {
       "name": "@comments/client (esm, brotli)",
       "path": "dist/index.js",
-      "limit": "10 kB"
+      "limit": "300 kB"
     }
   ]
 }
