@@ -34,7 +34,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       style={{ transform: `translate(${pin.x}px, ${pin.y}px)` }}
     >
       <span
-        aria-hidden
+        aria-hidden={true}
         className={cn(
           'cmnt:absolute cmnt:inset-0 cmnt:border-2 cmnt:border-white cmnt:shadow-lg',
           resolved ? 'cmnt:bg-gray-400' : 'cmnt:bg-blue-600',
@@ -43,7 +43,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
         style={{ borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)' }}
       />
       <span
-        aria-hidden
+        aria-hidden={true}
         className={cn(
           'cmnt:absolute cmnt:top-1.5 cmnt:left-1.5 cmnt:w-[30px] cmnt:h-[30px] cmnt:rounded-full cmnt:border-2 cmnt:border-white cmnt:flex cmnt:items-center cmnt:justify-center cmnt:font-semibold',
           resolved
@@ -55,7 +55,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       </span>
       {!resolved && item.unresolvedCount > 0 && (
         <span
-          aria-hidden
+          aria-hidden={true}
           className="cmnt:absolute cmnt:-top-1.5 cmnt:-right-[7px] cmnt:min-w-[18px] cmnt:h-[18px] cmnt:rounded-[9px] cmnt:bg-gray-900 cmnt:text-white cmnt:text-[11px] cmnt:font-bold cmnt:flex cmnt:items-center cmnt:justify-center cmnt:px-[5px] cmnt:border-2 cmnt:border-white"
         >
           {item.unresolvedCount}

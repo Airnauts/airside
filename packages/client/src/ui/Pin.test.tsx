@@ -37,4 +37,10 @@ describe('Pin', () => {
     const btn = screen.getByRole('button', { name: /resolved/i })
     expect(btn).toHaveTextContent('✓')
   })
+
+  it('shows no count pill for an open thread with 0 unresolved', () => {
+    render(<Pin item={item({ unresolvedCount: 0 })} pin={{ x: 0, y: 0 }} onOpen={() => {}} />)
+    const btn = screen.getByRole('button', { name: /Ann Lee/i })
+    expect(btn).not.toHaveTextContent('0')
+  })
 })
