@@ -29,6 +29,7 @@ export function ThreadsProvider({
       createController(dispatch, {
         client,
         isCached: (id) => id in stateRef.current.detailById,
+        isLoading: (id) => Boolean(stateRef.current.loadingDetail[id]),
       }),
     [client],
   )

@@ -15,12 +15,16 @@ export type Controller = {
  */
 export function createController(
   dispatch: (a: Action) => void,
-  deps: { client: Pick<ApiClient, 'getThread'>; isCached: (id: string) => boolean },
+  deps: {
+    client: Pick<ApiClient, 'getThread'>
+    isCached: (id: string) => boolean
+    isLoading: (id: string) => boolean
+  },
 ): Controller {
   return {
     openThread(id) {
       dispatch({ type: 'OPEN', id })
-      if (deps.isCached(id)) return
+      if (deps.isCached(id) || deps.isLoading(id)) return
       dispatch({ type: 'DETAIL_LOADING', id })
       deps.client
         .getThread(id)

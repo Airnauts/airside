@@ -7,7 +7,7 @@ import { ThreadsContext } from './ThreadsProvider'
 
 function useCtx() {
   const ctx = useContext(ThreadsContext)
-  if (!ctx) throw new Error('useThreads* must be used within <ThreadsProvider>')
+  if (!ctx) throw new Error('useThreads hooks must be used within <ThreadsProvider>')
   return ctx
 }
 
@@ -19,6 +19,7 @@ export function useController() {
   return useCtx().controller
 }
 
+/** Low-level dispatch for components that apply optimistic updates (e.g. reply/resolve). Prefer the controller for open/close/showResolved. */
 export function useDispatch() {
   return useCtx().dispatch
 }
