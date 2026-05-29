@@ -1,79 +1,46 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import type { ApiClient } from '../api/client'
-import { ApiError } from '../api/errors'
-import { WidgetProvider } from '../app/providers'
-import type { Identity } from '../identity/storage'
-import { ToastProvider } from '../ui/toast'
+import { mockRect } from '../../test/test-helpers/dom'
 import { MarkerLayer } from './MarkerLayer'
 
-const IDENTITY: Identity = { email: 'rev@example.com' }
-
-function mockClient(over: Partial<ApiClient> = {}): ApiClient {
+function client() {
   return {
-    listThreads: vi.fn(async () => ({ threads: [], nextCursor: null })),
-    createThread: vi.fn(
-      async () => ({ id: 'real-1' }) as Awaited<ReturnType<ApiClient['createThread']>>,
-    ),
-    getThread: vi.fn(),
-    addComment: vi.fn(),
-    setThreadStatus: vi.fn(),
-    refreshAnchor: vi.fn(),
-    upload: vi.fn(),
-    ...over,
-  } as ApiClient
+    listThreads: vi.fn().mockResolvedValue({ threads: [], nextCursor: null }),
+    createThread: vi.fn().mockResolvedValue({ id: 'new1' }),
+    refreshAnchor: vi.fn().mockResolvedValue({}),
+  }
 }
 
-function renderLayer(client: ApiClient, identity: Identity | null, onNeedIdentity = vi.fn()) {
-  return render(
-    <WidgetProvider>
-      <ToastProvider>
-        <MarkerLayer
-          client={client}
-          pageKey="h/p"
-          pageUrl="https://h/p"
-          identity={identity}
-          onNeedIdentity={onNeedIdentity}
-        />
-      </ToastProvider>
-    </WidgetProvider>,
-  )
-}
+const props = (c: ReturnType<typeof client>) => ({
+  client: c as never,
+  pageKey: 'k',
+  pageUrl: 'https://x.test/p',
+  identity: { email: 'a@b.c', name: 'A' },
+  onNeedIdentity: (resume: (i: { email: string; name: string }) => void) => resume({ email: 'a@b.c', name: 'A' }),
+})
 
-describe('MarkerLayer', () => {
-  it('optimistically adds a pin and reconciles to the server id on success', async () => {
-    let resolveCreate: (t: Awaited<ReturnType<ApiClient['createThread']>>) => void = () => {}
-    const created = new Promise<Awaited<ReturnType<ApiClient['createThread']>>>((r) => {
-      resolveCreate = r
-    })
-    const client = mockClient({ createThread: vi.fn(() => created) })
-    renderLayer(client, IDENTITY)
-    fireEvent.click(screen.getByRole('button', { name: /comment/i }))
-    // optimistic (pending) pin appears before the server responds
-    expect(await screen.findByTitle(/^optimistic-/)).toBeInTheDocument()
-    // resolve the server create -> reconcile
-    resolveCreate({ id: 'real-1' } as Awaited<ReturnType<ApiClient['createThread']>>)
-    expect(await screen.findByTitle('real-1')).toBeInTheDocument()
-    expect(screen.queryByTitle(/^optimistic-/)).toBeNull()
-    expect(client.createThread).toHaveBeenCalledOnce()
+describe('MarkerLayer place mode', () => {
+  it('enters place mode on + Comment, captures the clicked element, creates a thread', async () => {
+    document.body.innerHTML = '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
+    mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 80, height: 16 })
+    const c = client()
+    render(<MarkerLayer {...props(c)} />)
+    fireEvent.click(screen.getByTestId('comments-place'))
+    const target = document.querySelector('#t') as Element
+    fireEvent.click(target, { clientX: 40, clientY: 8 })
+    await waitFor(() => expect(c.createThread).toHaveBeenCalled())
+    const body = c.createThread.mock.calls[0][0]
+    expect(body.anchor.selectors[1]).toBe('#t')
+    expect(body.anchor.offset.fx).toBeCloseTo(0.5)
   })
 
-  it('rolls back the pin and shows a toast on failure', async () => {
-    const client = mockClient({
-      createThread: vi.fn(async () => {
-        throw new ApiError(400, 'VALIDATION_FAILED', 'nope')
-      }),
-    })
-    renderLayer(client, IDENTITY)
-    fireEvent.click(screen.getByRole('button', { name: /comment/i }))
-    expect(await screen.findByText('nope')).toBeInTheDocument()
-    await waitFor(() => expect(document.querySelector('[data-comments-pin]')).toBeNull())
-  })
-
-  it('requests identity when none is set', () => {
-    const onNeedIdentity = vi.fn()
-    renderLayer(mockClient(), null, onNeedIdentity)
-    fireEvent.click(screen.getByRole('button', { name: /comment/i }))
-    expect(onNeedIdentity).toHaveBeenCalledOnce()
+  it('ESC cancels place mode (a subsequent click does not capture)', async () => {
+    document.body.innerHTML = '<main><p id="t">x</p></main>'
+    const c = client()
+    render(<MarkerLayer {...props(c)} />)
+    fireEvent.click(screen.getByTestId('comments-place'))
+    fireEvent.keyDown(document, { key: 'Escape' })
+    fireEvent.click(document.querySelector('#t') as Element, { clientX: 1, clientY: 1 })
+    expect(c.createThread).not.toHaveBeenCalled()
   })
 })

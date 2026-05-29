@@ -1,13 +1,14 @@
 import type { Provenance } from '@comments/core'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { captureElement } from '../anchor/capture'
+import { createRuntime } from '../anchor/runtime'
 import type { ApiClient } from '../api/client'
 import { ApiError } from '../api/errors'
 import { buildCaptureContext } from '../config'
 import type { Identity } from '../identity/storage'
+import { observeReposition } from '../positioning/lifecycle'
+import { PinLayer, type Placement } from '../positioning/layer'
 import { useToast } from '../ui/toast'
-import { makeStubAnchor } from './stub-anchor'
-
-type Pin = { id: string; pending: boolean }
 
 export type MarkerLayerProps = {
   client: ApiClient
@@ -18,105 +19,87 @@ export type MarkerLayerProps = {
   provenance?: Provenance
 }
 
-let nextTempId = 0
-
-export function MarkerLayer({
-  client,
-  pageKey,
-  pageUrl,
-  identity,
-  onNeedIdentity,
-  provenance,
-}: MarkerLayerProps) {
-  const [pins, setPins] = useState<Pin[]>([])
+export function MarkerLayer({ client, pageKey, pageUrl, identity, onNeedIdentity, provenance }: MarkerLayerProps) {
+  const [placements, setPlacements] = useState<Placement[]>([])
+  const [placing, setPlacing] = useState(false)
   const toast = useToast()
+  const runtime = useRef<ReturnType<typeof createRuntime> | null>(null)
 
   useEffect(() => {
-    let active = true
-    client
-      .listThreads({ pageKey })
-      .then((res) => {
-        if (!active) return
-        setPins((prev) => [
-          ...res.threads.map((t) => ({ id: t.id, pending: false })),
-          ...prev.filter((p) => p.pending),
-        ])
-      })
-      .catch(() => {
-        // Reads are non-fatal in M5; the panel/orphan UX is M6+.
-      })
+    const rt = createRuntime({ client, pageKey, onPlacements: setPlacements })
+    runtime.current = rt
+    void rt.refresh()
+    const stop = observeReposition({
+      targets: [],
+      onReposition: () => rt.reposition(),
+      onRouteChange: () => {}, // pageKey re-key handled in a later task
+    })
     return () => {
-      active = false
+      stop()
+      runtime.current = null
     }
   }, [client, pageKey])
 
-  async function place(who: Identity) {
-    const tempId = `optimistic-${nextTempId++}`
-    setPins((prev) => [...prev, { id: tempId, pending: true }])
-    try {
-      const thread = await client.createThread({
-        pageUrl,
-        pageKey,
-        anchor: makeStubAnchor(),
-        comment: { text: 'Placeholder comment' },
-        author: { email: who.email, name: who.name },
-        captureContext: buildCaptureContext(),
-        provenance,
-      })
-      setPins((prev) => prev.map((p) => (p.id === tempId ? { id: thread.id, pending: false } : p)))
-    } catch (err) {
-      setPins((prev) => prev.filter((p) => p.id !== tempId))
-      toast(err instanceof ApiError ? err.message : 'Failed to create comment')
-    }
-  }
+  const createAt = useCallback(
+    async (el: Element, point: { x: number; y: number }, who: Identity) => {
+      try {
+        await client.createThread({
+          pageUrl,
+          pageKey,
+          anchor: captureElement(el, point),
+          comment: { text: 'Placeholder comment' }, // composer is M7
+          author: { email: who.email, name: who.name },
+          captureContext: buildCaptureContext(),
+          provenance,
+        })
+        await runtime.current?.refresh()
+      } catch (err) {
+        toast(err instanceof ApiError ? err.message : 'Failed to create comment')
+      }
+    },
+    [client, pageKey, pageUrl, provenance, toast],
+  )
 
-  function onPlaceClick() {
-    if (identity) void place(identity)
-    else
-      onNeedIdentity((who) => {
-        void place(who)
-      })
-  }
+  useEffect(() => {
+    if (!placing) return
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as Element | null
+      if (!target || (target as HTMLElement).dataset?.commentsPlace !== undefined) return
+      e.preventDefault()
+      e.stopPropagation()
+      setPlacing(false)
+      const el = (document.elementFromPoint?.(e.clientX, e.clientY)) ?? target
+      const point = { x: e.clientX, y: e.clientY }
+      if (identity) void createAt(el, point, identity)
+      else onNeedIdentity((who) => void createAt(el, point, who))
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setPlacing(false)
+    }
+    document.addEventListener('click', onClick, true)
+    document.addEventListener('keydown', onKey, true)
+    return () => {
+      document.removeEventListener('click', onClick, true)
+      document.removeEventListener('keydown', onKey, true)
+    }
+  }, [placing, identity, createAt, onNeedIdentity])
 
   return (
     <>
-      <div data-comments-overlay style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        {pins.map((pin, i) => (
-          <div
-            key={pin.id}
-            data-comments-pin
-            title={pin.id}
-            style={{
-              position: 'absolute',
-              top: 16 + i * 28,
-              left: 16,
-              width: 20,
-              height: 20,
-              borderRadius: '9999px',
-              background: pin.pending ? '#9ca3af' : '#2563eb',
-              pointerEvents: 'auto',
-            }}
-          />
-        ))}
-      </div>
+      <PinLayer placements={placements} />
       <button
         type="button"
         data-comments-place
-        onClick={onPlaceClick}
+        data-testid="comments-place"
+        onClick={() => setPlacing((p) => !p)}
         className="cmnt:rounded-full cmnt:shadow-lg"
         style={{
-          position: 'absolute',
-          bottom: 16,
-          right: 16,
-          padding: '8px 14px',
-          background: '#2563eb',
-          color: '#fff',
-          border: 'none',
-          cursor: 'pointer',
-          pointerEvents: 'auto',
+          position: 'absolute', bottom: 16, right: 16, padding: '8px 14px',
+          background: placing ? '#1e40af' : '#2563eb', color: '#fff', border: 'none',
+          cursor: 'pointer', pointerEvents: 'auto',
         }}
       >
-        + Comment
+        {placing ? 'Click an element…' : '+ Comment'}
       </button>
     </>
   )

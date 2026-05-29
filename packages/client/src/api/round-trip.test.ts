@@ -1,8 +1,8 @@
+import { ANCHOR_SCHEMA_VERSION } from '@comments/core'
 import { createCommentsServer, InMemoryRepository, type StorageAdapter } from '@comments/server'
 import { createDevServer, type DevServerHandle } from '@comments/server/dev'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildCaptureContext } from '../config'
-import { makeStubAnchor } from '../marker/stub-anchor'
 import type { FetchLike } from './client'
 import { createApiClient } from './client'
 
@@ -52,7 +52,12 @@ describe('API client round-trip against the in-memory dev server', () => {
     const created = await client.createThread({
       pageUrl: 'https://example.com/page',
       pageKey: 'example.com/page',
-      anchor: makeStubAnchor(),
+      anchor: {
+        schemaVersion: ANCHOR_SCHEMA_VERSION,
+        selectors: ['body', 'body'],
+        signals: { tag: 'body', classes: [], siblingIndex: 0, ancestorTrail: [] },
+        offset: { fx: 0.5, fy: 0.5 },
+      },
       comment: { text: 'hello from M5' },
       author: { email: 'reviewer@example.com' },
       captureContext: buildCaptureContext({
