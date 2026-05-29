@@ -43,6 +43,7 @@ export function MarkerLayer({
     const stop = observeReposition({
       targets: [],
       onReposition: () => rt.reposition(),
+      onMutation: () => rt.rematchAll(),
       onRouteChange: () => {
         const next = resolvePageKey ? resolvePageKey(window.location.href) : pageKey
         setActiveKey((prev) => (prev === next ? prev : next))
@@ -50,6 +51,7 @@ export function MarkerLayer({
     })
     return () => {
       stop()
+      rt.dispose()
       runtime.current = null
     }
   }, [client, activeKey])

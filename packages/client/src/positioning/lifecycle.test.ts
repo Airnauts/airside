@@ -26,12 +26,19 @@ describe('observeReposition', () => {
     spies.restore()
   })
 
-  it('calls onReposition when the MutationObserver fires', () => {
+  it('calls onMutation when the MutationObserver fires', () => {
     const spies = installObserverSpies()
     const onReposition = vi.fn()
-    const stop = observeReposition({ targets: [], onReposition, onRouteChange: vi.fn() })
+    const onMutation = vi.fn()
+    const stop = observeReposition({
+      targets: [],
+      onReposition,
+      onMutation,
+      onRouteChange: vi.fn(),
+    })
     spies.fireMutation()
-    expect(onReposition).toHaveBeenCalled()
+    expect(onMutation).toHaveBeenCalled()
+    expect(onReposition).not.toHaveBeenCalled()
     stop()
     spies.restore()
   })

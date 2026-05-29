@@ -96,4 +96,57 @@ describe('createRuntime.refresh', () => {
     )
     expect(onPlacements.mock.calls.at(-1)?.[0]).toHaveLength(1)
   })
+
+  it('selectionLost WITH heal sends the healed fingerprint', async () => {
+    // Build the stored anchor from the BEFORE dom (same text as the heal test so scoring works).
+    // The wrapper+rename makes both fast-path selectors miss; data-foo survives so scoring re-finds it.
+    // The selection.quote is not present in the new text -> selectionLost + healed together.
+    document.body.innerHTML =
+      '<section><p class="lead" data-foo="bar">unique alpha beta gamma delta</p></section>'
+    const stored = anchorFor('p')
+    stored.selection = {
+      start: { selectors: ['p', 'p'], textNodeIndex: 0, offset: 0 },
+      end: { selectors: ['p', 'p'], textNodeIndex: 0, offset: 0 },
+      quote: 'phrase that does not appear anywhere',
+      prefix: '',
+      suffix: '',
+    }
+    document.body.innerHTML =
+      '<section><div class="wrap"><p class="renamed" data-foo="bar">unique alpha beta gamma delta</p></div></section>'
+    mockRect(document.querySelector('p') as Element, { left: 0, top: 0, width: 50, height: 10 })
+    const client = fakeClient([{ id: 'th5', anchor: stored }])
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements: vi.fn() })
+    await rt.refresh()
+    expect(client.refreshAnchor).toHaveBeenCalledWith(
+      'th5',
+      expect.objectContaining({
+        anchorState: 'anchored',
+        selectionLost: true,
+        selectors: expect.anything(),
+        signals: expect.anything(),
+      }),
+    )
+  })
+})
+
+describe('createRuntime.rematchAll', () => {
+  it('re-matches retained anchors and orphans dropped elements on DOM mutation', async () => {
+    document.body.innerHTML = '<main><p id="rm1" class="lead">rematch target text</p></main>'
+    mockRect(document.querySelector('#rm1') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    const anchor = anchorFor('#rm1')
+    const client = fakeClient([{ id: 'thrm', anchor }])
+    const onPlacements = vi.fn()
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
+    await rt.refresh()
+    // confirm it was placed
+    expect(rt.placed).toHaveLength(1)
+    // Mutate DOM: remove the element entirely so rematch will orphan it
+    document.body.innerHTML = '<main><span>something else</span></main>'
+    rt.rematchAll()
+    // Should report orphaned
+    expect(client.refreshAnchor).toHaveBeenCalledWith('thrm', { anchorState: 'orphaned' })
+    // placed should now be empty and onPlacements called with []
+    expect(rt.placed).toHaveLength(0)
+    expect(onPlacements.mock.calls.at(-1)?.[0]).toHaveLength(0)
+  })
 })

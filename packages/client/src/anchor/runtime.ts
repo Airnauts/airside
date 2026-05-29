@@ -27,43 +27,75 @@ export function createRuntime(opts: RuntimeOptions) {
     opts.onPlacements(placed.map((p) => placementFor(p.id, p.el, p.anchor, p.highlight)))
   }
 
-  async function refresh() {
-    const { threads } = await opts.client.listThreads({ pageKey: opts.pageKey })
-    const next: typeof placed = []
-    for (const t of threads) {
-      const res = rematch(t.anchor, root)
-      if (res.kind === 'orphaned') {
-        void opts.client.refreshAnchor(t.id, { anchorState: 'orphaned' }).catch(() => {})
-        continue
-      }
-      if (res.kind === 'selectionLost') {
-        void opts.client
-          .refreshAnchor(t.id, { anchorState: 'anchored', selectionLost: true })
-          .catch(() => {})
-        next.push({ id: t.id, el: res.el, anchor: t.anchor, highlight: [] })
-        continue
-      }
-      if (res.healed) {
-        void opts.client
-          .refreshAnchor(t.id, {
-            anchorState: 'anchored',
-            selectors: res.healed.selectors,
-            signals: res.healed.signals,
-          })
-          .catch(() => {})
-      }
-      const highlight = res.range
+  // returns the retained record for a matched thread, or null if orphaned (already reported + dropped)
+  function matchAndReport(
+    id: string,
+    anchor: Anchor,
+  ): { id: string; el: Element; anchor: Anchor; highlight: Box[] } | null {
+    const res = rematch(anchor, root)
+    if (res.kind === 'orphaned') {
+      void opts.client.refreshAnchor(id, { anchorState: 'orphaned' }).catch(() => {})
+      return null
+    }
+    // Heal payload may accompany BOTH anchored and selectionLost (drifted element).
+    let nextAnchor = anchor
+    if (res.healed) {
+      void opts.client
+        .refreshAnchor(id, {
+          anchorState: 'anchored',
+          selectors: res.healed.selectors,
+          signals: res.healed.signals,
+          ...(res.kind === 'selectionLost' ? { selectionLost: true } : {}),
+        })
+        .catch(() => {})
+      // Update the retained anchor to the healed fingerprint so future re-matches fast-path
+      // instead of re-detecting drift and re-POSTing a heal on every mutation frame.
+      nextAnchor = { ...anchor, selectors: res.healed.selectors, signals: res.healed.signals }
+    } else if (res.kind === 'selectionLost') {
+      void opts.client
+        .refreshAnchor(id, { anchorState: 'anchored', selectionLost: true })
+        .catch(() => {})
+    }
+    const highlight =
+      res.kind === 'anchored' && res.range
         ? mapRects(Array.from(res.range.getClientRects()), { x: window.scrollX, y: window.scrollY })
         : []
-      next.push({ id: t.id, el: res.el, anchor: t.anchor, highlight })
-    }
-    placed = next
+    return { id, el: res.el, anchor: nextAnchor, highlight }
+  }
+
+  const resizeObs = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => emit()) : null
+
+  function observeWinners() {
+    resizeObs?.disconnect()
+    for (const p of placed) resizeObs?.observe(p.el)
+  }
+
+  async function refresh() {
+    const { threads } = await opts.client.listThreads({ pageKey: opts.pageKey })
+    placed = threads
+      .map((t) => matchAndReport(t.id, t.anchor))
+      .filter((p): p is NonNullable<typeof p> => p !== null)
+    observeWinners()
     emit()
+  }
+
+  function rematchAll() {
+    placed = placed
+      .map((p) => matchAndReport(p.id, p.anchor))
+      .filter((p): p is NonNullable<typeof p> => p !== null)
+    observeWinners()
+    emit()
+  }
+
+  function dispose() {
+    resizeObs?.disconnect()
   }
 
   return {
     refresh,
     reposition: emit,
+    rematchAll,
+    dispose,
     get placed() {
       return placed
     },

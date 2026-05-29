@@ -2,6 +2,7 @@ export type ObserveOptions = {
   targets: Element[]
   onReposition: () => void
   onRouteChange: () => void
+  onMutation?: () => void
 }
 
 /** Wire all reposition + route signals; returns a stop() that detaches everything. */
@@ -18,13 +19,26 @@ export function observeReposition(opts: ObserveOptions): () => void {
     })
   }
 
+  let mutFrame = 0
+  let mutPending = false
+  const scheduleMutation = () => {
+    if (!opts.onMutation) return
+    if (mutPending) return
+    mutPending = true
+    mutFrame = requestAnimationFrame(() => {
+      mutPending = false
+      mutFrame = 0
+      opts.onMutation?.()
+    })
+  }
+
   window.addEventListener('scroll', schedule, { passive: true, capture: true })
   window.addEventListener('resize', schedule, { passive: true })
 
   const ro = new ResizeObserver(schedule)
   for (const t of opts.targets) ro.observe(t)
 
-  const mo = new MutationObserver(schedule)
+  const mo = new MutationObserver(scheduleMutation)
   mo.observe(document.body, { childList: true, subtree: true, attributes: true })
 
   const route = () => opts.onRouteChange()
@@ -42,6 +56,7 @@ export function observeReposition(opts: ObserveOptions): () => void {
 
   return () => {
     if (frame) cancelAnimationFrame(frame)
+    if (mutFrame) cancelAnimationFrame(mutFrame)
     window.removeEventListener('scroll', schedule, { capture: true } as EventListenerOptions)
     window.removeEventListener('resize', schedule)
     ro.disconnect()

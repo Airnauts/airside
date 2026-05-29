@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
-import { mockRect } from '../../test/test-helpers/dom'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import { installObserverSpies, mockRect } from '../../test/test-helpers/dom'
 import { MarkerLayer } from './MarkerLayer'
 
 function client() {
@@ -78,4 +78,32 @@ it('re-lists threads when the route changes to a new pageKey', async () => {
   history.pushState({}, '', '/page-b')
   window.dispatchEvent(new PopStateEvent('popstate'))
   await waitFor(() => expect(c.listThreads.mock.calls.length).toBeGreaterThanOrEqual(2))
+})
+
+describe('MarkerLayer mutation wiring', () => {
+  beforeAll(() => {
+    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+      cb(0)
+      return 1
+    })
+    vi.stubGlobal('cancelAnimationFrame', () => {})
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('DOM mutation triggers rematchAll (not a re-list) and emits without crashing', async () => {
+    document.body.innerHTML = '<main><p id="mut">mutation target</p></main>'
+    const spies = installObserverSpies()
+    const c = client()
+    render(<MarkerLayer {...props(c)} />)
+    // Wait for the initial refresh (listThreads) to settle
+    await waitFor(() => expect(c.listThreads).toHaveBeenCalledTimes(1))
+    const listCountBefore = c.listThreads.mock.calls.length
+    // Fire a DOM mutation — this should call rematchAll, NOT listThreads again
+    spies.fireMutation()
+    // listThreads count must not increase — rematchAll does NOT re-list
+    expect(c.listThreads.mock.calls.length).toBe(listCountBefore)
+    spies.restore()
+  })
 })
