@@ -12,25 +12,25 @@ export type RuntimeOptions = {
   root?: ParentNode
 }
 
-type Placed = { item: ThreadListItem; el: Element; anchor: Anchor; highlight: Box[] }
+type RetainedMatch = { item: ThreadListItem; el: Element; anchor: Anchor; highlight: Box[] }
 
-function placedToPlacement(p: Placed): PlacedThread {
+function toPlacedThread(p: RetainedMatch): PlacedThread {
   const rect = p.el.getBoundingClientRect()
   return { item: p.item, pin: pinXY(rect, p.anchor.offset), highlight: p.highlight }
 }
 
 export function createRuntime(opts: RuntimeOptions) {
   const root = opts.root ?? document
-  let placed: Placed[] = []
+  let placed: RetainedMatch[] = []
 
   function emit() {
-    opts.onPlacements(placed.map(placedToPlacement))
+    opts.onPlacements(placed.map(toPlacedThread))
   }
 
   // returns the retained record for a matched thread, or null if orphaned (already reported + dropped).
   // `anchor` is the fingerprint to match against: the list item's anchor on the first pass,
   // or the retained (possibly self-healed) anchor on a re-match pass.
-  function matchAndReport(item: ThreadListItem, anchor: Anchor): Placed | null {
+  function matchAndReport(item: ThreadListItem, anchor: Anchor): RetainedMatch | null {
     const res = rematch(anchor, root)
     if (res.kind === 'orphaned') {
       void opts.client.refreshAnchor(item.id, { anchorState: 'orphaned' }).catch(() => {})
@@ -66,7 +66,9 @@ export function createRuntime(opts: RuntimeOptions) {
 
   async function refresh() {
     const { threads } = await opts.client.listThreads({ pageKey: opts.pageKey })
-    placed = threads.map((t) => matchAndReport(t, t.anchor)).filter((p): p is Placed => p !== null)
+    placed = threads
+      .map((t) => matchAndReport(t, t.anchor))
+      .filter((p): p is RetainedMatch => p !== null)
     observeWinners()
     emit()
   }
@@ -76,7 +78,7 @@ export function createRuntime(opts: RuntimeOptions) {
     // matching M6 semantics so drift isn't re-detected (and re-POSTed) every mutation frame.
     placed = placed
       .map((p) => matchAndReport(p.item, p.anchor))
-      .filter((p): p is Placed => p !== null)
+      .filter((p): p is RetainedMatch => p !== null)
     observeWinners()
     emit()
   }

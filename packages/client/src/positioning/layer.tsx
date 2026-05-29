@@ -1,7 +1,7 @@
 // packages/client/src/positioning/layer.tsx
 import type { PlacedThread } from '../threads/state'
 
-export type { PlacedThread } from '../threads/state'
+export type { PlacedThread }
 
 export function PinLayer({ placements }: { placements: PlacedThread[] }) {
   return (
