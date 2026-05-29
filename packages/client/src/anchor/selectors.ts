@@ -6,9 +6,12 @@ function structuralSelector(el: Element): string {
   const body = el.ownerDocument?.body
   // Stop at <html> and <body> so the path stays short (no leading `body` segment).
   while (cursor && cursor !== root && cursor !== body && cursor.parentElement) {
-    const node = cursor
+    // Explicit annotation: `cursor` is reassigned below from a value derived from this copy,
+    // so without it TS infers a circular `any` (TS7022). `parent` reads from the narrowed
+    // `cursor.parentElement` (non-null by the loop condition) rather than the copy.
+    const node: Element = cursor
+    const parent: Element = cursor.parentElement
     const tag = node.tagName.toLowerCase()
-    const parent = node.parentElement
     const sameTag = Array.from(parent.children).filter((c) => c.tagName === node.tagName)
     const part = sameTag.length === 1 ? tag : `${tag}:nth-of-type(${sameTag.indexOf(node) + 1})`
     parts.unshift(part)
@@ -45,5 +48,6 @@ export function resolveUnique(selector: string, root: ParentNode): Element | nul
   } catch {
     return null // malformed selector (e.g. stale escaped value) → treat as miss
   }
-  return matches.length === 1 ? matches[0] : null
+  // matches.item(0) is Element | null (matches[0] would be Element | undefined under noUncheckedIndexedAccess).
+  return matches.length === 1 ? matches.item(0) : null
 }
