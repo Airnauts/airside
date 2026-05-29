@@ -40,15 +40,19 @@ function clickTarget() {
 describe('WidgetApp', () => {
   beforeEach(() => localStorage.clear())
 
-  it('prompts for identity on first placement, then creates after submit', async () => {
+  it('prompts for identity on send, then creates after submit', async () => {
     const client = mockClient()
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
     const target = clickTarget()
 
     fireEvent.click(screen.getByRole('button', { name: /comment/i }))
-    // Now in place mode — click the target element to trigger onNeedIdentity.
+    // Now in place mode — click the target element to open a draft popover.
     fireEvent.click(target, { clientX: 50, clientY: 10 })
-    // Identity modal appears (no identity yet).
+    fireEvent.change(await screen.findByPlaceholderText(/add a comment/i), {
+      target: { value: 'Needs work' },
+    })
+    // No identity yet — Send opens the identity modal.
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
     fireEvent.change(await screen.findByLabelText('Email'), {
       target: { value: 'rev@example.com' },
     })
@@ -56,7 +60,10 @@ describe('WidgetApp', () => {
 
     await waitFor(() => expect(client.createThread).toHaveBeenCalledOnce())
     expect(client.createThread).toHaveBeenCalledWith(
-      expect.objectContaining({ author: expect.objectContaining({ email: 'rev@example.com' }) }),
+      expect.objectContaining({
+        author: expect.objectContaining({ email: 'rev@example.com' }),
+        comment: expect.objectContaining({ text: 'Needs work' }),
+      }),
     )
     // Identity persisted for next time.
     expect(localStorage.getItem('comments:identity')).toContain('rev@example.com')
@@ -70,8 +77,12 @@ describe('WidgetApp', () => {
     const target = clickTarget()
 
     fireEvent.click(screen.getByRole('button', { name: /comment/i }))
-    // No identity modal — directly in place mode, click the target.
+    // No identity modal — click the target to open the draft, then type and send.
     fireEvent.click(target, { clientX: 50, clientY: 10 })
+    fireEvent.change(await screen.findByPlaceholderText(/add a comment/i), {
+      target: { value: 'Looks good' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
 
     await waitFor(() => expect(client.createThread).toHaveBeenCalledOnce())
     expect(client.createThread).toHaveBeenCalledWith(

@@ -5,6 +5,7 @@ import { WidgetErrorBoundary } from '../error-boundary'
 import { IdentityModal } from '../identity/IdentityModal'
 import { type Identity, loadIdentity, saveIdentity } from '../identity/storage'
 import { MarkerLayer } from '../marker/MarkerLayer'
+import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { ToastProvider } from '../ui/toast'
 import { WidgetProvider } from './providers'
 
@@ -43,23 +44,25 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
     <WidgetErrorBoundary>
       <WidgetProvider>
         <ToastProvider>
-          <MarkerLayer
-            client={client}
-            pageKey={pageKey}
-            pageUrl={pageUrl}
-            resolvePageKey={(url) => resolvePageKey(options, url)}
-            identity={identity}
-            onNeedIdentity={onNeedIdentity}
-            provenance={options.provenance}
-          />
-          <IdentityModal
-            open={modalOpen}
-            onOpenChange={(open) => {
-              if (!open) resumeRef.current = null
-              setModalOpen(open)
-            }}
-            onSubmit={onSubmitIdentity}
-          />
+          <ThreadsProvider client={client}>
+            <MarkerLayer
+              client={client}
+              pageKey={pageKey}
+              pageUrl={pageUrl}
+              resolvePageKey={(url) => resolvePageKey(options, url)}
+              identity={identity}
+              onNeedIdentity={onNeedIdentity}
+              provenance={options.provenance}
+            />
+            <IdentityModal
+              open={modalOpen}
+              onOpenChange={(open) => {
+                if (!open) resumeRef.current = null
+                setModalOpen(open)
+              }}
+              onSubmit={onSubmitIdentity}
+            />
+          </ThreadsProvider>
         </ToastProvider>
       </WidgetProvider>
     </WidgetErrorBoundary>

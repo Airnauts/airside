@@ -1,9 +1,19 @@
 // packages/client/src/positioning/layer.tsx
+import type { ApiClient } from '../api/client'
+import type { Identity } from '../identity/storage'
 import type { PlacedThread } from '../threads/state'
+import { ThreadPopover } from '../ui/ThreadPopover'
 
-export type { PlacedThread }
+export type { PlacedThread } from '../threads/state'
 
-export function PinLayer({ placements }: { placements: PlacedThread[] }) {
+export type PinLayerProps = {
+  placements: PlacedThread[]
+  client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
+  identity: Identity | null
+  onNeedIdentity: (resume: (who: Identity) => void) => void
+}
+
+export function PinLayer({ placements, client, identity, onNeedIdentity }: PinLayerProps) {
   return (
     <div data-comments-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
       {placements.flatMap((p) =>
@@ -19,12 +29,13 @@ export function PinLayer({ placements }: { placements: PlacedThread[] }) {
         )),
       )}
       {placements.map((p) => (
-        <div
+        <ThreadPopover
           key={p.item.id}
-          data-testid="comments-pin"
-          data-comments-pin
-          className="cmnt:absolute cmnt:w-5 cmnt:h-5 cmnt:-ml-2.5 cmnt:-mt-2.5 cmnt:rounded-full cmnt:bg-blue-600 cmnt:pointer-events-auto"
-          style={{ transform: `translate(${p.pin.x}px, ${p.pin.y}px)` }}
+          item={p.item}
+          pin={p.pin}
+          client={client}
+          identity={identity}
+          onNeedIdentity={onNeedIdentity}
         />
       ))}
     </div>
