@@ -61,6 +61,8 @@ describe('MarkerLayer place mode', () => {
     expect(body.comment.text).toBe('Looks off here')
     expect(body.anchor.selectors[1]).toBe('#t')
     expect(body.anchor.offset.fx).toBeCloseTo(0.5)
+    // A successful create must not fire the "anchor lost" orphan toast.
+    expect(screen.queryByText(/anchor was lost/i)).not.toBeInTheDocument()
   })
 
   it('ESC cancels place mode (a subsequent click does not open a draft)', async () => {

@@ -32,7 +32,8 @@ export type MarkerLayerProps = {
 export function MarkerLayer({
   client,
   pageKey,
-  pageUrl,
+  // pageUrl prop retained on MarkerLayerProps for the public API; createThread now
+  // reads window.location.href directly so the URL is live after an SPA route change.
   identity,
   onNeedIdentity,
   provenance,
@@ -88,7 +89,7 @@ export function MarkerLayer({
     ) => {
       try {
         const created = await client.createThread({
-          pageUrl,
+          pageUrl: window.location.href,
           pageKey: activeKey,
           anchor,
           comment: { text, attachmentIds: attachmentIds as AttachmentId[] },
@@ -97,13 +98,13 @@ export function MarkerLayer({
           provenance,
         })
         dispatch({ type: 'CLEAR_DRAFT' })
-        dispatch({ type: 'OPEN', id: created.id })
         await runtime.current?.refresh()
+        dispatch({ type: 'OPEN', id: created.id })
       } catch (err) {
         toast(err instanceof ApiError ? err.message : 'Failed to create comment')
       }
     },
-    [client, activeKey, pageUrl, provenance, toast, dispatch],
+    [client, activeKey, provenance, toast, dispatch],
   )
 
   // Place mode: next click/selection captures an anchor and opens a DRAFT popover.
@@ -111,7 +112,12 @@ export function MarkerLayer({
     if (!placing) return
     const onClick = (e: MouseEvent) => {
       const target = e.target as Element | null
-      if (!target || (target as HTMLElement).dataset?.commentsPlace !== undefined) return
+      if (
+        !target ||
+        (target as HTMLElement).dataset?.commentsPlace !== undefined ||
+        target.closest('[data-comments-overlay]')
+      )
+        return
       e.preventDefault()
       e.stopPropagation()
       setPlacing(false)
