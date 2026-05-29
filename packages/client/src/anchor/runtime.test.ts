@@ -58,4 +58,17 @@ describe('createRuntime.refresh', () => {
     await rt.refresh()
     expect(client.refreshAnchor).toHaveBeenCalledWith('th3', expect.objectContaining({ anchorState: 'anchored' }))
   })
+
+  it('reports selectionLost via refreshAnchor and keeps the element pin', async () => {
+    document.body.innerHTML = '<article id="a"><p>Entirely different content now.</p></article>'
+    mockRect(document.querySelector('#a') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    const anchor = anchorFor('#a')
+    anchor.selection = { start: { selectors: ['p', 'p'], textNodeIndex: 0, offset: 0 }, end: { selectors: ['p', 'p'], textNodeIndex: 0, offset: 0 }, quote: 'missing quote', prefix: '', suffix: '' }
+    const client = fakeClient([{ id: 'th4', anchor }])
+    const onPlacements = vi.fn()
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
+    await rt.refresh()
+    expect(client.refreshAnchor).toHaveBeenCalledWith('th4', expect.objectContaining({ anchorState: 'anchored', selectionLost: true }))
+    expect(onPlacements.mock.calls.at(-1)?.[0]).toHaveLength(1)
+  })
 })

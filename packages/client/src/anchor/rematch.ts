@@ -1,5 +1,5 @@
 import type { Anchor, Signals } from '@comments/core'
-import { decide, scoreCandidate } from '@comments/core'
+import { decide, locateQuote, scoreCandidate } from '@comments/core'
 import { extractSignals } from './extract'
 import { buildSelectors, resolveUnique } from './selectors'
 
@@ -65,19 +65,55 @@ function healedFrom(el: Element): Healed {
   return { selectors: buildSelectors(el), signals: extractSignals(el) }
 }
 
+function finishMatch(el: Element, anchor: Anchor, healed?: Healed): RematchResult {
+  if (!anchor.selection) return { kind: 'anchored', el, healed }
+  const offsets = locateQuote(el.textContent ?? '', anchor.selection)
+  if (!offsets) return { kind: 'selectionLost', el, healed }
+  const range = rangeForOffsets(el, offsets.start, offsets.end)
+  return range ? { kind: 'anchored', el, range, healed } : { kind: 'selectionLost', el, healed }
+}
+
+/** Map character offsets within el.textContent to a DOM Range across its text nodes. */
+function rangeForOffsets(el: Element, start: number, end: number): Range | null {
+  const doc = el.ownerDocument
+  if (!doc) return null
+  const walker = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+  const range = doc.createRange()
+  let pos = 0
+  let started = false
+  let node = walker.nextNode() as Text | null
+  while (node) {
+    const len = node.length
+    if (!started && pos + len >= start) {
+      range.setStart(node, start - pos)
+      started = true
+    }
+    if (started && pos + len >= end) {
+      range.setEnd(node, end - pos)
+      return range
+    }
+    pos += len
+    node = walker.nextNode() as Text | null
+  }
+  return started ? range : null
+}
+
 export function rematch(anchor: Anchor, root: ParentNode): RematchResult {
   // 1. Fast path: a unique selector hit whose signals agree -> anchored, no scoring, no heal.
   for (const selector of anchor.selectors) {
     const hit = resolveUnique(selector, root)
     if (hit && signalsAgree(anchor.signals, hit)) {
-      return { kind: 'anchored', el: hit }
+      return finishMatch(hit, anchor)
     }
   }
   // 2. Scored search scoped to the nearest surviving ancestor-landmark.
   const candidates = findCandidates(root, anchor.signals)
-  const scored = candidates.map((el) => ({ ref: el, score: scoreCandidate(anchor.signals, extractSignals(el)) }))
+  const scored = candidates.map((el) => ({
+    ref: el,
+    score: scoreCandidate(anchor.signals, extractSignals(el)),
+  }))
   const decision = decide(scored)
   if (decision.kind === 'orphaned') return { kind: 'orphaned', reason: decision.reason }
   // 3. Matched via scoring -> fingerprint drifted -> emit a heal payload.
-  return { kind: 'anchored', el: decision.winner, healed: healedFrom(decision.winner) }
+  return finishMatch(decision.winner, anchor, healedFrom(decision.winner))
 }

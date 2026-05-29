@@ -53,3 +53,26 @@ describe('rematch fast path', () => {
     expect(res.kind).toBe('orphaned')
   })
 })
+
+describe('rematch selection', () => {
+  const ep = { selectors: ['p', 'p'] as [string, string], textNodeIndex: 0, offset: 0 }
+
+  it('returns a range when the quote is found in the matched element', () => {
+    const before = parse('<article id="a"><p>The quick brown fox jumps.</p></article>')
+    const anchor = anchorFor(before, 'article')
+    anchor.selection = { start: ep, end: ep, quote: 'brown fox', prefix: 'quick ', suffix: ' jumps' }
+    const after = parse('<article id="a"><p>The quick brown fox jumps.</p></article>')
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('anchored')
+    if (res.kind === 'anchored') expect(res.range).toBeTruthy()
+  })
+
+  it('returns selectionLost when the element matches but the quote is gone', () => {
+    const before = parse('<article id="a"><p>The quick brown fox jumps.</p></article>')
+    const anchor = anchorFor(before, 'article')
+    anchor.selection = { start: ep, end: ep, quote: 'nonexistent phrase', prefix: '', suffix: '' }
+    const after = parse('<article id="a"><p>Entirely different content now.</p></article>')
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('selectionLost')
+  })
+})

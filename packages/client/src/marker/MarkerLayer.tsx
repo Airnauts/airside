@@ -1,13 +1,13 @@
 import type { Provenance } from '@comments/core'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { captureElement } from '../anchor/capture'
+import { captureElement, captureSelection } from '../anchor/capture'
 import { createRuntime } from '../anchor/runtime'
 import type { ApiClient } from '../api/client'
 import { ApiError } from '../api/errors'
 import { buildCaptureContext } from '../config'
 import type { Identity } from '../identity/storage'
-import { observeReposition } from '../positioning/lifecycle'
 import { PinLayer, type Placement } from '../positioning/layer'
+import { observeReposition } from '../positioning/lifecycle'
 import { useToast } from '../ui/toast'
 
 export type MarkerLayerProps = {
@@ -19,7 +19,14 @@ export type MarkerLayerProps = {
   provenance?: Provenance
 }
 
-export function MarkerLayer({ client, pageKey, pageUrl, identity, onNeedIdentity, provenance }: MarkerLayerProps) {
+export function MarkerLayer({
+  client,
+  pageKey,
+  pageUrl,
+  identity,
+  onNeedIdentity,
+  provenance,
+}: MarkerLayerProps) {
   const [placements, setPlacements] = useState<Placement[]>([])
   const [placing, setPlacing] = useState(false)
   const toast = useToast()
@@ -60,15 +67,45 @@ export function MarkerLayer({ client, pageKey, pageUrl, identity, onNeedIdentity
     [client, pageKey, pageUrl, provenance, toast],
   )
 
+  const createSelectionThread = useCallback(
+    async (range: Range, who: Identity) => {
+      try {
+        await client.createThread({
+          pageUrl,
+          pageKey,
+          anchor: captureSelection(range),
+          comment: { text: 'Placeholder comment' },
+          author: { email: who.email, name: who.name },
+          captureContext: buildCaptureContext(),
+          provenance,
+        })
+        await runtime.current?.refresh()
+      } catch (err) {
+        toast(err instanceof ApiError ? err.message : 'Failed to create comment')
+      }
+    },
+    [client, pageKey, pageUrl, provenance, toast],
+  )
+
   useEffect(() => {
     if (!placing) return
     const onClick = (e: MouseEvent) => {
       const target = e.target as Element | null
       if (!target || (target as HTMLElement).dataset?.commentsPlace !== undefined) return
+      const sel = window.getSelection()
+      if (sel && !sel.isCollapsed && sel.rangeCount > 0) {
+        e.preventDefault()
+        e.stopPropagation()
+        setPlacing(false)
+        const range = sel.getRangeAt(0)
+        if (identity) void createSelectionThread(range, identity)
+        else onNeedIdentity((who) => void createSelectionThread(range, who))
+        return
+      }
       e.preventDefault()
       e.stopPropagation()
       setPlacing(false)
-      const el = (document.elementFromPoint?.(e.clientX, e.clientY)) ?? target
+      const el = document.elementFromPoint?.(e.clientX, e.clientY) ?? target
       const point = { x: e.clientX, y: e.clientY }
       if (identity) void createAt(el, point, identity)
       else onNeedIdentity((who) => void createAt(el, point, who))
@@ -82,7 +119,7 @@ export function MarkerLayer({ client, pageKey, pageUrl, identity, onNeedIdentity
       document.removeEventListener('click', onClick, true)
       document.removeEventListener('keydown', onKey, true)
     }
-  }, [placing, identity, createAt, onNeedIdentity])
+  }, [placing, identity, createAt, createSelectionThread, onNeedIdentity])
 
   return (
     <>
@@ -94,9 +131,15 @@ export function MarkerLayer({ client, pageKey, pageUrl, identity, onNeedIdentity
         onClick={() => setPlacing((p) => !p)}
         className="cmnt:rounded-full cmnt:shadow-lg"
         style={{
-          position: 'absolute', bottom: 16, right: 16, padding: '8px 14px',
-          background: placing ? '#1e40af' : '#2563eb', color: '#fff', border: 'none',
-          cursor: 'pointer', pointerEvents: 'auto',
+          position: 'absolute',
+          bottom: 16,
+          right: 16,
+          padding: '8px 14px',
+          background: placing ? '#1e40af' : '#2563eb',
+          color: '#fff',
+          border: 'none',
+          cursor: 'pointer',
+          pointerEvents: 'auto',
         }}
       >
         {placing ? 'Click an element…' : '+ Comment'}

@@ -1,6 +1,6 @@
 import type { Anchor } from '@comments/core'
 import type { ApiClient } from '../api/client'
-import { type Box, pinXY, type XY } from '../positioning/coords'
+import { type Box, mapRects, pinXY, type XY } from '../positioning/coords'
 import type { Placement } from '../positioning/layer'
 import { rematch } from './rematch'
 
@@ -36,12 +36,26 @@ export function createRuntime(opts: RuntimeOptions) {
         void opts.client.refreshAnchor(t.id, { anchorState: 'orphaned' }).catch(() => {})
         continue
       }
+      if (res.kind === 'selectionLost') {
+        void opts.client
+          .refreshAnchor(t.id, { anchorState: 'anchored', selectionLost: true })
+          .catch(() => {})
+        next.push({ id: t.id, el: res.el, anchor: t.anchor, highlight: [] })
+        continue
+      }
       if (res.healed) {
         void opts.client
-          .refreshAnchor(t.id, { anchorState: 'anchored', selectors: res.healed.selectors, signals: res.healed.signals })
+          .refreshAnchor(t.id, {
+            anchorState: 'anchored',
+            selectors: res.healed.selectors,
+            signals: res.healed.signals,
+          })
           .catch(() => {})
       }
-      next.push({ id: t.id, el: res.el, anchor: t.anchor, highlight: [] })
+      const highlight = res.range
+        ? mapRects(Array.from(res.range.getClientRects()), { x: window.scrollX, y: window.scrollY })
+        : []
+      next.push({ id: t.id, el: res.el, anchor: t.anchor, highlight })
     }
     placed = next
     emit()
@@ -50,6 +64,8 @@ export function createRuntime(opts: RuntimeOptions) {
   return {
     refresh,
     reposition: emit,
-    get placed() { return placed },
+    get placed() {
+      return placed
+    },
   }
 }

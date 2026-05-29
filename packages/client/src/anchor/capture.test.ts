@@ -1,6 +1,6 @@
 import { Anchor } from '@comments/core'
 import { describe, expect, it } from 'vitest'
-import { captureElement, clamp01, offsetWithin } from './capture'
+import { captureElement, captureSelection, clamp01, offsetWithin } from './capture'
 
 const withRect = (el: Element, r: Partial<DOMRect>): Element => {
   el.getBoundingClientRect = () =>
@@ -40,5 +40,22 @@ describe('captureElement', () => {
     const anchor = captureElement(el, { x: 0, y: 0 })
     expect(() => Anchor.parse(anchor)).not.toThrow()
     expect(anchor.offset).toEqual({ fx: 0.5, fy: 0.5 })
+  })
+})
+
+describe('captureSelection', () => {
+  it('captures quote/prefix/suffix and a schema-valid anchor on the common-ancestor element', () => {
+    document.body.innerHTML = '<article id="a"><p>The quick brown fox jumps over the lazy dog.</p></article>'
+    const textNode = document.querySelector('p')?.firstChild as Text
+    const range = document.createRange()
+    const full = textNode.textContent ?? ''
+    const start = full.indexOf('brown fox')
+    range.setStart(textNode, start)
+    range.setEnd(textNode, start + 'brown fox'.length)
+    const anchor = captureSelection(range)
+    expect(anchor.selection?.quote).toBe('brown fox')
+    expect(anchor.selection?.prefix.endsWith('quick ')).toBe(true)
+    expect(anchor.selection?.suffix.startsWith(' jumps')).toBe(true)
+    expect(() => Anchor.parse(anchor)).not.toThrow()
   })
 })

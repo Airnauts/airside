@@ -43,4 +43,24 @@ describe('MarkerLayer place mode', () => {
     fireEvent.click(document.querySelector('#t') as Element, { clientX: 1, clientY: 1 })
     expect(c.createThread).not.toHaveBeenCalled()
   })
+
+  it('captures a text selection when one is active in place mode', async () => {
+    document.body.innerHTML = '<main><p id="p">The quick brown fox jumps.</p></main>'
+    const tn = document.querySelector('#p')?.firstChild as Text
+    const range = document.createRange()
+    const s = (tn.textContent ?? '').indexOf('brown fox')
+    range.setStart(tn, s); range.setEnd(tn, s + 'brown fox'.length)
+    // jsdom's Selection is limited; if removeAllRanges/addRange don't reflect in getSelection(),
+    // stub window.getSelection for this test to return a selection exposing this range.
+    vi.spyOn(window, 'getSelection').mockReturnValue({
+      isCollapsed: false, rangeCount: 1, getRangeAt: () => range,
+    } as unknown as Selection)
+    const c = client()
+    render(<MarkerLayer {...props(c)} />)
+    fireEvent.click(screen.getByTestId('comments-place'))
+    fireEvent.click(document.querySelector('#p') as Element, { clientX: 5, clientY: 5 })
+    await waitFor(() => expect(c.createThread).toHaveBeenCalled())
+    expect(c.createThread.mock.calls[0][0].anchor.selection.quote).toBe('brown fox')
+    vi.restoreAllMocks()
+  })
 })
