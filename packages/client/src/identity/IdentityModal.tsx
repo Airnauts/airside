@@ -24,28 +24,9 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal container={container ?? undefined}>
-        <Dialog.Overlay
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.4)',
-            pointerEvents: 'auto',
-          }}
-        />
-        <Dialog.Content
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: '#fff',
-            padding: 24,
-            borderRadius: 12,
-            minWidth: 320,
-            pointerEvents: 'auto',
-          }}
-        >
-          <Dialog.Title style={{ marginTop: 0 }}>Enter your email</Dialog.Title>
+        <Dialog.Overlay className="cmnt:fixed cmnt:inset-0 cmnt:bg-black/40 cmnt:pointer-events-auto" />
+        <Dialog.Content className="cmnt:fixed cmnt:top-1/2 cmnt:left-1/2 cmnt:-translate-x-1/2 cmnt:-translate-y-1/2 cmnt:bg-white cmnt:p-6 cmnt:rounded-xl cmnt:min-w-80 cmnt:pointer-events-auto">
+          <Dialog.Title className="cmnt:mt-0">Enter your email</Dialog.Title>
           <Dialog.Description>
             Used only to label your comments. No verification, and no email is ever sent.
           </Dialog.Description>
@@ -57,7 +38,7 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              style={{ display: 'block', width: '100%', margin: '12px 0', padding: 8 }}
+              className="cmnt:block cmnt:w-full cmnt:my-3 cmnt:p-2 cmnt:border cmnt:border-gray-300 cmnt:rounded"
             />
             <input
               aria-label="Name (optional)"
@@ -65,9 +46,14 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Name (optional)"
-              style={{ display: 'block', width: '100%', margin: '12px 0', padding: 8 }}
+              className="cmnt:block cmnt:w-full cmnt:my-3 cmnt:p-2 cmnt:border cmnt:border-gray-300 cmnt:rounded"
             />
-            <button type="submit">Start commenting</button>
+            <button
+              type="submit"
+              className="cmnt:bg-blue-600 cmnt:text-white cmnt:rounded-md cmnt:px-3 cmnt:py-2 cmnt:border-none cmnt:cursor-pointer"
+            >
+              Start commenting
+            </button>
           </form>
         </Dialog.Content>
       </Dialog.Portal>

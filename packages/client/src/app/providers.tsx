@@ -22,11 +22,11 @@ export function WidgetProvider({ children }: { children: ReactNode }) {
   return (
     <ContainerContext.Provider value={{ portal, toasts }}>
       {children}
-      <div data-portal-container ref={setPortal} style={{ position: 'absolute' }} />
+      <div data-portal-container ref={setPortal} className="cmnt:absolute" />
       <div
         data-toasts-container
         ref={setToasts}
-        style={{ position: 'absolute', bottom: 16, right: 16, pointerEvents: 'none' }}
+        className="cmnt:absolute cmnt:bottom-4 cmnt:right-4 cmnt:pointer-events-none"
       />
     </ContainerContext.Provider>
   )
