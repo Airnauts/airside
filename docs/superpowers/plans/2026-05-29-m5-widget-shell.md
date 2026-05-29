@@ -1998,6 +1998,13 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     outDir: 'dist',
+    platform: 'browser',
+    // Replace process.env.NODE_ENV so the bundled React has a defined env in the
+    // browser (else `process is not defined` throws on load) and dev-only branches DCE.
+    define: { 'process.env.NODE_ENV': JSON.stringify('production') },
+    // No code-splitting in M5: inline the dynamic import('./app/mount') into index.js.
+    // (tsup defaults splitting ON for ESM, which would move React into a separate chunk.)
+    splitting: false,
     noExternal: [/.*/],
     clean: false, // the `build` script does `rm -rf dist` once, before tsup
   },
@@ -2009,6 +2016,8 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     outDir: 'dist',
+    platform: 'browser',
+    define: { 'process.env.NODE_ENV': JSON.stringify('production') },
     external: ['react', 'react-dom'],
     esbuildPlugins: [
       {
