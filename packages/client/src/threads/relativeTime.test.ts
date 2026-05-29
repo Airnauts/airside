@@ -22,4 +22,13 @@ describe('relativeTime', () => {
   it('clamps future timestamps to "just now"', () => {
     expect(relativeTime('2026-05-29T12:05:00.000Z', now)).toBe('just now')
   })
+  it('returns "1m" at exactly 60 seconds', () => {
+    expect(relativeTime('2026-05-29T11:59:00.000Z', now)).toBe('1m')
+  })
+  it('returns "1h" at exactly 60 minutes', () => {
+    expect(relativeTime('2026-05-29T11:00:00.000Z', now)).toBe('1h')
+  })
+  it('returns "7d" at exactly 7 days', () => {
+    expect(relativeTime('2026-05-22T12:00:00.000Z', now)).toBe('7d')
+  })
 })
