@@ -47,6 +47,12 @@ toggle. The cross-page panel is **M8** and is out of scope here.
 - **Aesthetic** — proposed clean, neutral floating-pin idiom (Vercel/Figma-comments
   family) built on the widget's existing shadcn/Radix + Tailwind setup. No external
   design system to match.
+- **Styling convention** — static styling uses M5's **Tailwind `cmnt:`-prefixed
+  utilities** composed with the `cn()` helper; inline `style` is reserved for
+  runtime-computed values (pin/highlight/draft coordinates, per-author avatar color)
+  and the one-off teardrop shape. The existing M5/M6 inline-styled components
+  (`IdentityModal`, toast, providers) are **retrofitted** to the same convention so
+  the widget is consistent.
 - **Reply-reopens** — replying to a resolved thread reopens it.
 - **State architecture** — a small **threads store + imperative controller**
   (approach A below), chosen so the open-by-id seam M8 needs exists from the start
