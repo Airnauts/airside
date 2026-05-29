@@ -25,5 +25,6 @@ describe('PendingAttachment', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: /retry/i }))
     expect(onRetry).toHaveBeenCalled()
+    expect(screen.queryByTestId('attachment-spinner')).not.toBeInTheDocument()
   })
 })

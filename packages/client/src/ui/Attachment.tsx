@@ -16,7 +16,17 @@ export function PendingAttachment({
   onRetry: () => void
 }) {
   return (
-    <div className="cmnt:relative cmnt:w-[88px] cmnt:h-[58px] cmnt:rounded-lg cmnt:overflow-hidden cmnt:border cmnt:border-slate-300 cmnt:bg-[#dbe3f0] cmnt:flex cmnt:items-center cmnt:justify-center cmnt:mb-2">
+    <div
+      role="status"
+      aria-label={
+        status === 'uploading'
+          ? `Uploading ${name}`
+          : status === 'error'
+            ? `Upload failed for ${name}`
+            : name
+      }
+      className="cmnt:relative cmnt:w-[88px] cmnt:h-[58px] cmnt:rounded-lg cmnt:overflow-hidden cmnt:border cmnt:border-slate-300 cmnt:bg-[#dbe3f0] cmnt:flex cmnt:items-center cmnt:justify-center cmnt:mb-2"
+    >
       {previewUrl ? (
         <img src={previewUrl} alt={name} className="cmnt:w-full cmnt:h-full cmnt:object-cover" />
       ) : (
@@ -26,10 +36,14 @@ export function PendingAttachment({
       )}
       {status === 'uploading' && (
         <div
+          aria-hidden
           data-testid="attachment-spinner"
           className="cmnt:absolute cmnt:inset-0 cmnt:bg-white/55 cmnt:flex cmnt:items-center cmnt:justify-center"
         >
-          <span className="cmnt:w-5 cmnt:h-5 cmnt:border-2 cmnt:border-blue-600 cmnt:border-t-transparent cmnt:rounded-full cmnt:animate-spin" />
+          <span
+            aria-hidden
+            className="cmnt:w-5 cmnt:h-5 cmnt:border-2 cmnt:border-blue-600 cmnt:border-t-transparent cmnt:rounded-full cmnt:animate-spin"
+          />
         </div>
       )}
       {status === 'error' && (
