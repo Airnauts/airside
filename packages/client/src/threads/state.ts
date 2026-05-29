@@ -53,6 +53,7 @@ export type Action =
 
 function mapDetail(state: ThreadsState, id: string, fn: (t: Thread) => Thread): ThreadsState {
   const t = state.detailById[id]
+  // Safe no-op: optimistic actions are only dispatched from an open thread, whose detail is always loaded.
   if (!t) return state
   return { ...state, detailById: { ...state.detailById, [id]: fn(t) } }
 }
@@ -92,12 +93,14 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
       return { ...state, lostOpenId: null }
     case 'SET_SHOW_RESOLVED':
       return { ...state, showResolved: action.value }
-    case 'DETAIL_LOADING':
+    case 'DETAIL_LOADING': {
+      const { [action.id]: _e, ...error } = state.detailError
       return {
         ...state,
         loadingDetail: { ...state.loadingDetail, [action.id]: true },
-        detailError: { ...state.detailError, [action.id]: false },
+        detailError: error,
       }
+    }
     case 'DETAIL_LOADED': {
       const { [action.id]: _l, ...loading } = state.loadingDetail
       const { [action.id]: _e, ...error } = state.detailError

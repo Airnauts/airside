@@ -35,13 +35,22 @@ describe('threads reducer', () => {
     expect(s.placementsById.b.pin).toEqual({ x: 10, y: 20 })
   })
 
-  it('INGEST_PLACEMENTS preserves openId, detail, and draft', () => {
+  it('INGEST_PLACEMENTS preserves openId and detail', () => {
     let s = reducer(initialState, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
     s = reducer(s, { type: 'OPEN', id: 'a' })
     s = reducer(s, { type: 'DETAIL_LOADED', id: 'a', thread: thread('a') })
     const next = reducer(s, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
     expect(next.openId).toBe('a')
     expect(next.detailById.a).toBeDefined()
+  })
+
+  it('INGEST_PLACEMENTS preserves an active draft', () => {
+    let s = reducer(initialState, {
+      type: 'SET_DRAFT',
+      draft: { anchor: {} as never, point: { x: 1, y: 2 }, pin: { x: 1, y: 2 } },
+    })
+    s = reducer(s, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
+    expect(s.draft).not.toBeNull()
   })
 
   it('INGEST_PLACEMENTS clears openId and records lostOpenId when the open thread orphans away', () => {
