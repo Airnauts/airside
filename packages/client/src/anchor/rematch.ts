@@ -1,3 +1,8 @@
+import type { Anchor, Signals } from '@comments/core'
+import { decide, scoreCandidate } from '@comments/core'
+import { extractSignals } from './extract'
+import { buildSelectors, resolveUnique } from './selectors'
+
 // Label format emitted by extractSignals.ancestorLabel: 'tag', 'tag#id', or 'tag[data-testid=v]'.
 // These forms are mutually exclusive; id takes priority so the combined form is never produced.
 function parseAncestorLabel(label: string): { tag: string; id?: string; testid?: string } {
@@ -38,4 +43,41 @@ export function findCandidates(
   }
   // Fall back to all elements of the stored tag.
   return Array.from(root.querySelectorAll(stored.tag))
+}
+
+export type Healed = { selectors: [string, string]; signals: Signals }
+export type RematchResult =
+  | { kind: 'anchored'; el: Element; range?: Range; healed?: Healed }
+  | { kind: 'selectionLost'; el: Element; healed?: Healed }
+  | { kind: 'orphaned'; reason: 'noCandidates' | 'belowAccept' | 'ambiguous' }
+
+/** Cheap agreement check for the fast path: same tag and every stored stableAttr present + equal. */
+export function signalsAgree(stored: Signals, el: Element): boolean {
+  if (stored.tag.toLowerCase() !== el.tagName.toLowerCase()) return false
+  for (const [k, v] of Object.entries(stored.stableAttrs ?? {})) {
+    const actual = k === 'id' ? el.id : el.getAttribute(k)
+    if (actual !== v) return false
+  }
+  return true
+}
+
+function healedFrom(el: Element): Healed {
+  return { selectors: buildSelectors(el), signals: extractSignals(el) }
+}
+
+export function rematch(anchor: Anchor, root: ParentNode): RematchResult {
+  // 1. Fast path: a unique selector hit whose signals agree -> anchored, no scoring, no heal.
+  for (const selector of anchor.selectors) {
+    const hit = resolveUnique(selector, root)
+    if (hit && signalsAgree(anchor.signals, hit)) {
+      return { kind: 'anchored', el: hit }
+    }
+  }
+  // 2. Scored search scoped to the nearest surviving ancestor-landmark.
+  const candidates = findCandidates(root, anchor.signals)
+  const scored = candidates.map((el) => ({ ref: el, score: scoreCandidate(anchor.signals, extractSignals(el)) }))
+  const decision = decide(scored)
+  if (decision.kind === 'orphaned') return { kind: 'orphaned', reason: decision.reason }
+  // 3. Matched via scoring -> fingerprint drifted -> emit a heal payload.
+  return { kind: 'anchored', el: decision.winner, healed: healedFrom(decision.winner) }
 }

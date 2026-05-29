@@ -1,0 +1,55 @@
+import { ANCHOR_SCHEMA_VERSION, type Anchor } from '@comments/core'
+import { describe, expect, it } from 'vitest'
+import { extractSignals } from './extract'
+import { buildSelectors } from './selectors'
+import { rematch } from './rematch'
+
+const parse = (html: string): HTMLElement =>
+  new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html').body
+
+function anchorFor(root: ParentNode, selector: string): Anchor {
+  const el = root.querySelector(selector) as Element
+  return {
+    schemaVersion: ANCHOR_SCHEMA_VERSION,
+    selectors: buildSelectors(el),
+    signals: extractSignals(el),
+    offset: { fx: 0.5, fy: 0.5 },
+  }
+}
+
+describe('rematch fast path', () => {
+  it('anchors via unique selector + agreeing signals, with no healed payload', () => {
+    const before = parse('<main><p id="t" class="lead">hello</p></main>')
+    const anchor = anchorFor(before, '#t')
+    const after = parse('<main><p id="t" class="lead">hello</p></main>')
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('anchored')
+    if (res.kind === 'anchored') {
+      expect(res.el).toBe(after.querySelector('#t'))
+      expect(res.healed).toBeUndefined()
+    }
+  })
+
+  it('falls through to scored search when both selectors miss, emitting healed', () => {
+    // data-foo survives (a scored stableAttr worth +0.40) but is NOT used by the #id/[data-testid]
+    // selector form; wrapper + class rename make BOTH fast-path selectors miss, so scoring must do
+    // the work -> the match is "drifted" -> a healed payload is emitted. (Verified to score ~0.73.)
+    const before = parse('<section><p class="lead" data-foo="bar">unique alpha beta gamma delta</p></section>')
+    const anchor = anchorFor(before, 'p')
+    const after = parse('<section><div class="wrap"><p class="renamed" data-foo="bar">unique alpha beta gamma delta</p></div></section>')
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('anchored')
+    if (res.kind === 'anchored') {
+      expect(res.el).toBe(after.querySelector('p'))
+      expect(res.healed?.signals.tag).toBe('p')
+    }
+  })
+
+  it('orphans when nothing clears the threshold', () => {
+    const before = parse('<main><p id="t" class="lead">unique snippet here</p></main>')
+    const anchor = anchorFor(before, '#t')
+    const after = parse('<main><span>totally different</span></main>')
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('orphaned')
+  })
+})
