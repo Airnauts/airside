@@ -1,4 +1,4 @@
-import { Anchor, ANCHOR_SCHEMA_VERSION } from '@comments/core'
+import { ANCHOR_SCHEMA_VERSION, Anchor } from '@comments/core'
 import { describe, expect, it } from 'vitest'
 import { makeStubAnchor } from './stub-anchor'
 

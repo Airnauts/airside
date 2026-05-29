@@ -10,6 +10,9 @@ export type CommentsLayerProps = Omit<InitOptions, 'key'> & {
 
 /** Thin wrapper for React hosts: calls comments.init() in an effect and tears down on unmount. */
 export function CommentsLayer({ commentsKey, ...rest }: CommentsLayerProps): null {
+  // Re-init only on connection-identity change (key/endpoint/keyParam), not on every
+  // prop-object change — intentionally narrower than exhaustive deps.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: connection-scoped deps by design
   useEffect(() => {
     let handle: CommentsHandle | null = null
     let cancelled = false
@@ -21,8 +24,6 @@ export function CommentsLayer({ commentsKey, ...rest }: CommentsLayerProps): nul
       cancelled = true
       handle?.destroy()
     }
-    // Re-init only when the connection identity changes.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: intentional connection-scoped deps
   }, [commentsKey, rest.endpoint, rest.keyParam])
   return null
 }

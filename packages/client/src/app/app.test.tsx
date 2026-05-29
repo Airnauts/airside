@@ -6,7 +6,9 @@ import { WidgetApp } from './app'
 function mockClient(): ApiClient {
   return {
     listThreads: vi.fn(async () => ({ threads: [], nextCursor: null })),
-    createThread: vi.fn(async () => ({ id: 'real-1' }) as Awaited<ReturnType<ApiClient['createThread']>>),
+    createThread: vi.fn(
+      async () => ({ id: 'real-1' }) as Awaited<ReturnType<ApiClient['createThread']>>,
+    ),
     getThread: vi.fn(),
     addComment: vi.fn(),
     setThreadStatus: vi.fn(),

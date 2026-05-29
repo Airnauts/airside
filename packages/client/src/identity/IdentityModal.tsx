@@ -24,7 +24,14 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal container={container ?? undefined}>
-        <Dialog.Overlay style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', pointerEvents: 'auto' }} />
+        <Dialog.Overlay
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.4)',
+            pointerEvents: 'auto',
+          }}
+        />
         <Dialog.Content
           style={{
             position: 'fixed',
@@ -39,7 +46,9 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
           }}
         >
           <Dialog.Title style={{ marginTop: 0 }}>Enter your email</Dialog.Title>
-          <Dialog.Description>Used only to label your comments. No verification, and no email is ever sent.</Dialog.Description>
+          <Dialog.Description>
+            Used only to label your comments. No verification, and no email is ever sent.
+          </Dialog.Description>
           <form onSubmit={submit}>
             <input
               aria-label="Email"

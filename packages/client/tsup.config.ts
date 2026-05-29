@@ -32,7 +32,10 @@ export default defineConfig([
           // react.ts imports from './index'; keep it external (a deterministic
           // onResolve beats esbuild's flaky relative-path `external` matching) so
           // the one widget bundle (with its own React) loads at runtime.
-          build.onResolve({ filter: /^\.\/index(\.js)?$/ }, () => ({ path: './index.js', external: true }))
+          build.onResolve({ filter: /^\.\/index(\.js)?$/ }, () => ({
+            path: './index.js',
+            external: true,
+          }))
         },
       },
     ],

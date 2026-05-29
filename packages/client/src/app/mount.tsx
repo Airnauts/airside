@@ -1,5 +1,5 @@
-import { createRoot, type Root } from 'react-dom/client'
 import { flushSync } from 'react-dom'
+import { createRoot, type Root } from 'react-dom/client'
 import type { InitOptions } from '../config'
 import { WidgetApp } from './app'
 import { widgetCss } from './widget-css.generated'
@@ -13,7 +13,8 @@ export function mount(options: InitOptions): WidgetHandle {
   host.setAttribute('data-comments-root', '')
   // `all: revert` first neutralizes inherited host styles; the following longhands
   // re-establish only the few we need (longhands after a shorthand win in CSS).
-  host.style.cssText = 'all: revert; position: fixed; inset: 0; pointer-events: none; z-index: 2147483600;'
+  host.style.cssText =
+    'all: revert; position: fixed; inset: 0; pointer-events: none; z-index: 2147483600;'
 
   const style = document.createElement('style')
   style.setAttribute('data-comments-style', '')

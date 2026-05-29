@@ -15,7 +15,9 @@ export type WidgetAppProps = {
 }
 
 export function WidgetApp({ options, client: injected }: WidgetAppProps) {
-  const [client] = useState<ApiClient>(() => injected ?? createApiClient({ endpoint: options.endpoint, key: options.key }))
+  const [client] = useState<ApiClient>(
+    () => injected ?? createApiClient({ endpoint: options.endpoint, key: options.key }),
+  )
   const [identity, setIdentity] = useState<Identity | null>(() => loadIdentity())
   const [modalOpen, setModalOpen] = useState(false)
   const resumeRef = useRef<((identity: Identity) => void) | null>(null)

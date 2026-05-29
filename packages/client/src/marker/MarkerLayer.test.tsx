@@ -12,7 +12,9 @@ const IDENTITY: Identity = { email: 'rev@example.com' }
 function mockClient(over: Partial<ApiClient> = {}): ApiClient {
   return {
     listThreads: vi.fn(async () => ({ threads: [], nextCursor: null })),
-    createThread: vi.fn(async () => ({ id: 'real-1' }) as Awaited<ReturnType<ApiClient['createThread']>>),
+    createThread: vi.fn(
+      async () => ({ id: 'real-1' }) as Awaited<ReturnType<ApiClient['createThread']>>,
+    ),
     getThread: vi.fn(),
     addComment: vi.fn(),
     setThreadStatus: vi.fn(),
@@ -26,7 +28,13 @@ function renderLayer(client: ApiClient, identity: Identity | null, onNeedIdentit
   return render(
     <WidgetProvider>
       <ToastProvider>
-        <MarkerLayer client={client} pageKey="h/p" pageUrl="https://h/p" identity={identity} onNeedIdentity={onNeedIdentity} />
+        <MarkerLayer
+          client={client}
+          pageKey="h/p"
+          pageUrl="https://h/p"
+          identity={identity}
+          onNeedIdentity={onNeedIdentity}
+        />
       </ToastProvider>
     </WidgetProvider>,
   )

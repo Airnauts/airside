@@ -19,7 +19,10 @@ const storageStub: StorageAdapter = {
 // Browsers send Origin automatically; node fetch does not, and checkOrigin rejects
 // a missing Origin. Inject it here to simulate the browser.
 const fetchWithOrigin: FetchLike = (input, init) =>
-  fetch(input, { ...init, headers: { ...(init?.headers as Record<string, string>), Origin: ORIGIN } })
+  fetch(input, {
+    ...init,
+    headers: { ...(init?.headers as Record<string, string>), Origin: ORIGIN },
+  })
 
 let dev: DevServerHandle
 let endpoint: string

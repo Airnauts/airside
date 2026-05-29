@@ -33,7 +33,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               key={t.id}
               role="status"
               data-comments-toast
-              style={{ pointerEvents: 'auto', background: '#1f2937', color: '#fff', padding: '8px 12px', borderRadius: 8, marginTop: 8 }}
+              style={{
+                pointerEvents: 'auto',
+                background: '#1f2937',
+                color: '#fff',
+                padding: '8px 12px',
+                borderRadius: 8,
+                marginTop: 8,
+              }}
             >
               {t.message}
             </div>

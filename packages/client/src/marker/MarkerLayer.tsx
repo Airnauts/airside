@@ -20,7 +20,14 @@ export type MarkerLayerProps = {
 
 let nextTempId = 0
 
-export function MarkerLayer({ client, pageKey, pageUrl, identity, onNeedIdentity, provenance }: MarkerLayerProps) {
+export function MarkerLayer({
+  client,
+  pageKey,
+  pageUrl,
+  identity,
+  onNeedIdentity,
+  provenance,
+}: MarkerLayerProps) {
   const [pins, setPins] = useState<Pin[]>([])
   const toast = useToast()
 
@@ -65,7 +72,10 @@ export function MarkerLayer({ client, pageKey, pageUrl, identity, onNeedIdentity
 
   function onPlaceClick() {
     if (identity) void place(identity)
-    else onNeedIdentity((who) => { void place(who) })
+    else
+      onNeedIdentity((who) => {
+        void place(who)
+      })
   }
 
   return (

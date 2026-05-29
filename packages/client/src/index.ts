@@ -1,4 +1,4 @@
-import { type InitOptions, DEFAULT_KEY_PARAM } from './config'
+import { DEFAULT_KEY_PARAM, type InitOptions } from './config'
 import { isActivated } from './gate'
 
 export const packageName = '@comments/client'
@@ -22,7 +22,13 @@ const NOOP_HANDLE: CommentsHandle = { destroy() {} }
  */
 export async function init(options: InitOptions): Promise<CommentsHandle> {
   if (typeof window === 'undefined') return NOOP_HANDLE
-  if (!isActivated({ search: window.location.search, key: options.key, keyParam: options.keyParam ?? DEFAULT_KEY_PARAM })) {
+  if (
+    !isActivated({
+      search: window.location.search,
+      key: options.key,
+      keyParam: options.keyParam ?? DEFAULT_KEY_PARAM,
+    })
+  ) {
     return NOOP_HANDLE
   }
   const { mount } = await import('./app/mount')

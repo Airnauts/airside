@@ -1,4 +1,4 @@
-import { type Anchor, ANCHOR_SCHEMA_VERSION } from '@comments/core'
+import { ANCHOR_SCHEMA_VERSION, type Anchor } from '@comments/core'
 
 /**
  * A minimal, schema-valid anchor for the M5 placeholder marker. It is NOT a real

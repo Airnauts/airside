@@ -42,7 +42,12 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
   const base = opts.endpoint.replace(/\/+$/, '')
   const doFetch: FetchLike = opts.fetch ?? ((input, init) => fetch(input, init))
 
-  async function request<T>(method: string, path: string, body?: unknown, isForm = false): Promise<T> {
+  async function request<T>(
+    method: string,
+    path: string,
+    body?: unknown,
+    isForm = false,
+  ): Promise<T> {
     const headers: Record<string, string> = { [KEY_HEADER_NAME]: opts.key }
     let payload: BodyInit | undefined
     if (isForm) {
@@ -60,7 +65,9 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       /* non-JSON body (e.g. a proxy/gateway error page) */
     }
     if (!res.ok) {
-      const err = (json as { error?: { code?: string; message?: string; details?: unknown } } | undefined)?.error
+      const err = (
+        json as { error?: { code?: string; message?: string; details?: unknown } } | undefined
+      )?.error
       throw new ApiError(
         res.status,
         (err?.code as ApiError['code']) ?? 'UNKNOWN',
@@ -88,9 +95,11 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     createThread: (body) => request<Thread>('POST', '/threads', body),
     listThreads: (params) => request<ThreadListResponse>('GET', `/threads${qs(params)}`),
     getThread: (threadId) => request<Thread>('GET', `/threads/${id(threadId)}`),
-    addComment: (threadId, body) => request<Comment>('POST', `/threads/${id(threadId)}/comments`, body),
+    addComment: (threadId, body) =>
+      request<Comment>('POST', `/threads/${id(threadId)}/comments`, body),
     setThreadStatus: (threadId, body) => request<Thread>('PATCH', `/threads/${id(threadId)}`, body),
-    refreshAnchor: (threadId, body) => request<ThreadListItem>('PATCH', `/threads/${id(threadId)}/anchor`, body),
+    refreshAnchor: (threadId, body) =>
+      request<ThreadListItem>('PATCH', `/threads/${id(threadId)}/anchor`, body),
     upload: (file) => {
       const fd = new FormData()
       fd.append('file', file)

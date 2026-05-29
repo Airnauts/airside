@@ -4,7 +4,10 @@ import { createApiClient } from './client'
 import { ApiError } from './errors'
 
 function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'content-type': 'application/json' },
+  })
 }
 
 describe('createApiClient', () => {
@@ -17,7 +20,12 @@ describe('createApiClient', () => {
     const client = createApiClient({ endpoint: 'http://x/api/', key: 'k', fetch: fakeFetch })
     const body = {
       pageUrl: 'https://h/p',
-      anchor: { schemaVersion: 1, selectors: ['body', 'body'], signals: { tag: 'body', classes: [], siblingIndex: 0, ancestorTrail: [] }, offset: { fx: 0.5, fy: 0.5 } },
+      anchor: {
+        schemaVersion: 1,
+        selectors: ['body', 'body'],
+        signals: { tag: 'body', classes: [], siblingIndex: 0, ancestorTrail: [] },
+        offset: { fx: 0.5, fy: 0.5 },
+      },
       comment: { text: 'hi' },
       author: { email: 'a@b.com' },
       captureContext: { viewportW: 1, viewportH: 1, devicePixelRatio: 1, userAgent: 'u' },
@@ -40,7 +48,8 @@ describe('createApiClient', () => {
   })
 
   it('maps a non-2xx response to ApiError', async () => {
-    const fakeFetch: FetchLike = async () => jsonResponse({ error: { code: 'VALIDATION_FAILED', message: 'bad' } }, 400)
+    const fakeFetch: FetchLike = async () =>
+      jsonResponse({ error: { code: 'VALIDATION_FAILED', message: 'bad' } }, 400)
     const client = createApiClient({ endpoint: 'http://x', key: 'k', fetch: fakeFetch })
     const err = await client.getThread('t1').catch((e: unknown) => e)
     expect(err).toBeInstanceOf(ApiError)
@@ -49,7 +58,11 @@ describe('createApiClient', () => {
 
   it('maps a non-JSON error body to ApiError(UNKNOWN) instead of throwing SyntaxError', async () => {
     const fakeFetch: FetchLike = async () =>
-      new Response('<html>502 Bad Gateway</html>', { status: 502, statusText: 'Bad Gateway', headers: { 'content-type': 'text/html' } })
+      new Response('<html>502 Bad Gateway</html>', {
+        status: 502,
+        statusText: 'Bad Gateway',
+        headers: { 'content-type': 'text/html' },
+      })
     const client = createApiClient({ endpoint: 'http://x', key: 'k', fetch: fakeFetch })
     const err = await client.getThread('t1').catch((e: unknown) => e)
     expect(err).toBeInstanceOf(ApiError)

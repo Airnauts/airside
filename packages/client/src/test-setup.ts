@@ -15,7 +15,12 @@ if (!('ResizeObserver' in globalThis)) {
   }
 }
 
-for (const method of ['hasPointerCapture', 'setPointerCapture', 'releasePointerCapture', 'scrollIntoView'] as const) {
+for (const method of [
+  'hasPointerCapture',
+  'setPointerCapture',
+  'releasePointerCapture',
+  'scrollIntoView',
+] as const) {
   if (!(method in Element.prototype)) {
     ;(Element.prototype as unknown as Record<string, () => void>)[method] = () => {}
   }

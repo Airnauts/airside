@@ -7,7 +7,9 @@ describe('config', () => {
   })
 
   it('resolves pageKey via core normalization by default', () => {
-    expect(resolvePageKey({ key: 'k', endpoint: 'e' }, 'https://x.com/a/?q=1#h')).toBe(resolvePageKey({ key: 'k', endpoint: 'e' }, 'https://x.com/a'))
+    expect(resolvePageKey({ key: 'k', endpoint: 'e' }, 'https://x.com/a/?q=1#h')).toBe(
+      resolvePageKey({ key: 'k', endpoint: 'e' }, 'https://x.com/a'),
+    )
   })
 
   it('uses a custom pageKey function when provided', () => {
@@ -16,7 +18,17 @@ describe('config', () => {
   })
 
   it('builds a schema-valid capture context from a window', () => {
-    const win = { innerWidth: 1280, innerHeight: 720, devicePixelRatio: 2, navigator: { userAgent: 'UA' } } as unknown as Window
-    expect(buildCaptureContext(win)).toEqual({ viewportW: 1280, viewportH: 720, devicePixelRatio: 2, userAgent: 'UA' })
+    const win = {
+      innerWidth: 1280,
+      innerHeight: 720,
+      devicePixelRatio: 2,
+      navigator: { userAgent: 'UA' },
+    } as unknown as Window
+    expect(buildCaptureContext(win)).toEqual({
+      viewportW: 1280,
+      viewportH: 720,
+      devicePixelRatio: 2,
+      userAgent: 'UA',
+    })
   })
 })
