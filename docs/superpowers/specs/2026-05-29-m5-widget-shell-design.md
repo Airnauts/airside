@@ -71,8 +71,8 @@ Recorded so later milestones don't relitigate them.
 
 | # | Decision | Rationale |
 |---|---|---|
-| 1 | **Two entry points, one lazy split:** a tiny vanilla `index.ts` gating shell that `await import('./app')`s the heavy React/shadcn chunk. | ADR-0002 ("own bundled React, lazy-loaded"). The split's M5 rationale is **gate inertness** — with no key, React/shadcn never load and the widget is truly inert — *not* size optimization (size is deferred). |
-| 2 | **Dual-React boundary.** The widget's `./app` chunk bundles its own React; `@comments/client/react`'s `<CommentsLayer/>` uses the **host's** React as a `peerDependency`. | ADR-0002. The wrapper only calls `init()` in an effect; no React state ever crosses the boundary, so two React instances coexist safely. |
+| 1 | **Two entry points; no code-splitting in M5.** `index.ts` is the vanilla `comments.init()` entry; the app + React bundle into `dist/index.js`. `init()` keeps an **async signature** so a lazy-download split can land later without an API break. | ADR-0002 ("own bundled React"). The activation gate makes the widget **inert** (never mounts/renders/fetches) when keyless; download-time savings from splitting are deferred since size is an M9 concern (per user direction). |
+| 2 | **Dual-React boundary.** The vanilla widget bundles its own React; `@comments/client/react`'s `<CommentsLayer/>` uses the **host's** React (marked `external`, reusing the one widget bundle at runtime). | ADR-0002. The wrapper's own hooks run on host React; the widget renders its own `createRoot` tree — separate trees, so two React instances coexist safely. The secret prop is `commentsKey` (React reserves `key`). |
 | 3 | **Tailwind v4 precompiled to a CSS file at build, inlined into the bundle as a string** (a generated `.ts` module), injected into the host root `<style>` at mount (not document `<head>`); theme vars on the host root element, not `:root`. | ADR-0006 (light DOM, no-preflight, prefix). Precompiling to a file then inlining via a plain generated `.ts` removes the esbuild/vitest text-loader risk (resolves identically in build *and* jsdom tests) while still keeping the "one `init()` call, integrators import nothing" promise. |
 | 4 | **Gate requires URL param `=== init({ key })`,** not mere presence; param name configurable via `keyParam` (default `comments-key`). | Arch §4: one secret value flows `init({key})` → URL param → header. Equality stops a stale/foreign link param from activating a different mount. The server still independently validates the header. |
 | 5 | **Placeholder marker uses a schema-valid stub anchor;** `extract.ts` is *not* wired. | Milestone says "before any anchoring." M6 owns capture→signals integration. M5 proves the round-trip, not anchoring. |
@@ -106,17 +106,20 @@ packages/client/
 
 **Entry shells.**
 
-- `index.ts` exports a `comments` namespace with `init(opts)`. `init` validates
-  options, runs the gate **synchronously**, and only on a pass does
-  `await import('./app/mount')`. It contains **no static import of React** so the
-  shell stays inert and self-contained.
-- `react.ts` exports `<CommentsLayer {...opts} />`, which calls `comments.init(opts)`
-  in a `useEffect` and tears down on unmount. `react` + `react-dom` are
-  `peerDependencies` here.
+- `index.ts` exports a `comments` namespace with `init(opts)` (plus a named `init`).
+  `init` validates options, runs the gate, and on a pass mounts the app
+  (`await import('./app/mount')` — a dynamic import for ergonomics; with splitting
+  off it inlines into `index.js`). `init` is **async by contract** so a future lazy
+  split is non-breaking. The vanilla widget bundles its own React.
+- `react.ts` exports `<CommentsLayer {...opts} />` (secret prop `commentsKey`, since
+  React reserves `key`), which calls `comments.init()` in a `useEffect` and tears
+  down on unmount. `react`/`react-dom` are `external` here (host's React).
 
-**Build.** tsup with code-splitting (`splitting: true`, ESM) so `./app` is a separate
-chunk; React/shadcn bundle into it. `@comments/client/react` externalizes `react`
-(peer). The `tsc --build` / tsup split from ADR-0011 is unchanged. CSS is handled per §6.
+**Build.** Two tsup configs: the vanilla widget (`index`) bundles everything incl.
+its own React (`noExternal`); the `react` wrapper marks `react`/`react-dom` + the
+sibling `./index.js` **external** so it stays thin and reuses the one widget bundle
+(the dual-React boundary). No code-splitting in M5. The `tsc --build` / tsup split
+from ADR-0011 is unchanged. CSS is handled per §6.
 
 ## 5. Host DOM structure & isolation (ADR-0006)
 
@@ -235,9 +238,10 @@ real `examples/` host app lands.
 A new record capturing the hard-to-reverse choices (CLAUDE.md ADR triggers: framework
 choice, coding/architectural pattern):
 
-- **Lazy own-React app chunk behind a tiny gating shell** — refines how ADR-0002's
-  "lazy-loaded own React" is realized (code-split `./app`; shell stays React-free for
-  gate inertness).
+- **Bundled-React widget + peer-React wrapper via two tsup configs** — the vanilla
+  widget bundles its own React; `<CommentsLayer/>` uses the host's React and reuses
+  the one widget bundle (dual-React boundary). No code-splitting in M5; `init()`
+  stays async so a lazy split can land later without an API break.
 - **Tailwind v4 precompiled to a file, inlined as a string and injected into the
   light-DOM host root** — the concrete mechanism for ADR-0006's no-preflight/prefixed
   isolation (chosen over a text-loaded `.css` import to avoid dual build/test loader
