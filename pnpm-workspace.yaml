@@ -1,4 +1,5 @@
 packages:
   - 'packages/*'
-  # examples/* reserved for the sample Next.js host app — first scaffolded in M4.
-  # - 'examples/*'
+  # examples/* holds dev-only demos. M5 adds a throwaway widget playground;
+  # M9 replaces it with the real sample Next.js host app.
+  - 'examples/*'

@@ -1,0 +1,17 @@
+{
+  "name": "@comments/playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:server": "node dev-server.mjs"
+  },
+  "dependencies": {
+    "@comments/client": "workspace:*",
+    "@comments/server": "workspace:*"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
