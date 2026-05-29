@@ -18,15 +18,23 @@ export function CommentList({ comments, loading, error, onRetry }: CommentListPr
     return (
       <div className="cmnt:p-3 cmnt:text-[13px] cmnt:text-gray-500">
         Couldn't load this thread.{' '}
-        <button type="button" onClick={onRetry} className={LINK}>
-          Retry
-        </button>
+        {onRetry && (
+          <button type="button" onClick={onRetry} className={LINK}>
+            Retry
+          </button>
+        )}
       </div>
     )
   }
   if (loading) {
     return (
-      <div data-testid="comments-skeleton" className="cmnt:p-3">
+      <div
+        data-testid="comments-skeleton"
+        role="status"
+        aria-busy="true"
+        aria-label="Loading comments"
+        className="cmnt:p-3"
+      >
         {[0, 1].map((i) => (
           <div key={i} className="cmnt:flex cmnt:gap-[9px] cmnt:mb-3.5">
             <div className="cmnt:w-[26px] cmnt:h-[26px] cmnt:rounded-full cmnt:bg-gray-200" />
@@ -42,7 +50,7 @@ export function CommentList({ comments, loading, error, onRetry }: CommentListPr
   if (comments.length === 0) {
     return (
       <div className="cmnt:px-3 cmnt:py-4 cmnt:text-gray-400 cmnt:text-center cmnt:text-[13px]">
-        💬 No comments yet — start the thread.
+        <span aria-hidden="true">💬</span> No comments yet — start the thread.
       </div>
     )
   }

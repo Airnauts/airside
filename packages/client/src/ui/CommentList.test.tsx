@@ -1,7 +1,7 @@
 // packages/client/src/ui/CommentList.test.tsx
 import type { Comment } from '@comments/core'
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
 import { CommentList } from './CommentList'
 
 const comment = (over: Partial<Comment> = {}): Comment =>
@@ -50,5 +50,16 @@ describe('CommentList', () => {
   it('renders an inline retry on error', () => {
     render(<CommentList comments={[]} loading={false} error onRetry={() => {}} />)
     expect(screen.getByRole('button', { name: /retry/i })).toBeInTheDocument()
+  })
+  it('calls onRetry when the retry button is clicked', () => {
+    const onRetry = vi.fn()
+    render(<CommentList comments={[]} loading={false} error onRetry={onRetry} />)
+    fireEvent.click(screen.getByRole('button', { name: /retry/i }))
+    expect(onRetry).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders a relative time for a comment', () => {
+    render(<CommentList loading={false} error={false} comments={[comment()]} />)
+    expect(screen.getByText(/just now|ago|^\d+[mhd]$/i)).toBeInTheDocument()
   })
 })
