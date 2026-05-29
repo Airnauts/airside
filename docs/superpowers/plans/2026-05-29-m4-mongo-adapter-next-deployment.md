@@ -188,7 +188,7 @@ import {
   type Repository,
   type Scope,
 } from '@comments/server'
-import type { Db, UpdateFilter } from 'mongodb'
+import type { Db, Filter, UpdateFilter } from 'mongodb'
 
 const COLLECTION = 'threads'
 
@@ -276,7 +276,9 @@ export function createMongoRepository({ db }: { db: Db }): Repository {
         ]
       }
       const docs = await col
-        .find(filter, { projection: { comments: 0, captureContext: 0, provenance: 0 } })
+        .find(filter as Filter<StoredThread>, {
+          projection: { comments: 0, captureContext: 0, provenance: 0 },
+        })
         .sort({ updatedAt: -1, _id: -1 })
         .limit(limit + 1)
         .toArray()
@@ -369,7 +371,14 @@ export { createMongoRepository } from './repository'
 Run: `pnpm --filter @comments/adapter-mongo exec vitest run src/repository.test.ts`
 Expected: PASS — all `Repository contract — mongo` cases green, plus the index assertion. (First run downloads a `mongod` binary; allow time.)
 
-- [ ] **Step 9: Update the export-resolution check**
+- [ ] **Step 9: Typecheck (vitest does NOT typecheck — esbuild strips types)**
+
+The per-test runner does not type-check, so run the project's type gate explicitly to catch driver-typing issues (e.g. `Filter`/`UpdateFilter` assignability) now rather than in Task 7.
+
+Run: `pnpm --filter @comments/adapter-mongo typecheck`
+Expected: `tsc --build` exits 0, no errors.
+
+- [ ] **Step 10: Update the export-resolution check**
 
 In `scripts/check-exports.mjs`, change the adapter-mongo entry from the placeholder symbol to a real one:
 
@@ -386,7 +395,7 @@ pnpm check:exports
 
 Expected: `✓ @comments/adapter-mongo -> createMongoRepository` among the resolved entries.
 
-- [ ] **Step 10: Commit**
+- [ ] **Step 11: Commit**
 
 ```bash
 git add packages/adapter-mongo scripts/check-exports.mjs pnpm-lock.yaml
@@ -567,6 +576,11 @@ export default defineConfig({
 
 Run: `pnpm --filter @comments/server exec vitest run src/next.test.ts`
 Expected: PASS — all three `createNextHandler` cases green.
+
+- [ ] **Step 5b: Typecheck (vitest does NOT typecheck)**
+
+Run: `pnpm --filter @comments/server typecheck`
+Expected: `tsc --build` exits 0, no errors.
 
 - [ ] **Step 6: Add the export-resolution check**
 
