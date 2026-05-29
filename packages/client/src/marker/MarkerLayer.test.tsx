@@ -34,10 +34,19 @@ function renderLayer(client: ApiClient, identity: Identity | null, onNeedIdentit
 
 describe('MarkerLayer', () => {
   it('optimistically adds a pin and reconciles to the server id on success', async () => {
-    const client = mockClient()
+    let resolveCreate: (t: Awaited<ReturnType<ApiClient['createThread']>>) => void = () => {}
+    const created = new Promise<Awaited<ReturnType<ApiClient['createThread']>>>((r) => {
+      resolveCreate = r
+    })
+    const client = mockClient({ createThread: vi.fn(() => created) })
     renderLayer(client, IDENTITY)
     fireEvent.click(screen.getByRole('button', { name: /comment/i }))
+    // optimistic (pending) pin appears before the server responds
+    expect(await screen.findByTitle(/^optimistic-/)).toBeInTheDocument()
+    // resolve the server create -> reconcile
+    resolveCreate({ id: 'real-1' } as Awaited<ReturnType<ApiClient['createThread']>>)
     expect(await screen.findByTitle('real-1')).toBeInTheDocument()
+    expect(screen.queryByTitle(/^optimistic-/)).toBeNull()
     expect(client.createThread).toHaveBeenCalledOnce()
   })
 

@@ -64,8 +64,8 @@ export function MarkerLayer({ client, pageKey, pageUrl, identity, onNeedIdentity
   }
 
   function onPlaceClick() {
-    if (identity) place(identity)
-    else onNeedIdentity((who) => place(who))
+    if (identity) void place(identity)
+    else onNeedIdentity((who) => { void place(who) })
   }
 
   return (
