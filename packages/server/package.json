@@ -11,6 +11,10 @@
     "./dev": {
       "types": "./dist/dev.d.ts",
       "import": "./dist/dev.js"
+    },
+    "./next": {
+      "types": "./dist/next.d.ts",
+      "import": "./dist/next.js"
     }
   },
   "files": [
