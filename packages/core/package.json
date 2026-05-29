@@ -13,7 +13,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsup && tsc --build",
+    "build": "tsup && tsc --build && tsx scripts/emit-openapi.ts",
     "typecheck": "tsc --build",
     "test": "vitest run",
     "emit:openapi": "tsx scripts/emit-openapi.ts"
