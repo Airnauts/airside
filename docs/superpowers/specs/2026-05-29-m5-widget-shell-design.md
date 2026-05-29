@@ -73,7 +73,7 @@ Recorded so later milestones don't relitigate them.
 |---|---|---|
 | 1 | **Two entry points, one lazy split:** a tiny vanilla `index.ts` gating shell that `await import('./app')`s the heavy React/shadcn chunk. | ADR-0002 ("own bundled React, lazy-loaded"). The split's M5 rationale is **gate inertness** — with no key, React/shadcn never load and the widget is truly inert — *not* size optimization (size is deferred). |
 | 2 | **Dual-React boundary.** The widget's `./app` chunk bundles its own React; `@comments/client/react`'s `<CommentsLayer/>` uses the **host's** React as a `peerDependency`. | ADR-0002. The wrapper only calls `init()` in an effect; no React state ever crosses the boundary, so two React instances coexist safely. |
-| 3 | **Tailwind v4 compiled to a CSS string, injected into the host root** `<style>` at mount (not document `<head>`); theme vars on the host root element, not `:root`. | ADR-0006 (light DOM, no-preflight, prefix). Keeps the "one `init()` call, framework-agnostic" promise — integrators import nothing extra. Alternative (ship a CSS file consumers import) rejected for that reason. |
+| 3 | **Tailwind v4 precompiled to a CSS file at build, inlined into the bundle as a string** (a generated `.ts` module), injected into the host root `<style>` at mount (not document `<head>`); theme vars on the host root element, not `:root`. | ADR-0006 (light DOM, no-preflight, prefix). Precompiling to a file then inlining via a plain generated `.ts` removes the esbuild/vitest text-loader risk (resolves identically in build *and* jsdom tests) while still keeping the "one `init()` call, integrators import nothing" promise. |
 | 4 | **Gate requires URL param `=== init({ key })`,** not mere presence; param name configurable via `keyParam` (default `comments-key`). | Arch §4: one secret value flows `init({key})` → URL param → header. Equality stops a stale/foreign link param from activating a different mount. The server still independently validates the header. |
 | 5 | **Placeholder marker uses a schema-valid stub anchor;** `extract.ts` is *not* wired. | Milestone says "before any anchoring." M6 owns capture→signals integration. M5 proves the round-trip, not anchoring. |
 | 6 | **Optimistic + rollback on `createThread` only;** other writes are plain typed calls. | The marker is the only write surface in M5; M7/M8 add optimistic behavior when they have UI to roll back. |
@@ -94,7 +94,8 @@ packages/client/
       mount.tsx       #   creates host root, injects CSS, mounts React root, teardown
       app.tsx         #   error boundary > providers > identity gate > overlay/chrome
       providers.tsx   #   portal-container + toasts-container context
-      styles.css      #   Tailwind v4 entry (compiled → string at build)
+      widget.css              # Tailwind v4 entry (@import "tailwindcss"; no-preflight + prefix)
+      widget-css.generated.ts # build:css output — export const widgetCss (git-ignored)
     gate.ts           # activation-gate logic (pure, unit-testable)
     identity/         # localStorage identity + <IdentityModal/>
     api/              # createApiClient + typed methods + error mapping
@@ -144,15 +145,20 @@ then mounts a React root into it:
 
 ## 6. Tailwind v4 CSS delivery
 
-- A Tailwind v4 CSS entry (`app/styles.css`) with **preflight disabled** and a
-  **scoped class prefix**. Theme CSS variables are declared on the widget host root,
-  not document `:root`.
-- At build, Tailwind compiles to a CSS string; the string is imported into the app
-  chunk as **text** (esbuild `loader: { '.css': 'text' }`) and injected into the
-  host-root `<style>` at mount. Nothing is written to the document `<head>`.
-- This is the **riskiest build integration in M5** (Tailwind v4 prefix syntax + the
-  compile-to-string step). The implementation plan should validate it in an early,
-  isolated step before the UI depends on it.
+- A Tailwind v4 CSS entry (`app/widget.css`: `@import "tailwindcss"`) with
+  **preflight disabled** and a **scoped class prefix**. Theme CSS variables are
+  declared on the widget host root, not document `:root`.
+- **Build = precompile, then inline.** A `build:css` package step runs the Tailwind
+  CLI to compile that entry to a CSS file, then a tiny script wraps the output in a
+  generated module `app/widget-css.generated.ts` (`export const widgetCss = "…"`).
+  `mount.tsx` imports `widgetCss` and injects it into the host-root `<style>` at
+  mount; nothing touches the document `<head>`.
+- **Why this shape** (the "just bundle the CSS file" call): inlining a precompiled
+  file as a **plain `.ts` string** needs **no esbuild/vitest loader config** — the
+  module imports identically in the tsup build and the jsdom tests, which is the
+  failure mode a `.css`-as-text import would risk. The only remaining config is
+  standard Tailwind (no-preflight + prefix). `widget-css.generated.ts` is git-ignored
+  and produced by `build:css` ahead of `tsup`/`tsc`/`vitest`.
 
 ## 7. Runtime modules
 
@@ -232,8 +238,10 @@ choice, coding/architectural pattern):
 - **Lazy own-React app chunk behind a tiny gating shell** — refines how ADR-0002's
   "lazy-loaded own React" is realized (code-split `./app`; shell stays React-free for
   gate inertness).
-- **Tailwind v4 compiled to a string, injected into the light-DOM host root** — the
-  concrete mechanism for ADR-0006's no-preflight/prefixed isolation.
+- **Tailwind v4 precompiled to a file, inlined as a string and injected into the
+  light-DOM host root** — the concrete mechanism for ADR-0006's no-preflight/prefixed
+  isolation (chosen over a text-loaded `.css` import to avoid dual build/test loader
+  config).
 - **Dual-React boundary** — bundled-React widget vs. peer-React `<CommentsLayer/>`.
 
 ADR-0002/0005/0006 are *implemented* here, not changed; ADR-0014 records the
