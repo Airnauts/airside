@@ -8,6 +8,8 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     outDir: 'dist',
+    platform: 'browser',
+    define: { 'process.env.NODE_ENV': JSON.stringify('production') },
     noExternal: [/.*/],
     splitting: false, // keep createRoot in index.js (dynamic import('./app/mount') must not split)
     clean: false, // the `build` script does `rm -rf dist` once, before tsup
@@ -20,6 +22,8 @@ export default defineConfig([
     dts: false,
     sourcemap: true,
     outDir: 'dist',
+    platform: 'browser',
+    define: { 'process.env.NODE_ENV': JSON.stringify('production') },
     external: ['react', 'react-dom'],
     esbuildPlugins: [
       {
