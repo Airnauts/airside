@@ -501,3 +501,50 @@ widget's Tailwind CSS reaches the page, and the resulting dual-React boundary.
   this is an accepted, documented deferral, not a regression.
 - Re-introducing a lazy-download split later is non-breaking because `init()` is
   already async.
+
+---
+
+## ADR-0015 — M4 deployment glue: Next.js path mapping & v1 OpenAPI delivery
+
+- **Date:** 2026-05-29
+- **Status:** accepted
+
+**Context.** M4 mounts the M3 server core on the v1 target stack. Two boundary
+choices are architecturally significant because integrators and future adapters
+build on them: (1) how a request under a mount prefix (`/api/comments/…`) reaches
+the dispatcher, which matches **bare** operation paths (`^/threads$`, no prefix
+stripping); and (2) how the OpenAPI contract (ADR-0007) is delivered in v1.
+Architecture §6 and ADR-0007 anticipated serving `GET /openapi.json` + a Scalar
+`/docs` page; M4 decides whether to build that now.
+
+**Decision.**
+
+1. **The Next.js mount maps the path from the catch-all, not a configured base
+   path.** `createNextHandler(server)` (in `@comments/server/next`) reconstructs
+   the operation-relative path from Next's `[...path]` segments, rebuilds the Web
+   `Request`, and calls `server.handle`. The mount is zero-config and
+   location-agnostic — the integrator's whole glue is
+   `export const { GET, POST, PATCH, OPTIONS } = createNextHandler(server)`. A
+   `basePath` option on `createCommentsServer` is left as a documented seam for
+   non-catch-all / other-framework adapters (e.g. Express) and is **not** built in
+   v1 (YAGNI).
+2. **v1 ships the static `openapi.json` artifact only.** `core`'s existing
+   `emit:openapi` is wired into the build so CI publishes `core/dist/openapi.json`.
+   Runtime `GET /openapi.json` and the Scalar `/docs` page are **deferred** behind
+   ADR-0007's seam: no v1 consumer needs a live endpoint (the in-repo TS client
+   imports `core` types directly), and a browser hitting `/docs` sends no
+   capability key, so gating it is self-defeating while serving it publicly adds
+   surface for no v1 benefit. This narrows the M4 exit criteria in
+   `docs/milestones.md`.
+
+**Consequences.**
+- Integrators mount with one line and never configure a base path; the core stays
+  unaware of its mount location.
+- The glue couples to Next's catch-all convention and the Web `Request` contract;
+  it `await`s `params` so it is correct on both Next 14 (sync) and Next 15 (async
+  params). No `next` package dependency is added.
+- The OpenAPI contract ships as a build artifact for CI/publishing and future
+  non-TS consumers; enabling live serving + Scalar later is additive and touches
+  only `@comments/server` (the seam is unchanged).
+- The MongoDB document model needs no new record — ADR-0008 already decided it; M4
+  implements it behind the `Repository` interface.

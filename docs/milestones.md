@@ -148,7 +148,7 @@ storage adapters pass their contract suite.
 
 **In scope.** `@comments/adapter-mongo` (MongoDB repository **passing the M3
 contract suite**); indexes from the spec; `@comments/server/next` App Router glue
-(`createNextHandler`); **OpenAPI generation + Scalar docs** + static artifact;
+(`createNextHandler`); **static OpenAPI artifact** (runtime `/openapi.json` + Scalar `/docs` deferred — ADR-0015);
 integration tests on `mongodb-memory-server`; a deploy recipe for **Vercel +
 MongoDB Atlas + Vercel Blob**.
 
@@ -157,7 +157,7 @@ MongoDB Atlas + Vercel Blob**.
 **Depends on.** M3.
 
 **Exit criteria.** Mongo adapter green on the contract suite + integration tests;
-one-line Next.js mount documented; `/openapi.json` + `/docs` serve; a sample mount
+one-line Next.js mount documented; the build emits the static `core/dist/openapi.json`; a sample mount
 deploys to Vercel against Atlas and round-trips a thread.
 
 **Refs.** Spec §2, §4, §5; ADR-0003, ADR-0007.
