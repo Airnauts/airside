@@ -75,12 +75,12 @@ docs/milestones.md                  # MODIFY: add design-spec ref to M5
 
 - [ ] **Step 1: Add dependencies and scripts to `packages/client/package.json`**
 
-Replace the `scripts`, `dependencies`, and `devDependencies` blocks (keep `name`, `version`, `private`, `type`, `exports`, `files`, `size-limit` as-is):
+Replace the `scripts`, `dependencies`, and `devDependencies` blocks (keep `name`, `version`, `private`, `type`, `exports`, `files` as-is). Also bump `size-limit` (Step 1b) — the widget now bundles React, so the M1 placeholder of `10 kB` would fail CI.
 
 ```jsonc
   "scripts": {
     "build:css": "node scripts/build-css.mjs",
-    "build": "pnpm build:css && tsup && tsc --build",
+    "build": "pnpm build:css && rm -rf dist && tsup && tsc --build",
     "typecheck": "tsc --build",
     "test": "pnpm build:css && vitest run",
     "size": "size-limit"
@@ -108,6 +108,22 @@ Replace the `scripts`, `dependencies`, and `devDependencies` blocks (keep `name`
 ```
 
 > Note: `react`/`react-dom` live in `dependencies` because the vanilla widget **bundles** them. The `@comments/client/react` wrapper treats them as the host's React via tsup `external` (Task 18). A formal `peerDependencies` split is a publish-time concern (deferred); for this private workspace, deps-only is correct and avoids pnpm peer churn.
+
+- [ ] **Step 1b: Bump the `size-limit` budget so it is non-binding (size is an M9 concern)**
+
+In `packages/client/package.json`, change the `size-limit` block's limit:
+
+```jsonc
+  "size-limit": [
+    {
+      "name": "@comments/client (esm, brotli)",
+      "path": "dist/index.js",
+      "limit": "300 kB"
+    }
+  ]
+```
+
+> The widget bundles React (~50–70 kB brotli) plus Radix/our UI. `300 kB` is deliberately non-binding for M5; real budgets are calibrated in M9 (architecture §9). Leaving the M1 `10 kB` would make `pnpm size` (CI) fail.
 
 - [ ] **Step 2: Add JSX + test-file exclusion to `packages/client/tsconfig.json`**
 
@@ -930,7 +946,8 @@ describe('API client round-trip against the in-memory dev server', () => {
 
     expect(created.id).toBeTruthy()
 
-    const list = await client.listThreads({ pageKey: 'example.com/page' })
+    // List by the pageKey the server actually stored (robust to pageKey normalization).
+    const list = await client.listThreads({ pageKey: created.pageKey ?? undefined })
     expect(list.threads.map((t) => t.id)).toContain(created.id)
 
     const got = await client.getThread(created.id)
@@ -1982,27 +1999,34 @@ export default defineConfig([
     sourcemap: true,
     outDir: 'dist',
     noExternal: [/.*/],
-    clean: ['dist/**/*.js', 'dist/**/*.js.map'],
+    clean: false, // the `build` script does `rm -rf dist` once, before tsup
   },
   {
-    // React wrapper: uses the HOST's React (peer) and references the sibling
-    // widget bundle at runtime — it must NOT re-bundle React or the widget.
+    // React wrapper: uses the HOST's React (external) and references the sibling
+    // widget bundle (./index.js) at runtime — it must NOT re-bundle React or the widget.
     entry: { react: 'src/react.ts' },
     format: ['esm'],
     dts: false,
     sourcemap: true,
     outDir: 'dist',
     external: ['react', 'react-dom'],
-    esbuildOptions(options) {
-      // Keep the sibling widget bundle external so it is loaded at runtime, not re-bundled.
-      options.external = [...(options.external ?? []), './index.js']
-    },
+    esbuildPlugins: [
+      {
+        name: 'external-sibling-widget',
+        setup(build) {
+          // react.ts imports from './index'; keep it external (a deterministic
+          // onResolve beats esbuild's flaky relative-path `external` matching) so
+          // the one widget bundle (with its own React) loads at runtime.
+          build.onResolve({ filter: /^\.\/index(\.js)?$/ }, () => ({ path: './index.js', external: true }))
+        },
+      },
+    ],
     clean: false,
   },
 ])
 ```
 
-> The wrapper source imports `comments`/types from `./index`. Because the emitted `react.js` references `./index.js` and we mark that path external, the wrapper stays tiny and the single self-contained widget (with its bundled React) is the only widget implementation.
+> The wrapper source imports `comments`/types from `./index` (extensionless — resolves in vitest). The plugin rewrites that to an external `./index.js` in the build, so `react.js` stays tiny and the single self-contained widget (with its bundled React) is the only widget implementation.
 
 - [ ] **Step 2: Build and verify the outputs**
 
@@ -2016,7 +2040,7 @@ Expected: `react.js` is small (single-digit KB), references `./index.js`, and do
 Run: `node -e "const fs=require('fs');console.log('index.js has React runtime:', fs.readFileSync('packages/client/dist/index.js','utf8').includes('createRoot'));"`
 Expected: `true`.
 
-> If `react.js` turns out to inline the widget/React (relative external not honored), fall back to importing the wrapper's runtime dependency via the package self-reference `@comments/client` and marking that external instead. Re-run the inspection.
+> The `onResolve` plugin makes the external deterministic. If `react.js` still inlines the widget/React, confirm the import specifier in `react.ts` is exactly `./index` (so the filter `/^\.\/index(\.js)?$/` matches) and re-run the inspection.
 
 - [ ] **Step 4: Commit**
 
@@ -2034,7 +2058,7 @@ git commit -m "M5: tsup two-config — widget bundles React, wrapper externals i
 - Create: `examples/playground/package.json`
 - Create: `examples/playground/vite.config.ts`
 - Create: `examples/playground/index.html`
-- Create: `examples/playground/src/main.tsx`
+- Create: `examples/playground/src/main.ts`
 - Create: `examples/playground/dev-server.mjs`
 - Create: `examples/playground/README.md`
 
@@ -2069,7 +2093,6 @@ packages:
     "@comments/server": "workspace:*"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
     "vite": "^6.0.0"
   }
 }
@@ -2077,14 +2100,12 @@ packages:
 
 - [ ] **Step 3: Vite config**
 
-`examples/playground/vite.config.ts`:
+`examples/playground/vite.config.ts` (no React plugin — the playground itself writes no JSX; the prebuilt `@comments/client` widget carries its own React):
 
 ```ts
-import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  plugins: [react()],
   server: { port: 5173 },
 })
 ```
@@ -2103,16 +2124,16 @@ export default defineConfig({
   <body>
     <h1>Host page</h1>
     <p>Open this page with <code>?comments-key=dev-key</code> to activate the widget.</p>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
 ```
 
 - [ ] **Step 5: Mount script**
 
-`examples/playground/src/main.tsx`:
+`examples/playground/src/main.ts` (plain TS — no JSX):
 
-```tsx
+```ts
 import { comments } from '@comments/client'
 
 void comments.init({
@@ -2292,21 +2313,29 @@ Expected: PASS — including the client's new gate/config/identity/api/round-tri
 Run: `pnpm build`
 Expected: PASS; `packages/client/dist/{index,react}.js` + `.d.ts` present.
 
-- [ ] **Step 4: Lint/format**
+- [ ] **Step 4: Format, then lint**
 
-Run: `pnpm lint`
-Expected: PASS (Biome). If Biome flags import ordering or the `useExhaustiveDependencies` line, fix imports and confirm the single `biome-ignore` in `react.ts` is intact; re-run.
+`biome ci` (`pnpm lint`) is check-only and will fail on any formatting drift in the hand-written code. Auto-format first:
 
-- [ ] **Step 5: Export-map check**
+Run: `pnpm format` (writes Biome formatting fixes)
+Then run: `pnpm lint`
+Expected: `lint` PASS. If Biome still flags a rule (e.g. the `useExhaustiveDependencies` line), confirm the single `biome-ignore` in `react.ts` is intact and address any `noEmptyBlockStatements` hits in `test-setup.ts` (give the shim bodies a trivial statement or a `biome-ignore`); re-run.
+
+- [ ] **Step 5: Bundle-size budget (must not be red in CI)**
+
+Run: `pnpm size`
+Expected: PASS — `dist/index.js` is under the `300 kB` budget set in Task 1 (Step 1b).
+
+- [ ] **Step 6: Export-map check**
 
 Run: `pnpm check:exports`
 Expected: PASS — `@comments/client` (`.`) and `@comments/client/react` resolve.
 
-- [ ] **Step 6: Commit any fixups**
+- [ ] **Step 7: Commit any fixups**
 
 ```bash
 git add -A
-git commit -m "M5: lint/typecheck fixups; full suite green"
+git commit -m "M5: format/lint/typecheck fixups; full suite + size green"
 ```
 
 ---
