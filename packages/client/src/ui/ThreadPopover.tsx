@@ -46,9 +46,10 @@ export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: T
     } as unknown as Comment
     dispatch({ type: 'ADD_OPTIMISTIC_COMMENT', id, comment: optimistic })
     const wasResolved = resolved
-    // Reply reopens (optimistic): route through the controller so the pin AND the runtime's
-    // cached status flip together — a plain SET_STATUS would be clobbered by the next re-emit.
-    if (wasResolved) controller.setStatus(id, 'open')
+    // Reply reopens optimistically: patch the store AND the runtime cache together (a plain
+    // SET_STATUS would be clobbered by the next re-emit) — but only the UI, no network yet. The
+    // reopen is persisted below, AFTER the reply saves, so the two requests can't race.
+    if (wasResolved) controller.patchStatus(id, 'open')
     let saved: Comment
     try {
       saved = await client.addComment(id, {
@@ -58,12 +59,22 @@ export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: T
       })
     } catch {
       dispatch({ type: 'REMOVE_OPTIMISTIC_COMMENT', id, tempId })
-      if (wasResolved) controller.setStatus(id, 'resolved')
+      if (wasResolved) controller.patchStatus(id, 'resolved')
       toast('Failed to post reply')
       return
     }
     dispatch({ type: 'REPLACE_OPTIMISTIC_COMMENT', id, tempId, comment: saved })
-    // controller.setStatus already persisted the reopen above; no separate setThreadStatus call.
+    if (wasResolved) {
+      // The reply is in; now persist the reopen. On failure, revert the optimistic flip and tell
+      // the user the thread is still resolved server-side (rather than silently leaving the pin
+      // showing 'open' while the server stays 'resolved').
+      try {
+        await client.setThreadStatus(id, { status: 'open' })
+      } catch {
+        controller.patchStatus(id, 'resolved')
+        toast('Reply posted, but reopening the thread failed')
+      }
+    }
   }
 
   async function toggleStatus() {

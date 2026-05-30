@@ -2,10 +2,12 @@
 import type { ThreadListItem } from '@comments/core'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import { WidgetProvider } from '../app/providers'
 import type { PlacedThread } from '../threads/state'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { useController, useDispatch, useVisiblePlacements } from '../threads/useThreads'
 import { ThreadPopover } from './ThreadPopover'
+import { ToastProvider } from './toast'
 
 const item = (over: Partial<ThreadListItem> = {}) =>
   ({
@@ -191,6 +193,86 @@ describe('ThreadPopover', () => {
         (c as never as { setThreadStatus: ReturnType<typeof vi.fn> }).setThreadStatus,
       ).toHaveBeenCalledWith('a', { status: 'open' }),
     )
+  })
+
+  it('persists the reopen only after the reply is saved (no race with addComment)', async () => {
+    // Hold addComment open so we can observe ordering: the reopen must not be persisted while
+    // the reply is still in flight (the previous code fired both in parallel).
+    let resolveAdd: (v: unknown) => void = () => {}
+    const addComment = vi.fn().mockReturnValue(
+      new Promise((res) => {
+        resolveAdd = res
+      }),
+    )
+    const setThreadStatus = vi.fn().mockResolvedValue({ id: 'a', status: 'open' })
+    const c = clientResolved({ addComment, setThreadStatus })
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'reopen please' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(addComment).toHaveBeenCalled())
+    // Reply in flight → reopen NOT yet persisted (no racing setThreadStatus).
+    expect(setThreadStatus).not.toHaveBeenCalled()
+    // Reply lands → reopen persists.
+    resolveAdd({
+      id: 'c2',
+      author: { email: 'a@b.c' },
+      text: 'reopen please',
+      attachments: [],
+      createdAt: new Date().toISOString(),
+    })
+    await waitFor(() => expect(setThreadStatus).toHaveBeenCalledWith('a', { status: 'open' }))
+  })
+
+  it('does not persist a reopen when the reply itself fails', async () => {
+    const addComment = vi.fn().mockRejectedValue(new Error('nope'))
+    const setThreadStatus = vi.fn().mockResolvedValue({ id: 'a', status: 'open' })
+    const c = clientResolved({ addComment, setThreadStatus })
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'oops' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(addComment).toHaveBeenCalled())
+    await waitFor(() => expect(screen.queryByText('oops')).not.toBeInTheDocument())
+    // The failed reply must not leave a reopen persisted server-side, and the header stays Resolved.
+    expect(setThreadStatus).not.toHaveBeenCalled()
+    expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument()
+  })
+
+  it('tells the user (and reverts the pin) when the reply posts but reopening fails', async () => {
+    const setThreadStatus = vi.fn().mockRejectedValue(new Error('nope'))
+    const c = clientResolved({ setThreadStatus })
+    // Real toast stack so the partial-failure message actually renders into the DOM.
+    render(
+      <WidgetProvider>
+        <ToastProvider>
+          <ThreadsProvider client={c}>
+            <Harness client={c} />
+          </ThreadsProvider>
+        </ToastProvider>
+      </WidgetProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'reopen please' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    // Reply lands...
+    await waitFor(() => expect(screen.getByText('reopen please')).toBeInTheDocument())
+    // ...but the reopen fails: the user is told, and the header reverts to Resolved.
+    await waitFor(() =>
+      expect(screen.getByText(/reopening the thread failed/i)).toBeInTheDocument(),
+    )
+    await waitFor(() => expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument())
   })
 
   it('rolls back status when resolve fails', async () => {

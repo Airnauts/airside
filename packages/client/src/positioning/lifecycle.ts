@@ -36,6 +36,12 @@ export function observeReposition(opts: ObserveOptions): () => void {
   // inside document.body, so its own DOM churn (Radix popover data-state/aria flips, the draft's
   // inline style updates, focus) would otherwise fire the observer → rematch → re-render →
   // more widget mutations → infinite loop. Only HOST-page mutations can actually move anchors.
+  //
+  // INVARIANT: this depends on every widget-rendered node — INCLUDING portalled popovers and
+  // toasts — living under [data-comments-root]. mount() asserts this at startup (warns if a
+  // portal/toast container escapes the root). Edge case: if a widget node is detached and then
+  // mutated, `closest` returns null and the record is treated as host → at worst ONE spurious
+  // rematch, which self-heals (its own re-render churn is filtered, so it can't loop).
   const isOwnMutation = (rec: MutationRecord): boolean => {
     const t = rec.target
     const el = t instanceof Element ? t : t.parentElement

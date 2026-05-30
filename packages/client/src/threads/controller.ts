@@ -10,6 +10,13 @@ export type Controller = {
   /** Optimistically set a thread's status (store + runtime cache) and persist; rolls back on failure. */
   setStatus(id: string, status: ThreadStatus): Promise<boolean>
   /**
+   * Optimistically patch a thread's status in the store AND the runtime cache WITHOUT persisting.
+   * The reply flow uses this to reopen a resolved thread instantly, then persists the reopen only
+   * after the reply itself has been saved — so the two network calls can't race. Keeping the runtime
+   * cache in sync is what stops a reposition/mutation re-emit from clobbering the optimistic flip.
+   */
+  patchStatus(id: string, status: ThreadStatus): void
+  /**
    * MarkerLayer registers the live anchor-runtime here so status changes also patch its cached
    * item list. Without this, the runtime re-emits stale 'open' placements on the next reposition/
    * mutation, clobbering the optimistic update (the pin would revert until a full reload).
@@ -32,6 +39,13 @@ export function createController(
 ): Controller {
   let patchRuntime: ((id: string, status: ThreadStatus) => void) | null = null
 
+  // Optimistic store + runtime patch, no network. Shared by setStatus (which then persists) and
+  // exposed directly for the reply flow (which persists separately, after the reply is saved).
+  const patchStatus = (id: string, status: ThreadStatus) => {
+    dispatch({ type: 'SET_STATUS', id, status })
+    patchRuntime?.(id, status)
+  }
+
   return {
     openThread(id) {
       dispatch({ type: 'OPEN', id })
@@ -51,18 +65,17 @@ export function createController(
     registerRuntime(patch) {
       patchRuntime = patch
     },
+    patchStatus,
     async setStatus(id, status) {
       const prev: ThreadStatus = status === 'resolved' ? 'open' : 'resolved'
       // Optimistic: update the store (instant pin/header) AND the runtime cache (so the next
       // reposition/mutation re-emit doesn't overwrite it with the stale listed status).
-      dispatch({ type: 'SET_STATUS', id, status })
-      patchRuntime?.(id, status)
+      patchStatus(id, status)
       try {
         await deps.client.setThreadStatus(id, { status })
         return true
       } catch {
-        dispatch({ type: 'SET_STATUS', id, status: prev })
-        patchRuntime?.(id, prev)
+        patchStatus(id, prev)
         return false
       }
     },

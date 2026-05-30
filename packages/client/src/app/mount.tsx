@@ -32,6 +32,21 @@ export function mount(options: InitOptions): WidgetHandle {
   const root: Root = createRoot(mountNode)
   flushSync(() => root.render(<WidgetApp options={options} />))
 
+  // Invariant tripwire: the MutationObserver self-mutation filter (positioning/lifecycle.ts)
+  // assumes ALL widget-rendered DOM — including portalled popovers and toasts — lives inside
+  // [data-comments-root]. If a portal/toast container escapes the root, its own churn would be
+  // misclassified as host-page changes and reintroduce the rematch → re-render loop. flushSync
+  // above commits the first render synchronously, so the containers exist here. Warn loudly if
+  // a future change moves one out of the root, so the regression isn't silent.
+  for (const sel of ['[data-portal-container]', '[data-toasts-container]']) {
+    if (!host.querySelector(sel)) {
+      console.warn(
+        `[comments] ${sel} is not inside [data-comments-root]; the MutationObserver self-mutation ` +
+          'filter will misclassify its DOM as host changes and may reintroduce the re-render loop.',
+      )
+    }
+  }
+
   return {
     destroy() {
       root.unmount()
