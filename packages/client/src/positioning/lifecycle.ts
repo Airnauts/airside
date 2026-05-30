@@ -32,13 +32,29 @@ export function observeReposition(opts: ObserveOptions): () => void {
     })
   }
 
+  // A mutation record is "ours" if its target lives inside the widget root. The widget renders
+  // inside document.body, so its own DOM churn (Radix popover data-state/aria flips, the draft's
+  // inline style updates, focus) would otherwise fire the observer → rematch → re-render →
+  // more widget mutations → infinite loop. Only HOST-page mutations can actually move anchors.
+  const isOwnMutation = (rec: MutationRecord): boolean => {
+    const t = rec.target
+    const el = t instanceof Element ? t : t.parentElement
+    return !!el?.closest('[data-comments-root]')
+  }
+  const onMutations = (records: MutationRecord[]) => {
+    // Skip only when every record is widget-internal. An empty batch (degenerate; a real
+    // MutationObserver always delivers ≥1 record) is treated as a host signal, not skipped.
+    if (records.length > 0 && records.every(isOwnMutation)) return
+    scheduleMutation()
+  }
+
   window.addEventListener('scroll', schedule, { passive: true, capture: true })
   window.addEventListener('resize', schedule, { passive: true })
 
   const ro = new ResizeObserver(schedule)
   for (const t of opts.targets) ro.observe(t)
 
-  const mo = new MutationObserver(scheduleMutation)
+  const mo = new MutationObserver(onMutations)
   mo.observe(document.body, { childList: true, subtree: true, attributes: true })
 
   const route = () => opts.onRouteChange()

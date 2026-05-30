@@ -65,6 +65,63 @@ describe('MarkerLayer place mode', () => {
     expect(screen.queryByText(/anchor was lost/i)).not.toBeInTheDocument()
   })
 
+  it('shows the just-posted comment in the popover immediately, with no extra getThread (BUG A)', async () => {
+    document.body.innerHTML =
+      '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
+    mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 80, height: 16 })
+    const c = client()
+    // Faithful to production (confirmed via the server create-thread use-case + core Thread
+    // schema): createThread returns a full Thread whose `comments` array already holds the
+    // first comment. The default mock returns comments:[], so override it.
+    c.createThread = vi.fn().mockImplementation(async (body: { comment: { text: string } }) => ({
+      id: 'new1',
+      status: 'open',
+      comments: [
+        {
+          id: 'c-first',
+          author: { email: 'a@b.c', name: 'A' },
+          text: body.comment.text,
+          attachments: [],
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    }))
+    // Faithful to production: after create, runtime.refresh() re-lists and matches the new
+    // thread to the just-clicked DOM node, producing a placement so the ThreadPopover mounts.
+    // Reuse the anchor the client captured so the runtime re-matches it to #t.
+    c.listThreads = vi.fn().mockImplementation(async () => {
+      const created = c.createThread.mock.calls[0]?.[0]
+      if (!created) return { threads: [], nextCursor: null }
+      return {
+        threads: [
+          {
+            id: 'new1',
+            status: 'open',
+            anchorState: 'anchored',
+            unresolvedCount: 1,
+            commentCount: 1,
+            createdBy: { email: 'a@b.c', name: 'A' },
+            anchor: created.anchor,
+          },
+        ],
+        nextCursor: null,
+      }
+    })
+    renderMarker(props(c))
+    fireEvent.click(screen.getByTestId('comments-place'))
+    fireEvent.click(document.querySelector('#t') as Element, { clientX: 40, clientY: 8 })
+    expect(await screen.findByTestId('comments-draft')).toBeInTheDocument()
+    fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
+      target: { value: 'My first note' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    // The comment text must appear immediately in the popover — no manual reload, no refetch.
+    await waitFor(() => expect(screen.getByText('My first note')).toBeInTheDocument())
+    expect(screen.queryByText(/no comments yet/i)).not.toBeInTheDocument()
+    // Seeding from the create response means we must NOT have re-fetched via getThread.
+    expect(c.getThread).not.toHaveBeenCalled()
+  })
+
   it('ESC cancels place mode (a subsequent click does not open a draft)', async () => {
     document.body.innerHTML = '<main><p id="t">x</p></main>'
     const c = client()
@@ -152,6 +209,77 @@ describe('MarkerLayer mutation wiring', () => {
     spies.fireMutation()
     // listThreads count must not increase — rematchAll does NOT re-list
     expect(c.listThreads.mock.calls.length).toBe(listCountBefore)
+    spies.restore()
+  })
+
+  it('keeps the pin ✓ after resolve even when a re-emit (mutation/reposition) follows (BUG 2)', async () => {
+    document.body.innerHTML = '<main><p id="t" class="lead">resolve target text</p></main>'
+    mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    const spies = installObserverSpies()
+    // Real createRuntime: listThreads returns one OPEN thread anchored to #t (status 'open').
+    const c = client()
+    c.listThreads = vi.fn().mockResolvedValue({
+      threads: [
+        {
+          id: 'th1',
+          status: 'open',
+          anchorState: 'anchored',
+          unresolvedCount: 1,
+          commentCount: 1,
+          createdBy: { email: 'a@b.c', name: 'Ann' },
+          anchor: {
+            schemaVersion: 1,
+            selectors: ['#t', '#t'],
+            signals: {
+              tag: 'p',
+              classes: ['lead'],
+              siblingIndex: 0,
+              ancestorTrail: ['main'],
+              textSnippet: 'resolve target text',
+            },
+            offset: { fx: 0.5, fy: 0.5 },
+          },
+        },
+      ],
+      nextCursor: null,
+    })
+    c.getThread = vi.fn().mockResolvedValue({
+      id: 'th1',
+      status: 'open',
+      comments: [
+        {
+          id: 'c1',
+          author: { email: 'a@b.c', name: 'Ann' },
+          text: 'the comment',
+          attachments: [],
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    })
+    renderMarker(props(c))
+    // Pin renders for the open thread.
+    const pin = await screen.findByTestId('comments-pin')
+    expect(pin).toHaveAccessibleName(/^Comment thread by/i)
+    // Open it and resolve.
+    fireEvent.click(pin)
+    await waitFor(() => expect(screen.getByText('the comment')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
+    await waitFor(() =>
+      expect(screen.getByTestId('comments-pin')).toHaveAccessibleName(/resolved/i),
+    )
+    // Now simulate what the live app does: the popover's own content change is a DOM mutation
+    // under document.body → rematchAll() re-emits from the runtime's cached list. Without the
+    // runtime status patch, this re-ingest carries stale 'open' and reverts the pin.
+    spies.fireMutation()
+    // Also exercise reposition (scroll/resize path), which re-emits the cached items too.
+    spies.fireResize()
+    // The pin must STAY resolved (✓) — no clobber back to the blue "open" avatar.
+    await waitFor(() =>
+      expect(screen.getByTestId('comments-pin')).toHaveAccessibleName(/resolved/i),
+    )
+    expect(screen.getByTestId('comments-pin')).toHaveTextContent('✓')
+    // listThreads must not have been called again (no refetch; cache patch sufficed).
+    expect(c.listThreads).toHaveBeenCalledTimes(1)
     spies.restore()
   })
 })

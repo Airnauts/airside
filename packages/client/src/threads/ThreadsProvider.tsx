@@ -16,7 +16,7 @@ export function ThreadsProvider({
   client,
   children,
 }: {
-  client: Pick<ApiClient, 'getThread'>
+  client: Pick<ApiClient, 'getThread' | 'setThreadStatus'>
   children: ReactNode
 }) {
   const [state, dispatch] = useReducer(reducer, initialState)

@@ -13,8 +13,10 @@ export function mount(options: InitOptions): WidgetHandle {
   host.setAttribute('data-comments-root', '')
   // `all: revert` first neutralizes inherited host styles; the following longhands
   // re-establish only the few we need (longhands after a shorthand win in CSS).
+  // font-family is set here so the whole widget inherits a sans-serif stack rather
+  // than the host page's font (the UA default after `all: revert` is serif).
   host.style.cssText =
-    'all: revert; position: fixed; inset: 0; pointer-events: none; z-index: 2147483600;'
+    'all: revert; position: fixed; inset: 0; pointer-events: none; z-index: 2147483600; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";'
 
   const style = document.createElement('style')
   style.setAttribute('data-comments-style', '')

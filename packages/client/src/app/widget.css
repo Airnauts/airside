@@ -10,3 +10,14 @@
 
 /* Scan widget source (relative to this file = src/app) for prefixed classes. */
 @source "../**/*.{ts,tsx}";
+
+/* No Preflight means form controls keep their UA font (serif). Force them to
+   inherit the sans-serif family set on the widget root (see app/mount.tsx). */
+@layer base {
+  [data-comments-root] button,
+  [data-comments-root] input,
+  [data-comments-root] textarea,
+  [data-comments-root] select {
+    font-family: inherit;
+  }
+}

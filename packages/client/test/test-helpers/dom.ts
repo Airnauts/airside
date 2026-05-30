@@ -14,7 +14,11 @@ export function mockRect(el: Element, r: Partial<DOMRect>): void {
     }) as DOMRect
 }
 
-type Spies = { fireResize: () => void; fireMutation: () => void; restore: () => void }
+type Spies = {
+  fireResize: () => void
+  fireMutation: (records?: MutationRecord[]) => void
+  restore: () => void
+}
 
 /** Replace global ResizeObserver/MutationObserver with versions whose callbacks the test can fire. */
 export function installObserverSpies(): Spies {
@@ -46,8 +50,8 @@ export function installObserverSpies(): Spies {
     fireResize: () => {
       for (const cb of resizeCbs) cb([], {} as ResizeObserver)
     },
-    fireMutation: () => {
-      for (const cb of mutationCbs) cb([], {} as MutationObserver)
+    fireMutation: (records: MutationRecord[] = []) => {
+      for (const cb of mutationCbs) cb(records, {} as MutationObserver)
     },
     restore: () => {
       g.ResizeObserver = origRO

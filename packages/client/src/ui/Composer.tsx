@@ -1,6 +1,6 @@
 // packages/client/src/ui/Composer.tsx
 import type { Attachment } from '@comments/core'
-import { type ChangeEvent, useRef, useState } from 'react'
+import { type ChangeEvent, useEffect, useRef, useState } from 'react'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
 import { PendingAttachment, type PendingStatus } from './Attachment'
@@ -13,15 +13,32 @@ export type ComposerProps = {
   onNeedIdentity: (resume: (who: Identity) => void) => void
   onSubmit: (payload: ComposerSubmit) => Promise<void>
   upload: (file: File) => Promise<Attachment>
+  /** When set, renders a Cancel button left of Send (used by the new-comment draft). */
+  onCancel?: () => void
+  /** Focus the text input on mount. */
+  autoFocus?: boolean
 }
 
 type Pending = { name: string; status: PendingStatus; id?: string; file: File }
 
-export function Composer({ mode, identity, onNeedIdentity, onSubmit, upload }: ComposerProps) {
+export function Composer({
+  mode,
+  identity,
+  onNeedIdentity,
+  onSubmit,
+  upload,
+  onCancel,
+  autoFocus,
+}: ComposerProps) {
   const [text, setText] = useState('')
   const [pending, setPending] = useState<Pending | null>(null)
   const [sending, setSending] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (autoFocus) inputRef.current?.focus()
+  }, [autoFocus])
 
   const attachmentReady = !pending || pending.status === 'ready'
   const canSend = text.trim().length > 0 && attachmentReady && !sending
@@ -64,7 +81,7 @@ export function Composer({ mode, identity, onNeedIdentity, onSubmit, upload }: C
   const placeholder = mode === 'newThread' ? 'Add a comment…' : 'Reply…'
 
   return (
-    <div className="cmnt:border-t cmnt:border-[#f1f3f5] cmnt:px-3 cmnt:py-[9px]">
+    <div className="cmnt:border-t cmnt:first:border-t-0 cmnt:border-[#f1f3f5] cmnt:px-3 cmnt:py-[9px]">
       {pending && (
         <PendingAttachment
           name={pending.name}
@@ -91,6 +108,7 @@ export function Composer({ mode, identity, onNeedIdentity, onSubmit, upload }: C
           className="cmnt:hidden"
         />
         <input
+          ref={inputRef}
           aria-label={placeholder}
           placeholder={placeholder}
           value={text}
@@ -103,6 +121,15 @@ export function Composer({ mode, identity, onNeedIdentity, onSubmit, upload }: C
           }}
           className="cmnt:flex-1 cmnt:border-none cmnt:outline-none cmnt:text-[13px] cmnt:bg-transparent"
         />
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="cmnt:bg-white cmnt:border cmnt:border-gray-300 cmnt:rounded-md cmnt:px-[11px] cmnt:py-[5px] cmnt:text-xs cmnt:font-semibold cmnt:text-gray-600 cmnt:cursor-pointer"
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="button"
           onClick={onSendClick}

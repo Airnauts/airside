@@ -1,9 +1,11 @@
 import type { AttachmentId, Provenance } from '@comments/core'
+import * as Popover from '@radix-ui/react-popover'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { captureElement, captureSelection } from '../anchor/capture'
 import { createRuntime } from '../anchor/runtime'
 import type { ApiClient } from '../api/client'
 import { ApiError } from '../api/errors'
+import { usePortalContainer } from '../app/providers'
 import { buildCaptureContext } from '../config'
 import type { Identity } from '../identity/storage'
 import { pinXY } from '../positioning/coords'
@@ -15,6 +17,7 @@ import {
   useThreadsState,
   useVisiblePlacements,
 } from '../threads/useThreads'
+import { initials } from '../ui/avatar'
 import { Composer, type ComposerSubmit } from '../ui/Composer'
 import { Launcher } from '../ui/Launcher'
 import { useToast } from '../ui/toast'
@@ -46,6 +49,7 @@ export function MarkerLayer({
   const [placing, setPlacing] = useState(false)
   const [activeKey, setActiveKey] = useState(pageKey)
   const toast = useToast()
+  const container = usePortalContainer()
   const runtime = useRef<ReturnType<typeof createRuntime> | null>(null)
   const openCount = Object.values(state.itemsById).filter((i) => i.status === 'open').length
 
@@ -57,6 +61,10 @@ export function MarkerLayer({
       onPlacements: (next) => dispatch({ type: 'INGEST_PLACEMENTS', placements: next }),
     })
     runtime.current = rt
+    // Bridge optimistic status changes into the runtime's cached list so its next emit
+    // (reposition/rematchAll, fired by scroll/resize and the popover's own DOM mutation)
+    // doesn't clobber the resolved pin back to 'open' until a reload.
+    controller.registerRuntime((id, status) => rt.setItemStatus(id, status))
     void rt.refresh()
     const stop = observeReposition({
       targets: [],
@@ -70,9 +78,10 @@ export function MarkerLayer({
     return () => {
       stop()
       rt.dispose()
+      controller.registerRuntime(null)
       runtime.current = null
     }
-  }, [client, activeKey, dispatch])
+  }, [client, activeKey, dispatch, controller])
 
   // Toast + clear when the open thread orphaned during a re-match.
   useEffect(() => {
@@ -99,6 +108,10 @@ export function MarkerLayer({
         })
         dispatch({ type: 'CLEAR_DRAFT' })
         await runtime.current?.refresh()
+        // Seed the detail cache from the create response (a full Thread with its first
+        // comment) so the popover renders comments immediately. Plain OPEN only sets
+        // openId and would leave detail null → "No comments yet" until a manual refetch.
+        dispatch({ type: 'DETAIL_LOADED', id: created.id, thread: created })
         dispatch({ type: 'OPEN', id: created.id })
       } catch (err) {
         toast(err instanceof ApiError ? err.message : 'Failed to create comment')
@@ -161,38 +174,54 @@ export function MarkerLayer({
       />
       {state.draft && (
         <div data-comments-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
-          <div
-            data-testid="comments-draft"
-            className="cmnt:absolute cmnt:w-80 cmnt:-ml-40 cmnt:mt-3 cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:pointer-events-auto cmnt:overflow-hidden cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
-            style={{ transform: `translate(${state.draft.pin.x}px, ${state.draft.pin.y}px)` }} // computed → inline
-          >
-            <div className="cmnt:flex cmnt:justify-between cmnt:px-3 cmnt:py-2.5 cmnt:border-b cmnt:border-[#f1f3f5]">
-              <span className="cmnt:text-[11px] cmnt:font-semibold cmnt:text-gray-500">
-                New comment
-              </span>
-              <button
-                type="button"
-                aria-label="Discard"
-                onClick={() => dispatch({ type: 'CLEAR_DRAFT' })}
-                className="cmnt:border-none cmnt:bg-transparent cmnt:cursor-pointer cmnt:text-gray-500"
+          {/* Radix Popover anchored at the draft pin so Radix handles flip/shift +
+              collision and the composer never overflows the viewport. The Anchor IS the
+              preview pin (same teardrop visual as ui/Pin.tsx), so the user sees pin + composer. */}
+          <Popover.Root open onOpenChange={(o) => !o && dispatch({ type: 'CLEAR_DRAFT' })}>
+            <Popover.Anchor asChild>
+              <div
+                data-testid="comments-draft-pin"
+                aria-hidden="true"
+                className="cmnt:absolute cmnt:w-[42px] cmnt:h-[42px] cmnt:-ml-[21px] cmnt:-mt-[42px] cmnt:pointer-events-none"
+                style={{ transform: `translate(${state.draft.pin.x}px, ${state.draft.pin.y}px)` }}
               >
-                ✕
-              </button>
-            </div>
-            {state.draft.anchor.selection?.quote && (
-              <div className="cmnt:mx-3 cmnt:mt-2 cmnt:px-2 cmnt:py-1.5 cmnt:border-l-[3px] cmnt:border-blue-600 cmnt:bg-[#f3f6fc] cmnt:text-xs cmnt:text-gray-700 cmnt:italic">
-                “{state.draft.anchor.selection.quote}”
+                <span
+                  className="cmnt:absolute cmnt:inset-0 cmnt:border-2 cmnt:border-white cmnt:shadow-lg cmnt:bg-blue-600"
+                  style={{ borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)' }}
+                />
+                <span className="cmnt:absolute cmnt:top-1.5 cmnt:left-1.5 cmnt:w-[30px] cmnt:h-[30px] cmnt:rounded-full cmnt:border-2 cmnt:border-white cmnt:bg-blue-600 cmnt:text-white cmnt:text-xs cmnt:flex cmnt:items-center cmnt:justify-center cmnt:font-semibold">
+                  {identity ? initials(identity) : ''}
+                </span>
               </div>
-            )}
-            <Composer
-              mode="newThread"
-              identity={identity}
-              onNeedIdentity={onNeedIdentity}
-              upload={client.upload}
-              // biome-ignore lint/style/noNonNullAssertion: draft is guarded by the enclosing `state.draft &&`; the closure reads the live draft at submit time.
-              onSubmit={(payload) => createThread(payload, state.draft!.anchor)}
-            />
-          </div>
+            </Popover.Anchor>
+            <Popover.Portal container={container ?? undefined}>
+              <Popover.Content
+                side="top"
+                align="center"
+                sideOffset={8}
+                collisionPadding={8}
+                onOpenAutoFocus={(e) => e.preventDefault()}
+                data-testid="comments-draft"
+                className="cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:pointer-events-auto cmnt:overflow-hidden cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
+              >
+                {state.draft.anchor.selection?.quote && (
+                  <div className="cmnt:mx-3 cmnt:mt-2 cmnt:px-2 cmnt:py-1.5 cmnt:border-l-[3px] cmnt:border-blue-600 cmnt:bg-[#f3f6fc] cmnt:text-xs cmnt:text-gray-700 cmnt:italic">
+                    “{state.draft.anchor.selection.quote}”
+                  </div>
+                )}
+                <Composer
+                  mode="newThread"
+                  identity={identity}
+                  onNeedIdentity={onNeedIdentity}
+                  upload={client.upload}
+                  autoFocus
+                  onCancel={() => dispatch({ type: 'CLEAR_DRAFT' })}
+                  // biome-ignore lint/style/noNonNullAssertion: draft is guarded by the enclosing `state.draft &&`; the closure reads the live draft at submit time.
+                  onSubmit={(payload) => createThread(payload, state.draft!.anchor)}
+                />
+              </Popover.Content>
+            </Popover.Portal>
+          </Popover.Root>
         </div>
       )}
       <Launcher

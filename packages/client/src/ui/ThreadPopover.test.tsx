@@ -2,8 +2,9 @@
 import type { ThreadListItem } from '@comments/core'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import type { PlacedThread } from '../threads/state'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
-import { useController } from '../threads/useThreads'
+import { useController, useDispatch, useVisiblePlacements } from '../threads/useThreads'
 import { ThreadPopover } from './ThreadPopover'
 
 const item = (over: Partial<ThreadListItem> = {}) =>
@@ -205,5 +206,65 @@ describe('ThreadPopover', () => {
     fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
     await waitFor(() => expect(setThreadStatus).toHaveBeenCalled())
     await waitFor(() => expect(screen.getByText(/Open ·/)).toBeInTheDocument())
+  })
+
+  // Renders pins through useVisiblePlacements + INGEST_PLACEMENTS (like the real PinLayer),
+  // so the visiblePlacements open-exemption is actually exercised. showResolved stays false.
+  function PinsHarness({ client: c }: { client: never }) {
+    const controller = useController()
+    const dispatch = useDispatch()
+    const placements = useVisiblePlacements()
+    const placed: PlacedThread = {
+      item: item(),
+      pin: { x: 10, y: 10 },
+      highlight: [],
+    }
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'INGEST_PLACEMENTS', placements: [placed] })}
+        >
+          ingest
+        </button>
+        <button type="button" onClick={() => controller.openThread('a')}>
+          open-a
+        </button>
+        {placements.map((p) => (
+          <ThreadPopover
+            key={p.item.id}
+            item={p.item}
+            pin={p.pin}
+            client={c}
+            identity={{ email: 'a@b.c', name: 'Ann' }}
+            onNeedIdentity={(r) => r({ email: 'a@b.c', name: 'Ann' })}
+          />
+        ))}
+      </>
+    )
+  }
+
+  it('flips the pin to ✓ and keeps the popover open immediately on resolve, no re-ingest (BUG B)', async () => {
+    const c = client()
+    render(
+      <ThreadsProvider client={c}>
+        <PinsHarness client={c} />
+      </ThreadsProvider>,
+    )
+    // Ingest one OPEN placement, then open it. showResolved is the default (false).
+    fireEvent.click(screen.getByText('ingest'))
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    // Pin starts unresolved.
+    expect(screen.getByTestId('comments-pin')).toHaveAccessibleName(/^Comment thread by/i)
+    // Resolve from the popover.
+    fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
+    // WITHOUT any refresh/re-ingest: the pin is still rendered (open-exemption) and shows ✓...
+    await waitFor(() =>
+      expect(screen.getByTestId('comments-pin')).toHaveAccessibleName(/resolved/i),
+    )
+    expect(screen.getByTestId('comments-pin')).toHaveTextContent('✓')
+    // ...and the popover stays open with a Resolved header.
+    expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument()
   })
 })

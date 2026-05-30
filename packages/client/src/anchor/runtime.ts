@@ -1,5 +1,5 @@
 // packages/client/src/anchor/runtime.ts
-import type { Anchor, ThreadListItem } from '@comments/core'
+import type { Anchor, ThreadListItem, ThreadStatus } from '@comments/core'
 import type { ApiClient } from '../api/client'
 import { type Box, mapRects, pinXY } from '../positioning/coords'
 import type { PlacedThread } from '../threads/state'
@@ -83,6 +83,20 @@ export function createRuntime(opts: RuntimeOptions) {
     emit()
   }
 
+  // Patch a cached item's status so subsequent emits (reposition/rematchAll, fired by
+  // scroll/resize and by DOM mutations — including the widget's own popover content change)
+  // carry the new status instead of clobbering an optimistic store update back to stale.
+  function setItemStatus(id: string, status: ThreadStatus) {
+    let changed = false
+    placed = placed.map((p) => {
+      if (p.item.id !== id) return p
+      changed = true
+      const unresolvedCount = status === 'resolved' ? 0 : Math.max(1, p.item.unresolvedCount)
+      return { ...p, item: { ...p.item, status, unresolvedCount } }
+    })
+    if (changed) emit()
+  }
+
   function dispose() {
     resizeObs?.disconnect()
   }
@@ -91,6 +105,7 @@ export function createRuntime(opts: RuntimeOptions) {
     refresh,
     reposition: emit,
     rematchAll,
+    setItemStatus,
     dispose,
     get placed() {
       return placed
