@@ -136,10 +136,18 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
       }))
     case 'SET_STATUS': {
       const item = state.itemsById[action.id]
+      // Keep the list item in sync so the pin (status/count) reacts immediately, not
+      // just after a refresh. A resolved thread carries no unresolved comments; reopening
+      // restores the count to 1 (the list refetch reconciles the exact number).
+      const unresolvedCount =
+        action.status === 'resolved' ? 0 : Math.max(1, item?.unresolvedCount ?? 1)
       const withItem = item
         ? {
             ...state,
-            itemsById: { ...state.itemsById, [action.id]: { ...item, status: action.status } },
+            itemsById: {
+              ...state.itemsById,
+              [action.id]: { ...item, status: action.status, unresolvedCount },
+            },
           }
         : state
       return mapDetail(withItem, action.id, (t) => ({ ...t, status: action.status }))
@@ -156,7 +164,9 @@ export function visiblePlacements(state: ThreadsState): PlacedThread[] {
     const item = state.itemsById[id]
     const geo = state.placementsById[id]
     if (!item || !geo) continue
-    if (item.status === 'resolved' && !state.showResolved) continue
+    // Hide resolved threads unless showResolved — but never hide the one that's open, so
+    // resolving from its popover flips the pin to ✓ in place instead of making it vanish.
+    if (item.status === 'resolved' && !state.showResolved && id !== state.openId) continue
     out.push({ item, pin: geo.pin, highlight: geo.highlight })
   }
   return out

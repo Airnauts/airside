@@ -36,11 +36,50 @@ describe('observeReposition', () => {
       onMutation,
       onRouteChange: vi.fn(),
     })
+    // No records (empty array) is treated as a host-page signal (back-compat) and fires.
     spies.fireMutation()
     expect(onMutation).toHaveBeenCalled()
     expect(onReposition).not.toHaveBeenCalled()
     stop()
     spies.restore()
+  })
+
+  it('ignores mutations that originate inside the widget root (prevents the re-render loop)', () => {
+    document.body.innerHTML = '<div data-comments-root><span id="own">x</span></div>'
+    const spies = installObserverSpies()
+    const onMutation = vi.fn()
+    const stop = observeReposition({
+      targets: [],
+      onMutation,
+      onReposition: vi.fn(),
+      onRouteChange: vi.fn(),
+    })
+    const ownTarget = document.querySelector('#own') as Element
+    // A widget-internal mutation (e.g. Radix popover attribute flip) must NOT trigger rematch.
+    spies.fireMutation([{ target: ownTarget } as unknown as MutationRecord])
+    expect(onMutation).not.toHaveBeenCalled()
+    stop()
+    spies.restore()
+    document.body.innerHTML = ''
+  })
+
+  it('still reacts to host-page mutations outside the widget root', () => {
+    document.body.innerHTML =
+      '<main><p id="host">host</p></main><div data-comments-root><span id="own">x</span></div>'
+    const spies = installObserverSpies()
+    const onMutation = vi.fn()
+    const stop = observeReposition({
+      targets: [],
+      onMutation,
+      onReposition: vi.fn(),
+      onRouteChange: vi.fn(),
+    })
+    const hostTarget = document.querySelector('#host') as Element
+    spies.fireMutation([{ target: hostTarget } as unknown as MutationRecord])
+    expect(onMutation).toHaveBeenCalled()
+    stop()
+    spies.restore()
+    document.body.innerHTML = ''
   })
 
   it('calls onRouteChange on pushState and popstate', () => {

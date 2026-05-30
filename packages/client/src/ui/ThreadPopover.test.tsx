@@ -2,9 +2,12 @@
 import type { ThreadListItem } from '@comments/core'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import { WidgetProvider } from '../app/providers'
+import type { PlacedThread } from '../threads/state'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
-import { useController } from '../threads/useThreads'
+import { useController, useDispatch, useVisiblePlacements } from '../threads/useThreads'
 import { ThreadPopover } from './ThreadPopover'
+import { ToastProvider } from './toast'
 
 const item = (over: Partial<ThreadListItem> = {}) =>
   ({
@@ -192,6 +195,86 @@ describe('ThreadPopover', () => {
     )
   })
 
+  it('persists the reopen only after the reply is saved (no race with addComment)', async () => {
+    // Hold addComment open so we can observe ordering: the reopen must not be persisted while
+    // the reply is still in flight (the previous code fired both in parallel).
+    let resolveAdd: (v: unknown) => void = () => {}
+    const addComment = vi.fn().mockReturnValue(
+      new Promise((res) => {
+        resolveAdd = res
+      }),
+    )
+    const setThreadStatus = vi.fn().mockResolvedValue({ id: 'a', status: 'open' })
+    const c = clientResolved({ addComment, setThreadStatus })
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'reopen please' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(addComment).toHaveBeenCalled())
+    // Reply in flight → reopen NOT yet persisted (no racing setThreadStatus).
+    expect(setThreadStatus).not.toHaveBeenCalled()
+    // Reply lands → reopen persists.
+    resolveAdd({
+      id: 'c2',
+      author: { email: 'a@b.c' },
+      text: 'reopen please',
+      attachments: [],
+      createdAt: new Date().toISOString(),
+    })
+    await waitFor(() => expect(setThreadStatus).toHaveBeenCalledWith('a', { status: 'open' }))
+  })
+
+  it('does not persist a reopen when the reply itself fails', async () => {
+    const addComment = vi.fn().mockRejectedValue(new Error('nope'))
+    const setThreadStatus = vi.fn().mockResolvedValue({ id: 'a', status: 'open' })
+    const c = clientResolved({ addComment, setThreadStatus })
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'oops' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(addComment).toHaveBeenCalled())
+    await waitFor(() => expect(screen.queryByText('oops')).not.toBeInTheDocument())
+    // The failed reply must not leave a reopen persisted server-side, and the header stays Resolved.
+    expect(setThreadStatus).not.toHaveBeenCalled()
+    expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument()
+  })
+
+  it('tells the user (and reverts the pin) when the reply posts but reopening fails', async () => {
+    const setThreadStatus = vi.fn().mockRejectedValue(new Error('nope'))
+    const c = clientResolved({ setThreadStatus })
+    // Real toast stack so the partial-failure message actually renders into the DOM.
+    render(
+      <WidgetProvider>
+        <ToastProvider>
+          <ThreadsProvider client={c}>
+            <Harness client={c} />
+          </ThreadsProvider>
+        </ToastProvider>
+      </WidgetProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.change(screen.getByPlaceholderText(/reply/i), { target: { value: 'reopen please' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    // Reply lands...
+    await waitFor(() => expect(screen.getByText('reopen please')).toBeInTheDocument())
+    // ...but the reopen fails: the user is told, and the header reverts to Resolved.
+    await waitFor(() =>
+      expect(screen.getByText(/reopening the thread failed/i)).toBeInTheDocument(),
+    )
+    await waitFor(() => expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument())
+  })
+
   it('rolls back status when resolve fails', async () => {
     const setThreadStatus = vi.fn().mockRejectedValue(new Error('nope'))
     const c = client({ setThreadStatus })
@@ -205,5 +288,65 @@ describe('ThreadPopover', () => {
     fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
     await waitFor(() => expect(setThreadStatus).toHaveBeenCalled())
     await waitFor(() => expect(screen.getByText(/Open ·/)).toBeInTheDocument())
+  })
+
+  // Renders pins through useVisiblePlacements + INGEST_PLACEMENTS (like the real PinLayer),
+  // so the visiblePlacements open-exemption is actually exercised. showResolved stays false.
+  function PinsHarness({ client: c }: { client: never }) {
+    const controller = useController()
+    const dispatch = useDispatch()
+    const placements = useVisiblePlacements()
+    const placed: PlacedThread = {
+      item: item(),
+      pin: { x: 10, y: 10 },
+      highlight: [],
+    }
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => dispatch({ type: 'INGEST_PLACEMENTS', placements: [placed] })}
+        >
+          ingest
+        </button>
+        <button type="button" onClick={() => controller.openThread('a')}>
+          open-a
+        </button>
+        {placements.map((p) => (
+          <ThreadPopover
+            key={p.item.id}
+            item={p.item}
+            pin={p.pin}
+            client={c}
+            identity={{ email: 'a@b.c', name: 'Ann' }}
+            onNeedIdentity={(r) => r({ email: 'a@b.c', name: 'Ann' })}
+          />
+        ))}
+      </>
+    )
+  }
+
+  it('flips the pin to ✓ and keeps the popover open immediately on resolve, no re-ingest (BUG B)', async () => {
+    const c = client()
+    render(
+      <ThreadsProvider client={c}>
+        <PinsHarness client={c} />
+      </ThreadsProvider>,
+    )
+    // Ingest one OPEN placement, then open it. showResolved is the default (false).
+    fireEvent.click(screen.getByText('ingest'))
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    // Pin starts unresolved.
+    expect(screen.getByTestId('comments-pin')).toHaveAccessibleName(/^Comment thread by/i)
+    // Resolve from the popover.
+    fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
+    // WITHOUT any refresh/re-ingest: the pin is still rendered (open-exemption) and shows ✓...
+    await waitFor(() =>
+      expect(screen.getByTestId('comments-pin')).toHaveAccessibleName(/resolved/i),
+    )
+    expect(screen.getByTestId('comments-pin')).toHaveTextContent('✓')
+    // ...and the popover stays open with a Resolved header.
+    expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument()
   })
 })

@@ -46,7 +46,10 @@ export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: T
     } as unknown as Comment
     dispatch({ type: 'ADD_OPTIMISTIC_COMMENT', id, comment: optimistic })
     const wasResolved = resolved
-    if (wasResolved) dispatch({ type: 'SET_STATUS', id, status: 'open' }) // reply reopens (optimistic)
+    // Reply reopens optimistically: patch the store AND the runtime cache together (a plain
+    // SET_STATUS would be clobbered by the next re-emit) — but only the UI, no network yet. The
+    // reopen is persisted below, AFTER the reply saves, so the two requests can't race.
+    if (wasResolved) controller.patchStatus(id, 'open')
     let saved: Comment
     try {
       saved = await client.addComment(id, {
@@ -56,15 +59,19 @@ export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: T
       })
     } catch {
       dispatch({ type: 'REMOVE_OPTIMISTIC_COMMENT', id, tempId })
-      if (wasResolved) dispatch({ type: 'SET_STATUS', id, status: 'resolved' })
+      if (wasResolved) controller.patchStatus(id, 'resolved')
       toast('Failed to post reply')
       return
     }
     dispatch({ type: 'REPLACE_OPTIMISTIC_COMMENT', id, tempId, comment: saved })
     if (wasResolved) {
+      // The reply is in; now persist the reopen. On failure, revert the optimistic flip and tell
+      // the user the thread is still resolved server-side (rather than silently leaving the pin
+      // showing 'open' while the server stays 'resolved').
       try {
         await client.setThreadStatus(id, { status: 'open' })
       } catch {
+        controller.patchStatus(id, 'resolved')
         toast('Reply posted, but reopening the thread failed')
       }
     }
@@ -72,13 +79,10 @@ export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: T
 
   async function toggleStatus() {
     const next = resolved ? 'open' : 'resolved'
-    dispatch({ type: 'SET_STATUS', id, status: next })
-    try {
-      await client.setThreadStatus(id, { status: next })
-    } catch {
-      dispatch({ type: 'SET_STATUS', id, status: resolved ? 'resolved' : 'open' })
-      toast(`Failed to ${next === 'resolved' ? 'resolve' : 'reopen'} thread`)
-    }
+    // controller.setStatus updates the store + runtime cache optimistically, persists, and
+    // rolls back both on failure (so the pin reverts and a re-emit can't re-clobber it).
+    const ok = await controller.setStatus(id, next)
+    if (!ok) toast(`Failed to ${next === 'resolved' ? 'resolve' : 'reopen'} thread`)
   }
 
   return (
@@ -94,7 +98,8 @@ export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: T
           side="top"
           align="center"
           sideOffset={8}
-          className="cmnt:w-80 cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:overflow-hidden cmnt:text-[13px] cmnt:text-gray-900 cmnt:pointer-events-auto cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
+          collisionPadding={8}
+          className="cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:overflow-hidden cmnt:text-[13px] cmnt:text-gray-900 cmnt:pointer-events-auto cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
         >
           <div
             className={cn(

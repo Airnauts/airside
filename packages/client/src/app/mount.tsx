@@ -13,8 +13,10 @@ export function mount(options: InitOptions): WidgetHandle {
   host.setAttribute('data-comments-root', '')
   // `all: revert` first neutralizes inherited host styles; the following longhands
   // re-establish only the few we need (longhands after a shorthand win in CSS).
+  // font-family is set here so the whole widget inherits a sans-serif stack rather
+  // than the host page's font (the UA default after `all: revert` is serif).
   host.style.cssText =
-    'all: revert; position: fixed; inset: 0; pointer-events: none; z-index: 2147483600;'
+    'all: revert; position: fixed; inset: 0; pointer-events: none; z-index: 2147483600; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";'
 
   const style = document.createElement('style')
   style.setAttribute('data-comments-style', '')
@@ -29,6 +31,21 @@ export function mount(options: InitOptions): WidgetHandle {
 
   const root: Root = createRoot(mountNode)
   flushSync(() => root.render(<WidgetApp options={options} />))
+
+  // Invariant tripwire: the MutationObserver self-mutation filter (positioning/lifecycle.ts)
+  // assumes ALL widget-rendered DOM — including portalled popovers and toasts — lives inside
+  // [data-comments-root]. If a portal/toast container escapes the root, its own churn would be
+  // misclassified as host-page changes and reintroduce the rematch → re-render loop. flushSync
+  // above commits the first render synchronously, so the containers exist here. Warn loudly if
+  // a future change moves one out of the root, so the regression isn't silent.
+  for (const sel of ['[data-portal-container]', '[data-toasts-container]']) {
+    if (!host.querySelector(sel)) {
+      console.warn(
+        `[comments] ${sel} is not inside [data-comments-root]; the MutationObserver self-mutation ` +
+          'filter will misclassify its DOM as host changes and may reintroduce the re-render loop.',
+      )
+    }
+  }
 
   return {
     destroy() {

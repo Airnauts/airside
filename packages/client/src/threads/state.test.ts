@@ -125,6 +125,15 @@ describe('threads reducer', () => {
     expect(s.detailById.a.status).toBe('resolved')
   })
 
+  it('SET_STATUS zeroes unresolvedCount on resolve and restores it on reopen', () => {
+    let s = reducer(initialState, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
+    expect(s.itemsById.a.unresolvedCount).toBe(1)
+    s = reducer(s, { type: 'SET_STATUS', id: 'a', status: 'resolved' })
+    expect(s.itemsById.a.unresolvedCount).toBe(0)
+    s = reducer(s, { type: 'SET_STATUS', id: 'a', status: 'open' })
+    expect(s.itemsById.a.unresolvedCount).toBe(1)
+  })
+
   it('SET_SHOW_RESOLVED toggles the flag', () => {
     const s = reducer(initialState, { type: 'SET_SHOW_RESOLVED', value: true })
     expect(s.showResolved).toBe(true)
@@ -142,5 +151,24 @@ describe('visiblePlacements selector', () => {
       'a',
       'b',
     ])
+  })
+
+  it('keeps the open thread visible after it is resolved, even when showResolved is off', () => {
+    let s = reducer(initialState, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
+    s = reducer(s, { type: 'OPEN', id: 'a' })
+    s = reducer(s, { type: 'SET_STATUS', id: 'a', status: 'resolved' })
+    // resolved + showResolved off → normally hidden, but it's open so the pin stays (shows ✓)
+    expect(visiblePlacements(s).map((p) => p.item.id)).toEqual(['a'])
+    expect(s.showResolved).toBe(false)
+  })
+
+  it('hides a resolved thread once it is no longer the open one', () => {
+    let s = reducer(initialState, {
+      type: 'INGEST_PLACEMENTS',
+      placements: [placed('a', 'open'), placed('b', 'resolved')],
+    })
+    s = reducer(s, { type: 'OPEN', id: 'a' })
+    // b is resolved and not open → hidden when showResolved is off
+    expect(visiblePlacements(s).map((p) => p.item.id)).toEqual(['a'])
   })
 })
