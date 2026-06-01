@@ -313,6 +313,9 @@ not by scope.
 
 ## 9. Testing strategy
 
+> **Integrating the widget?** See [`docs/integration.md`](integration.md) for the
+> minutes-long quickstart, with `examples/nextjs-host` as the worked example.
+
 The backend packages (`core`, `server`, adapters) are built **test-first (TDD)** —
 the test/fixture precedes the code it covers (ADR-0010).
 
