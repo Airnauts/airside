@@ -20,4 +20,16 @@
   [data-comments-root] select {
     font-family: inherit;
   }
+
+  /* No Preflight + `all: revert` on the root leaves elements at the UA default
+     content-box, but Tailwind's fixed sizes/borders (w-[42px], border-2, min-w-[18px],
+     px-[5px], …) assume border-box — otherwise borders/padding inflate the pin avatar,
+     count badge, and teardrop. Restore border-box, scoped to the widget root so the
+     host page is untouched (this mirrors what Preflight would do globally). */
+  [data-comments-root],
+  [data-comments-root] *,
+  [data-comments-root] *::before,
+  [data-comments-root] *::after {
+    box-sizing: border-box;
+  }
 }

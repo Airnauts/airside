@@ -119,7 +119,10 @@ export function Composer({
               onSendClick()
             }
           }}
-          className="cmnt:flex-1 cmnt:border-none cmnt:outline-none cmnt:text-[13px] cmnt:bg-transparent"
+          // min-w-0 lets flex-1 shrink the input below its intrinsic min-width so the
+          // 📎 + input + Cancel + Send row fits within the fixed w-80 popover (Send was
+          // being clipped by overflow-hidden because a flex item defaults to min-width:auto).
+          className="cmnt:flex-1 cmnt:min-w-0 cmnt:border-none cmnt:outline-none cmnt:text-[13px] cmnt:bg-transparent"
         />
         {onCancel && (
           <button
