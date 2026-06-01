@@ -107,4 +107,9 @@ describe('WidgetApp', () => {
     expect(await screen.findByTestId('comments-place')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: /resolved/i })).toBeInTheDocument()
   })
+
+  it('renders the Launcher panel button (panel mounted)', () => {
+    render(<WidgetApp options={{ key: 'k', endpoint: 'https://api.test' }} client={mockClient()} />)
+    expect(screen.getByTestId('comments-panel-open')).toBeInTheDocument()
+  })
 })
