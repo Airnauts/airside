@@ -66,7 +66,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       {!resolved && item.unresolvedCount > 0 && (
         <span
           aria-hidden={true}
-          className="cmnt:absolute cmnt:-top-1.5 cmnt:-right-[7px] cmnt:min-w-[18px] cmnt:h-[18px] cmnt:rounded-[9px] cmnt:bg-gray-900 cmnt:text-white cmnt:text-[11px] cmnt:font-bold cmnt:flex cmnt:items-center cmnt:justify-center cmnt:px-[5px] cmnt:border-2 cmnt:border-white"
+          className="cmnt:absolute cmnt:-top-1.5 cmnt:-right-[7px] cmnt:min-w-[22px] cmnt:h-[22px] cmnt:rounded-[11px] cmnt:bg-gray-900 cmnt:text-white cmnt:text-[11px] cmnt:font-bold cmnt:flex cmnt:items-center cmnt:justify-center cmnt:px-[5px] cmnt:border-2 cmnt:border-white cmnt:leading-[0]"
         >
           {item.unresolvedCount}
         </span>
