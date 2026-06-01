@@ -21,7 +21,7 @@ function storage(): StorageAdapter {
 }
 
 export const server: CommentsServer = createCommentsServer({
-  secretKey: 'dev-key',
+  secretKey: 'dev-key', // demo only — replace with a real secret in production
   projectId: 'nextjs-host',
   allowedOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000'],
   repository: repository(),
