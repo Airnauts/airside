@@ -1,7 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installObserverSpies, mockRect } from '../../test/test-helpers/dom'
+import { WidgetProvider } from '../app/providers'
+import { PanelDrawer } from '../panel/PanelDrawer'
+import { PanelProvider } from '../panel/PanelProvider'
+import { FOCUS_STORAGE_KEY } from '../panel/navigate'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
+import { ToastProvider } from '../ui/toast'
 import { MarkerLayer } from './MarkerLayer'
 
 function client() {
@@ -34,7 +39,9 @@ const props = (c: ReturnType<typeof client>) => ({
 const renderMarker = (p: ReturnType<typeof props>) =>
   render(
     <ThreadsProvider client={p.client as never}>
-      <MarkerLayer {...p} />
+      <PanelProvider client={p.client as never}>
+        <MarkerLayer {...p} />
+      </PanelProvider>
     </ThreadsProvider>,
   )
 
@@ -281,5 +288,58 @@ describe('MarkerLayer mutation wiring', () => {
     // listThreads must not have been called again (no refetch; cache patch sufficed).
     expect(c.listThreads).toHaveBeenCalledTimes(1)
     spies.restore()
+  })
+})
+
+// MarkerLayer owns the Launcher (and its panel button); the drawer is a sibling rendered by
+// app.tsx. We render PanelDrawer alongside here so "open the panel" is observable end-to-end.
+function renderLayer(client: unknown) {
+  return render(
+    <WidgetProvider>
+      <ToastProvider>
+        <ThreadsProvider client={client as never}>
+          <PanelProvider client={client as never}>
+            <MarkerLayer
+              client={client as never}
+              pageKey="x.test/here"
+              pageUrl="https://x.test/here"
+              resolvePageKey={() => 'x.test/here'}
+              identity={null}
+              onNeedIdentity={() => {}}
+            />
+            <PanelDrawer resolvePageKey={() => 'x.test/here'} />
+          </PanelProvider>
+        </ThreadsProvider>
+      </ToastProvider>
+    </WidgetProvider>,
+  )
+}
+
+describe('MarkerLayer panel integration', () => {
+  beforeEach(() => window.sessionStorage.clear())
+
+  it('opens the panel from the Launcher list button', async () => {
+    const client = {
+      listThreads: vi.fn(async () => ({ threads: [], nextCursor: null })),
+      refreshAnchor: vi.fn(),
+      getThread: vi.fn(),
+    }
+    renderLayer(client)
+    screen.getByTestId('comments-panel-open').click()
+    await waitFor(() => expect(screen.getByTestId('comments-panel')).toBeInTheDocument())
+  })
+
+  it('consumes a boot focus handoff after the first refresh', async () => {
+    window.sessionStorage.setItem(FOCUS_STORAGE_KEY, 't1')
+    const getThread = vi.fn().mockResolvedValue({ id: 't1', status: 'open', comments: [] })
+    const client = {
+      listThreads: vi.fn(async () => ({ threads: [], nextCursor: null })),
+      refreshAnchor: vi.fn(),
+      getThread,
+    }
+    renderLayer(client)
+    // boot handoff → controller.requestFocus('t1') → lazy getThread('t1')
+    await waitFor(() => expect(getThread).toHaveBeenCalledWith('t1'))
+    expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBeNull()
   })
 })

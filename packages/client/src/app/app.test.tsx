@@ -45,7 +45,7 @@ describe('WidgetApp', () => {
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
     const target = clickTarget()
 
-    fireEvent.click(screen.getByRole('button', { name: /comment/i }))
+    fireEvent.click(screen.getByTestId('comments-place'))
     // Now in place mode — click the target element to open a draft popover.
     fireEvent.click(target, { clientX: 50, clientY: 10 })
     fireEvent.change(await screen.findByPlaceholderText(/add a comment/i), {
@@ -76,7 +76,7 @@ describe('WidgetApp', () => {
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
     const target = clickTarget()
 
-    fireEvent.click(screen.getByRole('button', { name: /comment/i }))
+    fireEvent.click(screen.getByTestId('comments-place'))
     // No identity modal — click the target to open the draft, then type and send.
     fireEvent.click(target, { clientX: 50, clientY: 10 })
     fireEvent.change(await screen.findByPlaceholderText(/add a comment/i), {

@@ -8,6 +8,8 @@ import { ApiError } from '../api/errors'
 import { usePortalContainer } from '../app/providers'
 import { buildCaptureContext } from '../config'
 import type { Identity } from '../identity/storage'
+import { usePanelController } from '../panel/PanelProvider'
+import { takeFocusHandoff } from '../panel/navigate'
 import { pinXY } from '../positioning/coords'
 import { PinLayer } from '../positioning/layer'
 import { observeReposition } from '../positioning/lifecycle'
@@ -21,6 +23,7 @@ import { initials } from '../ui/avatar'
 import { Composer, type ComposerSubmit } from '../ui/Composer'
 import { Launcher } from '../ui/Launcher'
 import { useToast } from '../ui/toast'
+import { useFocusPin } from './useFocusPin'
 
 export type MarkerLayerProps = {
   client: ApiClient
@@ -53,6 +56,26 @@ export function MarkerLayer({
   const runtime = useRef<ReturnType<typeof createRuntime> | null>(null)
   const openCount = Object.values(state.itemsById).filter((i) => i.status === 'open').length
 
+  const panel = usePanelController()
+  const pendingFocusId = state.pendingFocusId
+  const placed = pendingFocusId ? Boolean(state.placementsById[pendingFocusId]) : false
+  // getElement must be stable: MarkerLayer re-renders on every INGEST_PLACEMENTS (scroll/resize/
+  // mutation), and useFocusPin keys its timeout on getElement — a fresh closure each render would
+  // restart the lost-anchor timeout forever. runtime is a ref, so the empty-dep closure stays live.
+  const getElement = useCallback(
+    (id: string) => runtime.current?.placed.find((p) => p.item.id === id)?.el ?? null,
+    [],
+  )
+
+  useFocusPin({
+    pendingFocusId,
+    focusedId: state.focusedId,
+    placed,
+    getElement,
+    dispatch,
+    toast,
+  })
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: pageKey/resolvePageKey are read only inside onRouteChange which re-keys via functional setState; the runtime is keyed on the resolved activeKey.
   useEffect(() => {
     const rt = createRuntime({
@@ -65,7 +88,10 @@ export function MarkerLayer({
     // (reposition/rematchAll, fired by scroll/resize and the popover's own DOM mutation)
     // doesn't clobber the resolved pin back to 'open' until a reload.
     controller.registerRuntime((id, status) => rt.setItemStatus(id, status))
-    void rt.refresh()
+    void rt.refresh().then(() => {
+      const focusId = takeFocusHandoff()
+      if (focusId) controller.requestFocus(focusId)
+    })
     const stop = observeReposition({
       targets: [],
       onReposition: () => rt.reposition(),
@@ -230,7 +256,7 @@ export function MarkerLayer({
         showResolved={state.showResolved}
         onShowResolved={(v) => controller.setShowResolved(v)}
         openCount={openCount}
-        onTogglePanel={() => {}}
+        onTogglePanel={() => void panel.openPanel()}
       />
     </>
   )
