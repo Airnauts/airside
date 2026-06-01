@@ -55,6 +55,9 @@ export function PanelDrawer({ resolvePageKey }: PanelDrawerProps) {
             <Dialog.Title className="cmnt:text-sm cmnt:font-semibold cmnt:text-gray-900">
               Comments
             </Dialog.Title>
+            <Dialog.Description className="cmnt:sr-only">
+              Comment threads across all pages
+            </Dialog.Description>
             <Dialog.Close
               aria-label="Close panel"
               className="cmnt:border-0 cmnt:bg-transparent cmnt:cursor-pointer cmnt:text-gray-500 cmnt:px-1"

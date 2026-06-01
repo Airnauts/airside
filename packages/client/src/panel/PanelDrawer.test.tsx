@@ -5,6 +5,7 @@ import { act } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
+import { useController } from '../threads/useThreads'
 import { FOCUS_STORAGE_KEY } from './navigate'
 import { PanelDrawer } from './PanelDrawer'
 import { PanelProvider, usePanelController } from './PanelProvider'
@@ -31,10 +32,29 @@ function Opener() {
   )
 }
 
+function CloseProbe() {
+  const c = usePanelController()
+  return (
+    <button type="button" onClick={() => void c.closePanel()}>
+      close
+    </button>
+  )
+}
+
+function StatusProbe() {
+  const threads = useController()
+  return (
+    <button type="button" onClick={() => void threads.setStatus('a', 'resolved')}>
+      resolve
+    </button>
+  )
+}
+
 function setup(opts: {
   threads: ThreadListItem[]
   review?: ThreadListItem[]
   resolvePageKey?: (url: string) => string
+  withProbes?: boolean
 }) {
   // The main fetch carries `sort: 'updatedAt'`; the review fetch sends only `status`.
   // Distinguish the two by the presence of `sort`.
@@ -45,6 +65,7 @@ function setup(opts: {
         : { threads: opts.review ?? [], nextCursor: null },
     ),
     getThread: vi.fn().mockResolvedValue({ id: 'x', status: 'open', comments: [] }),
+    setThreadStatus: vi.fn().mockResolvedValue(undefined),
   }
   const resolvePageKey = opts.resolvePageKey ?? (() => 'x.test/other')
   render(
@@ -52,6 +73,8 @@ function setup(opts: {
       <ThreadsProvider client={client as never}>
         <PanelProvider client={client as never}>
           <Opener />
+          <CloseProbe />
+          {opts.withProbes && <StatusProbe />}
           <PanelDrawer resolvePageKey={resolvePageKey} />
         </PanelProvider>
       </ThreadsProvider>
@@ -102,5 +125,42 @@ describe('PanelDrawer', () => {
     act(() => screen.getByTestId('comments-panel-row').click())
     await waitFor(() => expect(screen.queryByTestId('comments-panel')).not.toBeInTheDocument())
     expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBeNull()
+  })
+
+  it('status change while panel is open triggers a refetch; closing removes the listener', async () => {
+    const { client } = setup({
+      threads: [item({ id: 'a' })],
+      withProbes: true,
+    })
+
+    // Open the panel and wait for the initial rows to render.
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getAllByTestId('comments-panel-row')).toHaveLength(1))
+
+    // Clear the mock so only calls AFTER this point are counted.
+    client.listThreads.mockClear()
+
+    // Fire a status change — setStatus persists then calls the registered statusListener,
+    // which calls panel.refresh() → listThreads again.
+    act(() => {
+      screen.getByText('resolve').click()
+    })
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled())
+
+    // Close the panel — the useEffect cleanup deregisters the listener.
+    client.listThreads.mockClear()
+    act(() => {
+      screen.getByText('close').click()
+    })
+    await waitFor(() => expect(screen.queryByTestId('comments-panel')).not.toBeInTheDocument())
+
+    // Another status change must NOT trigger a refetch since the listener was removed.
+    client.listThreads.mockClear()
+    act(() => {
+      screen.getByText('resolve').click()
+    })
+    // Give any potential async cascade time to resolve before asserting.
+    await new Promise((r) => setTimeout(r, 50))
+    expect(client.listThreads).not.toHaveBeenCalled()
   })
 })
