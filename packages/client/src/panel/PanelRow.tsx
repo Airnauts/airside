@@ -12,7 +12,7 @@ export function PanelRow({ item, onSelect }: { item: ThreadListItem; onSelect: (
       data-testid="comments-panel-row"
       data-thread-id={item.id}
       onClick={onSelect}
-      className="cmnt:w-full cmnt:flex cmnt:items-start cmnt:gap-2 cmnt:px-3 cmnt:py-2.5 cmnt:text-left cmnt:bg-transparent cmnt:border-none cmnt:border-b cmnt:border-[#f1f3f5] cmnt:cursor-pointer hover:cmnt:bg-gray-50"
+      className="cmnt:w-full cmnt:flex cmnt:items-start cmnt:gap-2 cmnt:px-3 cmnt:py-2.5 cmnt:text-left cmnt:bg-transparent cmnt:border-none cmnt:border-b cmnt:border-[#f1f3f5] cmnt:cursor-pointer cmnt:hover:bg-gray-50"
     >
       <span
         aria-hidden={true}
