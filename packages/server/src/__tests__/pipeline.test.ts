@@ -1,5 +1,5 @@
-import { KEY_HEADER_NAME, operations } from '@comments/core'
-import { makeCreateThreadBody } from '@comments/test-support'
+import { KEY_HEADER_NAME, operations } from '@airnauts/comments-core'
+import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { InMemoryRepository } from '../repository/in-memory'
 import type { UseCaseMap } from '../router'

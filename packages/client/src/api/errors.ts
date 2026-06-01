@@ -1,4 +1,4 @@
-import type { ErrorCode } from '@comments/core'
+import type { ErrorCode } from '@airnauts/comments-core'
 
 export class ApiError extends Error {
   readonly status: number

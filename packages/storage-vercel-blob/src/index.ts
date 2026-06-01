@@ -1,4 +1,4 @@
-import type { PutBlob, PutResult, StorageAdapter } from '@comments/server'
+import type { PutBlob, PutResult, StorageAdapter } from '@airnauts/comments-server'
 import { put } from '@vercel/blob'
 
 export type VercelBlobStorageOptions = {
@@ -69,4 +69,4 @@ export class VercelBlobStorage implements StorageAdapter {
   }
 }
 
-export const packageName = '@comments/storage-vercel-blob'
+export const packageName = '@airnauts/comments-storage-vercel-blob'

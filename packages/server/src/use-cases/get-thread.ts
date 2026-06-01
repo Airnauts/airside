@@ -1,4 +1,4 @@
-import type { Thread, ThreadId, ThreadIdParam } from '@comments/core'
+import type { Thread, ThreadId, ThreadIdParam } from '@airnauts/comments-core'
 import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
 import type { Repository } from '../repository/types'

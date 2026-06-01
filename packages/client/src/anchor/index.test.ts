@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import * as anchor from './index'
 import { buildSelectors, captureElement, resolveUnique } from './index'
 
-describe('@comments/client/anchor barrel', () => {
+describe('@airnauts/comments-client/anchor barrel', () => {
   it('exports extractSignals', () => {
     expect(typeof anchor.extractSignals).toBe('function')
   })

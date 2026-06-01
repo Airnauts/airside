@@ -1,6 +1,6 @@
 // packages/client/src/threads/useThreads.ts
 
-import type { Thread } from '@comments/core'
+import type { Thread } from '@airnauts/comments-core'
 import { useContext } from 'react'
 import { type PlacedThread, visiblePlacements } from './state'
 import { ThreadsContext } from './ThreadsProvider'

@@ -1,4 +1,4 @@
-import type { Thread, ThreadId, ThreadListItem, ThreadStatus } from '@comments/core'
+import type { Thread, ThreadId, ThreadListItem, ThreadStatus } from '@airnauts/comments-core'
 import { decodeCursor, encodeCursor } from '../cursor'
 import type {
   AnchorPatch,

@@ -1,5 +1,5 @@
 // packages/client/src/ui/CommentList.test.tsx
-import type { Comment } from '@comments/core'
+import type { Comment } from '@airnauts/comments-core'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { CommentList } from './CommentList'

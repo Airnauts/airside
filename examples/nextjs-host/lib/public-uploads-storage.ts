@@ -1,6 +1,6 @@
 import { join } from 'node:path'
-import type { PutBlob, PutResult, StorageAdapter } from '@comments/server'
-import { FileSystemStorage } from '@comments/storage-fs'
+import type { PutBlob, PutResult, StorageAdapter } from '@airnauts/comments-server'
+import { FileSystemStorage } from '@airnauts/comments-storage-fs'
 
 /**
  * Writes uploads under `public/uploads/` and returns a browser-served path

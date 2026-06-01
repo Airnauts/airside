@@ -1,5 +1,5 @@
-import { KEY_HEADER_NAME } from '@comments/core'
-import { makeCreateThreadBody } from '@comments/test-support'
+import { KEY_HEADER_NAME } from '@airnauts/comments-core'
+import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { createNextHandler } from './next'
 import { InMemoryRepository } from './repository/in-memory'

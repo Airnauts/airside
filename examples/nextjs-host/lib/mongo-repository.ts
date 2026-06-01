@@ -1,5 +1,5 @@
-import { createMongoRepository, ensureIndexes } from '@comments/adapter-mongo'
-import type { Repository } from '@comments/server'
+import { createMongoRepository, ensureIndexes } from '@airnauts/comments-adapter-mongo'
+import type { Repository } from '@airnauts/comments-server'
 import { MongoClient } from 'mongodb'
 
 // Memoize the connected repository across HMR reloads / warm serverless invocations.

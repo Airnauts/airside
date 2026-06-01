@@ -1,5 +1,5 @@
-import { ANCHOR_SCHEMA_VERSION, type ThreadId } from '@comments/core'
-import type { Repository } from '@comments/server'
+import { ANCHOR_SCHEMA_VERSION, type ThreadId } from '@airnauts/comments-core'
+import type { Repository } from '@airnauts/comments-server'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { makeComment, makeNewThread } from './fixtures'
 

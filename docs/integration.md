@@ -7,7 +7,7 @@ lifted from it.
 ## 1. Install
 
 ```bash
-pnpm add @comments/client @comments/server
+pnpm add @airnauts/comments-client @airnauts/comments-server
 ```
 
 ## 2. Add the API route
@@ -15,8 +15,8 @@ pnpm add @comments/client @comments/server
 Create `app/api/comments/[...path]/route.ts`:
 
 ```ts
-import { createNextHandler } from '@comments/server/next'
-import { createCommentsServer, InMemoryRepository } from '@comments/server'
+import { createNextHandler } from '@airnauts/comments-server/next'
+import { createCommentsServer, InMemoryRepository } from '@airnauts/comments-server'
 
 const server = createCommentsServer({
   secretKey: 'dev-key',
@@ -39,7 +39,7 @@ In a client component rendered from your root layout:
 
 ```tsx
 'use client'
-import { CommentsLayer } from '@comments/client/react'
+import { CommentsLayer } from '@airnauts/comments-client/react'
 
 export function CommentsMount() {
   return <CommentsLayer commentsKey="dev-key" endpoint="/api/comments" />
@@ -70,18 +70,18 @@ Open any page with `?comments-key=dev-key`. The widget stays completely inert
 ## 5. Go to production
 
 ```bash
-pnpm add @comments/adapter-mongo @comments/storage-vercel-blob
-# (or @comments/storage-fs for filesystem storage)
+pnpm add @airnauts/comments-adapter-mongo @airnauts/comments-storage-vercel-blob
+# (or @airnauts/comments-storage-fs for filesystem storage)
 ```
 
 Swap the two ephemeral pieces for real infrastructure:
 
 - **Persistence:** replace `InMemoryRepository` with `createMongoRepository({ db })`
-  from `@comments/adapter-mongo`. Connect a `MongoClient`, call `ensureIndexes(db)`
+  from `@airnauts/comments-adapter-mongo`. Connect a `MongoClient`, call `ensureIndexes(db)`
   once at startup, then pass the `db` to `createMongoRepository`.
 - **Storage:** replace the stub with `new VercelBlobStorage()` from
-  `@comments/storage-vercel-blob` (reads `BLOB_READ_WRITE_TOKEN`), or
-  `new FileSystemStorage({ rootDir })` from `@comments/storage-fs`.
+  `@airnauts/comments-storage-vercel-blob` (reads `BLOB_READ_WRITE_TOKEN`), or
+  `new FileSystemStorage({ rootDir })` from `@airnauts/comments-storage-fs`.
 - **Origins:** set `allowedOrigins` to your real site origins.
 
 See [`examples/nextjs-host/lib/comments-server.ts`](../examples/nextjs-host/lib/comments-server.ts)

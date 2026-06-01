@@ -1,4 +1,4 @@
-import { ANCHOR_SCHEMA_VERSION, type Anchor } from '@comments/core'
+import { ANCHOR_SCHEMA_VERSION, type Anchor } from '@airnauts/comments-core'
 import { describe, expect, it } from 'vitest'
 import { extractSignals } from './extract'
 import { rematch } from './rematch'

@@ -1,8 +1,8 @@
 # Deploying the comments backend — Vercel + MongoDB Atlas + Vercel Blob
 
 The v1 reference deployment (architecture §2; ADR-0001, ADR-0003). It mounts
-`@comments/server` in a Next.js App Router app, persists to MongoDB Atlas via
-`@comments/adapter-mongo`, and stores image uploads in Vercel Blob.
+`@airnauts/comments-server` in a Next.js App Router app, persists to MongoDB Atlas via
+`@airnauts/comments-adapter-mongo`, and stores image uploads in Vercel Blob.
 
 > Scope: this is the **deploy-ready recipe**. The full widget host app, the
 > Playwright E2E, and the dogfood deployment are M9.
@@ -32,9 +32,9 @@ once.
 
 ```ts
 // lib/comments.ts
-import { createCommentsServer } from '@comments/server'
-import { createMongoRepository, ensureIndexes } from '@comments/adapter-mongo'
-import { VercelBlobStorage } from '@comments/storage-vercel-blob'
+import { createCommentsServer } from '@airnauts/comments-server'
+import { createMongoRepository, ensureIndexes } from '@airnauts/comments-adapter-mongo'
+import { VercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 import { MongoClient } from 'mongodb'
 
 const client = new MongoClient(process.env.MONGODB_URI!)
@@ -64,7 +64,7 @@ export async function getServer() {
 
 ```ts
 // app/api/comments/[...path]/route.ts
-import { createNextHandler } from '@comments/server/next'
+import { createNextHandler } from '@airnauts/comments-server/next'
 import { getServer } from '@/lib/comments'
 
 const server = await getServer() // top-level await (ESM route module)

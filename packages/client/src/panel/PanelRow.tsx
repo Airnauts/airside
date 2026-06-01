@@ -1,5 +1,5 @@
 // packages/client/src/panel/PanelRow.tsx
-import type { ThreadListItem } from '@comments/core'
+import type { ThreadListItem } from '@airnauts/comments-core'
 import { cn } from '../lib/cn'
 import { relativeTime } from '../threads/relativeTime'
 

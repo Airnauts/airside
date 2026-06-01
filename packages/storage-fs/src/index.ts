@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join, posix } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { PutBlob, PutResult, StorageAdapter } from '@comments/server'
+import type { PutBlob, PutResult, StorageAdapter } from '@airnauts/comments-server'
 
 export type FileSystemStorageOptions = {
   rootDir: string
@@ -63,4 +63,4 @@ export class FileSystemStorage implements StorageAdapter {
   }
 }
 
-export const packageName = '@comments/storage-fs'
+export const packageName = '@airnauts/comments-storage-fs'

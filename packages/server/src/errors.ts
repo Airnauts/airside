@@ -1,5 +1,5 @@
-import type { ErrorCode } from '@comments/core'
-import { ERROR_STATUS } from '@comments/core'
+import type { ErrorCode } from '@airnauts/comments-core'
+import { ERROR_STATUS } from '@airnauts/comments-core'
 
 export abstract class DomainError extends Error {
   abstract readonly code: ErrorCode

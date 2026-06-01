@@ -1,4 +1,10 @@
-import type { Comment, Thread, ThreadId, ThreadListItem, ThreadStatus } from '@comments/core'
+import type {
+  Comment,
+  Thread,
+  ThreadId,
+  ThreadListItem,
+  ThreadStatus,
+} from '@airnauts/comments-core'
 import {
   type AnchorPatch,
   decodeCursor,
@@ -9,7 +15,7 @@ import {
   type NewThread,
   type Repository,
   type Scope,
-} from '@comments/server'
+} from '@airnauts/comments-server'
 import type { Db, Filter, UpdateFilter } from 'mongodb'
 
 export const COLLECTION = 'threads'

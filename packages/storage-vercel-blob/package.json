@@ -1,7 +1,28 @@
 {
-  "name": "@comments/storage-vercel-blob",
+  "name": "@airnauts/comments-storage-vercel-blob",
   "version": "0.0.0",
-  "private": true,
+  "description": "Vercel Blob attachment-storage adapter for the Airnauts commenting tool server.",
+  "keywords": [
+    "comments",
+    "commenting",
+    "annotations",
+    "feedback",
+    "airnauts",
+    "storage",
+    "vercel",
+    "blob"
+  ],
+  "license": "MIT",
+  "author": "Airnauts",
+  "homepage": "https://github.com/Airnauts/commenting-tool#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Airnauts/commenting-tool.git",
+    "directory": "packages/storage-vercel-blob"
+  },
+  "bugs": {
+    "url": "https://github.com/Airnauts/commenting-tool/issues"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -10,19 +31,25 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/.tsbuildinfo",
+    "README.md",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup && tsc --build",
     "typecheck": "tsc --build",
     "test": "vitest run"
   },
   "dependencies": {
-    "@comments/core": "workspace:*",
-    "@comments/server": "workspace:*",
+    "@airnauts/comments-core": "workspace:^",
+    "@airnauts/comments-server": "workspace:^",
     "@vercel/blob": "^1.1.1"
   },
   "devDependencies": {
-    "@comments/test-support": "workspace:*"
+    "@airnauts/comments-test-support": "workspace:*"
   }
 }

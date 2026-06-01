@@ -1,4 +1,4 @@
-import { comments } from '@comments/client'
+import { comments } from '@airnauts/comments-client'
 
 void comments.init({
   key: 'dev-key',

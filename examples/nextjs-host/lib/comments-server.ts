@@ -4,8 +4,8 @@ import {
   InMemoryRepository,
   type Repository,
   type StorageAdapter,
-} from '@comments/server'
-import { VercelBlobStorage } from '@comments/storage-vercel-blob'
+} from '@airnauts/comments-server'
+import { VercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 import { mongoRepository } from './mongo-repository'
 import { publicUploadsStorage } from './public-uploads-storage'
 

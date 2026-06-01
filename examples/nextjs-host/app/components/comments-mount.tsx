@@ -1,6 +1,6 @@
 'use client'
 
-import { CommentsLayer } from '@comments/client/react'
+import { CommentsLayer } from '@airnauts/comments-client/react'
 
 /**
  * Mounts the comments widget. `init()`'s gate keeps it inert until the page is

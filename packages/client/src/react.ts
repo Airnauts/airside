@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { type CommentsHandle, comments, type InitOptions } from './index'
 
-export const packageName = '@comments/client/react'
+export const packageName = '@airnauts/comments-client/react'
 
 export type CommentsLayerProps = Omit<InitOptions, 'key'> & {
   /** The secret key (React reserves the `key` prop name, so it is `commentsKey` here). */

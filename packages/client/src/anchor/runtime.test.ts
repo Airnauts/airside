@@ -1,4 +1,4 @@
-import { ANCHOR_SCHEMA_VERSION, type Anchor, type ThreadListItem } from '@comments/core'
+import { ANCHOR_SCHEMA_VERSION, type Anchor, type ThreadListItem } from '@airnauts/comments-core'
 import { describe, expect, it, vi } from 'vitest'
 import { mockRect } from '../../test/test-helpers/dom'
 import { extractSignals } from './extract'

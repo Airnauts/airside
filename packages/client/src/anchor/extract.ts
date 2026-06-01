@@ -1,4 +1,4 @@
-import type { Signals } from '@comments/core'
+import type { Signals } from '@airnauts/comments-core'
 
 const MAX_TEXT_SNIPPET = 120
 const MAX_ANCESTOR_TRAIL = 8

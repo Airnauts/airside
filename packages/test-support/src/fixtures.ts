@@ -7,8 +7,8 @@ import {
   type CommentId,
   type CreateThreadBody,
   type ThreadId,
-} from '@comments/core'
-import type { NewComment, NewThread } from '@comments/server'
+} from '@airnauts/comments-core'
+import type { NewComment, NewThread } from '@airnauts/comments-server'
 
 // Counter is module-scoped — Vitest resets it per test file (one worker per file by default).
 let counter = 0

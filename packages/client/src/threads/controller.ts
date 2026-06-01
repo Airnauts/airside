@@ -1,5 +1,5 @@
 // packages/client/src/threads/controller.ts
-import type { ThreadStatus } from '@comments/core'
+import type { ThreadStatus } from '@airnauts/comments-core'
 import type { ApiClient } from '../api/client'
 import type { Action } from './state'
 

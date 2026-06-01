@@ -1,5 +1,5 @@
-import { createCommentsServer, InMemoryRepository } from '@comments/server'
-import { createDevServer } from '@comments/server/dev'
+import { createCommentsServer, InMemoryRepository } from '@airnauts/comments-server'
+import { createDevServer } from '@airnauts/comments-server/dev'
 
 const storageStub = {
   async put(blob) {

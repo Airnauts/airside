@@ -1,7 +1,27 @@
 {
-  "name": "@comments/adapter-mongo",
+  "name": "@airnauts/comments-adapter-mongo",
   "version": "0.0.0",
-  "private": true,
+  "description": "MongoDB repository adapter for the Airnauts commenting tool server.",
+  "keywords": [
+    "comments",
+    "commenting",
+    "annotations",
+    "feedback",
+    "airnauts",
+    "mongodb",
+    "adapter"
+  ],
+  "license": "MIT",
+  "author": "Airnauts",
+  "homepage": "https://github.com/Airnauts/commenting-tool#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Airnauts/commenting-tool.git",
+    "directory": "packages/adapter-mongo"
+  },
+  "bugs": {
+    "url": "https://github.com/Airnauts/commenting-tool/issues"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -10,20 +30,26 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/.tsbuildinfo",
+    "README.md",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup && tsc --build",
     "typecheck": "tsc --build",
     "test": "vitest run"
   },
   "dependencies": {
-    "@comments/core": "workspace:*",
-    "@comments/server": "workspace:*",
+    "@airnauts/comments-core": "workspace:^",
+    "@airnauts/comments-server": "workspace:^",
     "mongodb": "^6.12.0"
   },
   "devDependencies": {
-    "@comments/test-support": "workspace:*",
+    "@airnauts/comments-test-support": "workspace:*",
     "mongodb-memory-server": "^10.1.2"
   }
 }

@@ -1,4 +1,4 @@
-import { Anchor } from '@comments/core'
+import { Anchor } from '@airnauts/comments-core'
 import { describe, expect, it } from 'vitest'
 import { captureElement, captureSelection, clamp01, offsetWithin } from './capture'
 

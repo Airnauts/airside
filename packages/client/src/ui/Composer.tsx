@@ -1,5 +1,5 @@
 // packages/client/src/ui/Composer.tsx
-import type { Attachment } from '@comments/core'
+import type { Attachment } from '@airnauts/comments-core'
 import { type ChangeEvent, useEffect, useRef, useState } from 'react'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'

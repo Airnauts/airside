@@ -1,6 +1,10 @@
-import { ANCHOR_SCHEMA_VERSION } from '@comments/core'
-import { createCommentsServer, InMemoryRepository, type StorageAdapter } from '@comments/server'
-import { createDevServer, type DevServerHandle } from '@comments/server/dev'
+import { ANCHOR_SCHEMA_VERSION } from '@airnauts/comments-core'
+import {
+  createCommentsServer,
+  InMemoryRepository,
+  type StorageAdapter,
+} from '@airnauts/comments-server'
+import { createDevServer, type DevServerHandle } from '@airnauts/comments-server/dev'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildCaptureContext } from '../config'
 import type { FetchLike } from './client'

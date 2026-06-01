@@ -1,4 +1,4 @@
-import type { Attachment } from '@comments/core'
+import type { Attachment } from '@airnauts/comments-core'
 import type { Ctx, IdFactory } from '../ctx'
 import { UploadTooLargeError, ValidationError } from '../errors'
 import type { ParsedUpload } from '../multipart'

@@ -1,4 +1,4 @@
-import { ANCHOR_SCHEMA_VERSION, type CreateThreadBody, type Thread } from '@comments/core'
+import { ANCHOR_SCHEMA_VERSION, type CreateThreadBody, type Thread } from '@airnauts/comments-core'
 import type { Ctx } from '../ctx'
 import type { Repository } from '../repository/types'
 

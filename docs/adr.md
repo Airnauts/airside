@@ -698,3 +698,54 @@ emit).
 - `tsc` incremental state is reset on each real build, so cross-package builds full-
   rebuild declarations every cache miss. Negligible — these packages build in
   milliseconds and cache hits still skip the work entirely.
+
+## ADR-0020 — Publish the packages to npm under the `@airnauts` scope (MIT), released with Changesets
+
+- **Date:** 2026-06-01
+- **Status:** accepted
+
+**Context.** The packages were authored as a private workspace: every manifest was
+`"private": true` at version `0.0.0` under the internal `@comments/*` scope, which is
+not an npm org anyone owns. To distribute v1 we must (a) publish under a scope owned
+by the Airnauts npm account, (b) attach a license and the metadata npm expects, and
+(c) choose a repeatable, multi-package release process. The `@comments/*` name was
+referenced by name in 100+ source files, `turbo.json` task keys, and
+`scripts/check-exports.mjs`, so the scope is not free to change later without another
+sweep — a hard-to-reverse, architecturally significant decision.
+
+**Decision.**
+- **Scope & naming.** Rename every package from `@comments/<x>` to
+  `@airnauts/comments-<x>` (a single `@comments/` → `@airnauts/comments-`
+  substitution that also rewrites subpath exports, `workspace:*` deps, turbo task
+  keys, and the export-check list). The `comments-` product prefix keeps the names
+  from colliding with future Airnauts libraries in the shared scope.
+- **Public set.** Publish the six runtime packages (`core`, `server`, `client`,
+  `storage-fs`, `storage-vercel-blob`, `adapter-mongo`) with
+  `"publishConfig": { "access": "public" }`. `@airnauts/comments-test-support` stays
+  `"private": true` (dev-only contract suite); the `examples/*` apps stay private.
+- **License.** MIT — a root `LICENSE` plus a copy in each published package.
+- **Client React deps.** Move `react`/`react-dom` from `dependencies` to **optional**
+  `peerDependencies` on `@airnauts/comments-client`. The vanilla widget bundles its
+  own React (`noExternal`), but the `./react` wrapper externalizes React and uses the
+  host's copy; shipping React as a hard dependency would risk a duplicate-React
+  "invalid hook call" in consumer apps. They remain in `devDependencies` so the
+  workspace build/tests still resolve them.
+- **Release process.** Adopt [Changesets](https://github.com/changesets/changesets)
+  (`access: public`, `baseBranch: main`): `pnpm changeset` to record intent,
+  `pnpm changeset version` to bump + write changelogs + update internal dep ranges,
+  and `pnpm release` (`pnpm build && changeset publish`) to build then publish in
+  dependency order. `pnpm`/Changesets rewrite `workspace:*` to real ranges at pack
+  time; the `release` script guarantees a fresh build (incl. the client's generated
+  CSS, which is inlined into `dist`) precedes every publish.
+
+**Consequences.**
+- First release is `0.1.0` for all six packages (an initial minor changeset bumps
+  them from `0.0.0`). Versioning is independent thereafter, with internal dependents
+  receiving a patch bump when a dependency changes (`updateInternalDependencies`).
+- The scope/name is effectively permanent once published — npm versions cannot be
+  re-pointed and unpublish is restricted — so a future scope change means a new name
+  and a deprecation of the old one, not a rename.
+- Consumers of the `./react` entry must provide React 19 themselves; vanilla-widget
+  consumers are unaffected (optional peer ⇒ no install warning).
+- This ADR records strategy only. Authenticating to npm and running `pnpm release`
+  remain manual, deliberate steps performed by a maintainer.

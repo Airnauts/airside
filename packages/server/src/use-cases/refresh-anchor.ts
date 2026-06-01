@@ -1,4 +1,9 @@
-import type { RefreshAnchorBody, ThreadId, ThreadIdParam, ThreadListItem } from '@comments/core'
+import type {
+  RefreshAnchorBody,
+  ThreadId,
+  ThreadIdParam,
+  ThreadListItem,
+} from '@airnauts/comments-core'
 import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
 import type { Repository } from '../repository/types'

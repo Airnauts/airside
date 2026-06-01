@@ -1,5 +1,5 @@
-import type { ThreadId } from '@comments/core'
-import { makeNewThread } from '@comments/test-support'
+import type { ThreadId } from '@airnauts/comments-core'
+import { makeNewThread } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { makeCtx } from '../ctx'
 import { ValidationError } from '../errors'

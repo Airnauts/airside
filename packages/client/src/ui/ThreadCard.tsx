@@ -1,6 +1,6 @@
 // packages/client/src/ui/ThreadCard.tsx
 
-import type { AttachmentId, Comment, ThreadListItem } from '@comments/core'
+import type { AttachmentId, Comment, ThreadListItem } from '@airnauts/comments-core'
 import type { ApiClient } from '../api/client'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'

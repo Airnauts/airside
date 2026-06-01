@@ -1,5 +1,5 @@
 // packages/client/src/threads/state.ts
-import type { Anchor, Comment, Thread, ThreadListItem, ThreadStatus } from '@comments/core'
+import type { Anchor, Comment, Thread, ThreadListItem, ThreadStatus } from '@airnauts/comments-core'
 import type { Box, XY } from '../positioning/coords'
 
 /** A matched thread plus its on-screen geometry — what the runtime emits to the store. */

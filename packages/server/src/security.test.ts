@@ -1,4 +1,4 @@
-import { KEY_HEADER_NAME } from '@comments/core'
+import { KEY_HEADER_NAME } from '@airnauts/comments-core'
 import { describe, expect, it } from 'vitest'
 import { AuthInvalidKeyError, OriginNotAllowedError } from './errors'
 import { checkKey, checkOrigin } from './security'

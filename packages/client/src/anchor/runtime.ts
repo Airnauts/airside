@@ -1,5 +1,5 @@
 // packages/client/src/anchor/runtime.ts
-import type { Anchor, ThreadListItem, ThreadStatus } from '@comments/core'
+import type { Anchor, ThreadListItem, ThreadStatus } from '@airnauts/comments-core'
 import type { ApiClient } from '../api/client'
 import { type Box, mapRects, pinXY } from '../positioning/coords'
 import type { PlacedThread } from '../threads/state'

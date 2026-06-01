@@ -1,6 +1,6 @@
 // packages/client/src/ui/ThreadPopover.tsx
 
-import type { ThreadListItem } from '@comments/core'
+import type { ThreadListItem } from '@airnauts/comments-core'
 import * as Popover from '@radix-ui/react-popover'
 import { useRef } from 'react'
 import type { ApiClient } from '../api/client'

@@ -1,4 +1,4 @@
-import type { Operation } from '@comments/core'
+import type { Operation } from '@airnauts/comments-core'
 import type { Ctx } from './ctx'
 import { NotFoundError, ValidationError } from './errors'
 import { parseMultipart } from './multipart'

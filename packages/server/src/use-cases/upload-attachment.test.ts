@@ -1,5 +1,5 @@
-import type { Attachment, AttachmentId } from '@comments/core'
-import type { StorageAdapter } from '@comments/server'
+import type { Attachment, AttachmentId } from '@airnauts/comments-core'
+import type { StorageAdapter } from '@airnauts/comments-server'
 import { describe, expect, it } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { UploadTooLargeError, ValidationError } from '../errors'

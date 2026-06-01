@@ -10,7 +10,7 @@ import {
   type ThreadListItem,
   type ThreadListResponse,
   type ThreadStatus,
-} from '@comments/core'
+} from '@airnauts/comments-core'
 import { ApiError } from './errors'
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>

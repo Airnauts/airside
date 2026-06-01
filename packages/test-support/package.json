@@ -1,5 +1,5 @@
 {
-  "name": "@comments/test-support",
+  "name": "@airnauts/comments-test-support",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -18,8 +18,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@comments/core": "workspace:*",
-    "@comments/server": "workspace:*"
+    "@airnauts/comments-core": "workspace:*",
+    "@airnauts/comments-server": "workspace:*"
   },
   "peerDependencies": {
     "vitest": "^3.2.0"

@@ -1,6 +1,6 @@
 # Next.js host app (M9 integration example)
 
-A real Next.js App Router app that integrates the `@comments/*` packages through
+A real Next.js App Router app that integrates the `@airnauts/comments-*` packages through
 their public seams. It is the worked example behind [`docs/integration.md`](../../docs/integration.md)
 and the manual integration proof for M9.
 
@@ -8,13 +8,13 @@ and the manual integration proof for M9.
 
 1. Build the workspace packages it imports:
    ```bash
-   pnpm --filter @comments/client --filter @comments/server \
-     --filter @comments/adapter-mongo --filter @comments/storage-fs \
-     --filter @comments/storage-vercel-blob build
+   pnpm --filter @airnauts/comments-client --filter @airnauts/comments-server \
+     --filter @airnauts/comments-adapter-mongo --filter @airnauts/comments-storage-fs \
+     --filter @airnauts/comments-storage-vercel-blob build
    ```
 2. Start the app (in-memory persistence, zero config):
    ```bash
-   pnpm --filter @comments/nextjs-host dev
+   pnpm --filter @airnauts/comments-nextjs-host dev
    ```
 3. Open <http://localhost:3000/?comments-key=dev-key>. Without the `comments-key`
    param the page is untouched and the widget is inert.
@@ -26,7 +26,7 @@ mode are written to a gitignored `public/uploads/` and served by Next.
 
 ## Manual smoke checklist
 
-Run against `pnpm --filter @comments/nextjs-host dev`:
+Run against `pnpm --filter @airnauts/comments-nextjs-host dev`:
 
 1. Open `/` **without** the key → page untouched, widget inert.
 2. Open `/?comments-key=dev-key` → comment affordance appears; the first action

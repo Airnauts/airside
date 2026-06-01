@@ -16,28 +16,28 @@
     "size": {
       "dependsOn": ["build"]
     },
-    "@comments/server#build": {
-      "dependsOn": ["@comments/core#build"],
+    "@airnauts/comments-server#build": {
+      "dependsOn": ["@airnauts/comments-core#build"],
       "outputs": ["dist/**", "!dist/**/*.tsbuildinfo"]
     },
-    "@comments/server#typecheck": {
-      "dependsOn": ["@comments/server#build", "@comments/core#build"],
+    "@airnauts/comments-server#typecheck": {
+      "dependsOn": ["@airnauts/comments-server#build", "@airnauts/comments-core#build"],
       "inputs": ["src/**/*.{ts,tsx}", "tsconfig.json", "../../tsconfig.base.json"],
       "outputs": []
     },
-    "@comments/server#test": {
-      "dependsOn": ["@comments/core#build", "@comments/test-support#build"]
+    "@airnauts/comments-server#test": {
+      "dependsOn": ["@airnauts/comments-core#build", "@airnauts/comments-test-support#build"]
     },
-    "@comments/test-support#build": {
-      "dependsOn": ["@comments/core#build", "@comments/server#build"],
+    "@airnauts/comments-test-support#build": {
+      "dependsOn": ["@airnauts/comments-core#build", "@airnauts/comments-server#build"],
       "outputs": ["dist/**", "!dist/**/*.tsbuildinfo"]
     },
-    "@comments/test-support#typecheck": {
-      "dependsOn": ["@comments/test-support#build"],
+    "@airnauts/comments-test-support#typecheck": {
+      "dependsOn": ["@airnauts/comments-test-support#build"],
       "inputs": ["src/**/*.{ts,tsx}", "tsconfig.json", "../../tsconfig.base.json"],
       "outputs": []
     },
-    "@comments/nextjs-host#build": {
+    "@airnauts/comments-nextjs-host#build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"]
     }

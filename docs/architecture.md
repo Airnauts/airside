@@ -36,31 +36,31 @@ endpoint with no client change.
 
 **Monorepo** (pnpm workspaces, tsup builds, ESM-first):
 
-- **`@comments/core`** — isomorphic, no DOM/Node. Types, zod schemas + the HTTP
+- **`@airnauts/comments-core`** — isomorphic, no DOM/Node. Types, zod schemas + the HTTP
   contract (source for OpenAPI), the anchor fingerprint schema + `schemaVersion`,
   and the pure scoring/threshold policy.
-- **`@comments/client`** — the widget engine: `init()` (vanilla, light-DOM
+- **`@airnauts/comments-client`** — the widget engine: `init()` (vanilla, light-DOM
   mount), the React UI (shadcn), the anchoring *runtime* (DOM capture / re-match
-  / overlay), and the API client. Subpath **`@comments/client/react`** exports the
+  / overlay), and the API client. Subpath **`@airnauts/comments-client/react`** exports the
   thin `<CommentsLayer/>` wrapper (tree-shaken away if unused).
-- **`@comments/server`** — the Web-standard `Request → Response` core + business
-  logic; depends only on adapter interfaces. Subpath **`@comments/server/next`**
+- **`@airnauts/comments-server`** — the Web-standard `Request → Response` core + business
+  logic; depends only on adapter interfaces. Subpath **`@airnauts/comments-server/next`**
   is the App Router glue.
-- **`@comments/adapter-mongo`** — MongoDB repository (only package that pulls the
+- **`@airnauts/comments-adapter-mongo`** — MongoDB repository (only package that pulls the
   mongo driver).
-- **`@comments/storage-vercel-blob`**, **`@comments/storage-fs`** — storage
+- **`@airnauts/comments-storage-vercel-blob`**, **`@airnauts/comments-storage-fs`** — storage
   concretes.
 - Seams with no v1 concrete: auth, other DBs, other frameworks, S3.
 
 **"Enable/disable via subpackage imports":** integrators install/import only the
 adapters they use (so e.g. the mongo driver never enters a build that doesn't
-import `@comments/adapter-mongo`). Client features (screenshots, text anchors) are
+import `@airnauts/comments-adapter-mongo`). Client features (screenshots, text anchors) are
 gated in `init({ features })` and dynamically imported. **Bundle delivery is
 npm-only in v1**; a CDN/script-tag build is a deliberate fast-follow.
 
 ---
 
-## 3. Client architecture (`@comments/client`)
+## 3. Client architecture (`@airnauts/comments-client`)
 
 **Mount.** A single call — `comments.init({ key, endpoint, pageKey?, features? })`
 — injects one root host element at `<body>` (`position: fixed; inset: 0;
@@ -95,13 +95,13 @@ cross-page panel, and the email-identity modal.
 - **api client** — endpoint + key header; optimistic posts with rollback.
 
 **core ↔ client split.** Pure, headless-testable logic (fingerprint schema,
-scoring weights, threshold policy, HTTP contract types) lives in `@comments/core`.
+scoring weights, threshold policy, HTTP contract types) lives in `@airnauts/comments-core`.
 Only DOM-touching code (building fingerprints from real nodes, running the search,
-rendering the overlay) lives in `@comments/client`.
+rendering the overlay) lives in `@airnauts/comments-client`.
 
 ---
 
-## 4. Server architecture (`@comments/server`)
+## 4. Server architecture (`@airnauts/comments-server`)
 
 A framework-agnostic core built on the Web `Request → Response` standard, with
 thin per-framework glue and injected adapters.
@@ -118,7 +118,7 @@ report-orphan / refresh-anchor, upload attachment.
 
 ```ts
 createCommentsServer({
-  repository,      // @comments/adapter-mongo
+  repository,      // @airnauts/comments-adapter-mongo
   storage,         // vercel-blob | fs
   secretKey,
   allowedOrigins,
@@ -223,7 +223,7 @@ collection later if ever needed.
 
 ## 6. HTTP API contract
 
-Defined once as zod in `@comments/core`; OpenAPI generated from it (served at
+Defined once as zod in `@airnauts/comments-core`; OpenAPI generated from it (served at
 `GET /openapi.json` + a Scalar page at `/docs`; static artifact at build).
 Mounted under a base path, e.g. `/api/comments`.
 
@@ -254,8 +254,8 @@ On-page load → `GET /threads?pageKey=…` → client runs scored re-match. Pan
 
 ## 7. Anchoring mechanism
 
-Pure scoring/threshold policy in `@comments/core`; DOM capture/search/positioning
-in `@comments/client`. All knobs have defaults and are tunable (PRD §9).
+Pure scoring/threshold policy in `@airnauts/comments-core`; DOM capture/search/positioning
+in `@airnauts/comments-client`. All knobs have defaults and are tunable (PRD §9).
 
 **Capture (on click / selection).** target = `elementFromPoint` (or the
 selection's container); build dual `selectors` (structural nth-of-type + class

@@ -1,7 +1,27 @@
 {
-  "name": "@comments/server",
+  "name": "@airnauts/comments-server",
   "version": "0.0.0",
-  "private": true,
+  "description": "Server runtime for the Airnauts embeddable commenting tool: HTTP router, use-cases, CORS/security, and framework adapters (dev server, Next.js).",
+  "keywords": [
+    "comments",
+    "commenting",
+    "annotations",
+    "feedback",
+    "airnauts",
+    "server",
+    "nextjs"
+  ],
+  "license": "MIT",
+  "author": "Airnauts",
+  "homepage": "https://github.com/Airnauts/commenting-tool#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Airnauts/commenting-tool.git",
+    "directory": "packages/server"
+  },
+  "bugs": {
+    "url": "https://github.com/Airnauts/commenting-tool/issues"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -18,18 +38,24 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/.tsbuildinfo",
+    "README.md",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup && tsc --build",
     "typecheck": "tsc --build",
     "test": "vitest run"
   },
   "dependencies": {
-    "@comments/core": "workspace:*",
+    "@airnauts/comments-core": "workspace:^",
     "nanoid": "^5.1.11"
   },
   "devDependencies": {
-    "@comments/test-support": "workspace:*"
+    "@airnauts/comments-test-support": "workspace:*"
   }
 }

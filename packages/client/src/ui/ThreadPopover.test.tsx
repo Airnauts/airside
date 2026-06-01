@@ -1,5 +1,5 @@
 // packages/client/src/ui/ThreadPopover.test.tsx
-import type { ThreadListItem } from '@comments/core'
+import type { ThreadListItem } from '@airnauts/comments-core'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'

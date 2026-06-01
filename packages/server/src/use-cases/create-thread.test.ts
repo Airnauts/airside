@@ -1,5 +1,5 @@
-import { ANCHOR_SCHEMA_VERSION, type CommentId, type ThreadId } from '@comments/core'
-import { makeCreateThreadBody } from '@comments/test-support'
+import { ANCHOR_SCHEMA_VERSION, type CommentId, type ThreadId } from '@airnauts/comments-core'
+import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { InMemoryRepository } from '../repository/in-memory'

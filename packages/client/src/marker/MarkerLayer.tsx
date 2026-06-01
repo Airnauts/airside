@@ -1,4 +1,4 @@
-import type { AttachmentId, Provenance } from '@comments/core'
+import type { AttachmentId, Provenance } from '@airnauts/comments-core'
 import * as Popover from '@radix-ui/react-popover'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { captureElement, captureSelection } from '../anchor/capture'

@@ -1,4 +1,4 @@
-import { type CaptureContext, normalizePageKey, type Provenance } from '@comments/core'
+import { type CaptureContext, normalizePageKey, type Provenance } from '@airnauts/comments-core'
 
 export type Features = {
   screenshots?: boolean

@@ -9,7 +9,7 @@ import {
   ThreadId,
 } from './index'
 
-describe('@comments/core public surface', () => {
+describe('@airnauts/comments-core public surface', () => {
   it('re-exports the frozen contract entry points', () => {
     expect(typeof normalizePageKey).toBe('function')
     expect(typeof buildOpenApiDocument).toBe('function')

@@ -2,7 +2,7 @@ import { loadActivationKey, saveActivationKey } from './activation/storage'
 import { DEFAULT_KEY_PARAM, type InitOptions } from './config'
 import { isActivated, isUrlActivation } from './gate'
 
-export const packageName = '@comments/client'
+export const packageName = '@airnauts/comments-client'
 
 export * from './anchor'
 export type { InitOptions } from './config'
