@@ -10,7 +10,9 @@
 
 **Source spec:** [`docs/superpowers/specs/2026-06-01-m9-integration-host-app-design.md`](../specs/2026-06-01-m9-integration-host-app-design.md)
 
-**Note on TDD:** This milestone writes no new package logic — it wires already-tested seams into an example app. Per CLAUDE.md ("Client/widget testing follows architecture §9, not strict TDD") and the fact this is a demo host, there are no unit tests here. Verification is the integration **build** (`next build` via turbo) plus the **manual smoke checklist** (Task 9). Each task's "verify" step is a real command with expected output.
+**Note on TDD:** The one piece of new package logic — the §0 origin-policy fix (Task 0) — **is** built test-first (update the failing test, then the implementation), per ADR-0010. The rest of the milestone wires already-tested seams into an example app; per CLAUDE.md ("Client/widget testing follows architecture §9, not strict TDD") and the fact this is a demo host, those tasks have no unit tests — they are verified by the integration **build** (`next build` via turbo) plus the **manual smoke checklist** (authored in Task 7's README, run in Task 10). Each task's "verify" step is a real command with expected output.
+
+**Why Task 0 exists:** `createNextHandler` mounts the API same-origin, but `checkOrigin` rejects a missing `Origin` header — which browsers omit on same-origin GET (Fetch spec). Without Task 0, the host app 403s on page load (`listThreads`). See spec §0 and ADR-0017.
 
 **Working directory:** all paths are relative to the repo root. Work happens on the current worktree branch; commit after each task.
 
@@ -39,10 +41,124 @@ Created under `examples/nextjs-host/`:
 
 Modified at repo root:
 
+- `packages/server/src/security.ts` — relax `checkOrigin` (allow absent Origin; reject only present-and-disallowed). **Task 0.**
+- `packages/server/src/security.test.ts` — flip the missing-Origin case (throws → returns `null`). **Task 0.**
+- `docs/adr.md` — add **ADR-0017** (same-origin Origin policy). **Task 0.**
 - `turbo.json` — add `@comments/nextjs-host#build` task with `.next` outputs (correct caching; keeps the generic `dist/**` output from mis-caching a Next build).
 - `docs/integration.md` — **new** consumer-facing quickstart.
 - `docs/milestones.md` — rewrite M9 to slim scope; add M10; update the dependency graph + suggested sequence.
 - Top-level `README.md` (if present) / `docs/architecture.md` §9 — one cross-link to `docs/integration.md`.
+
+---
+
+## Task 0: Relax the same-origin Origin policy (backend precursor, TDD) + ADR-0017
+
+**Files:**
+- Modify: `packages/server/src/security.test.ts`
+- Modify: `packages/server/src/security.ts`
+- Modify: `docs/adr.md`
+
+**Why:** `createNextHandler` mounts the API same-origin; browsers omit `Origin` on same-origin GET, but `checkOrigin` throws on a missing `Origin` → the host app would 403 on `listThreads`. Reject only a *present-and-disallowed* Origin; allow absent (the capability key is the gate).
+
+- [ ] **Step 1: Update the failing test** in `packages/server/src/security.test.ts`
+
+Replace the existing missing-Origin case:
+
+```ts
+  it('checkOrigin throws when Origin header is missing (browser widget only)', () => {
+    const req = new Request('http://x/')
+    expect(() => checkOrigin(req, ['https://app.example.com'])).toThrowError(OriginNotAllowedError)
+  })
+```
+
+with:
+
+```ts
+  it('checkOrigin allows a missing Origin (same-origin GET / non-browser); returns null', () => {
+    const req = new Request('http://x/')
+    expect(checkOrigin(req, ['https://app.example.com'])).toBeNull()
+  })
+
+  it('checkOrigin still rejects a present-but-disallowed Origin', () => {
+    const req = new Request('http://x/', { headers: { origin: 'https://attacker.example' } })
+    expect(() => checkOrigin(req, ['https://app.example.com'])).toThrowError(OriginNotAllowedError)
+  })
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+Run: `pnpm --filter @comments/server test -- security`
+Expected: FAIL — the "allows a missing Origin … returns null" case throws `OriginNotAllowedError` under the current implementation.
+
+- [ ] **Step 3: Implement the change** in `packages/server/src/security.ts`
+
+Replace the `checkOrigin` function:
+
+```ts
+/**
+ * Rejects only a **present-and-disallowed** `Origin`. An absent `Origin`
+ * (same-origin GET/HEAD per the Fetch spec, or a non-browser caller) is allowed —
+ * the capability key (`checkKey`) is the real gate, and a present cross-origin
+ * `Origin` not in `allowedOrigins` is still rejected (blocks unapproved embedding).
+ * Returns the validated origin (or `null` when absent) so callers can echo it in
+ * CORS headers. See ADR-0017.
+ */
+export function checkOrigin(req: Request, allowedOrigins: readonly string[]): string | null {
+  const origin = req.headers.get('origin')
+  if (origin && !allowedOrigins.includes(origin)) {
+    throw new OriginNotAllowedError()
+  }
+  return origin
+}
+```
+
+- [ ] **Step 4: Run the server test suite to verify green**
+
+Run: `pnpm --filter @comments/server test`
+Expected: PASS. (`next.test.ts`/`dev.test.ts` send explicit Origins; `cors.test.ts` preflight null-origin cases are unaffected — they use `preflightResponse`, not `checkOrigin`.)
+
+- [ ] **Step 5: Verify the client round-trip test still passes**
+
+Run: `pnpm --filter @comments/client test -- round-trip`
+Expected: PASS. (`round-trip.test.ts` sends an Origin manually to work around the old behavior; it remains present-and-allowed, so it stays green. If it now fails for an unrelated reason, do not weaken it — investigate.)
+
+- [ ] **Step 6: Add ADR-0017 to `docs/adr.md`** (append, newest-last)
+
+```markdown
+## ADR-0017 — Same-origin Origin policy: allow absent Origin, reject only present-and-disallowed
+
+- **Date:** 2026-06-01
+- **Status:** Accepted
+
+**Context.** `checkOrigin` rejected a request whose `Origin` header was absent or not
+in `allowedOrigins`. The absent-Origin rejection assumed every caller is a
+cross-origin browser widget (which always sends `Origin`). M9's `createNextHandler`
+host app mounts the API **same-origin**, and per the Fetch spec browsers omit
+`Origin` on same-origin GET/HEAD — so the widget's `listThreads`/`getThread` 403'd on
+page load. This is the first time the same-origin mount topology was exercised
+end-to-end.
+
+**Decision.** `checkOrigin` rejects only a **present-and-disallowed** `Origin`. An
+**absent** `Origin` (same-origin GET/HEAD, or a non-browser caller) is allowed; the
+capability key (`checkKey`) remains the authentication gate. A present cross-origin
+`Origin` not in `allowedOrigins` is still rejected, preserving the block on
+unapproved cross-site embedding. `checkOrigin` now returns `string | null`.
+
+**Consequences.** Same-origin Next mounts work without weakening the meaningful CSRF
+signal: a browser cannot omit or forge `Origin` on a cross-origin state-changing
+request, so present-and-disallowed is what matters; absent is benign. Reads are no
+longer origin-gated when same-origin (acceptable — the key gates them). Supersedes
+the implicit "missing Origin → 403" behavior previously asserted in
+`security.test.ts`. CORS preflight handling (`preflightResponse`) is unchanged.
+```
+
+- [ ] **Step 7: Lint + commit**
+
+```bash
+pnpm format && pnpm lint
+git add packages/server/src/security.ts packages/server/src/security.test.ts docs/adr.md
+git commit -m "M9 (ADR-0017): allow absent Origin in checkOrigin (unblock same-origin mounts)"
+```
 
 ---
 
@@ -369,7 +485,15 @@ curl -s -X POST 'http://localhost:3000/api/comments/threads' \
 ```
 Expected: a non-500 HTTP status line (a `400` validation error is the success signal here — it proves the request reached the server core, passed the key/origin checks, and hit zod validation; a `401`/`403` would mean the key/origin wiring is wrong, a `500` a bundling problem). Stop the dev server afterward.
 
-> Note: the exact header name is `x-comments-key` per the API client; if the smoke curl returns `401`, confirm the header name in `packages/client/src/api/client.ts` and match it.
+Then verify the **same-origin read path** (the Task 0 fix) — a GET with **no** `Origin` header must not 403:
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' \
+  'http://localhost:3000/api/comments/threads?pageKey=test' \
+  -H 'x-comments-key: dev-key'
+```
+Expected: `200` (an empty list). A `403` here means Task 0 did not take effect — the same-origin GET path is still origin-gated.
+
+> Note: the header name is `KEY_HEADER_NAME = 'x-comments-key'` (`packages/core/src/contract/wire.ts`); confirmed. If the POST smoke returns `401`, re-check it.
 
 - [ ] **Step 5: Lint + commit**
 
@@ -942,7 +1066,7 @@ git commit -m "M9: final verification fixups" || echo "nothing to commit"
 
 ## Self-review notes (for the implementer)
 
-- **Header name** in the Task 4 curl is a guess (`x-comments-key`); the step says to confirm it against `packages/client/src/api/client.ts` and the server's auth check. Treat a `400` (validation) as success, `401`/`403` as a wiring bug.
+- **Header name** is confirmed `x-comments-key` (`KEY_HEADER_NAME`, `packages/core/src/contract/wire.ts`). In the Task 4 POST smoke, treat a `400` (validation) as success, `401`/`403` as a wiring bug; the no-Origin GET smoke must return `200` (proves Task 0).
 - **`next build` typecheck** is the type gate for the example (no separate `typecheck` script), so every `lib/*` file is type-checked there — a `Repository`/`StorageAdapter` signature mismatch fails the build.
 - **Do not import `lib/comments-server.ts` (or anything importing `mongodb`) from a client component** — it must stay server-only, reached only via the route and server modules.
 - **Biome style:** single quotes, no semicolons, line width 100, JSX attrs double-quoted. `pnpm format` normalizes; never hand-fight it.

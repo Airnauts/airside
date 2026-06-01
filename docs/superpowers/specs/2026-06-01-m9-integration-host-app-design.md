@@ -20,6 +20,15 @@ out into a **new M10** (see §5). Verification here is **manual/visual**, captur
 a smoke checklist — the same role `examples/playground` played for M5, now on the
 production framework and against the whole stack.
 
+**One backend precursor (discovered during planning).** Building the host app
+surfaced a real conflict: the server's origin check (`checkOrigin`) **rejects a
+missing `Origin` header**, which is deliberate and test-pinned for the *cross-origin*
+widget topology. But `createNextHandler` mounts the API **same-origin**, and per the
+Fetch spec browsers omit `Origin` on same-origin GET — so the widget's
+`listThreads`/`getThread` would 403 on page load. M9 is the first cycle to exercise
+the same-origin topology end-to-end, so it fixes this here (§0 + **ADR-0017**). This
+is the *only* package-code change in M9.
+
 ## What is reused, not rebuilt
 
 Nothing new is built in the packages. M9 is pure integration wiring of seams that
@@ -42,6 +51,40 @@ already exist and are tested:
 
 The host app imports these as `workspace:*` packages exactly as a real integrator
 would import the published versions — the example **is** the integration test.
+
+## §0 Backend precursor — same-origin Origin policy (ADR-0017)
+
+`checkOrigin` currently throws `OriginNotAllowedError` when the `Origin` header is
+**absent or** not in `allowedOrigins`. The absent-Origin rejection assumes every
+caller is a cross-origin browser widget (which always sends `Origin`). The
+same-origin Next mount breaks that assumption: same-origin GET/HEAD omit `Origin`
+(Fetch spec), so reads would 403.
+
+**Change.** Reject only a **present-and-disallowed** `Origin`; treat an **absent**
+`Origin` (same-origin GET/HEAD, or a non-browser caller) as allowed. The
+**capability key** (`checkKey`) remains the real gate, and `allowedOrigins` still
+blocks an unapproved *present* origin (cross-site embedding). This is the
+conventional CSRF-safe pattern: a browser cannot forge or omit `Origin` on a
+cross-origin state-changing request, so present-and-disallowed is the meaningful
+signal; absent is benign.
+
+```ts
+// packages/server/src/security.ts — after
+export function checkOrigin(req: Request, allowedOrigins: readonly string[]): string | null {
+  const origin = req.headers.get('origin')
+  if (origin && !allowedOrigins.includes(origin)) throw new OriginNotAllowedError()
+  return origin // null when absent — callers already handle a null origin in CORS
+}
+```
+
+**Blast radius (verified):** only `security.test.ts`'s missing-Origin case flips
+(throws → returns `null`). `next.test.ts`/`dev.test.ts` send an explicit Origin
+(unaffected); `router.test.ts` bypasses the security wrapper; `cors.test.ts`'s
+null-origin → 403 cases are the **preflight** path (`preflightResponse`), which this
+change does not touch. The `handle()` caller ignores `checkOrigin`'s return value, so
+widening it to `string | null` is safe. **ADR-0017** records the policy change
+(supersedes the implicit "missing Origin → 403" decision; it does not edit ADR-0001's
+history).
 
 ## §1 The host app — `examples/nextjs-host`
 
@@ -157,12 +200,13 @@ For visibility; M10 gets its own brainstorm → spec → plan:
 
 ## Non-goals
 
-- No new features, schemas, endpoints, or package code — the M2a contract stays
-  frozen and the packages are imported, not modified.
+- No new features, schemas, or endpoints — the M2a contract stays frozen. The **only**
+  package-code change is the §0 origin-policy fix; nothing else in the packages is
+  modified.
 - No automated e2e, no CI e2e job, no live deployment (all M10).
-- No new ADR: M9 introduces no hard-to-reverse decision. The env-switch is ordinary
-  example wiring, and "split deferred work into M10" is a roadmap edit, not an
-  architecture decision.
+- **One ADR (ADR-0017)** for the §0 origin-policy change — that *is* a security
+  decision worth recording. The env-switch is ordinary example wiring, and "split
+  deferred work into M10" is a roadmap edit, neither needing an ADR.
 
 ## Risks & mitigations
 
