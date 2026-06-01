@@ -2,23 +2,39 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
-import { ToastProvider } from './toast'
 import { useController } from '../threads/useThreads'
 import { DetachedThread } from './DetachedThread'
+import { ToastProvider } from './toast'
 
 function Probe() {
   const c = useController()
-  return <button type="button" onClick={() => c.openThread('a')}>open</button>
+  return (
+    <button type="button" onClick={() => c.openThread('a')}>
+      open
+    </button>
+  )
 }
 
 function setup() {
   const client = {
     getThread: vi.fn().mockResolvedValue({
-      id: 'a', status: 'open',
-      createdBy: { email: 'a@b.c', name: 'Ann' }, unresolvedCount: 1,
-      comments: [{ id: 'c1', author: { email: 'a@b.c', name: 'Ann' }, text: 'Button moved', attachments: [], createdAt: new Date().toISOString() }],
+      id: 'a',
+      status: 'open',
+      createdBy: { email: 'a@b.c', name: 'Ann' },
+      unresolvedCount: 1,
+      comments: [
+        {
+          id: 'c1',
+          author: { email: 'a@b.c', name: 'Ann' },
+          text: 'Button moved',
+          attachments: [],
+          createdAt: new Date().toISOString(),
+        },
+      ],
     }),
-    addComment: vi.fn(), setThreadStatus: vi.fn(), upload: vi.fn(),
+    addComment: vi.fn(),
+    setThreadStatus: vi.fn(),
+    upload: vi.fn(),
   }
   render(
     <WidgetProvider>

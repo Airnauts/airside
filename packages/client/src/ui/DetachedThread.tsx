@@ -27,7 +27,12 @@ export function DetachedThread({ client, identity, onNeedIdentity }: DetachedThr
       <div className="cmnt:mb-1 cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:flex cmnt:items-center cmnt:gap-1 cmnt:px-2 cmnt:py-1 cmnt:rounded cmnt:bg-amber-100 cmnt:text-amber-700 cmnt:text-[11px] cmnt:font-medium">
         <span aria-hidden={true}>⚠</span> This comment's anchor was lost
       </div>
-      <ThreadCard item={detail} client={client} identity={identity} onNeedIdentity={onNeedIdentity} />
+      <ThreadCard
+        item={detail}
+        client={client}
+        identity={identity}
+        onNeedIdentity={onNeedIdentity}
+      />
     </div>
   )
 }

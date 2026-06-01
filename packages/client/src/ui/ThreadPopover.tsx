@@ -1,5 +1,6 @@
 // packages/client/src/ui/ThreadPopover.tsx
 
+import type { ThreadListItem } from '@comments/core'
 import * as Popover from '@radix-ui/react-popover'
 import { useRef } from 'react'
 import type { ApiClient } from '../api/client'
@@ -7,7 +8,6 @@ import { usePortalContainer } from '../app/providers'
 import type { Identity } from '../identity/storage'
 import type { XY } from '../positioning/coords'
 import { useController, useOpenThread } from '../threads/useThreads'
-import type { ThreadListItem } from '@comments/core'
 import { Pin } from './Pin'
 import { ThreadCard } from './ThreadCard'
 
@@ -51,7 +51,12 @@ export function ThreadPopover({
           collisionPadding={8}
           className="cmnt:pointer-events-auto"
         >
-          <ThreadCard item={item} client={client} identity={identity} onNeedIdentity={onNeedIdentity} />
+          <ThreadCard
+            item={item}
+            client={client}
+            identity={identity}
+            onNeedIdentity={onNeedIdentity}
+          />
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>
