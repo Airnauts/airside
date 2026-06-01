@@ -3,16 +3,20 @@ import type { ThreadListItem } from '@comments/core'
 import { cn } from '../lib/cn'
 import { relativeTime } from '../threads/relativeTime'
 
-export function PanelRow({ item, onSelect }: { item: ThreadListItem; onSelect: () => void }) {
+export type PanelRowProps = { item: ThreadListItem; onSelect: () => void }
+
+export function PanelRow({ item, onSelect }: PanelRowProps) {
   const resolved = item.status === 'resolved'
   const orphaned = item.anchorState === 'orphaned'
+  const label = `${resolved ? 'Resolved' : `${item.unresolvedCount} open`} comment thread on ${item.pageTitle ?? item.pageUrl}${orphaned ? ', anchor lost' : ''}`
   return (
     <button
       type="button"
       data-testid="comments-panel-row"
       data-thread-id={item.id}
+      aria-label={label}
       onClick={onSelect}
-      className="cmnt:w-full cmnt:flex cmnt:items-start cmnt:gap-2 cmnt:px-3 cmnt:py-2.5 cmnt:text-left cmnt:bg-transparent cmnt:border-none cmnt:border-b cmnt:border-[#f1f3f5] cmnt:cursor-pointer cmnt:hover:bg-gray-50"
+      className="cmnt:w-full cmnt:flex cmnt:items-start cmnt:gap-2 cmnt:px-3 cmnt:py-2.5 cmnt:text-left cmnt:bg-transparent cmnt:border-0 cmnt:border-b cmnt:border-[#f1f3f5] cmnt:cursor-pointer cmnt:hover:bg-gray-50"
     >
       <span
         aria-hidden={true}
@@ -31,7 +35,7 @@ export function PanelRow({ item, onSelect }: { item: ThreadListItem; onSelect: (
           <span>{relativeTime(item.updatedAt)}</span>
           {orphaned && (
             <span className="cmnt:ml-1 cmnt:px-1.5 cmnt:py-0.5 cmnt:rounded cmnt:bg-amber-100 cmnt:text-amber-700 cmnt:font-medium">
-              ⚠ anchor lost
+              <span aria-hidden={true}>⚠</span> anchor lost
             </span>
           )}
         </span>

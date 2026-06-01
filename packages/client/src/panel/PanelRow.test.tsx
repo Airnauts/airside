@@ -37,4 +37,11 @@ describe('PanelRow', () => {
     render(<PanelRow item={item({ anchorState: 'orphaned' })} onSelect={() => {}} />)
     expect(screen.getByText(/anchor lost/i)).toBeInTheDocument()
   })
+
+  it('exposes a descriptive aria-label', () => {
+    render(
+      <PanelRow item={item({ unresolvedCount: 2, pageTitle: 'Pricing' })} onSelect={() => {}} />,
+    )
+    expect(screen.getByTestId('comments-panel-row')).toHaveAccessibleName(/2 open.*Pricing/i)
+  })
 })
