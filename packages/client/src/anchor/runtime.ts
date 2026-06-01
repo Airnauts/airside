@@ -33,6 +33,12 @@ export function createRuntime(opts: RuntimeOptions) {
   function matchAndReport(item: ThreadListItem, anchor: Anchor): RetainedMatch | null {
     const res = rematch(anchor, root)
     if (res.kind === 'orphaned') {
+      console.debug('[comments] anchor lost', {
+        threadId: item.id,
+        pageKey: opts.pageKey,
+        reason: res.reason,
+        ...res.diagnostics,
+      })
       void opts.client.refreshAnchor(item.id, { anchorState: 'orphaned' }).catch(() => {})
       return null
     }

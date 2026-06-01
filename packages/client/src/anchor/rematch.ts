@@ -1,5 +1,11 @@
 import type { Anchor, Signals } from '@comments/core'
-import { decide, locateQuote, scoreCandidate } from '@comments/core'
+import {
+  DEFAULT_THRESHOLDS,
+  decide,
+  locateQuote,
+  type ScoreComponents,
+  scoreCandidate,
+} from '@comments/core'
 import { extractSignals } from './extract'
 import { buildSelectors, resolveUnique } from './selectors'
 
@@ -46,10 +52,24 @@ export function findCandidates(
 }
 
 export type Healed = { selectors: [string, string]; signals: Signals }
+
+/** Why an anchor was lost, with the scores that led there — for console diagnostics. */
+export type OrphanDiagnostics = {
+  candidateCount: number
+  thresholds: { accept: number; margin: number }
+  stored: { tag: string; selectors: readonly string[] }
+  // Top candidates by score, highest first (capped at 3). Empty when noCandidates.
+  top: Array<{ total: number; components: ScoreComponents; excluded: false | 'tagMismatch' }>
+}
+
 export type RematchResult =
   | { kind: 'anchored'; el: Element; range?: Range; healed?: Healed }
   | { kind: 'selectionLost'; el: Element; healed?: Healed }
-  | { kind: 'orphaned'; reason: 'noCandidates' | 'belowAccept' | 'ambiguous' }
+  | {
+      kind: 'orphaned'
+      reason: 'noCandidates' | 'belowAccept' | 'ambiguous'
+      diagnostics: OrphanDiagnostics
+    }
 
 /** Cheap agreement check for the fast path: same tag and every stored stableAttr present + equal. */
 export function signalsAgree(stored: Signals, el: Element): boolean {
@@ -113,7 +133,26 @@ export function rematch(anchor: Anchor, root: ParentNode): RematchResult {
     score: scoreCandidate(anchor.signals, extractSignals(el)),
   }))
   const decision = decide(scored)
-  if (decision.kind === 'orphaned') return { kind: 'orphaned', reason: decision.reason }
+  if (decision.kind === 'orphaned') {
+    const top = [...scored]
+      .sort((a, b) => b.score.total - a.score.total)
+      .slice(0, 3)
+      .map((s) => ({
+        total: s.score.total,
+        components: s.score.components,
+        excluded: s.score.excluded,
+      }))
+    return {
+      kind: 'orphaned',
+      reason: decision.reason,
+      diagnostics: {
+        candidateCount: scored.length,
+        thresholds: { accept: DEFAULT_THRESHOLDS.accept, margin: DEFAULT_THRESHOLDS.margin },
+        stored: { tag: anchor.signals.tag, selectors: anchor.selectors },
+        top,
+      },
+    }
+  }
   // 3. Matched via scoring -> fingerprint drifted -> emit a heal payload.
   return finishMatch(decision.winner, anchor, healedFrom(decision.winner))
 }
