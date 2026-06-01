@@ -136,9 +136,25 @@ not placed yet. So `focusThread`:
    store; resolve when `id` is placed, with a **~2s timeout** fallback.
 3. On placement → `scrollIntoView` the anchored element (centered) + a brief **pulse**
    highlight on the pin to draw the eye.
-4. **Orphaned / never-placed target** (the "Needs review" case): on timeout, open the
-   thread popover if the thread loaded, and show the existing lost-anchor toast
-   ("This comment's anchor was lost"). **No scroll.**
+4. **Orphaned / never-placed target** (the "Needs review" case): on timeout, show the
+   existing lost-anchor toast ("This comment's anchor was lost") and open the thread in
+   a **detached card** so the orphaned thread is still readable/actionable. **No scroll.**
+
+#### Detached thread card (pinless threads)
+
+A pin-anchored popover can't render for an orphan — there is no pin. So the thread
+card content (status header + resolve/reopen, `CommentList`, `Composer`) is extracted
+from `ThreadPopover` into a reusable **`ThreadCard`** that both surfaces share:
+
+- **`ThreadPopover`** wraps `ThreadCard` inside its Radix `Popover.Content` (pin-anchored).
+- **`DetachedThread`** renders `ThreadCard` in a **fixed-position** container (top-centre
+  of the viewport, portal'd into the widget host) whenever `openId` is set **and** that
+  thread has **no entry in `placementsById`** (its detail comes from `detailById[openId]`,
+  a `Thread`, which is a superset of `ThreadListItem`). It carries a small "anchor lost"
+  banner and a close button (`controller.close()`). Non-modal — the host stays interactive.
+
+This keeps the reply/resolve optimistic logic in one place (`ThreadCard`) and gives
+orphaned threads a readable surface without inventing a second commenting UI.
 
 The sessionStorage handoff is read once on boot; if the target turns out to be
 orphaned on the destination page, the same step-4 fallback applies. This is the only
