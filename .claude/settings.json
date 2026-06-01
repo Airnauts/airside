@@ -2,7 +2,17 @@
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true
   },
-  "worktree": {
-    "symlinkDirectories": ["node_modules"]
+  "hooks": {
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree-create.sh\"",
+            "timeout": 300
+          }
+        ]
+      }
+    ]
   }
 }
