@@ -30,4 +30,33 @@ describe('comments.init', () => {
     await init({ key: 'secret', endpoint: 'http://x' })
     expect(document.querySelector('[data-comments-root]')).toBeNull()
   })
+
+  it('persists the key and strips the param after activating via URL', async () => {
+    history.replaceState({}, '', '/?comments-key=secret')
+    await init({ key: 'secret', endpoint: 'http://x' })
+    expect(localStorage.getItem('comments:key')).toBe(JSON.stringify('secret'))
+    expect(window.location.search).toBe('')
+  })
+
+  it('preserves other params and the hash when stripping', async () => {
+    history.replaceState({}, '', '/?comments-key=secret&foo=1#section')
+    await init({ key: 'secret', endpoint: 'http://x' })
+    expect(window.location.search).toBe('?foo=1')
+    expect(window.location.hash).toBe('#section')
+  })
+
+  it('mounts from a stored key when the param is absent', async () => {
+    localStorage.setItem('comments:key', JSON.stringify('secret'))
+    history.replaceState({}, '', '/')
+    const handle = await init({ key: 'secret', endpoint: 'http://x' })
+    expect(document.querySelector('[data-comments-root]')).not.toBeNull()
+    handle.destroy()
+  })
+
+  it('does not mount from a stale stored key', async () => {
+    localStorage.setItem('comments:key', JSON.stringify('old-key'))
+    history.replaceState({}, '', '/')
+    await init({ key: 'secret', endpoint: 'http://x' })
+    expect(document.querySelector('[data-comments-root]')).toBeNull()
+  })
 })

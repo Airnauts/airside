@@ -18,4 +18,12 @@ describe('isActivated', () => {
   it('honors a custom param name', () => {
     expect(isActivated({ search: '?ck=secret', key: 'secret', keyParam: 'ck' })).toBe(true)
   })
+
+  it('activates from a stored key when the param is absent', () => {
+    expect(isActivated({ search: '', key: 'secret', storedKey: 'secret' })).toBe(true)
+  })
+
+  it('does not activate when the stored key differs from the key', () => {
+    expect(isActivated({ search: '', key: 'secret', storedKey: 'stale' })).toBe(false)
+  })
 })

@@ -620,3 +620,35 @@ request, so present-and-disallowed is what matters; absent is benign. Reads are 
 longer origin-gated when same-origin (acceptable — the key gates them). Supersedes
 the implicit "missing Origin → 403" behavior previously asserted in
 `security.test.ts`. CORS preflight handling (`preflightResponse`) is unchanged.
+
+## ADR-0018 — Persist the activation key and strip the URL param after first activation
+
+- **Date:** 2026-06-01
+- **Status:** Accepted
+
+**Context.** The activation gate (`isActivated`) mounted the widget only while
+`?comments-key=<key>` was present in the URL, re-checked on every load. A reviewer
+who wanted commenting on had to keep the param in the address bar across every
+navigation — it leaked into shared links, broke on internal links that drop the
+query string, and cluttered the URL. Identity (email/name) was already remembered in
+`localStorage` (`comments:identity`); activation was the one piece of state that
+wasn't sticky.
+
+**Decision.** On a URL activation (param present and equal to the init key), `init()`
+persists the key to `localStorage` under `comments:key` and strips the param from the
+address bar via `history.replaceState` (preserving all other params and the hash).
+The gate now activates when the URL param **or** the persisted key matches the init
+key; `isActivated` stays pure (storage is read in `init()` and passed in as
+`storedKey`). The stored value is the **key itself**, not a boolean — activation from
+storage re-checks `storedKey === options.key`, so rotating the integrator's key
+invalidates stale activations. A separate one-time `isUrlActivation` predicate gates
+the persist-and-strip side effects so they fire only on the URL path, never when
+activating from storage (idempotent under React strict-mode double-invoke).
+
+**Consequences.** Commenting stays available across visits and navigations without
+re-supplying the param, and the param no longer lingers in shared/bookmarked URLs.
+The capability key is now stored client-side in plaintext `localStorage` — acceptable
+for v1 (it is a shared dev/reviewer capability, already exposed in the URL and in the
+client bundle config, and gates only commenting). Clearing site data or rotating the
+key deactivates the widget. `GateInput` gains an optional `storedKey`; `replaceState`
+(not `pushState`/reload) keeps activation flash-free and out of Back history.

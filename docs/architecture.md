@@ -78,8 +78,11 @@ cross-page panel, and the email-identity modal.
 
 **Runtime modules.**
 
-- **activation gate** — mounts only when a valid key is present in the URL
-  (PRD §6.1); otherwise no-op.
+- **activation gate** — mounts when a valid key is present in the URL
+  (PRD §6.1) **or** was persisted from a prior URL activation; otherwise no-op.
+  A URL activation persists the key to `localStorage` and strips the param from
+  the address bar, so commenting stays on without re-supplying the param
+  (ADR-0018).
 - **identity** — first comment prompts for a self-asserted email; remembered in
   `localStorage` (PRD §6.1). No verification, no email sent (PRD §2).
 - **capture** — turns a click/selection into a fingerprint + offset / selection +
