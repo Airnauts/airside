@@ -47,3 +47,8 @@ export function useOpenThread(): {
     error: id ? Boolean(state.detailError[id]) : false,
   }
 }
+
+export function useFocus(): { pendingFocusId: string | null; focusedId: string | null } {
+  const { state } = useCtx()
+  return { pendingFocusId: state.pendingFocusId, focusedId: state.focusedId }
+}

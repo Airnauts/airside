@@ -2,6 +2,7 @@
 import type { ApiClient } from '../api/client'
 import type { Identity } from '../identity/storage'
 import type { PlacedThread } from '../threads/state'
+import { useFocus } from '../threads/useThreads'
 import { ThreadPopover } from '../ui/ThreadPopover'
 
 export type { PlacedThread } from '../threads/state'
@@ -14,6 +15,7 @@ export type PinLayerProps = {
 }
 
 export function PinLayer({ placements, client, identity, onNeedIdentity }: PinLayerProps) {
+  const { focusedId } = useFocus()
   return (
     <div data-comments-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
       {placements.flatMap((p) =>
@@ -33,6 +35,7 @@ export function PinLayer({ placements, client, identity, onNeedIdentity }: PinLa
           key={p.item.id}
           item={p.item}
           pin={p.pin}
+          focused={p.item.id === focusedId}
           client={client}
           identity={identity}
           onNeedIdentity={onNeedIdentity}

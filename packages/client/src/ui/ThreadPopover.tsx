@@ -22,9 +22,10 @@ export type ThreadPopoverProps = {
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
   identity: Identity | null
   onNeedIdentity: (resume: (who: Identity) => void) => void
+  focused?: boolean
 }
 
-export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: ThreadPopoverProps) {
+export function ThreadPopover({ item, pin, client, identity, onNeedIdentity, focused }: ThreadPopoverProps) {
   const id = item.id
   const controller = useController()
   const dispatch = useDispatch()
@@ -91,7 +92,7 @@ export function ThreadPopover({ item, pin, client, identity, onNeedIdentity }: T
       onOpenChange={(o) => (o ? controller.openThread(id) : controller.close())}
     >
       <Popover.Trigger asChild>
-        <Pin ref={pinRef} item={item} pin={pin} onOpen={() => {}} />
+        <Pin ref={pinRef} item={item} pin={pin} focused={focused} onOpen={() => {}} />
       </Popover.Trigger>
       <Popover.Portal container={container ?? undefined}>
         <Popover.Content

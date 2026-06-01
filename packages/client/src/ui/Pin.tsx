@@ -9,11 +9,12 @@ export type PinProps = {
   item: ThreadListItem
   pin: XY
   onOpen?: () => void
+  focused?: boolean
 } & ComponentPropsWithoutRef<'button'>
 
 /** The teardrop pin: solid-blue avatar, white ring, dark count pill. Resolved → grey + check. */
 export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
-  { item, pin, onOpen, onClick, className, style, ...rest },
+  { item, pin, onOpen, onClick, className, style, focused, ...rest },
   ref,
 ) {
   const resolved = item.status === 'resolved'
@@ -30,6 +31,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       data-comments-pin
       data-comments-pin-id={item.id}
       data-testid="comments-pin"
+      data-focused={focused ? 'true' : undefined}
       aria-label={label}
       // compose: Radix's toggle (onClick) AND the optional onOpen both fire
       onClick={(e) => {
@@ -43,6 +45,13 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       )}
       style={{ transform: `translate(${pin.x}px, ${pin.y}px)`, ...style }}
     >
+      {focused && (
+        <span
+          aria-hidden={true}
+          data-testid="comments-pin-pulse"
+          className="cmnt:absolute cmnt:inset-0 cmnt:rounded-full cmnt:bg-blue-500/40 cmnt:animate-ping"
+        />
+      )}
       <span
         aria-hidden={true}
         className={cn(

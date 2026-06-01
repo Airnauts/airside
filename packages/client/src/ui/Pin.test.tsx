@@ -43,4 +43,17 @@ describe('Pin', () => {
     const btn = screen.getByRole('button', { name: /Ann Lee/i })
     expect(btn).not.toHaveTextContent('0')
   })
+
+  it('marks the pin as focused via data-focused', () => {
+    const baseItem = {
+      id: 't1',
+      status: 'open',
+      unresolvedCount: 2,
+      createdBy: { email: 'a@b.c', name: 'Ann' },
+    } as never
+    const { rerender } = render(<Pin item={baseItem} pin={{ x: 0, y: 0 }} focused />)
+    expect(screen.getByTestId('comments-pin')).toHaveAttribute('data-focused', 'true')
+    rerender(<Pin item={baseItem} pin={{ x: 0, y: 0 }} />)
+    expect(screen.getByTestId('comments-pin')).not.toHaveAttribute('data-focused')
+  })
 })
