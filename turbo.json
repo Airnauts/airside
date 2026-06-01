@@ -3,7 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", "!dist/**/*.tsbuildinfo"]
     },
     "typecheck": {
       "dependsOn": ["build"],
@@ -18,7 +18,7 @@
     },
     "@comments/server#build": {
       "dependsOn": ["@comments/core#build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", "!dist/**/*.tsbuildinfo"]
     },
     "@comments/server#typecheck": {
       "dependsOn": ["@comments/server#build", "@comments/core#build"],
@@ -30,7 +30,7 @@
     },
     "@comments/test-support#build": {
       "dependsOn": ["@comments/core#build", "@comments/server#build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", "!dist/**/*.tsbuildinfo"]
     },
     "@comments/test-support#typecheck": {
       "dependsOn": ["@comments/test-support#build"],

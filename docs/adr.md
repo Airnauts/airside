@@ -548,3 +548,49 @@ Architecture §6 and ADR-0007 anticipated serving `GET /openapi.json` + a Scalar
   only `@comments/server` (the seam is unchanged).
 - The MongoDB document model needs no new record — ADR-0008 already decided it; M4
   implements it behind the `Repository` interface.
+
+## ADR-0016 — Exclude the TypeScript `.tsbuildinfo` from Turborepo's cached build outputs
+
+- **Date:** 2026-06-01
+- **Status:** accepted
+
+**Context.** Every package builds with `tsup` (JS) + `tsc --build` (declarations
+only; `composite`/`incremental`, `emitDeclarationOnly`, `tsBuildInfoFile:
+dist/.tsbuildinfo`). Consumers depend on each other through TS **project
+references** (e.g. `@comments/client` references `../core`) and resolve a workspace
+dep to its built `dist/index.d.ts`. Turbo cached `build` outputs as `["dist/**"]`,
+which **included `dist/.tsbuildinfo`** — TypeScript's incremental-build *state* file.
+
+A recurring build failure resulted: `pnpm build` after a consumer change reported
+`TS7016 — Could not find a declaration file for '@comments/core'` (×26), and `rm -rf
+dist` was the only known workaround. Root cause (verified empirically): a turbo
+cache **hit** for an upstream package (e.g. `core`) restored its `dist/.tsbuildinfo`
+— which asserts "declarations already emitted, project up-to-date" — alongside a
+cached `dist` that lacked the `.d.ts`. When a downstream package then ran `tsc
+--build` (cache miss), the project-references build read the restored buildinfo,
+concluded the upstream was up-to-date, and **skipped regenerating the missing
+`.d.ts`**. The incomplete `dist` got re-cached, making the breakage self-perpetuate.
+Caching an incremental *state* file as a build *artifact* is the anti-pattern.
+
+**Decision.** Exclude the buildinfo from every cached `build` output:
+`"outputs": ["dist/**", "!dist/**/*.tsbuildinfo"]` (the generic `build` task plus the
+package-scoped `@comments/server#build` / `@comments/test-support#build`). The
+buildinfo stays at `dist/.tsbuildinfo` (so a local `rm -rf dist` still clears it,
+keeping the incremental state consistent with the emitted files) but is never
+captured or restored by the cache.
+
+**Consequences.**
+- A cache hit restores only real artifacts (`.js`, `.d.ts`, `.js.map`, `openapi.json`),
+  never a stale "up-to-date" signal. A downstream `tsc --build` therefore always sees
+  the upstream as needing verification and regenerates any missing `.d.ts` — the
+  `TS7016`/`rm -rf dist` loop is gone. Verified: wiping `core/dist` then rebuilding
+  restores `index.d.ts` (not the buildinfo), and the exact failing combination
+  (`core` cache hit + `client` cache miss) now builds clean.
+- Editing `outputs` changes the turbo task hash, so the first build after this change
+  is a full rebuild that re-populates clean cache entries; no manual cache purge is
+  required going forward.
+- Incremental compilation still works locally (the buildinfo persists in `dist`); only
+  cross-cache restoration of the state file is removed. Negligible cost — these
+  packages build in milliseconds.
+- Applies repo-wide; all packages already place the buildinfo at `dist/.tsbuildinfo`,
+  and the `!dist/**/*.tsbuildinfo` glob also covers any default-named buildinfo.
