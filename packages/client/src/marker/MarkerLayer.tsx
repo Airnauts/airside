@@ -21,6 +21,7 @@ import {
 } from '../threads/useThreads'
 import { initials } from '../ui/avatar'
 import { Composer, type ComposerSubmit } from '../ui/Composer'
+import { DetachedThread } from '../ui/DetachedThread'
 import { Launcher } from '../ui/Launcher'
 import { useToast } from '../ui/toast'
 import { useFocusPin } from './useFocusPin'
@@ -198,6 +199,7 @@ export function MarkerLayer({
         identity={identity}
         onNeedIdentity={onNeedIdentity}
       />
+      <DetachedThread client={client} identity={identity} onNeedIdentity={onNeedIdentity} />
       {state.draft && (
         <div data-comments-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
           {/* Radix Popover anchored at the draft pin so Radix handles flip/shift +
