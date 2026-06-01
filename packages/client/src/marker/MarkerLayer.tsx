@@ -230,6 +230,7 @@ export function MarkerLayer({
         showResolved={state.showResolved}
         onShowResolved={(v) => controller.setShowResolved(v)}
         openCount={openCount}
+        onTogglePanel={() => {}}
       />
     </>
   )

@@ -13,6 +13,7 @@ describe('Launcher', () => {
         showResolved={false}
         onShowResolved={() => {}}
         openCount={2}
+        onTogglePanel={() => {}}
       />,
     )
     expect(screen.getByTestId('comments-place')).toHaveTextContent(/\+ Comment \(2\)/i)
@@ -25,6 +26,7 @@ describe('Launcher', () => {
         showResolved={false}
         onShowResolved={() => {}}
         openCount={2}
+        onTogglePanel={() => {}}
       />,
     )
     expect(screen.getByTestId('comments-place')).toHaveTextContent(/click/i)
@@ -40,9 +42,26 @@ describe('Launcher', () => {
         showResolved={false}
         onShowResolved={onShowResolved}
         openCount={0}
+        onTogglePanel={() => {}}
       />,
     )
     fireEvent.click(screen.getByRole('switch', { name: /resolved/i }))
     expect(onShowResolved).toHaveBeenCalledWith(true)
+  })
+
+  it('opens the panel via the list button', () => {
+    const onTogglePanel = vi.fn()
+    render(
+      <Launcher
+        placing={false}
+        onTogglePlace={() => {}}
+        showResolved={false}
+        onShowResolved={() => {}}
+        openCount={0}
+        onTogglePanel={onTogglePanel}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /comments panel/i }))
+    expect(onTogglePanel).toHaveBeenCalled()
   })
 })
