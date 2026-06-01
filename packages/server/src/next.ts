@@ -1,7 +1,11 @@
 import type { CommentsServer } from './server'
 
-/** Next App Router catch-all context. `params` is a Promise on Next 15 and a plain object on Next 14. */
-type NextRouteContext = { params: Promise<{ path?: string[] }> | { path?: string[] } }
+/**
+ * Next App Router catch-all context. Typed as a Promise to satisfy Next 15's
+ * route-handler type validation; the handler still `await`s `params`, so a
+ * synchronous Next 14 params object works at runtime (see next.test.ts).
+ */
+type NextRouteContext = { params: Promise<{ path?: string[] }> }
 type NextHandler = (req: Request, ctx: NextRouteContext) => Promise<Response>
 
 /**
