@@ -22,6 +22,10 @@ export type Controller = {
    * mutation, clobbering the optimistic update (the pin would revert until a full reload).
    */
   registerRuntime(patch: ((id: string, status: ThreadStatus) => void) | null): void
+  /** Focus a pin: open + lazy-fetch like openThread, but also arm the focus effect (scroll + pulse). */
+  requestFocus(id: string): void
+  /** The panel registers here to refetch its list when a status change persists (drawer-open reconciliation). */
+  registerStatusListener(fn: ((id: string, status: ThreadStatus) => void) | null): void
 }
 
 /**
@@ -38,6 +42,16 @@ export function createController(
   },
 ): Controller {
   let patchRuntime: ((id: string, status: ThreadStatus) => void) | null = null
+  let statusListener: ((id: string, status: ThreadStatus) => void) | null = null
+
+  const lazyFetchDetail = (id: string) => {
+    if (deps.isCached(id) || deps.isLoading(id)) return
+    dispatch({ type: 'DETAIL_LOADING', id })
+    deps.client
+      .getThread(id)
+      .then((thread) => dispatch({ type: 'DETAIL_LOADED', id, thread }))
+      .catch(() => dispatch({ type: 'DETAIL_ERROR', id }))
+  }
 
   // Optimistic store + runtime patch, no network. Shared by setStatus (which then persists) and
   // exposed directly for the reply flow (which persists separately, after the reply is saved).
@@ -49,12 +63,7 @@ export function createController(
   return {
     openThread(id) {
       dispatch({ type: 'OPEN', id })
-      if (deps.isCached(id) || deps.isLoading(id)) return
-      dispatch({ type: 'DETAIL_LOADING', id })
-      deps.client
-        .getThread(id)
-        .then((thread) => dispatch({ type: 'DETAIL_LOADED', id, thread }))
-        .catch(() => dispatch({ type: 'DETAIL_ERROR', id }))
+      lazyFetchDetail(id)
     },
     close() {
       dispatch({ type: 'CLOSE' })
@@ -73,11 +82,19 @@ export function createController(
       patchStatus(id, status)
       try {
         await deps.client.setThreadStatus(id, { status })
+        statusListener?.(id, status)
         return true
       } catch {
         patchStatus(id, prev)
         return false
       }
+    },
+    requestFocus(id) {
+      dispatch({ type: 'REQUEST_FOCUS', id })
+      lazyFetchDetail(id)
+    },
+    registerStatusListener(fn) {
+      statusListener = fn
     },
   }
 }
