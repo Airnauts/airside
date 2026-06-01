@@ -33,7 +33,10 @@ M2a Core: domain & HTTP contract  (Shared)   ← freezes the HTTP contract + anc
                                   M8 Cross-page panel
         └──────────────┬───────────────┘
                        ▼
-        M9 Integration, E2E & dogfooding  (Integration)
+        M9 Integration host app & docs  (Integration)
+                       │
+                       ▼
+        M10 Verification & dogfooding  (Integration)
 ```
 
 M2b (the pure scoring policy + jsdom fixture corpus) depends only on M2a's frozen
@@ -261,23 +264,57 @@ Spec §6; PRD §6.6.
 
 ---
 
-## M9 — Integration, E2E & dogfooding  ·  Integration  ·  M
+## M9 — Integration host app & setup docs  ·  Integration  ·  S–M
 
-**Goal.** Prove the whole thing works together and meet the PRD's acceptance bar.
+**Goal.** Prove the published packages integrate on a real Next.js App Router app
+through their public seams, and document "integrate in minutes." Manual/visual
+proof; automated e2e + dogfood deploy move to M10.
 
-**In scope.** A sample **Next.js host app in `examples/`**; **Playwright e2e** of
-the full loop including **reload + DOM mutation → re-anchor/orphan**, text
-selection, and panel navigation; **bundle-size budget** enforced in CI; a
-**Vercel + Atlas + Blob** dogfood deployment; integration/setup docs ("integrate
-in minutes").
+**In scope.** A sample **Next.js host app in `examples/nextjs-host`** (kept alongside
+the Vite `playground`): `<CommentsLayer/>` mounted in the layout; a
+`createNextHandler` catch-all API route; **env-switched persistence** (`MONGODB_URI`
+→ Mongo, else in-memory) and storage (`BLOB_READ_WRITE_TOKEN` → Vercel Blob, else
+local `public/uploads/`); three content routes exercising element pins, text
+selection, and the cross-page panel. An **integration quickstart** (`docs/integration.md`)
+with the host app as its worked example. A **manual smoke checklist** in the example
+README. Two small package fixes surfaced by the same-origin mount: the origin policy
+(ADR-0017) and typing `createNextHandler`'s `params` for Next 15.
+
+**Out of scope.** Playwright e2e, e2e-in-CI, live deployment, real-project adoption
+(all **M10**). No new features, schemas, or endpoints.
+
+**Depends on.** M4 (`@comments/server/next`, `adapter-mongo`, `storage-*`) **and**
+M8 (frontend complete).
+
+**Exit criteria.** `examples/nextjs-host` builds and runs; opening a page with the
+key activates the widget and round-trips a thread; the manual smoke checklist passes
+(place → comment → reply → attach → resolve, reload re-anchors, panel navigates
+cross-page); repo CI stays green; `docs/integration.md` published.
+
+**Refs.** Design [`specs/2026-06-01-m9-integration-host-app-design.md`](../superpowers/specs/2026-06-01-m9-integration-host-app-design.md);
+Plan [`plans/2026-06-01-m9-integration-host-app.md`](../superpowers/plans/2026-06-01-m9-integration-host-app.md);
+Spec §9; PRD §7.
+
+---
+
+## M10 — Verification & dogfooding  ·  Integration  ·  M
+
+**Goal.** Automate the integration proof and meet the PRD's acceptance bar in
+production.
+
+**In scope.** **Playwright e2e** of the full loop including **reload + DOM-mutation →
+re-anchor/orphan**, text selection, and panel navigation (driving
+`examples/nextjs-host`); **e2e wired into CI** (headless); **tighten/confirm the
+bundle-size budget**; a **Vercel + Atlas + Blob** dogfood deployment; integration
+into at least one real project in place of Vercel Comments.
 
 **Out of scope.** New features.
 
-**Depends on.** M4 (backend) **and** M8 (frontend complete).
+**Depends on.** M9.
 
-**Exit criteria (PRD §7).** Time-to-integrate measured in minutes; comments
-reliably re-anchor across repeated redeploys (e2e + the dogfood project);
-our team adopts it on at least one real project in place of Vercel Comments.
+**Exit criteria (PRD §7).** Time-to-integrate measured in minutes; comments reliably
+re-anchor across repeated redeploys (e2e + the dogfood project); our team adopts it
+on at least one real project in place of Vercel Comments.
 
 **Refs.** Spec §9; PRD §7.
 
@@ -290,7 +327,7 @@ our team adopts it on at least one real project in place of Vercel Comments.
    parallel. Frontend can develop against M3's in-memory dev server before M4 lands.
 3. **M2b** (scoring policy + corpus) is pure and gates **M6 only** — slot it on the
    frontend track any time after M2a and before M6 (e.g. alongside M5).
-4. **M9** once both tracks complete.
+4. **M9** once both tracks complete, then **M10** (e2e + dogfood deployment).
 
 If you'd rather get a thin end-to-end slice earliest, an alternative is to pull a
 minimal vertical (M3 in-memory + M5 + a stripped M6 element-pin loop) forward —
