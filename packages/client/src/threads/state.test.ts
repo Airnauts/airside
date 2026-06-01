@@ -172,3 +172,32 @@ describe('visiblePlacements selector', () => {
     expect(visiblePlacements(s).map((p) => p.item.id)).toEqual(['a'])
   })
 })
+
+describe('focus actions', () => {
+  it('REQUEST_FOCUS opens the thread, arms pending focus, clears draft + prior focusedId', () => {
+    const next = reducer(
+      { ...initialState, focusedId: 'old', draft: { anchor: {}, point: { x: 0, y: 0 }, pin: { x: 0, y: 0 } } as never },
+      { type: 'REQUEST_FOCUS', id: 't1' },
+    )
+    expect(next.openId).toBe('t1')
+    expect(next.pendingFocusId).toBe('t1')
+    expect(next.focusedId).toBeNull()
+    expect(next.draft).toBeNull()
+  })
+
+  it('FOCUS_PLACED sets focusedId and clears pendingFocusId', () => {
+    const next = reducer(
+      { ...initialState, pendingFocusId: 't1' },
+      { type: 'FOCUS_PLACED', id: 't1' },
+    )
+    expect(next.focusedId).toBe('t1')
+    expect(next.pendingFocusId).toBeNull()
+  })
+
+  it('CLEAR_FOCUS clears the pulse; CLEAR_PENDING_FOCUS disarms the wait', () => {
+    expect(reducer({ ...initialState, focusedId: 't1' }, { type: 'CLEAR_FOCUS' }).focusedId).toBeNull()
+    expect(
+      reducer({ ...initialState, pendingFocusId: 't1' }, { type: 'CLEAR_PENDING_FOCUS' }).pendingFocusId,
+    ).toBeNull()
+  })
+})

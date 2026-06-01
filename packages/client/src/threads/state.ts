@@ -20,6 +20,10 @@ export type ThreadsState = {
   showResolved: boolean
   /** Set when an open thread orphaned out of an ingest; the view toasts + clears it. */
   lostOpenId: string | null
+  /** A thread the panel asked us to focus; the focus effect waits for its placement. */
+  pendingFocusId: string | null
+  /** A just-focused thread; its pin pulses briefly. */
+  focusedId: string | null
 }
 
 export const initialState: ThreadsState = {
@@ -33,6 +37,8 @@ export const initialState: ThreadsState = {
   draft: null,
   showResolved: false,
   lostOpenId: null,
+  pendingFocusId: null,
+  focusedId: null,
 }
 
 export type Action =
@@ -50,6 +56,10 @@ export type Action =
   | { type: 'REPLACE_OPTIMISTIC_COMMENT'; id: string; tempId: string; comment: Comment }
   | { type: 'REMOVE_OPTIMISTIC_COMMENT'; id: string; tempId: string }
   | { type: 'SET_STATUS'; id: string; status: ThreadStatus }
+  | { type: 'REQUEST_FOCUS'; id: string }
+  | { type: 'FOCUS_PLACED'; id: string }
+  | { type: 'CLEAR_FOCUS' }
+  | { type: 'CLEAR_PENDING_FOCUS' }
 
 function mapDetail(state: ThreadsState, id: string, fn: (t: Thread) => Thread): ThreadsState {
   const t = state.detailById[id]
@@ -152,6 +162,14 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
         : state
       return mapDetail(withItem, action.id, (t) => ({ ...t, status: action.status }))
     }
+    case 'REQUEST_FOCUS':
+      return { ...state, openId: action.id, draft: null, pendingFocusId: action.id, focusedId: null }
+    case 'FOCUS_PLACED':
+      return { ...state, focusedId: action.id, pendingFocusId: null }
+    case 'CLEAR_FOCUS':
+      return { ...state, focusedId: null }
+    case 'CLEAR_PENDING_FOCUS':
+      return { ...state, pendingFocusId: null }
     default:
       return state
   }
