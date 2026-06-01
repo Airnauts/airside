@@ -45,7 +45,7 @@ export function ThreadPopover({
       </Popover.Trigger>
       <Popover.Portal container={container ?? undefined}>
         <Popover.Content
-          side="top"
+          side="bottom"
           align="center"
           sideOffset={8}
           collisionPadding={8}
