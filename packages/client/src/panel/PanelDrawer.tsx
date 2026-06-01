@@ -63,9 +63,9 @@ export function PanelDrawer({ resolvePageKey }: PanelDrawerProps) {
             </Dialog.Close>
           </div>
 
-          <fieldset className="cmnt:flex cmnt:gap-1 cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200 cmnt:border-0 cmnt:m-0 cmnt:p-0">
+          <fieldset className="cmnt:m-0 cmnt:p-0 cmnt:border-0 cmnt:min-w-0">
             <legend className="cmnt:sr-only">Filter threads</legend>
-            <div className="cmnt:flex cmnt:gap-1 cmnt:px-3 cmnt:py-2 cmnt:w-full">
+            <div className="cmnt:flex cmnt:gap-1 cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200">
               {FILTERS.map((f) => (
                 <button
                   key={f.value}
