@@ -108,6 +108,48 @@ describe('createRuntime.refresh', () => {
     expect(onPlacements.mock.calls.at(-1)?.[0]).toHaveLength(1)
   })
 
+  it('console.debug explains why a thread orphaned', async () => {
+    document.body.innerHTML = '<main><span>nothing matches</span></main>'
+    const orphanAnchor: Anchor = {
+      schemaVersion: ANCHOR_SCHEMA_VERSION,
+      selectors: ['#gone', '#gone'],
+      signals: {
+        tag: 'p',
+        classes: ['lead'],
+        siblingIndex: 0,
+        ancestorTrail: ['main'],
+        textSnippet: 'unique gone text',
+      },
+      offset: { fx: 0.5, fy: 0.5 },
+    } as unknown as Anchor
+    const debug = vi.spyOn(console, 'debug').mockImplementation(() => {})
+    const client = fakeClient([li('thd', orphanAnchor)])
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements: vi.fn() })
+    await rt.refresh()
+    expect(debug).toHaveBeenCalledTimes(1)
+    expect(debug).toHaveBeenCalledWith(
+      '[comments] anchor lost',
+      expect.objectContaining({
+        threadId: 'thd',
+        pageKey: 'k',
+        reason: 'noCandidates',
+        candidateCount: 0,
+      }),
+    )
+    debug.mockRestore()
+  })
+
+  it('does not console.debug when a thread anchors successfully', async () => {
+    document.body.innerHTML = '<main><p id="ok" class="lead">hello world</p></main>'
+    mockRect(document.querySelector('#ok') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    const debug = vi.spyOn(console, 'debug').mockImplementation(() => {})
+    const client = fakeClient([li('tha', anchorFor('#ok'))])
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements: vi.fn() })
+    await rt.refresh()
+    expect(debug).not.toHaveBeenCalled()
+    debug.mockRestore()
+  })
+
   it('selectionLost WITH heal sends the healed fingerprint', async () => {
     // Build the stored anchor from the BEFORE dom (same text as the heal test so scoring works).
     // The wrapper+rename makes both fast-path selectors miss; data-foo survives so scoring re-finds it.
