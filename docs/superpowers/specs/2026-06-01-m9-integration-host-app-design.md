@@ -20,14 +20,26 @@ out into a **new M10** (see §5). Verification here is **manual/visual**, captur
 a smoke checklist — the same role `examples/playground` played for M5, now on the
 production framework and against the whole stack.
 
-**One backend precursor (discovered during planning).** Building the host app
-surfaced a real conflict: the server's origin check (`checkOrigin`) **rejects a
-missing `Origin` header**, which is deliberate and test-pinned for the *cross-origin*
-widget topology. But `createNextHandler` mounts the API **same-origin**, and per the
-Fetch spec browsers omit `Origin` on same-origin GET — so the widget's
-`listThreads`/`getThread` would 403 on page load. M9 is the first cycle to exercise
-the same-origin topology end-to-end, so it fixes this here (§0 + **ADR-0017**). This
-is the *only* package-code change in M9.
+**Two small backend fixes (surfaced by integration).** Building the host app
+exposed two real package-level issues that only the same-origin Next-mount topology
+reveals — M9 is the first cycle to exercise it end-to-end:
+
+1. **Origin policy (§0 + ADR-0017).** `checkOrigin` **rejects a missing `Origin`
+   header**, deliberate and test-pinned for the *cross-origin* widget topology. But
+   browsers omit `Origin` on same-origin GET (Fetch spec), so the widget's
+   `listThreads`/`getThread` would 403 on page load. Fix: reject only a
+   present-and-disallowed Origin.
+2. **`createNextHandler` params typing.** Next 15's strict route-handler type
+   validation rejects the old `Promise<…> | {…}` union on the catch-all `params`, so
+   the documented one-liner `export const { GET, POST } = createNextHandler(server)`
+   would not typecheck under `next build`. Fix: type `params` as `Promise<…>` (Next
+   15's shape); the handler still `await`s it, so a synchronous Next 14 params object
+   keeps working at runtime (asserted by `next.test.ts`). Small enough to need only a
+   commit + code comment, not an ADR — and consistent with this spec's "pin the
+   example to Next 15" risk mitigation below.
+
+These two are the *only* package-code changes in M9; everything else is example
+wiring + docs.
 
 ## What is reused, not rebuilt
 
@@ -200,9 +212,10 @@ For visibility; M10 gets its own brainstorm → spec → plan:
 
 ## Non-goals
 
-- No new features, schemas, or endpoints — the M2a contract stays frozen. The **only**
-  package-code change is the §0 origin-policy fix; nothing else in the packages is
-  modified.
+- No new features, schemas, or endpoints — the M2a contract stays frozen. The only
+  package-code changes are the two integration fixes noted above (the §0 origin
+  policy + ADR-0017, and the `createNextHandler` Next 15 params typing); nothing else
+  in the packages is modified.
 - No automated e2e, no CI e2e job, no live deployment (all M10).
 - **One ADR (ADR-0017)** for the §0 origin-policy change — that *is* a security
   decision worth recording. The env-switch is ordinary example wiring, and "split
