@@ -56,6 +56,39 @@ describe('rematch fast path', () => {
     const res = rematch(anchor, after)
     expect(res.kind).toBe('orphaned')
   })
+
+  it('orphan carries diagnostics: top scores below the accept threshold', () => {
+    // Same tag (p) survives so there IS a candidate, but text/classes differ enough
+    // that the best total falls under accept (0.6) -> belowAccept with a non-empty top.
+    const before = parse('<main><p id="t" class="lead">unique snippet here alpha beta</p></main>')
+    const anchor = anchorFor(before, '#t')
+    const after = parse('<main><p class="other">completely unrelated wording entirely</p></main>')
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('orphaned')
+    if (res.kind === 'orphaned') {
+      expect(res.reason).toBe('belowAccept')
+      expect(res.diagnostics.thresholds).toEqual({ accept: 0.6, margin: 0.1 })
+      expect(res.diagnostics.candidateCount).toBe(1)
+      expect(res.diagnostics.stored.tag).toBe('p')
+      expect(res.diagnostics.top.length).toBeGreaterThan(0)
+      expect(res.diagnostics.top[0].total).toBeLessThan(0.6)
+      // components are present so the weak signals are visible
+      expect(res.diagnostics.top[0].components).toHaveProperty('text')
+    }
+  })
+
+  it('orphan carries diagnostics: no candidates of the stored tag', () => {
+    const before = parse('<main><p id="t" class="lead">unique snippet here</p></main>')
+    const anchor = anchorFor(before, '#t')
+    const after = parse('<main><span>totally different</span></main>')
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('orphaned')
+    if (res.kind === 'orphaned') {
+      expect(res.reason).toBe('noCandidates')
+      expect(res.diagnostics.candidateCount).toBe(0)
+      expect(res.diagnostics.top).toEqual([])
+    }
+  })
 })
 
 describe('rematch selection', () => {
