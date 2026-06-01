@@ -30,7 +30,12 @@ export type Action =
   | { type: 'CLOSE' }
   | { type: 'SET_FILTER'; filter: PanelFilter }
   | { type: 'LOAD_START' }
-  | { type: 'LOAD_SUCCESS'; list: ThreadListItem[]; nextCursor: string | null; needsReview: ThreadListItem[] }
+  | {
+      type: 'LOAD_SUCCESS'
+      list: ThreadListItem[]
+      nextCursor: string | null
+      needsReview: ThreadListItem[]
+    }
   | { type: 'LOAD_ERROR' }
   | { type: 'LOAD_MORE_START' }
   | { type: 'LOAD_MORE_SUCCESS'; list: ThreadListItem[]; nextCursor: string | null }

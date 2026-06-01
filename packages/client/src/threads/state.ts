@@ -163,7 +163,13 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
       return mapDetail(withItem, action.id, (t) => ({ ...t, status: action.status }))
     }
     case 'REQUEST_FOCUS':
-      return { ...state, openId: action.id, draft: null, pendingFocusId: action.id, focusedId: null }
+      return {
+        ...state,
+        openId: action.id,
+        draft: null,
+        pendingFocusId: action.id,
+        focusedId: null,
+      }
     case 'FOCUS_PLACED':
       return { ...state, focusedId: action.id, pendingFocusId: null }
     case 'CLEAR_FOCUS':

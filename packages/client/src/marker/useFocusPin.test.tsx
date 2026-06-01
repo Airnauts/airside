@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { initialState, reducer } from '../threads/state'
 import { useFocusPin } from './useFocusPin'
 
-function Harness(props: Omit<Parameters<typeof useFocusPin>[0], 'getElement'> & { el: Element | null }) {
+function Harness(
+  props: Omit<Parameters<typeof useFocusPin>[0], 'getElement'> & { el: Element | null },
+) {
   const { el, ...rest } = props
   useFocusPin({ ...rest, getElement: () => el })
   return null
@@ -33,7 +35,14 @@ describe('useFocusPin', () => {
     const el = { scrollIntoView } as unknown as Element
     const dispatch = vi.fn()
     render(
-      <Harness pendingFocusId="t1" focusedId={null} placed dispatch={dispatch} toast={vi.fn()} el={el} />,
+      <Harness
+        pendingFocusId="t1"
+        focusedId={null}
+        placed
+        dispatch={dispatch}
+        toast={vi.fn()}
+        el={el}
+      />,
     )
     expect(scrollIntoView).toHaveBeenCalled()
     expect(dispatch).toHaveBeenCalledWith({ type: 'FOCUS_PLACED', id: 't1' })
@@ -77,7 +86,14 @@ describe('useFocusPin', () => {
   it('does nothing when there is no pending focus', () => {
     const dispatch = vi.fn()
     render(
-      <Harness pendingFocusId={null} focusedId={null} placed={false} dispatch={dispatch} toast={vi.fn()} el={null} />,
+      <Harness
+        pendingFocusId={null}
+        focusedId={null}
+        placed={false}
+        dispatch={dispatch}
+        toast={vi.fn()}
+        el={null}
+      />,
     )
     act(() => vi.advanceTimersByTime(5000))
     expect(dispatch).not.toHaveBeenCalled()

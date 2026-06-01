@@ -5,9 +5,9 @@ import { act } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
-import { PanelProvider, usePanelController } from './PanelProvider'
-import { PanelDrawer } from './PanelDrawer'
 import { FOCUS_STORAGE_KEY } from './navigate'
+import { PanelDrawer } from './PanelDrawer'
+import { PanelProvider, usePanelController } from './PanelProvider'
 
 const item = (over: Partial<ThreadListItem>): ThreadListItem =>
   ({
@@ -24,7 +24,11 @@ const item = (over: Partial<ThreadListItem>): ThreadListItem =>
 
 function Opener() {
   const c = usePanelController()
-  return <button type="button" onClick={() => void c.openPanel()}>open</button>
+  return (
+    <button type="button" onClick={() => void c.openPanel()}>
+      open
+    </button>
+  )
 }
 
 function setup(opts: {
@@ -78,7 +82,10 @@ describe('PanelDrawer', () => {
   })
 
   it('cross-page row click stashes the focus id (then navigates)', async () => {
-    setup({ threads: [item({ id: 'a', pageKey: 'x.test/pricing' })], resolvePageKey: () => 'x.test/other' })
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/pricing' })],
+      resolvePageKey: () => 'x.test/other',
+    })
     screen.getByText('open').click()
     await waitFor(() => screen.getByTestId('comments-panel-row'))
     act(() => screen.getByTestId('comments-panel-row').click())
@@ -86,7 +93,10 @@ describe('PanelDrawer', () => {
   })
 
   it('same-page row click closes the drawer and writes no handoff', async () => {
-    setup({ threads: [item({ id: 'a', pageKey: 'x.test/here' })], resolvePageKey: () => 'x.test/here' })
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/here' })],
+      resolvePageKey: () => 'x.test/here',
+    })
     screen.getByText('open').click()
     await waitFor(() => screen.getByTestId('comments-panel-row'))
     act(() => screen.getByTestId('comments-panel-row').click())

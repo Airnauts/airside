@@ -25,7 +25,14 @@ export type ThreadPopoverProps = {
   focused?: boolean
 }
 
-export function ThreadPopover({ item, pin, client, identity, onNeedIdentity, focused }: ThreadPopoverProps) {
+export function ThreadPopover({
+  item,
+  pin,
+  client,
+  identity,
+  onNeedIdentity,
+  focused,
+}: ThreadPopoverProps) {
   const id = item.id
   const controller = useController()
   const dispatch = useDispatch()

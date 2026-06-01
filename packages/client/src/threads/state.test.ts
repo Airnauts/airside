@@ -176,7 +176,11 @@ describe('visiblePlacements selector', () => {
 describe('focus actions', () => {
   it('REQUEST_FOCUS opens the thread, arms pending focus, clears draft + prior focusedId', () => {
     const next = reducer(
-      { ...initialState, focusedId: 'old', draft: { anchor: {}, point: { x: 0, y: 0 }, pin: { x: 0, y: 0 } } as never },
+      {
+        ...initialState,
+        focusedId: 'old',
+        draft: { anchor: {}, point: { x: 0, y: 0 }, pin: { x: 0, y: 0 } } as never,
+      },
       { type: 'REQUEST_FOCUS', id: 't1' },
     )
     expect(next.openId).toBe('t1')
@@ -195,9 +199,12 @@ describe('focus actions', () => {
   })
 
   it('CLEAR_FOCUS clears the pulse; CLEAR_PENDING_FOCUS disarms the wait', () => {
-    expect(reducer({ ...initialState, focusedId: 't1' }, { type: 'CLEAR_FOCUS' }).focusedId).toBeNull()
     expect(
-      reducer({ ...initialState, pendingFocusId: 't1' }, { type: 'CLEAR_PENDING_FOCUS' }).pendingFocusId,
+      reducer({ ...initialState, focusedId: 't1' }, { type: 'CLEAR_FOCUS' }).focusedId,
+    ).toBeNull()
+    expect(
+      reducer({ ...initialState, pendingFocusId: 't1' }, { type: 'CLEAR_PENDING_FOCUS' })
+        .pendingFocusId,
     ).toBeNull()
   })
 })

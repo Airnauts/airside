@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { initialState, mainListExcludingReview, reducer } from './state'
 
 const item = (id: string, over: Partial<ThreadListItem> = {}): ThreadListItem =>
-  ({ id, status: 'open', anchorState: 'anchored', unresolvedCount: 1 } as ThreadListItem & typeof over)
+  ({ id, status: 'open', anchorState: 'anchored', unresolvedCount: 1 }) as ThreadListItem &
+    typeof over
 
 describe('panel reducer', () => {
   it('defaults to a closed drawer filtered to open', () => {

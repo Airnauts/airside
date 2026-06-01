@@ -2,10 +2,10 @@
 import type { ThreadListItem, ThreadListResponse } from '@comments/core'
 import { describe, expect, it, vi } from 'vitest'
 import { createPanelController } from './controller'
-import { initialState, reducer, type PanelState } from './state'
+import { initialState, type PanelState, reducer } from './state'
 
 const item = (id: string, over: Partial<ThreadListItem> = {}): ThreadListItem =>
-  ({ id, status: 'open', anchorState: 'anchored', unresolvedCount: 1, ...over } as ThreadListItem)
+  ({ id, status: 'open', anchorState: 'anchored', unresolvedCount: 1, ...over }) as ThreadListItem
 
 function harness(listThreads: (p?: unknown) => Promise<ThreadListResponse>) {
   let state: PanelState = initialState
@@ -59,7 +59,11 @@ describe('panel controller', () => {
   })
 
   it('sets error when the fetch rejects', async () => {
-    const h = harness(vi.fn(async () => { throw new Error('net') }) as never)
+    const h = harness(
+      vi.fn(async () => {
+        throw new Error('net')
+      }) as never,
+    )
     await h.controller.openPanel()
     expect(h.get().error).toBe(true)
     expect(h.get().loading).toBe(false)

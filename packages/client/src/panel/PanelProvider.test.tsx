@@ -1,15 +1,16 @@
 // packages/client/src/panel/PanelProvider.test.tsx
 import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import { PanelProvider } from './PanelProvider'
-import { usePanelController, usePanelState } from './PanelProvider'
+import { PanelProvider, usePanelController, usePanelState } from './PanelProvider'
 
 function Probe() {
   const state = usePanelState()
   const controller = usePanelController()
   return (
     <div>
-      <button type="button" onClick={() => void controller.openPanel()}>open</button>
+      <button type="button" onClick={() => void controller.openPanel()}>
+        open
+      </button>
       <span data-testid="open">{state.open ? 'yes' : 'no'}</span>
       <span data-testid="count">{state.list.length}</span>
     </div>

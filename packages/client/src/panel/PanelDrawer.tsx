@@ -5,8 +5,8 @@ import { usePortalContainer } from '../app/providers'
 import { cn } from '../lib/cn'
 import { useController } from '../threads/useThreads'
 import { goToThread } from './navigate'
-import { PanelRow } from './PanelRow'
 import { usePanelController, usePanelState } from './PanelProvider'
+import { PanelRow } from './PanelRow'
 import { mainListExcludingReview, type PanelFilter } from './state'
 
 const FILTERS: { value: PanelFilter; label: string }[] = [
@@ -63,29 +63,27 @@ export function PanelDrawer({ resolvePageKey }: PanelDrawerProps) {
             </Dialog.Close>
           </div>
 
-          <div
-            role="radiogroup"
-            aria-label="Filter threads"
-            className="cmnt:flex cmnt:gap-1 cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200"
-          >
-            {FILTERS.map((f) => (
-              <button
-                key={f.value}
-                type="button"
-                role="radio"
-                aria-checked={state.filter === f.value}
-                onClick={() => void panel.setFilter(f.value)}
-                className={cn(
-                  'cmnt:rounded-full cmnt:px-3 cmnt:py-1 cmnt:text-xs cmnt:font-medium cmnt:border cmnt:cursor-pointer',
-                  state.filter === f.value
-                    ? 'cmnt:bg-blue-600 cmnt:text-white cmnt:border-blue-600'
-                    : 'cmnt:bg-white cmnt:text-gray-600 cmnt:border-gray-200',
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <fieldset className="cmnt:flex cmnt:gap-1 cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200 cmnt:border-0 cmnt:m-0 cmnt:p-0">
+            <legend className="cmnt:sr-only">Filter threads</legend>
+            <div className="cmnt:flex cmnt:gap-1 cmnt:px-3 cmnt:py-2 cmnt:w-full">
+              {FILTERS.map((f) => (
+                <button
+                  key={f.value}
+                  type="button"
+                  aria-pressed={state.filter === f.value}
+                  onClick={() => void panel.setFilter(f.value)}
+                  className={cn(
+                    'cmnt:rounded-full cmnt:px-3 cmnt:py-1 cmnt:text-xs cmnt:font-medium cmnt:border cmnt:cursor-pointer',
+                    state.filter === f.value
+                      ? 'cmnt:bg-blue-600 cmnt:text-white cmnt:border-blue-600'
+                      : 'cmnt:bg-white cmnt:text-gray-600 cmnt:border-gray-200',
+                  )}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
           <div className="cmnt:flex-1 cmnt:overflow-y-auto">
             {state.needsReview.length > 0 && (
@@ -101,7 +99,10 @@ export function PanelDrawer({ resolvePageKey }: PanelDrawerProps) {
             )}
 
             {state.loading && (
-              <div data-testid="comments-panel-loading" className="cmnt:px-3 cmnt:py-6 cmnt:text-center cmnt:text-xs cmnt:text-gray-400">
+              <div
+                data-testid="comments-panel-loading"
+                className="cmnt:px-3 cmnt:py-6 cmnt:text-center cmnt:text-xs cmnt:text-gray-400"
+              >
                 Loading…
               </div>
             )}
@@ -119,11 +120,17 @@ export function PanelDrawer({ resolvePageKey }: PanelDrawerProps) {
               </div>
             )}
 
-            {!state.loading && !state.error && mainList.length === 0 && state.needsReview.length === 0 && (
-              <div data-testid="comments-panel-empty" className="cmnt:px-3 cmnt:py-6 cmnt:text-center cmnt:text-xs cmnt:text-gray-400">
-                No comments yet
-              </div>
-            )}
+            {!state.loading &&
+              !state.error &&
+              mainList.length === 0 &&
+              state.needsReview.length === 0 && (
+                <div
+                  data-testid="comments-panel-empty"
+                  className="cmnt:px-3 cmnt:py-6 cmnt:text-center cmnt:text-xs cmnt:text-gray-400"
+                >
+                  No comments yet
+                </div>
+              )}
 
             {mainList.map((t) => (
               <PanelRow key={t.id} item={t} onSelect={() => onSelect(t)} />

@@ -22,6 +22,10 @@ export function goToThread(row: { id: string; pageUrl: string }, deps: NavigateD
   } catch {
     /* storage unavailable — navigation still proceeds, just without auto-focus */
   }
-  const assign = deps.assign ?? ((url: string) => void (window.location.href = url))
+  const assign =
+    deps.assign ??
+    ((url: string) => {
+      window.location.href = url
+    })
   assign(row.pageUrl)
 }
