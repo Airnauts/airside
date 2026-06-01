@@ -108,7 +108,7 @@ export function PanelDrawer({ resolvePageKey }: PanelDrawerProps) {
 
             {state.error && !state.loading && (
               <div className="cmnt:px-3 cmnt:py-6 cmnt:text-center cmnt:text-xs cmnt:text-gray-500">
-                Couldn&rsquo;t load comments.
+                Couldn't load comments.
                 <button
                   type="button"
                   onClick={() => void panel.refresh()}
