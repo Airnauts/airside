@@ -98,12 +98,12 @@ describe('pipeline — security', () => {
     expect(res.status).toBe(403)
   })
 
-  it('403 when Origin header is missing', async () => {
+  it('allows a missing Origin when the key is valid (same-origin GET)', async () => {
     const server = build()
     const res = await server.handle(
       new Request('http://x/threads', { headers: { [KEY_HEADER_NAME]: 'sk_test' } }),
     )
-    expect(res.status).toBe(403)
+    expect(res.status).toBe(200)
   })
 })
 

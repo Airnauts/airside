@@ -14,9 +14,9 @@ describe('security', () => {
     expect(() => checkOrigin(req, ['https://app.example.com'])).toThrowError(OriginNotAllowedError)
   })
 
-  it('checkOrigin throws when Origin header is missing (browser widget only)', () => {
+  it('checkOrigin allows a missing Origin (same-origin GET / non-browser); returns null', () => {
     const req = new Request('http://x/')
-    expect(() => checkOrigin(req, ['https://app.example.com'])).toThrowError(OriginNotAllowedError)
+    expect(checkOrigin(req, ['https://app.example.com'])).toBeNull()
   })
 
   it('checkKey passes when the header matches', () => {

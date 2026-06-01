@@ -594,3 +594,29 @@ captured or restored by the cache.
   packages build in milliseconds.
 - Applies repo-wide; all packages already place the buildinfo at `dist/.tsbuildinfo`,
   and the `!dist/**/*.tsbuildinfo` glob also covers any default-named buildinfo.
+
+## ADR-0017 — Same-origin Origin policy: allow absent Origin, reject only present-and-disallowed
+
+- **Date:** 2026-06-01
+- **Status:** Accepted
+
+**Context.** `checkOrigin` rejected a request whose `Origin` header was absent or not
+in `allowedOrigins`. The absent-Origin rejection assumed every caller is a
+cross-origin browser widget (which always sends `Origin`). M9's `createNextHandler`
+host app mounts the API **same-origin**, and per the Fetch spec browsers omit
+`Origin` on same-origin GET/HEAD — so the widget's `listThreads`/`getThread` 403'd on
+page load. This is the first time the same-origin mount topology was exercised
+end-to-end.
+
+**Decision.** `checkOrigin` rejects only a **present-and-disallowed** `Origin`. An
+**absent** `Origin` (same-origin GET/HEAD, or a non-browser caller) is allowed; the
+capability key (`checkKey`) remains the authentication gate. A present cross-origin
+`Origin` not in `allowedOrigins` is still rejected, preserving the block on
+unapproved cross-site embedding. `checkOrigin` now returns `string | null`.
+
+**Consequences.** Same-origin Next mounts work without weakening the meaningful CSRF
+signal: a browser cannot omit or forge `Origin` on a cross-origin state-changing
+request, so present-and-disallowed is what matters; absent is benign. Reads are no
+longer origin-gated when same-origin (acceptable — the key gates them). Supersedes
+the implicit "missing Origin → 403" behavior previously asserted in
+`security.test.ts`. CORS preflight handling (`preflightResponse`) is unchanged.

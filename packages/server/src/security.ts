@@ -2,10 +2,17 @@ import { timingSafeEqual } from 'node:crypto'
 import { KEY_HEADER_NAME } from '@comments/core'
 import { AuthInvalidKeyError, OriginNotAllowedError } from './errors'
 
-/** Throws `OriginNotAllowedError` if Origin is missing or not in `allowedOrigins`. Returns the validated origin so callers can echo it in CORS headers. */
-export function checkOrigin(req: Request, allowedOrigins: readonly string[]): string {
+/**
+ * Rejects only a **present-and-disallowed** `Origin`. An absent `Origin`
+ * (same-origin GET/HEAD per the Fetch spec, or a non-browser caller) is allowed —
+ * the capability key (`checkKey`) is the real gate, and a present cross-origin
+ * `Origin` not in `allowedOrigins` is still rejected (blocks unapproved embedding).
+ * Returns the validated origin (or `null` when absent) so callers can echo it in
+ * CORS headers. See ADR-0017.
+ */
+export function checkOrigin(req: Request, allowedOrigins: readonly string[]): string | null {
   const origin = req.headers.get('origin')
-  if (!origin || !allowedOrigins.includes(origin)) {
+  if (origin && !allowedOrigins.includes(origin)) {
     throw new OriginNotAllowedError()
   }
   return origin
