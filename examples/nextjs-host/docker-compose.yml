@@ -1,0 +1,27 @@
+# Local MongoDB for testing the Next.js host integration.
+#
+#   docker compose up -d
+#   MONGODB_URI="mongodb://localhost:27017/comments" pnpm dev
+#
+# The host (lib/comments-server.ts) switches to Mongo persistence whenever
+# MONGODB_URI is set; otherwise it stays in-memory. The database name comes
+# from the connection string ("comments" above). No auth / replica set — the
+# adapter uses neither transactions nor change streams, so a standalone node
+# is enough for local testing.
+services:
+  mongo:
+    image: mongo:7
+    container_name: comments-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - comments-mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  comments-mongo-data:
