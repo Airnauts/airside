@@ -6,6 +6,23 @@ import { Composer } from './Composer'
 const identity = { email: 'a@b.c', name: 'Ann' }
 
 describe('Composer', () => {
+  it('lets the text input shrink (min-w-0) so the row fits the fixed-width popover', () => {
+    render(
+      <Composer
+        mode="reply"
+        identity={identity}
+        onNeedIdentity={(r) => r(identity)}
+        onSubmit={vi.fn()}
+        upload={vi.fn()}
+      />,
+    )
+    // Without min-w-0, flex items keep min-width:auto and the input cannot shrink below its
+    // intrinsic width — pushing Send past the w-80 popover edge (clipped by overflow-hidden).
+    const input = screen.getByPlaceholderText(/reply/i)
+    expect(input.className).toContain('cmnt:min-w-0')
+    expect(input.className).toContain('cmnt:flex-1')
+  })
+
   it('disables Send when empty and enables it with text', () => {
     render(
       <Composer

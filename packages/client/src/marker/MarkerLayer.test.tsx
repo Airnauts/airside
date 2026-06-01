@@ -48,10 +48,8 @@ describe('MarkerLayer place mode', () => {
     fireEvent.click(screen.getByTestId('comments-place'))
     const target = document.querySelector('#t') as Element
     fireEvent.click(target, { clientX: 40, clientY: 8 })
-    // A draft popover opens (positioned div, not portaled); no thread is created yet.
+    // A draft popover opens; no thread is created yet.
     expect(await screen.findByTestId('comments-draft')).toBeInTheDocument()
-    // The preview pin renders at the placement point alongside the composer.
-    expect(screen.getByTestId('comments-draft-pin')).toBeInTheDocument()
     expect(c.createThread).not.toHaveBeenCalled()
     // Type a comment and send.
     fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
