@@ -255,7 +255,9 @@ review** surfacing.
 work; selecting a thread navigates + focuses its pin; orphaned threads are listed
 distinctly.
 
-**Refs.** Spec §6; PRD §6.6.
+**Refs.** Design [`specs/2026-06-01-m8-cross-page-panel-design.md`](../superpowers/specs/2026-06-01-m8-cross-page-panel-design.md);
+Plan [`plans/2026-06-01-m8-cross-page-panel.md`](../superpowers/plans/2026-06-01-m8-cross-page-panel.md);
+Spec §6; PRD §6.6.
 
 ---
 
