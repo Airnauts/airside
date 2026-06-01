@@ -81,7 +81,12 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
       }
       // Invariant: ingest must not reset openId/detail/draft. The one exception:
       // if the open thread dropped out of the set (orphaned), close it and flag the loss.
-      const openGone = state.openId !== null && !(state.openId in itemsById)
+      // Only "lose" an open thread that WAS placed (had a pin) and has now dropped out — a genuine
+      // orphan-while-open. A panel-opened thread that was never placed (the detached/orphan card)
+      // must survive routine reposition emits, which re-ingest without it every scroll/resize.
+      const openId = state.openId
+      const wasPlaced = openId !== null && openId in state.placementsById
+      const openGone = wasPlaced && !(openId in itemsById)
       return {
         ...state,
         itemsById,

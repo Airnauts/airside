@@ -69,6 +69,14 @@ describe('threads reducer', () => {
     expect(next.lostOpenId).toBe('a')
   })
 
+  it('INGEST_PLACEMENTS keeps an open thread that was never placed (detached orphan)', () => {
+    // open a thread that is NOT in placements (no prior ingest placed it)
+    let s = reducer(initialState, { type: 'OPEN', id: 'x' })
+    s = reducer(s, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
+    expect(s.openId).toBe('x') // survives — detached card stays open
+    expect(s.lostOpenId).toBeNull() // not flagged lost, no toast
+  })
+
   it('OPEN clears any draft and sets openId', () => {
     let s = reducer(initialState, {
       type: 'SET_DRAFT',

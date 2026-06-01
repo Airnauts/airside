@@ -98,6 +98,19 @@ describe('ThreadPopover', () => {
     await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
   })
 
+  it('closes the popover via the ✕ close button (clears openId)', async () => {
+    const c = client()
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: /close/i }))
+    await waitFor(() => expect(screen.queryByText('first')).not.toBeInTheDocument())
+  })
+
   it('opens the popover when the pin itself is clicked', async () => {
     const c = client()
     render(
