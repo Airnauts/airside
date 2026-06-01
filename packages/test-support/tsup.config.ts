@@ -7,5 +7,7 @@ export default defineConfig({
   sourcemap: true,
   outDir: 'dist',
   external: ['vitest'],
-  clean: ['dist/**/*.js', 'dist/**/*.js.map'],
+  // Clean the whole dist (incl. stale .tsbuildinfo) so the following
+  // `tsc --build` always full-rebuilds and re-emits .d.ts (ADR-0019).
+  clean: true,
 })

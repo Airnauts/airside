@@ -652,3 +652,49 @@ for v1 (it is a shared dev/reviewer capability, already exposed in the URL and i
 client bundle config, and gates only commenting). Clearing site data or rotating the
 key deactivates the widget. `GateInput` gains an optional `storedKey`; `replaceState`
 (not `pushState`/reload) keeps activation flash-free and out of Back history.
+
+## ADR-0019 — Clean the whole `dist` before each build so `tsc` always re-emits declarations
+
+- **Date:** 2026-06-01
+- **Status:** accepted (extends [ADR-0016](#adr-0016--exclude-the-typescript-tsbuildinfo-from-turborepos-cached-build-outputs))
+
+**Context.** ADR-0016 fixed a `TS7016 — Could not find a declaration file for
+'@comments/core'` (×26) loop by excluding `dist/.tsbuildinfo` from turbo's cached
+outputs. That removed *one* desync vector (a cached "up-to-date" buildinfo restored
+without its `.d.ts`), but was **necessary-but-insufficient** — the same failure
+recurred the same day. The remaining vector is a package's *own* build: each backend
+package runs `tsup && tsc --build`, where `tsc` is `composite`/`incremental`,
+`emitDeclarationOnly`, with `tsBuildInfoFile: dist/.tsbuildinfo`. `tsup`'s `clean`
+was a **narrow glob** (`['dist/**/*.js', 'dist/**/*.js.map']`) that deleted only the
+JS, never the buildinfo. So a stale on-disk `dist/.tsbuildinfo` — left behind by a
+prior run and never managed by the cache (it is excluded per 0016), never wiped by
+`tsup` — told `tsc --build` "declarations already emitted", and `tsc` emitted **no
+`.d.ts`**. Turbo then cached that declaration-less `dist`; every cache hit replayed
+it, re-poisoning consumers. ADR-0016's verification (`rm -rf dist` then rebuild) hid
+this: deleting `dist` also deletes the buildinfo, so that path can never reproduce
+the bug — the failing path is **cache hit + partial clean**, which a full `dist` wipe
+never exercises.
+
+**Decision.** Set `clean: true` in every backend package's `tsup.config.ts` (`core`,
+`server`, `test-support`, `storage-fs`, `storage-vercel-blob`, `adapter-mongo`).
+Because `tsup` runs first in the `tsup && tsc --build [&& tsx …]` chain, cleaning the
+whole `dist` (including the stale `.tsbuildinfo` and any old `.d.ts`) before `tsc`
+runs forces a full declaration rebuild on every real (cache-miss) build; `tsc` and
+the openapi step re-emit their outputs immediately after. The buildinfo is therefore
+always consistent with the emitted `.d.ts` — it cannot survive into a build that
+skips emit. Rejected alternative: moving `tsBuildInfoFile` outside `dist` — that is
+the same desync reversed (the buildinfo would survive a `dist` wipe and still skip
+emit).
+
+**Consequences.**
+- A real build can no longer emit JS-without-declarations, so the cache can never be
+  poisoned with a declaration-less `dist`. The `TS7016`/`rm -rf dist` loop is closed
+  at its source. Verified on the *previously-broken* path (not `rm -rf dist`): wipe
+  all `dist` + the turbo cache → `pnpm build` (0 cached) → `pnpm build` again (8
+  cached, cache-hit replay) keeps every `dist/index.d.ts`; and the exact 0016 combo
+  (`core` cache hit + `client` cache miss) builds clean.
+- Editing each `tsup.config.ts` rehashes the turbo `build` task, so the poisoned
+  cache entries invalidate naturally — no manual purge needed.
+- `tsc` incremental state is reset on each real build, so cross-package builds full-
+  rebuild declarations every cache miss. Negligible — these packages build in
+  milliseconds and cache hits still skip the work entirely.
