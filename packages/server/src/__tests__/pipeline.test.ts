@@ -1,6 +1,6 @@
 import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { KEY_HEADER_NAME, operations } from '@airnauts/comments-core'
-import { makeCreateThreadBody } from '@airnauts/comments-test-support'
+import { makeAuthor, makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import type { UseCaseMap } from '../router'
 import { assertUseCasesCoverOperations, createCommentsServer } from '../server'
@@ -167,5 +167,75 @@ describe('pipeline — router', () => {
     const fetched = await getRes.json()
     expect(fetched.id).toBe(created.id)
     expect(getRes.headers.get('access-control-allow-origin')).toBe('https://app.example.com')
+  })
+})
+
+describe('pipeline — attachments (two-step upload)', () => {
+  // The headers a multipart upload sends: no JSON content-type (FormData sets the boundary).
+  const uploadHeaders = { origin: 'https://app.example.com', [KEY_HEADER_NAME]: 'sk_test' }
+
+  it('uploads an image, then references its id from an image-only comment end to end', async () => {
+    const server = build()
+
+    // 1. Create a thread to reply to.
+    const createRes = await server.handle(
+      new Request('http://x/threads', {
+        method: 'POST',
+        headers: allowedHeaders,
+        body: JSON.stringify(makeCreateThreadBody()),
+      }),
+    )
+    expect(createRes.status).toBe(201)
+    const thread = await createRes.json()
+
+    // 2. Upload an image via multipart → get back an Attachment with an id.
+    const fd = new FormData()
+    fd.append('file', new File([new Uint8Array([1, 2, 3])], 'shot.png', { type: 'image/png' }))
+    const uploadRes = await server.handle(
+      new Request('http://x/uploads', { method: 'POST', headers: uploadHeaders, body: fd }),
+    )
+    expect(uploadRes.status).toBe(201)
+    const attachment = await uploadRes.json()
+    expect(attachment.id).toBeDefined()
+    expect(attachment.url).toBe('https://blob.test/x')
+
+    // 3. Post an IMAGE-ONLY reply (blank text) that references the uploaded id.
+    const commentRes = await server.handle(
+      new Request(`http://x/threads/${thread.id}/comments`, {
+        method: 'POST',
+        headers: allowedHeaders,
+        body: JSON.stringify({ text: '', attachmentIds: [attachment.id], author: makeAuthor() }),
+      }),
+    )
+    expect(commentRes.status).toBe(201)
+
+    // 4. Fetch the thread — the reply must carry the resolved attachment, not [].
+    const getRes = await server.handle(
+      new Request(`http://x/threads/${thread.id}`, { headers: allowedHeaders }),
+    )
+    const fetched = await getRes.json()
+    const reply = fetched.comments.at(-1)
+    expect(reply.text).toBe('')
+    expect(reply.attachments).toEqual([attachment])
+  })
+
+  it('rejects a comment that references an unknown attachment id with 400', async () => {
+    const server = build()
+    const createRes = await server.handle(
+      new Request('http://x/threads', {
+        method: 'POST',
+        headers: allowedHeaders,
+        body: JSON.stringify(makeCreateThreadBody()),
+      }),
+    )
+    const thread = await createRes.json()
+    const res = await server.handle(
+      new Request(`http://x/threads/${thread.id}/comments`, {
+        method: 'POST',
+        headers: allowedHeaders,
+        body: JSON.stringify({ text: 'hi', attachmentIds: ['at_ghost'], author: makeAuthor() }),
+      }),
+    )
+    expect(res.status).toBe(400)
   })
 })

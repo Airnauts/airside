@@ -8,13 +8,21 @@ import { AnchorState, ThreadStatus } from '../schemas/thread'
 
 const Selectors = z.tuple([z.string(), z.string()])
 
+// A comment must carry content: either non-blank text or at least one attachment.
+// Text alone, image alone, or both are all valid — image-only comments are allowed.
+const hasContent = (c: { text: string; attachmentIds?: readonly string[] }): boolean =>
+  c.text.trim().length > 0 || (c.attachmentIds?.length ?? 0) > 0
+const CONTENT_REQUIRED = { message: 'a comment needs text or an attachment' }
+
 export const CreateThreadBody = z
   .object({
     pageKey: z.string().optional(),
     pageUrl: z.url(),
     pageTitle: z.string().optional(),
     anchor: Anchor,
-    comment: z.object({ text: z.string().min(1), attachmentIds: z.array(AttachmentId).optional() }),
+    comment: z
+      .object({ text: z.string(), attachmentIds: z.array(AttachmentId).optional() })
+      .refine(hasContent, CONTENT_REQUIRED),
     author: Author,
     captureContext: CaptureContext,
     provenance: Provenance.optional(),
@@ -37,10 +45,11 @@ export type ThreadIdParam = z.infer<typeof ThreadIdParam>
 
 export const AddCommentBody = z
   .object({
-    text: z.string().min(1),
+    text: z.string(),
     attachmentIds: z.array(AttachmentId).optional(),
     author: Author,
   })
+  .refine(hasContent, CONTENT_REQUIRED)
   .meta({ id: 'AddCommentBody' })
 export type AddCommentBody = z.infer<typeof AddCommentBody>
 
