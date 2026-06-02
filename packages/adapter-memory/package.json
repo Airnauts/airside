@@ -2,7 +2,15 @@
   "name": "@airnauts/comments-adapter-memory",
   "version": "0.0.0",
   "description": "In-memory repository adapter for the Airnauts commenting tool server.",
-  "keywords": ["comments", "commenting", "annotations", "feedback", "airnauts", "in-memory", "adapter"],
+  "keywords": [
+    "comments",
+    "commenting",
+    "annotations",
+    "feedback",
+    "airnauts",
+    "in-memory",
+    "adapter"
+  ],
   "license": "MIT",
   "author": "Airnauts",
   "homepage": "https://github.com/Airnauts/commenting-tool#readme",
@@ -11,7 +19,9 @@
     "url": "git+https://github.com/Airnauts/commenting-tool.git",
     "directory": "packages/adapter-memory"
   },
-  "bugs": { "url": "https://github.com/Airnauts/commenting-tool/issues" },
+  "bugs": {
+    "url": "https://github.com/Airnauts/commenting-tool/issues"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -19,8 +29,15 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist", "!dist/.tsbuildinfo", "README.md", "LICENSE"],
-  "publishConfig": { "access": "public" },
+  "files": [
+    "dist",
+    "!dist/.tsbuildinfo",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup && tsc --build",
     "typecheck": "tsc --build",

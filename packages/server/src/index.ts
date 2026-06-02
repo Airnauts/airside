@@ -3,7 +3,6 @@ export const VERSION = '0.0.0'
 export type { Ctx, CtxInit, IdFactory } from './ctx'
 export { defaultIds, makeCtx } from './ctx'
 export { decodeCursor, encodeCursor } from './cursor'
-export { lazyRepository } from './repository/lazy'
 export {
   AuthInvalidKeyError,
   ConflictError,
@@ -17,6 +16,7 @@ export {
 } from './errors'
 export type { CheckResult, RateLimitConfig, RateLimiter } from './rate-limit'
 export { InMemoryRateLimiter } from './rate-limit'
+export { lazyRepository } from './repository/lazy'
 
 export type {
   AnchorPatch,

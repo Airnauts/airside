@@ -1,8 +1,8 @@
+import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { KEY_HEADER_NAME } from '@airnauts/comments-core'
 import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { createNextHandler } from './next'
-import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { createCommentsServer } from './server'
 import type { StorageAdapter } from './storage/types'
 
