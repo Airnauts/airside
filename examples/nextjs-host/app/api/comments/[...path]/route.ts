@@ -1,4 +1,21 @@
-import { createNextHandler } from '@airnauts/comments-server/next'
-import { server } from '@/lib/comments-server'
+import { join } from 'node:path'
+import { memoryRepository } from '@airnauts/comments-adapter-memory'
+import { mongoRepository } from '@airnauts/comments-adapter-mongo'
+import { createCommentsRoute } from '@airnauts/comments-next'
+import { fileSystemStorage } from '@airnauts/comments-storage-fs'
+import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createNextHandler(server)
+export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
+  secretKey: 'dev-key', // demo only — replace with a real secret in production
+  projectId: 'nextjs-host',
+  allowedOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  // Mongo when MONGODB_URI is set, else ephemeral in-memory.
+  repository: process.env.MONGODB_URI
+    ? mongoRepository({ uri: process.env.MONGODB_URI })
+    : memoryRepository(),
+  // Vercel Blob when its token is present, else local public/uploads.
+  storage: process.env.BLOB_READ_WRITE_TOKEN
+    ? vercelBlobStorage()
+    : fileSystemStorage({ rootDir: join(process.cwd(), 'public', 'uploads'), baseUrl: '/uploads' }),
+  rateLimit: false,
+})

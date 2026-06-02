@@ -53,12 +53,18 @@ importers:
 
   examples/nextjs-host:
     dependencies:
+      '@airnauts/comments-adapter-memory':
+        specifier: workspace:*
+        version: link:../../packages/adapter-memory
       '@airnauts/comments-adapter-mongo':
         specifier: workspace:*
         version: link:../../packages/adapter-mongo
       '@airnauts/comments-client':
         specifier: workspace:*
         version: link:../../packages/client
+      '@airnauts/comments-next':
+        specifier: workspace:*
+        version: link:../../packages/next
       '@airnauts/comments-server':
         specifier: workspace:*
         version: link:../../packages/server
@@ -68,9 +74,6 @@ importers:
       '@airnauts/comments-storage-vercel-blob':
         specifier: workspace:*
         version: link:../../packages/storage-vercel-blob
-      mongodb:
-        specifier: ^6.12.0
-        version: 6.21.0
       next:
         specifier: ^15.1.0
         version: 15.5.18(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -212,6 +215,22 @@ importers:
       tsx:
         specifier: ^4.22.3
         version: 4.22.3
+
+  packages/next:
+    dependencies:
+      '@airnauts/comments-server':
+        specifier: workspace:^
+        version: link:../server
+    devDependencies:
+      '@airnauts/comments-adapter-memory':
+        specifier: workspace:*
+        version: link:../adapter-memory
+      '@airnauts/comments-core':
+        specifier: workspace:*
+        version: link:../core
+      '@airnauts/comments-test-support':
+        specifier: workspace:*
+        version: link:../test-support
 
   packages/server:
     dependencies:
