@@ -76,12 +76,37 @@ export function CommentList({ comments, loading, error, onRetry }: CommentListPr
               {c.text}
             </div>
             {c.attachments.map((a) => (
-              <img
+              <a
                 key={a.id}
-                src={a.url}
-                alt={a.name}
-                className="cmnt:mt-1.5 cmnt:max-w-[160px] cmnt:rounded-lg cmnt:border cmnt:border-slate-300 cmnt:block"
-              />
+                href={a.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open ${a.name} in a new tab`}
+                title="Open in new tab"
+                className="cmnt:group cmnt:relative cmnt:mt-1.5 cmnt:block cmnt:w-max cmnt:rounded-lg cmnt:border cmnt:border-slate-300 cmnt:overflow-hidden"
+              >
+                <img src={a.url} alt={a.name} className="cmnt:max-w-[160px] cmnt:block" />
+                <span
+                  aria-hidden
+                  className="cmnt:absolute cmnt:top-1 cmnt:right-1 cmnt:flex cmnt:items-center cmnt:justify-center cmnt:w-5 cmnt:h-5 cmnt:rounded cmnt:bg-black/55 cmnt:text-white cmnt:opacity-80 cmnt:group-hover:opacity-100 cmnt:transition-opacity"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="12"
+                    height="12"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <title>Open in new tab</title>
+                    <path d="M15 3h6v6" />
+                    <path d="M10 14 21 3" />
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  </svg>
+                </span>
+              </a>
             ))}
           </div>
         </div>
