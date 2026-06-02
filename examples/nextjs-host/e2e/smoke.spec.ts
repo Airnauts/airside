@@ -7,7 +7,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 test.describe('single-page commenting loop', () => {
   test('activate, identity, comment, reply, attach, resolve, reopen, reload', async ({ page }) => {
-    await activate(page, '/article')
+    await activate(page, '/article', 'smoke')
 
     // Place an element pin + first comment (identity modal handled inside).
     await placeElementPin(page, 'Content signals', 'First comment on the list item')

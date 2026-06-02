@@ -1,11 +1,22 @@
 import { expect, type Page } from '@playwright/test'
 
-export const KEY_PARAM = 'comments-key=dev-key'
+export const DEV_KEY = 'dev-key'
 
-/** Open a route with the activation key and wait for the widget to mount. */
-export async function activate(page: Page, path = '/') {
-  const sep = path.includes('?') ? '&' : '?'
-  await page.goto(`${path}${sep}${KEY_PARAM}`)
+/** Build a URL with merged query params; empty-string values are skipped. */
+export function urlFor(path: string, params: Record<string, string> = {}) {
+  const [p, q = ''] = path.split('?')
+  const sp = new URLSearchParams(q)
+  for (const [k, v] of Object.entries(params)) if (v) sp.set(k, v)
+  const s = sp.toString()
+  return s ? `${p}?${s}` : p
+}
+
+/** Open a route with the activation key and wait for the widget to mount.
+ *  `ns` namespaces the page via the host's pageKey override so tests sharing the
+ *  single in-memory store don't see each other's threads. Pass a unique `ns` per test
+ *  (and carry the same `ns` on any later navigation/reload within that test). */
+export async function activate(page: Page, path = '/', ns = '') {
+  await page.goto(urlFor(path, { ns, 'comments-key': DEV_KEY }))
   // Launcher place button proves the widget activated.
   await expect(page.getByTestId('comments-place')).toBeVisible()
 }
