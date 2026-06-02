@@ -656,6 +656,10 @@ async function connectMongo(uri: string): Promise<Repository> {
  * connection (warm serverless / HMR reuse) under `cacheKey`. The single function
  * a host imports — `createMongoRepository`/`ensureIndexes` remain for callers
  * that own their own connection.
+ *
+ * `cacheKey` defaults to `'mongo'`. If you connect to more than one database in the
+ * same process, pass a distinct `cacheKey` per connection — otherwise the second
+ * call reuses the first connection under the shared default key.
  */
 export function mongoRepository({
   uri,
@@ -699,14 +703,22 @@ git commit -m "feat(adapter-mongo): add memoized mongoRepository({uri}) factory"
 
 - [ ] **Step 1: Write the failing tests**
 
-Append to `packages/storage-fs/src/index.test.ts` (keep the existing `storageContract` block at the top; add these imports and cases below it):
+This file **already exists** and already imports `mkdtempSync` (`node:fs`), `tmpdir`
+(`node:os`), and `join` (`node:path`) for its `storageContract` block — do **not**
+re-import them (duplicate declarations won't compile). Make two edits:
+
+1. Add `fileSystemStorage` to the existing `./index` import — change
+   `import { FileSystemStorage } from './index'` to:
+
+   ```ts
+   import { FileSystemStorage, fileSystemStorage } from './index'
+   ```
+
+2. Add a `vitest` import (the file currently has none — globals are off in this repo)
+   and the new `describe` block, **below** the existing `storageContract(...)` call:
 
 ```ts
-import { mkdtempSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { fileSystemStorage } from './index'
 
 function blob(name = 'a.bin') {
   return { data: new Uint8Array([1, 2, 3]), contentType: 'application/octet-stream', name }
@@ -801,12 +813,19 @@ git commit -m "feat(storage-fs): add baseUrl option and fileSystemStorage factor
 
 - [ ] **Step 1: Write the failing test**
 
-Append to `packages/storage-vercel-blob/src/index.test.ts`:
+This file **already exists** and already imports `{ afterAll, describe, it }` from
+`vitest` and `{ VercelBlobStorage }` from `./index` — merge, don't duplicate. Make two
+edits:
+
+1. Add `expect` to the vitest import — change `import { afterAll, describe, it } from 'vitest'`
+   to `import { afterAll, describe, expect, it } from 'vitest'`.
+2. Add `vercelBlobStorage` to the `./index` import — change
+   `import { VercelBlobStorage } from './index'` to
+   `import { VercelBlobStorage, vercelBlobStorage } from './index'`.
+
+Then append the new block at the end of the file:
 
 ```ts
-import { describe, expect, it } from 'vitest'
-import { vercelBlobStorage } from './index'
-
 describe('vercelBlobStorage', () => {
   it('returns a StorageAdapter', () => {
     const store = vercelBlobStorage({ token: 'test-token' })
