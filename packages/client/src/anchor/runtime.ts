@@ -57,10 +57,19 @@ export function createRuntime(opts: RuntimeOptions) {
       void opts.client
         .refreshAnchor(item.id, { anchorState: 'anchored', selectionLost: true })
         .catch(() => {})
+    } else if (item.anchorState === 'orphaned') {
+      // Clean fast-path re-anchor (no heal payload) of a thread the server still has flagged
+      // orphaned — e.g. a transient orphan written during an SPA route transition. Without this
+      // write-back the comment renders fine but the stored flag never clears, so the API and the
+      // cross-page panel keep showing it as anchor-lost. Patch the retained item to 'anchored'
+      // below so repeated rematches don't re-POST.
+      void opts.client.refreshAnchor(item.id, { anchorState: 'anchored' }).catch(() => {})
     }
     const highlight =
       res.kind === 'anchored' && res.range ? mapRects(Array.from(res.range.getClientRects())) : []
-    return { item, el: res.el, anchor: nextAnchor, highlight }
+    const nextItem: ThreadListItem =
+      item.anchorState === 'orphaned' ? { ...item, anchorState: 'anchored' } : item
+    return { item: nextItem, el: res.el, anchor: nextAnchor, highlight }
   }
 
   const resizeObs = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => emit()) : null
