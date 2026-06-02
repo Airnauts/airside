@@ -3,7 +3,7 @@ import { makeNewThread } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { makeCtx } from '../ctx'
 import { NotFoundError } from '../errors'
-import { InMemoryRepository } from '../repository/in-memory'
+import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { refreshAnchor } from './refresh-anchor'
 
 const ctx = (now: string) => makeCtx({ projectId: 'proj_x', now: () => new Date(now) })

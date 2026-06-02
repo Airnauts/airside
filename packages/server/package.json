@@ -56,6 +56,7 @@
     "nanoid": "^5.1.11"
   },
   "devDependencies": {
+    "@airnauts/comments-adapter-memory": "workspace:*",
     "@airnauts/comments-test-support": "workspace:*"
   }
 }

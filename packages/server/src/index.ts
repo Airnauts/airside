@@ -18,7 +18,6 @@ export {
 export type { CheckResult, RateLimitConfig, RateLimiter } from './rate-limit'
 export { InMemoryRateLimiter } from './rate-limit'
 
-export { InMemoryRepository } from './repository/in-memory'
 export type {
   AnchorPatch,
   ListQuery,

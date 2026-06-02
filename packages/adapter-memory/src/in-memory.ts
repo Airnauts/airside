@@ -1,14 +1,15 @@
 import type { Thread, ThreadId, ThreadListItem, ThreadStatus } from '@airnauts/comments-core'
-import { decodeCursor, encodeCursor } from '../cursor'
-import type {
-  AnchorPatch,
-  ListQuery,
-  ListResult,
-  NewComment,
-  NewThread,
-  Repository,
-  Scope,
-} from './types'
+import {
+  type AnchorPatch,
+  decodeCursor,
+  encodeCursor,
+  type ListQuery,
+  type ListResult,
+  type NewComment,
+  type NewThread,
+  type Repository,
+  type Scope,
+} from '@airnauts/comments-server'
 
 type StoredThread = Thread & { projectId: string; env?: string }
 

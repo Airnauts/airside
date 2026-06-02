@@ -69,6 +69,7 @@
     }
   },
   "devDependencies": {
+    "@airnauts/comments-adapter-memory": "workspace:*",
     "@airnauts/comments-server": "workspace:*",
     "@size-limit/preset-small-lib": "^11.1.6",
     "@tailwindcss/cli": "^4.0.0",

@@ -3,7 +3,7 @@ import { makeNewThread } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { makeCtx } from '../ctx'
 import { ValidationError } from '../errors'
-import { InMemoryRepository } from '../repository/in-memory'
+import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { listThreads } from './list-threads'
 
 const ctx = makeCtx({ projectId: 'proj_x' })

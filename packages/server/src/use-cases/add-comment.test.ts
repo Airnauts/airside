@@ -3,7 +3,7 @@ import { makeAuthor, makeNewThread } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { NotFoundError } from '../errors'
-import { InMemoryRepository } from '../repository/in-memory'
+import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { addComment } from './add-comment'
 
 describe('addComment use-case', () => {
