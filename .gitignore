@@ -8,6 +8,9 @@ dist/
 # OS / editor
 .DS_Store
 
+# Ephemeral git worktrees created by the WorktreeCreate hook
+.claude/worktrees/
+
 # Build tooling
 .turbo/
 *.tsbuildinfo
