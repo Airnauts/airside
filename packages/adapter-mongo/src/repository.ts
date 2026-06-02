@@ -11,12 +11,14 @@ import {
   encodeCursor,
   type ListQuery,
   type ListResult,
+  lazyRepository,
   type NewComment,
   type NewThread,
   type Repository,
   type Scope,
 } from '@airnauts/comments-server'
-import type { Db, Filter, UpdateFilter } from 'mongodb'
+import { type Db, type Filter, MongoClient, type UpdateFilter } from 'mongodb'
+import { ensureIndexes } from './indexes'
 
 export const COLLECTION = 'threads'
 
@@ -178,4 +180,38 @@ export function createMongoRepository({ db }: { db: Db }): Repository {
       return toListItem(doc)
     },
   }
+}
+
+/** Open one client, connect, ensure indexes, and build the repository. */
+async function connectMongo(uri: string): Promise<Repository> {
+  const client = new MongoClient(uri)
+  try {
+    await client.connect() // intentionally left open for the process lifetime on success
+  } catch (err) {
+    await client.close().catch(() => {}) // best-effort cleanup; swallow secondary errors
+    throw err
+  }
+  const db = client.db() // database name comes from the connection string
+  await ensureIndexes(db)
+  return createMongoRepository({ db })
+}
+
+/**
+ * Host-facing Mongo `Repository`: connects lazily on first use and memoizes the
+ * connection (warm serverless / HMR reuse) under `cacheKey`. The single function
+ * a host imports — `createMongoRepository`/`ensureIndexes` remain for callers
+ * that own their own connection.
+ *
+ * `cacheKey` defaults to `'mongo'`. If you connect to more than one database in the
+ * same process, pass a distinct `cacheKey` per connection — otherwise the second
+ * call reuses the first connection under the shared default key.
+ */
+export function mongoRepository({
+  uri,
+  cacheKey = 'mongo',
+}: {
+  uri: string
+  cacheKey?: string
+}): Repository {
+  return lazyRepository(() => connectMongo(uri), { cacheKey })
 }

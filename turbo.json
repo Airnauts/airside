@@ -26,7 +26,11 @@
       "outputs": []
     },
     "@airnauts/comments-server#test": {
-      "dependsOn": ["@airnauts/comments-core#build", "@airnauts/comments-test-support#build"]
+      "dependsOn": [
+        "@airnauts/comments-core#build",
+        "@airnauts/comments-test-support#build",
+        "@airnauts/comments-adapter-memory#build"
+      ]
     },
     "@airnauts/comments-test-support#build": {
       "dependsOn": ["@airnauts/comments-core#build", "@airnauts/comments-server#build"],

@@ -749,3 +749,53 @@ sweep — a hard-to-reverse, architecturally significant decision.
   consumers are unaffected (optional peer ⇒ no install warning).
 - This ADR records strategy only. Authenticating to npm and running `pnpm release`
   remain manual, deliberate steps performed by a maintainer.
+
+## ADR-0021 — Uniform adapter construction: one factory per adapter + the `lazyRepository` primitive; in-memory extracted to its own package
+
+- **Status:** accepted
+- **Date:** 2026-06-02
+
+**Context.** The `Repository` and `StorageAdapter` interfaces are already uniform
+(each enforced by a shared contract suite), but *construction* was not:
+`new InMemoryRepository()` vs. `createMongoRepository({ db })` vs. hand-written host
+glue that owned a `MongoClient` and memoized it. The memoization is not Mongo- or
+Next-specific — any lazily-connecting backend (Postgres, Redis) needs the same
+warm-serverless / HMR connection reuse. In-memory lived inside `server` while Mongo
+was a standalone adapter.
+
+**Decision.** Each adapter — including in-memory — is its own package exposing a
+lowercase `xxxRepository(config)` / `xxxStorage(config)` factory over the existing
+shared interface. Connection memoization is a single generic `lazyRepository(connect,
+{ cacheKey })` primitive in `@airnauts/comments-server` (a `globalThis` registry keyed
+by `cacheKey`, retry-on-failure). `mongoRepository({ uri })` is built on it;
+`InMemoryRepository` moves to `@airnauts/comments-adapter-memory` and `server` stops
+exporting it. Low-level constructs (`InMemoryRepository`, `createMongoRepository`,
+`FileSystemStorage`, `VercelBlobStorage`) remain exported for advanced use. No
+monolithic `createRepository({ driver })` dispatcher (it would force every driver
+dependency into one module).
+
+**Consequences.** Host construction is uniform; future Postgres/Redis adapters reuse
+`lazyRepository`. `server` becomes a pure engine that depends on no concrete adapter.
+A benign dev-only workspace cycle remains: `server`/`client` tests devDepend on
+`@airnauts/comments-adapter-memory`, which depends on `server` — acyclic for
+`tsc --build` (server's non-test build never imports memory) and allowed by pnpm.
+`@airnauts/comments-adapter-memory` is a new published package.
+
+## ADR-0022 — Next.js integration package (`@airnauts/comments-next`)
+
+- **Status:** accepted
+- **Date:** 2026-06-02
+
+**Context.** Mounting the commenting server on Next App Router required hosts to
+hand-wire `createCommentsServer` + `createNextHandler` plus repository/storage
+construction across several `lib/` files. The only genuinely Next-shaped piece is the
+route-handler wiring.
+
+**Decision.** Add `@airnauts/comments-next` exposing `createCommentsRoute(config)`,
+which builds the server and wraps it with the existing `createNextHandler`, returning
+`{ GET, POST, PATCH, OPTIONS, server }`. The package reads no environment variables;
+the mongo/memory and blob/fs switches stay host-owned in the single route file.
+
+**Consequences.** A Next host integrates in one route file with no bespoke glue.
+`@airnauts/comments-next` is a new published package; the example `nextjs-host` is
+reduced to that one route file.

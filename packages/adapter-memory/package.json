@@ -1,15 +1,15 @@
 {
-  "name": "@airnauts/comments-server",
+  "name": "@airnauts/comments-adapter-memory",
   "version": "0.0.0",
-  "description": "Server runtime for the Airnauts embeddable commenting tool: HTTP router, use-cases, CORS/security, and framework adapters (dev server, Next.js).",
+  "description": "In-memory repository adapter for the Airnauts commenting tool server.",
   "keywords": [
     "comments",
     "commenting",
     "annotations",
     "feedback",
     "airnauts",
-    "server",
-    "nextjs"
+    "in-memory",
+    "adapter"
   ],
   "license": "MIT",
   "author": "Airnauts",
@@ -17,7 +17,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Airnauts/commenting-tool.git",
-    "directory": "packages/server"
+    "directory": "packages/adapter-memory"
   },
   "bugs": {
     "url": "https://github.com/Airnauts/commenting-tool/issues"
@@ -27,14 +27,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./dev": {
-      "types": "./dist/dev.d.ts",
-      "import": "./dist/dev.js"
-    },
-    "./next": {
-      "types": "./dist/next.d.ts",
-      "import": "./dist/next.js"
     }
   },
   "files": [
@@ -53,10 +45,9 @@
   },
   "dependencies": {
     "@airnauts/comments-core": "workspace:^",
-    "nanoid": "^5.1.11"
+    "@airnauts/comments-server": "workspace:^"
   },
   "devDependencies": {
-    "@airnauts/comments-adapter-memory": "workspace:*",
     "@airnauts/comments-test-support": "workspace:*"
   }
 }

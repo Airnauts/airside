@@ -53,12 +53,18 @@ importers:
 
   examples/nextjs-host:
     dependencies:
+      '@airnauts/comments-adapter-memory':
+        specifier: workspace:*
+        version: link:../../packages/adapter-memory
       '@airnauts/comments-adapter-mongo':
         specifier: workspace:*
         version: link:../../packages/adapter-mongo
       '@airnauts/comments-client':
         specifier: workspace:*
         version: link:../../packages/client
+      '@airnauts/comments-next':
+        specifier: workspace:*
+        version: link:../../packages/next
       '@airnauts/comments-server':
         specifier: workspace:*
         version: link:../../packages/server
@@ -68,9 +74,6 @@ importers:
       '@airnauts/comments-storage-vercel-blob':
         specifier: workspace:*
         version: link:../../packages/storage-vercel-blob
-      mongodb:
-        specifier: ^6.12.0
-        version: 6.21.0
       next:
         specifier: ^15.1.0
         version: 15.5.18(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -103,6 +106,19 @@ importers:
       vite:
         specifier: ^7.0.0
         version: 7.3.3(@types/node@22.19.19)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.3)(yaml@2.9.0)
+
+  packages/adapter-memory:
+    dependencies:
+      '@airnauts/comments-core':
+        specifier: workspace:^
+        version: link:../core
+      '@airnauts/comments-server':
+        specifier: workspace:^
+        version: link:../server
+    devDependencies:
+      '@airnauts/comments-test-support':
+        specifier: workspace:*
+        version: link:../test-support
 
   packages/adapter-mongo:
     dependencies:
@@ -141,6 +157,9 @@ importers:
         specifier: ^2.6.0
         version: 2.6.1
     devDependencies:
+      '@airnauts/comments-adapter-memory':
+        specifier: workspace:*
+        version: link:../adapter-memory
       '@airnauts/comments-server':
         specifier: workspace:*
         version: link:../server
@@ -197,6 +216,22 @@ importers:
         specifier: ^4.22.3
         version: 4.22.3
 
+  packages/next:
+    dependencies:
+      '@airnauts/comments-server':
+        specifier: workspace:^
+        version: link:../server
+    devDependencies:
+      '@airnauts/comments-adapter-memory':
+        specifier: workspace:*
+        version: link:../adapter-memory
+      '@airnauts/comments-core':
+        specifier: workspace:*
+        version: link:../core
+      '@airnauts/comments-test-support':
+        specifier: workspace:*
+        version: link:../test-support
+
   packages/server:
     dependencies:
       '@airnauts/comments-core':
@@ -206,6 +241,9 @@ importers:
         specifier: ^5.1.11
         version: 5.1.11
     devDependencies:
+      '@airnauts/comments-adapter-memory':
+        specifier: workspace:*
+        version: link:../adapter-memory
       '@airnauts/comments-test-support':
         specifier: workspace:*
         version: link:../test-support
