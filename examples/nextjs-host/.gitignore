@@ -2,3 +2,8 @@
 next-env.d.ts
 public/uploads/
 .env
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
