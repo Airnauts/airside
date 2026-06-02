@@ -18,7 +18,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command:
-      `pnpm --dir ../.. turbo run build --filter=@airnauts/comments-nextjs-host... && ` +
+      `pnpm --dir=../.. turbo run build --filter=@airnauts/comments-nextjs-host... && ` +
       `pnpm --filter @airnauts/comments-nextjs-host exec next start -p ${PORT}`,
     url: baseURL,
     timeout: 180_000,

@@ -10,13 +10,15 @@ export async function activate(page: Page, path = '/') {
   await expect(page.getByTestId('comments-place')).toBeVisible()
 }
 
-/** Fill the self-asserted email identity modal if it is showing. Idempotent. */
+/** Fill the self-asserted email identity modal if it is showing. Idempotent.
+ *  Keyed off the identity-specific "Start commenting" button, not a generic
+ *  dialog role (the draft composer is also a Radix dialog). */
 export async function ensureIdentity(page: Page, email = 'reviewer@example.com') {
-  const dialog = page.getByRole('dialog')
-  if (await dialog.isVisible().catch(() => false)) {
-    await page.getByLabel('Email').fill(email)
-    await page.getByRole('button', { name: 'Start commenting' }).click()
-    await expect(dialog).toBeHidden()
+  const submit = page.getByRole('button', { name: 'Start commenting' })
+  if (await submit.isVisible().catch(() => false)) {
+    await page.getByRole('textbox', { name: 'Email', exact: true }).fill(email)
+    await submit.click()
+    await expect(submit).toBeHidden()
   }
 }
 
@@ -24,11 +26,12 @@ export async function ensureIdentity(page: Page, email = 'reviewer@example.com')
 export async function placeElementPin(page: Page, targetText: string, body: string) {
   await page.getByTestId('comments-place').click()
   await page.getByText(targetText, { exact: false }).first().click()
-  await ensureIdentity(page) // identity modal can interrupt the first draft
   const draft = page.getByTestId('comments-draft')
   await expect(draft).toBeVisible()
   await draft.getByRole('textbox').fill(body)
   await draft.getByRole('button', { name: 'Send' }).click()
+  // The first submit triggers the identity gate; on submit it resumes and posts.
+  await ensureIdentity(page)
   await expect(page.getByTestId('comments-pin').first()).toBeVisible()
 }
 
@@ -44,14 +47,20 @@ export async function placeTextSelection(page: Page, targetText: string, body: s
   await page.mouse.down()
   await page.mouse.move(box.x + box.width - 4, y, { steps: 12 })
   await page.mouse.up()
-  await ensureIdentity(page)
   const draft = page.getByTestId('comments-draft')
   await expect(draft).toBeVisible()
   await draft.getByRole('textbox').fill(body)
   await draft.getByRole('button', { name: 'Send' }).click()
+  // The first submit triggers the identity gate; on submit it resumes and posts.
+  await ensureIdentity(page)
 }
 
-/** Open the thread popover by clicking its pin. */
+/** Ensure the thread popover is open. The pin is a Radix Popover trigger, so a
+ *  blind click toggles it; placing a comment can leave the thread already open.
+ *  Key off the thread card's status button to open only when it is closed. */
 export async function openThread(page: Page) {
+  const statusButton = page.getByRole('button', { name: /Resolve|Reopen/ })
+  if (await statusButton.isVisible().catch(() => false)) return
   await page.getByTestId('comments-pin').first().click()
+  await expect(statusButton).toBeVisible()
 }
