@@ -2,13 +2,14 @@
 .superpowers/
 
 # Dependencies / build
-node_modules/
+# No trailing slash so worktree node_modules symlinks are ignored too, not just real dirs.
+node_modules
 dist/
 
 # OS / editor
 .DS_Store
 
-# Ephemeral git worktrees created by the WorktreeCreate hook
+# Ephemeral git worktrees (.claude/worktrees/<name>)
 .claude/worktrees/
 
 # Build tooling
