@@ -19,7 +19,7 @@ export type ComposerProps = {
   autoFocus?: boolean
 }
 
-type Pending = { name: string; status: PendingStatus; id?: string; file: File }
+type Pending = { name: string; status: PendingStatus; id?: string; file: File; previewUrl: string }
 
 export function Composer({
   mode,
@@ -35,16 +35,41 @@ export function Composer({
   const [sending, setSending] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  // Mirrors the current preview object URL so the unmount cleanup can revoke it
+  // without re-subscribing on every pending change.
+  const previewUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus()
   }, [autoFocus])
 
+  // Revoke any outstanding object URL when the composer unmounts.
+  useEffect(
+    () => () => {
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
+    },
+    [],
+  )
+
   const attachmentReady = !pending || pending.status === 'ready'
-  const canSend = text.trim().length > 0 && attachmentReady && !sending
+  // A ready attachment is enough on its own — image-only comments are allowed.
+  const hasContent = text.trim().length > 0 || pending?.status === 'ready'
+  const canSend = hasContent && attachmentReady && !sending
+
+  // Drop the pending attachment and revoke its preview URL (remove, send, or replace).
+  function clearPending() {
+    setPending((p) => {
+      if (p?.previewUrl) URL.revokeObjectURL(p.previewUrl)
+      return null
+    })
+    previewUrlRef.current = null
+  }
 
   function startUpload(file: File) {
-    setPending({ name: file.name, status: 'uploading', file })
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current) // replacing a prior pick
+    const previewUrl = URL.createObjectURL(file)
+    previewUrlRef.current = previewUrl
+    setPending({ name: file.name, status: 'uploading', file, previewUrl })
     upload(file)
       .then((att) =>
         setPending((p) => (p && p.file === file ? { ...p, status: 'ready', id: att.id } : p)),
@@ -64,7 +89,7 @@ export function Composer({
     onSubmit({ text: text.trim(), attachmentIds, who })
       .then(() => {
         setText('')
-        setPending(null)
+        clearPending()
       })
       .catch(() => {
         /* caller surfaces the error (toast); keep the draft so the user can retry */
@@ -86,7 +111,8 @@ export function Composer({
         <PendingAttachment
           name={pending.name}
           status={pending.status}
-          onRemove={() => setPending(null)}
+          previewUrl={pending.previewUrl}
+          onRemove={clearPending}
           onRetry={() => startUpload(pending.file)}
         />
       )}

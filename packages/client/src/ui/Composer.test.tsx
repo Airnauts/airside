@@ -1,9 +1,15 @@
 // packages/client/src/ui/Composer.test.tsx
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { Composer } from './Composer'
 
 const identity = { email: 'a@b.c', name: 'Ann' }
+
+// jsdom doesn't implement object URLs; stub them so the preview lifecycle runs.
+beforeAll(() => {
+  URL.createObjectURL = vi.fn(() => 'blob:preview') as never
+  URL.revokeObjectURL = vi.fn() as never
+})
 
 describe('Composer', () => {
   it('lets the text input shrink (min-w-0) so the row fits the fixed-width popover', () => {
@@ -133,6 +139,45 @@ describe('Composer', () => {
       expect(screen.getByRole('button', { name: /retry upload/i })).toBeInTheDocument(),
     )
     expect(screen.getByRole('button', { name: /send/i })).toBeDisabled()
+  })
+
+  it('shows an image preview for the picked attachment', async () => {
+    const upload = vi.fn().mockResolvedValue({ id: 'at1' })
+    render(
+      <Composer
+        mode="reply"
+        identity={identity}
+        onNeedIdentity={(r) => r(identity)}
+        onSubmit={vi.fn().mockResolvedValue(undefined)}
+        upload={upload as never}
+      />,
+    )
+    const file = new File(['x'], 'shot.png', { type: 'image/png' })
+    fireEvent.change(screen.getByTestId('composer-file'), { target: { files: [file] } })
+    const img = await screen.findByAltText('shot.png')
+    expect(img).toHaveAttribute('src', 'blob:preview')
+  })
+
+  it('allows sending an image-only comment (no text)', async () => {
+    const upload = vi.fn().mockResolvedValue({ id: 'at1' })
+    const onSubmit = vi.fn().mockResolvedValue(undefined)
+    render(
+      <Composer
+        mode="reply"
+        identity={identity}
+        onNeedIdentity={(r) => r(identity)}
+        onSubmit={onSubmit}
+        upload={upload as never}
+      />,
+    )
+    // No text typed — just an attachment.
+    const file = new File(['x'], 'shot.png', { type: 'image/png' })
+    fireEvent.change(screen.getByTestId('composer-file'), { target: { files: [file] } })
+    await waitFor(() => expect(screen.getByRole('button', { name: /send/i })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({ text: '', attachmentIds: ['at1'], who: identity }),
+    )
   })
 
   it('removing a pending attachment re-enables Send (text present)', async () => {

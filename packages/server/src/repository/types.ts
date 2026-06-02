@@ -1,5 +1,7 @@
 import type {
   Anchor,
+  Attachment,
+  AttachmentId,
   Author,
   CaptureContext,
   Comment,
@@ -69,4 +71,15 @@ export interface Repository {
     patch: AnchorPatch,
     now: string,
   ): Promise<ThreadListItem>
+  /**
+   * Persist an uploaded attachment's metadata under `scope`, keyed by its id, so a
+   * later add-comment / create-thread can resolve the `attachmentIds` the client
+   * references (architecture §6, two-step uploads).
+   */
+  putAttachment(scope: Scope, attachment: Attachment): Promise<void>
+  /**
+   * Resolve attachment ids to their stored metadata within `scope`. Returns only the
+   * attachments that exist (missing/foreign ids are omitted); order is not guaranteed.
+   */
+  getAttachments(scope: Scope, ids: AttachmentId[]): Promise<Attachment[]>
 }

@@ -1,6 +1,7 @@
 import { ANCHOR_SCHEMA_VERSION, type CreateThreadBody, type Thread } from '@airnauts/comments-core'
 import type { Ctx } from '../ctx'
 import type { Repository } from '../repository/types'
+import { resolveAttachments } from './resolve-attachments'
 
 export type CreateThreadDeps = { repo: Repository }
 
@@ -9,14 +10,16 @@ export async function createThread(
   deps: CreateThreadDeps,
 ): Promise<Thread> {
   const { ctx, body } = input
+  const scope = { projectId: ctx.projectId, env: ctx.env }
   const nowIso = ctx.now().toISOString()
   const threadId = ctx.ids.thread()
   const commentId = ctx.ids.comment()
+  const attachments = await resolveAttachments(deps.repo, scope, body.comment.attachmentIds)
   const firstComment = {
     id: commentId,
     author: body.author,
     text: body.comment.text,
-    attachments: [],
+    attachments,
     createdAt: nowIso,
   }
   return deps.repo.createThread({

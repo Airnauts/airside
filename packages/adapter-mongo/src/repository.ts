@@ -1,4 +1,6 @@
 import type {
+  Attachment,
+  AttachmentId,
   Comment,
   Thread,
   ThreadId,
@@ -21,12 +23,25 @@ import { type Db, type Filter, MongoClient, type UpdateFilter } from 'mongodb'
 import { ensureIndexes } from './indexes'
 
 export const COLLECTION = 'threads'
+export const ATTACHMENTS_COLLECTION = 'attachments'
 
 /** Stored shape: the wire Thread (minus its `id`) keyed by `_id`, plus server-only scope. */
 type StoredThread = Omit<Thread, 'id'> & {
   _id: string
   projectId: string
   env: string | null
+}
+
+/** Stored shape: the wire Attachment (minus its `id`) keyed by `_id`, plus server-only scope. */
+type StoredAttachment = Omit<Attachment, 'id'> & {
+  _id: string
+  projectId: string
+  env: string | null
+}
+
+function toAttachment(doc: StoredAttachment): Attachment {
+  const { _id, projectId: _p, env: _e, ...rest } = doc
+  return { id: _id as AttachmentId, ...rest }
 }
 
 function scopeFilter(scope: Scope): { projectId: string; env: string | null } {
@@ -58,6 +73,7 @@ function toListItem(doc: StoredThread): ThreadListItem {
 
 export function createMongoRepository({ db }: { db: Db }): Repository {
   const col = db.collection<StoredThread>(COLLECTION)
+  const attachmentsCol = db.collection<StoredAttachment>(ATTACHMENTS_COLLECTION)
 
   return {
     async createThread(input: NewThread): Promise<Thread> {
@@ -178,6 +194,20 @@ export function createMongoRepository({ db }: { db: Db }): Repository {
       )
       if (!doc) throw new Error('thread not found')
       return toListItem(doc)
+    },
+
+    async putAttachment(scope: Scope, attachment: Attachment): Promise<void> {
+      const { id, ...rest } = attachment
+      const doc: StoredAttachment = { _id: id, ...scopeFilter(scope), ...rest }
+      await attachmentsCol.replaceOne({ _id: id }, doc, { upsert: true })
+    },
+
+    async getAttachments(scope: Scope, ids: AttachmentId[]): Promise<Attachment[]> {
+      if (ids.length === 0) return []
+      const docs = await attachmentsCol
+        .find({ _id: { $in: ids as unknown as string[] }, ...scopeFilter(scope) })
+        .toArray()
+      return docs.map((d) => toAttachment(d as StoredAttachment))
     },
   }
 }

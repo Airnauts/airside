@@ -1,10 +1,18 @@
 import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
-import type { CommentId, ThreadId } from '@airnauts/comments-core'
+import type { Attachment, AttachmentId, CommentId, ThreadId } from '@airnauts/comments-core'
 import { makeAuthor, makeNewThread } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
-import { NotFoundError } from '../errors'
+import { NotFoundError, ValidationError } from '../errors'
 import { addComment } from './add-comment'
+
+const attachment: Attachment = {
+  id: 'at_1' as AttachmentId,
+  url: 'https://blob.test/at_1',
+  name: 'shot.png',
+  contentType: 'image/png',
+  size: 42,
+}
 
 describe('addComment use-case', () => {
   it('appends a comment and bumps updatedAt', async () => {
@@ -31,6 +39,45 @@ describe('addComment use-case', () => {
     expect(out.text).toBe('reply')
     const refetched = await repo.getThread({ projectId: 'proj_x' }, thread.id)
     expect(refetched?.updatedAt).toBe(now.toISOString())
+  })
+
+  it('resolves attachmentIds into the stored comment', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({
+      projectId: 'proj_x',
+      ids: { ...defaultIds(), comment: () => 'c_1' as CommentId },
+    })
+    await repo.putAttachment({ projectId: 'proj_x' }, attachment)
+    const thread = await repo.createThread(makeNewThread({ projectId: 'proj_x' }))
+    const out = await addComment(
+      {
+        ctx,
+        params: { id: thread.id },
+        query: undefined,
+        body: { text: '', attachmentIds: [attachment.id], author: makeAuthor() },
+      },
+      { repo },
+    )
+    expect(out.attachments).toEqual([attachment])
+    const refetched = await repo.getThread({ projectId: 'proj_x' }, thread.id)
+    expect(refetched?.comments.at(-1)?.attachments).toEqual([attachment])
+  })
+
+  it('throws ValidationError when an attachmentId cannot be resolved', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({ projectId: 'proj_x' })
+    const thread = await repo.createThread(makeNewThread({ projectId: 'proj_x' }))
+    await expect(
+      addComment(
+        {
+          ctx,
+          params: { id: thread.id },
+          query: undefined,
+          body: { text: 'hi', attachmentIds: ['at_missing' as AttachmentId], author: makeAuthor() },
+        },
+        { repo },
+      ),
+    ).rejects.toBeInstanceOf(ValidationError)
   })
 
   it('throws NotFoundError when the thread does not exist', async () => {

@@ -1,9 +1,24 @@
 import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { ANCHOR_SCHEMA_VERSION, type CommentId, type ThreadId } from '@airnauts/comments-core'
+import {
+  ANCHOR_SCHEMA_VERSION,
+  type Attachment,
+  type AttachmentId,
+  type CommentId,
+  type ThreadId,
+} from '@airnauts/comments-core'
 import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
+import { ValidationError } from '../errors'
 import { createThread } from './create-thread'
+
+const attachment: Attachment = {
+  id: 'at_1' as AttachmentId,
+  url: 'https://blob.test/at_1',
+  name: 'shot.png',
+  contentType: 'image/png',
+  size: 42,
+}
 
 describe('createThread use-case', () => {
   it('persists a thread and returns it', async () => {
@@ -33,5 +48,27 @@ describe('createThread use-case', () => {
 
     const stored = await repo.getThread({ projectId: 'proj_x' }, thread.id)
     expect(stored?.id).toBe(thread.id)
+  })
+
+  it('resolves the first comment attachmentIds (image-only first comment allowed)', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({ projectId: 'proj_x' })
+    await repo.putAttachment({ projectId: 'proj_x' }, attachment)
+    const body = makeCreateThreadBody({
+      comment: { text: '', attachmentIds: [attachment.id] },
+    })
+    const thread = await createThread({ ctx, params: undefined, query: undefined, body }, { repo })
+    expect(thread.comments[0]?.attachments).toEqual([attachment])
+  })
+
+  it('throws ValidationError when a first-comment attachmentId cannot be resolved', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({ projectId: 'proj_x' })
+    const body = makeCreateThreadBody({
+      comment: { text: 'hi', attachmentIds: ['at_missing' as AttachmentId] },
+    })
+    await expect(
+      createThread({ ctx, params: undefined, query: undefined, body }, { repo }),
+    ).rejects.toBeInstanceOf(ValidationError)
   })
 })

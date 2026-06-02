@@ -844,3 +844,60 @@ shell step and not better than letting `tsc` itself ignore the file.
   poisoned cache entries invalidate naturally — no manual purge needed.
 - `tsc` incremental state is unused on real builds. Negligible — these packages build
   in milliseconds and cache hits still skip the work entirely.
+
+## ADR-0024 — Complete two-step attachment uploads: persist attachment metadata in the repository and resolve `attachmentIds` server-side; allow image-only comments
+
+- **Date:** 2026-06-02
+- **Status:** accepted
+
+**Context.** Architecture §6 specifies two-step uploads: the client `POST`s an image to
+`/uploads`, gets back an `Attachment { id, url, name, contentType, size }`, then
+references that id via `attachmentIds` when creating a thread or reply. Only the first
+half existed. `uploadAttachment` stored the blob via the `StorageAdapter` and minted an
+id, but persisted **nothing** keyed by that id — the `StorageAdapter` is blob-only
+(`put → { url, key, size }`) and the `Repository` had no attachment methods. So
+`addComment`/`createThread` had no way to turn an `attachmentId` back into an
+`Attachment`; both hardcoded `attachments: []` and silently dropped the reference. Three
+user-visible symptoms followed: (1) no preview after upload, (2) the composer's Send
+button was disabled unless text was present — and the request schemas enforced
+`text.min(1)` — so an image alone could never be sent, and (3) when text *and* an image
+were sent, the image never appeared on the saved comment. (1) is a pure client bug; (2)
+and (3) were the unbuilt half of the documented design. The fork was whether to build the
+documented id-based persistence (server resolves ids) or reverse it so the client sends
+full `Attachment` objects it already holds. The latter is a smaller diff but reverses a
+documented decision and makes the server trust client-supplied `url`/`size`/`contentType`
+(a client could point the rendered `<img>` at an arbitrary URL).
+
+**Decision.** Complete the documented design rather than reverse it.
+
+- Add two methods to the `Repository` contract: `putAttachment(scope, attachment)` and
+  `getAttachments(scope, ids) → Attachment[]` (returns only the ids that exist; order
+  unspecified). They are scoped by `(projectId, env)` exactly like threads, and are part
+  of the shared adapter contract suite so both `adapter-memory` and `adapter-mongo` are
+  covered test-first. Mongo stores them in a dedicated `attachments` collection keyed by
+  `_id`; memory keeps a `Map`.
+- `uploadAttachment` now persists the `Attachment` under the request scope after storing
+  the blob (its deps gain `repo`; wired in `createCommentsServer`). `lazyRepository`
+  forwards the two new methods.
+- A shared `resolveAttachments(repo, scope, ids)` helper resolves the referenced ids in
+  request order and throws `ValidationError` (HTTP 400) if **any** id is unknown — a clean
+  failure beats silently dropping the user's image. `addComment` and `createThread` call
+  it and set the result on the comment.
+- Allow image-only comments: `AddCommentBody` and `CreateThreadBody.comment` drop
+  `text.min(1)` for `z.string()` plus a refine requiring non-blank text **or** at least one
+  attachment. The composer's `canSend` mirrors this (a ready attachment is sufficient).
+- Client preview (symptom 1): the composer creates an object URL at file-pick time and
+  passes it to `PendingAttachment` (which already supported `previewUrl`), revoking it on
+  remove, send, replace, and unmount.
+
+**Consequences.**
+- Faithful to architecture §6; the client keeps sending opaque `attachmentIds` and the
+  server remains the authority on attachment metadata (no client-supplied URLs trusted).
+  No prior ADR is superseded — this fills a gap.
+- New persisted state: attachment metadata now lives in the repository, separate from the
+  blob in storage. Orphaned attachments (uploaded but never referenced by a comment) are a
+  v1-accepted leak under either design — blobs already orphan in storage; GC is deferred.
+- `Repository` implementers must now provide the two methods; the contract suite enforces
+  it. Verified end-to-end through the real server handler (`pipeline.test.ts`): multipart
+  upload → image-only comment referencing the returned id → fetched thread carries the
+  resolved attachment; an unknown id returns 400.
