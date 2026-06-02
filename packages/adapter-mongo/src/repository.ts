@@ -185,7 +185,12 @@ export function createMongoRepository({ db }: { db: Db }): Repository {
 /** Open one client, connect, ensure indexes, and build the repository. */
 async function connectMongo(uri: string): Promise<Repository> {
   const client = new MongoClient(uri)
-  await client.connect() // intentionally left open for the process lifetime
+  try {
+    await client.connect() // intentionally left open for the process lifetime on success
+  } catch (err) {
+    await client.close().catch(() => {}) // best-effort cleanup; swallow secondary errors
+    throw err
+  }
   const db = client.db() // database name comes from the connection string
   await ensureIndexes(db)
   return createMongoRepository({ db })
