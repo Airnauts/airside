@@ -10,6 +10,13 @@ export type RuntimeOptions = {
   pageKey: string
   onPlacements: (placements: PlacedThread[]) => void
   root?: ParentNode
+  /**
+   * Resolve the page key for the CURRENT document URL. Used to detect that a client-side
+   * route change is in flight: when this no longer equals `pageKey`, this runtime is keyed
+   * to the page being left and the live DOM already belongs to the destination route, so
+   * rematching would falsely orphan our threads. Omitted in tests that don't exercise nav.
+   */
+  currentPageKey?: () => string
 }
 
 type RetainedMatch = { item: ThreadListItem; el: Element; anchor: Anchor; highlight: Box[] }
@@ -89,6 +96,12 @@ export function createRuntime(opts: RuntimeOptions) {
   }
 
   function rematchAll() {
+    // Bail if a client-side route change is in flight: the URL has already moved to another
+    // page, so the live DOM belongs to the destination route, not opts.pageKey. Mutations from
+    // the host swapping page content would otherwise make our retained threads miss and get
+    // persisted `orphaned` — patching anchors for the page we're leaving. The re-keyed runtime
+    // (created on the route change) matches the destination page's threads instead.
+    if (opts.currentPageKey && opts.currentPageKey() !== opts.pageKey) return
     // Re-match from the RETAINED anchor (p.anchor), which may already be self-healed —
     // matching M6 semantics so drift isn't re-detected (and re-POSTed) every mutation frame.
     placed = placed
