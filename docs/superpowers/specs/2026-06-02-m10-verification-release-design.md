@@ -120,10 +120,22 @@ fallback if `next start` proves flaky under CI.
 | DOM-mutation re-anchor/orphan | Capture on default page → reload a **variant** → reorder/rename/wrap **re-anchor**; remove **orphans** | M6 |
 | Cross-page panel | Thread on page A → navigate via panel → **focuses the pin** on A; orphaned thread **listed distinctly** | M8 |
 
-**Location & tooling.** A dedicated e2e package/dir (e.g. `e2e/` or
-`examples/nextjs-host/e2e/`, decided in the plan against the refactored layout),
-Playwright config with the `chromium` project and the `webServer` block. Selectors
-prefer the widget's stable scoped-prefix classes / roles over brittle DOM paths.
+**Location & tooling.** A dedicated e2e dir under `examples/nextjs-host/e2e/`
+(SUT + its e2e live together), Playwright config with the `chromium` project and the
+`webServer` block.
+
+**Selector & assertion strategy (keeps the "no package-code" scope honest).** The e2e
+drives the widget through **user-facing locators** — `getByRole` / `getByLabel` /
+`getByText` (e.g. email `aria-label="Email"`, the "Send" button, the
+"✓ Resolve" / "↺ Reopen" toggle, the `role="switch"` show-resolved control) — plus the
+**`data-testid` hooks the widget already exposes** (`comments-place`, `comments-pin`,
+`comments-draft`, `comments-panel*`, `comments-highlight`, `comments-detached`,
+`composer-file`). **No new `data-testid`s or any other widget source changes are
+added** — M10 stays tests + config + the one host-app variant surface. The
+screenshot-upload test asserts on the **attachment element's presence + persistence
+across reload**, not on the served image bytes — runtime-written `public/uploads/`
+files are not guaranteed to be served by `next start`, and the upload round-trip
+(record created + persisted) is the behavior under test.
 
 ### §2 — Switchable page variants in the host app
 
@@ -165,7 +177,7 @@ jobs:
     steps:
       - checkout / pnpm / setup-node (registry-url npm)
       - pnpm install --frozen-lockfile
-      - pnpm build
+      - pnpm lint && pnpm typecheck && pnpm build && pnpm test   # gates, self-contained
       - pnpm exec changeset publish      # publishes pkgs whose version isn't on npm
         env: { NODE_AUTH_TOKEN / NPM_TOKEN }
 ```
@@ -173,8 +185,11 @@ jobs:
 Publishing the **8 public `@airnauts/comments-*` packages** (`core`, `client`,
 `server`, `next`, `adapter-memory`, `adapter-mongo`, `storage-fs`,
 `storage-vercel-blob`; the examples + `test-support` are in the Changesets `ignore`
-list, so they never publish). The workflow runs **build + tests before publish** (or is
-gated on a green CI run for the same commit) so a broken tag can't ship.
+list, so they never publish). The workflow is **self-contained** — it runs
+`pnpm install` → **lint → typecheck → build → test** → `changeset publish` in one job.
+(It cannot rely on `ci.yml`, which only triggers on `push: branches: [main]` and
+`pull_request`, never on a tag push — so release re-runs the gates itself and a broken
+tag can't ship.)
 
 **Release runbook** (documented in the repo — `docs/` or a `RELEASING.md`):
 
