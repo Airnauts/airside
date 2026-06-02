@@ -90,7 +90,9 @@ export function ThreadCard({ item, client, identity, onNeedIdentity }: ThreadCar
             resolved ? 'cmnt:text-green-600' : 'cmnt:text-blue-600',
           )}
         >
-          {resolved ? '✓ Resolved' : `Open · ${item.unresolvedCount} unresolved`}
+          {resolved
+            ? '✓ Resolved'
+            : `Open · ${item.commentCount} ${item.commentCount === 1 ? 'comment' : 'comments'}`}
         </span>
         <div className="cmnt:flex cmnt:items-center cmnt:gap-1.5 cmnt:text-gray-500">
           <button
