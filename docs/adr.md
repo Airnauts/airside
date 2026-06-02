@@ -799,3 +799,48 @@ the mongo/memory and blob/fs switches stay host-owned in the single route file.
 **Consequences.** A Next host integrates in one route file with no bespoke glue.
 `@airnauts/comments-next` is a new published package; the example `nextjs-host` is
 reduced to that one route file.
+
+## ADR-0023 — Force declaration emit with `tsc --build --force` (tsup `clean` does not delete `.tsbuildinfo`)
+
+- **Date:** 2026-06-02
+- **Status:** accepted (supersedes [ADR-0019](#adr-0019--clean-the-whole-dist-before-each-build-so-tsc-always-re-emits-declarations))
+
+**Context.** ADR-0019 set `clean: true` in every backend `tsup.config.ts` on the
+premise that tsup, running first in `tsup && tsc --build`, would wipe the whole
+`dist` — *including* the stale `dist/.tsbuildinfo` — so `tsc --build` would always
+full-rebuild and re-emit `.d.ts`. That premise is false for tsup v8.5.1: its `clean`
+deletes the emitted `.js`/`.d.ts` but **leaves the dotfile `.tsbuildinfo` in place**
+(verified — a `tsup`-only run left the buildinfo's mtime unchanged while removing all
+`.d.ts`). So the exact desync ADR-0019 claimed to close survived: a stale
+`.tsbuildinfo` — never cached (excluded per ADR-0016), never wiped by `tsup` — tells
+`tsc --build` "declarations already emitted", `tsc` emits **no `.d.ts`**, and the
+declaration-less `dist` is what gets cached and replayed. The bug resurfaced when a
+host build failed with `'@airnauts/comments-adapter-mongo' has no exported member
+'mongoRepository'` (and the same for `fileSystemStorage`, `createCommentsRoute`, the
+`@airnauts/comments-server/next` subpath) — every consumer of a package whose `.d.ts`
+had been silently dropped. ADR-0019's verification missed it because it only checked
+the cache-*hit* replay of an already-correct `dist`, never a build whose `tsc` step
+ran against a surviving stale buildinfo.
+
+**Decision.** Change the declaration step from `tsc --build` to `tsc --build --force`
+in every package whose build emits declarations (`core`, `server`, `test-support`,
+`client`, `next`, `adapter-memory`, `adapter-mongo`, `storage-fs`,
+`storage-vercel-blob`). `--force` makes `tsc` ignore `.tsbuildinfo` entirely and
+rebuild + re-emit `.d.ts` on every real (cache-miss) build, regardless of any stale
+on-disk buildinfo. This does not depend on tsup's clean behavior at all. The
+`clean: true` settings from ADR-0019 are kept (harmless, and they still remove stale
+`.js`/`.d.ts`), but correctness no longer rests on them deleting the buildinfo.
+Rejected alternative: `rm -f dist/.tsbuildinfo` before `tsc` — works, but is one more
+shell step and not better than letting `tsc` itself ignore the file.
+
+**Consequences.**
+- A real build can no longer emit JS-without-declarations: `tsc --build --force`
+  always emits, so the cache can never be poisoned with a declaration-less `dist`.
+- Verified on **both** paths (the discriminating check ADR-0019 skipped): `pnpm build`
+  with the script change → 10 tasks, 0 cached (full rebuild, host included, green);
+  immediate re-run → 10 cached (cache-hit replay) with every `dist/index.d.ts` and
+  subpath `.d.ts` present and exporting the expected factories.
+- Editing each `package.json` build script rehashes the turbo `build` task, so the
+  poisoned cache entries invalidate naturally — no manual purge needed.
+- `tsc` incremental state is unused on real builds. Negligible — these packages build
+  in milliseconds and cache hits still skip the work entirely.

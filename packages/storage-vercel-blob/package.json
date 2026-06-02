@@ -40,7 +40,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && tsc --build",
+    "build": "tsup && tsc --build --force",
     "typecheck": "tsc --build",
     "test": "vitest run"
   },

@@ -39,7 +39,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && tsc --build && tsx scripts/emit-openapi.ts",
+    "build": "tsup && tsc --build --force && tsx scripts/emit-openapi.ts",
     "typecheck": "tsc --build",
     "test": "vitest run",
     "emit:openapi": "tsx scripts/emit-openapi.ts"
