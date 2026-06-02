@@ -1,4 +1,4 @@
-import type { ThreadId, ThreadStatus } from '@airnauts/comments-core'
+import type { Attachment, AttachmentId, ThreadId, ThreadStatus } from '@airnauts/comments-core'
 import type { AnchorPatch, ListQuery, NewComment, NewThread, Repository, Scope } from './types'
 
 // One connected Repository per cacheKey, memoized across warm serverless
@@ -51,5 +51,9 @@ export function lazyRepository(
       get().then((r) => r.setStatus(scope, threadId, status, now)),
     updateAnchor: (scope: Scope, threadId: ThreadId, patch: AnchorPatch, now: string) =>
       get().then((r) => r.updateAnchor(scope, threadId, patch, now)),
+    putAttachment: (scope: Scope, attachment: Attachment) =>
+      get().then((r) => r.putAttachment(scope, attachment)),
+    getAttachments: (scope: Scope, ids: AttachmentId[]) =>
+      get().then((r) => r.getAttachments(scope, ids)),
   }
 }

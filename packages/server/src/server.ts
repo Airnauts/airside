@@ -99,6 +99,7 @@ export function createCommentsServer(opts: CreateCommentsServerOptions): Comment
     uploadAttachment: (input) =>
       uploadAttachment(input as never, {
         storage: opts.storage,
+        repo: opts.repository,
         ids,
         maxBytes: opts.uploads?.maxBytes,
       }),

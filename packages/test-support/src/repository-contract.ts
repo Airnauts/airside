@@ -1,7 +1,22 @@
-import { ANCHOR_SCHEMA_VERSION, type ThreadId } from '@airnauts/comments-core'
+import {
+  ANCHOR_SCHEMA_VERSION,
+  type Attachment,
+  type AttachmentId,
+  type ThreadId,
+} from '@airnauts/comments-core'
 import type { Repository } from '@airnauts/comments-server'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { makeComment, makeNewThread } from './fixtures'
+
+function makeAttachment(id: string): Attachment {
+  return {
+    id: id as AttachmentId,
+    url: `https://blob.test/${id}`,
+    name: `${id}.png`,
+    contentType: 'image/png',
+    size: 123,
+  }
+}
 
 /**
  * Executable spec for `Repository` implementations.
@@ -339,6 +354,44 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
             '2026-06-01T00:00:00.000Z',
           ),
         ).rejects.toThrow()
+      })
+    })
+
+    describe('attachments', () => {
+      it('persists an attachment and resolves it by id', async () => {
+        const att = makeAttachment('at_1')
+        await repo.putAttachment({ projectId: 'proj_test' }, att)
+        const found = await repo.getAttachments({ projectId: 'proj_test' }, [att.id])
+        expect(found).toEqual([att])
+      })
+
+      it('resolves only the ids that exist (missing ids are omitted)', async () => {
+        await repo.putAttachment({ projectId: 'proj_test' }, makeAttachment('at_1'))
+        const found = await repo.getAttachments({ projectId: 'proj_test' }, [
+          'at_1' as AttachmentId,
+          'at_nope' as AttachmentId,
+        ])
+        expect(found.map((a) => a.id)).toEqual(['at_1'])
+      })
+
+      it('returns [] for an empty id list', async () => {
+        expect(await repo.getAttachments({ projectId: 'proj_test' }, [])).toEqual([])
+      })
+
+      it('isolates attachments by project scope', async () => {
+        await repo.putAttachment({ projectId: 'proj_a' }, makeAttachment('at_1'))
+        const fromOther = await repo.getAttachments({ projectId: 'proj_b' }, [
+          'at_1' as AttachmentId,
+        ])
+        expect(fromOther).toEqual([])
+      })
+
+      it('isolates attachments by env scope', async () => {
+        await repo.putAttachment({ projectId: 'proj_a', env: 'prod' }, makeAttachment('at_1'))
+        const fromOther = await repo.getAttachments({ projectId: 'proj_a', env: 'staging' }, [
+          'at_1' as AttachmentId,
+        ])
+        expect(fromOther).toEqual([])
       })
     })
 

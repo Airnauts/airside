@@ -7,7 +7,8 @@ export default defineConfig({
   sourcemap: true,
   outDir: 'dist',
   external: ['vitest'],
-  // Clean the whole dist (incl. stale .tsbuildinfo) so the following
-  // `tsc --build` always full-rebuilds and re-emits .d.ts (ADR-0019).
+  // Remove stale .js/.d.ts before the build. NOTE: tsup's clean does NOT
+  // delete the dotfile dist/.tsbuildinfo, so declaration re-emit is forced by
+  // `tsc --build --force` in package.json, not by this clean (ADR-0023).
   clean: true,
 })

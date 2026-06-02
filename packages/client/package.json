@@ -44,7 +44,7 @@
   },
   "scripts": {
     "build:css": "node scripts/build-css.mjs",
-    "build": "pnpm build:css && rm -rf dist && tsup && tsc --build",
+    "build": "pnpm build:css && rm -rf dist && tsup && tsc --build --force",
     "typecheck": "tsc --build",
     "test": "pnpm build:css && vitest run",
     "size": "size-limit"

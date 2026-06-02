@@ -1,3 +1,4 @@
+import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import type { Attachment, AttachmentId } from '@airnauts/comments-core'
 import type { StorageAdapter } from '@airnauts/comments-server'
 import { describe, expect, it } from 'vitest'
@@ -28,8 +29,9 @@ function blob(type: string, bytes: number): Blob {
 }
 
 describe('uploadAttachment use-case', () => {
-  it('stores an allowed image and returns an Attachment', async () => {
+  it('stores an allowed image and persists its metadata for later resolution', async () => {
     const storage = new StubStorage()
+    const repo = new InMemoryRepository()
     const out: Attachment = await uploadAttachment(
       {
         ctx,
@@ -37,16 +39,20 @@ describe('uploadAttachment use-case', () => {
         query: undefined,
         body: { data: blob('image/png', 100), name: 'x.png', contentType: 'image/png' },
       },
-      { storage, ids: ctx.ids, maxBytes: 1000 },
+      { storage, repo, ids: ctx.ids, maxBytes: 1000 },
     )
     expect(out.id).toBe('at_fixed')
     expect(out.url).toBe('https://blob.test/k')
     expect(out.contentType).toBe('image/png')
     expect(out.size).toBe(100)
+    // The metadata is persisted under the request scope so a later comment can resolve it.
+    const resolved = await repo.getAttachments({ projectId: 'proj_x' }, [out.id])
+    expect(resolved).toEqual([out])
   })
 
   it('rejects disallowed content types', async () => {
     const storage = new StubStorage()
+    const repo = new InMemoryRepository()
     await expect(
       uploadAttachment(
         {
@@ -59,13 +65,14 @@ describe('uploadAttachment use-case', () => {
             contentType: 'application/pdf',
           },
         },
-        { storage, ids: ctx.ids, maxBytes: 1000 },
+        { storage, repo, ids: ctx.ids, maxBytes: 1000 },
       ),
     ).rejects.toBeInstanceOf(ValidationError)
   })
 
   it('rejects oversize blobs', async () => {
     const storage = new StubStorage()
+    const repo = new InMemoryRepository()
     await expect(
       uploadAttachment(
         {
@@ -74,7 +81,7 @@ describe('uploadAttachment use-case', () => {
           query: undefined,
           body: { data: blob('image/png', 2000), name: 'x.png', contentType: 'image/png' },
         },
-        { storage, ids: ctx.ids, maxBytes: 1000 },
+        { storage, repo, ids: ctx.ids, maxBytes: 1000 },
       ),
     ).rejects.toBeInstanceOf(UploadTooLargeError)
   })
