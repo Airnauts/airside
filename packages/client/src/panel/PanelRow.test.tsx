@@ -9,7 +9,9 @@ const item = (over: Partial<ThreadListItem> = {}): ThreadListItem =>
     id: 't1',
     status: 'open',
     anchorState: 'anchored',
-    unresolvedCount: 2,
+    // unresolvedCount is a binary status flag; the row must show the real comment count instead.
+    unresolvedCount: 1,
+    commentCount: 2,
     pageUrl: 'https://x.test/pricing',
     pageTitle: 'Pricing',
     updatedAt: new Date(Date.now() - 5 * 60_000).toISOString(),
@@ -18,11 +20,11 @@ const item = (over: Partial<ThreadListItem> = {}): ThreadListItem =>
   }) as ThreadListItem
 
 describe('PanelRow', () => {
-  it('shows page title, unresolved count and relative time, and calls onSelect', () => {
+  it('shows page title, comment count and relative time, and calls onSelect', () => {
     const onSelect = vi.fn()
     render(<PanelRow item={item()} onSelect={onSelect} />)
     expect(screen.getByText('Pricing')).toBeInTheDocument()
-    expect(screen.getByTestId('comments-panel-row')).toHaveTextContent(/2/)
+    expect(screen.getByTestId('comments-panel-row')).toHaveTextContent(/2 comments/)
     expect(screen.getByTestId('comments-panel-row')).toHaveTextContent(/5m/)
     fireEvent.click(screen.getByTestId('comments-panel-row'))
     expect(onSelect).toHaveBeenCalled()
@@ -39,9 +41,7 @@ describe('PanelRow', () => {
   })
 
   it('exposes a descriptive aria-label', () => {
-    render(
-      <PanelRow item={item({ unresolvedCount: 2, pageTitle: 'Pricing' })} onSelect={() => {}} />,
-    )
-    expect(screen.getByTestId('comments-panel-row')).toHaveAccessibleName(/2 open.*Pricing/i)
+    render(<PanelRow item={item({ commentCount: 2, pageTitle: 'Pricing' })} onSelect={() => {}} />)
+    expect(screen.getByTestId('comments-panel-row')).toHaveAccessibleName(/2 comments.*Pricing/i)
   })
 })
