@@ -23,12 +23,24 @@ export default async function ArticlePage({
 }) {
   const variant = asVariant((await searchParams).variant)
 
-  // The mutation anchor target is the SECOND list item. Build the <ul> per variant.
+  // The mutation anchor target is the SECOND list item. It carries a `data-anchor` attribute so
+  // the anchor's signals gain a stable attribute (scored, weight 0.40) WITHOUT changing its
+  // selector — selectors only use id/data-testid, so the captured selector stays positional
+  // (`li:nth-of-type(2)`). This is what makes the scored re-anchor path testable on a bare <li>:
+  // a signal-less <li> caps at text(0.25)+sibling(0.05)+ancestor(0.05)=0.35, below the 0.6 accept
+  // threshold, so it could never re-anchor via scoring; `data-anchor` lifts it over the line.
+  // Under ?variant=wrapped the positional selector breaks → scoring runs → the unchanged <li>
+  // re-anchors via its data-anchor match. Under ?variant=removed the <li> is gone, the positional
+  // selector re-resolves onto a sibling that lacks data-anchor → fast path rejected → orphan.
   const items = variant === 'reordered' ? [...ITEMS].reverse() : ITEMS
   const list = (
     <ul className={variant === 'renamed' ? 'mutated-list' : undefined}>
       {items.map((text) =>
-        variant === 'removed' && text === ITEMS[1] ? null : <li key={text}>{text}</li>,
+        variant === 'removed' && text === ITEMS[1] ? null : (
+          <li key={text} data-anchor={text === ITEMS[1] ? 'target' : undefined}>
+            {text}
+          </li>
+        ),
       )}
     </ul>
   )

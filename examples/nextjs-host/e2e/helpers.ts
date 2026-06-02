@@ -46,18 +46,46 @@ export async function placeElementPin(page: Page, targetText: string, body: stri
   await expect(page.getByTestId('comments-pin').first()).toBeVisible()
 }
 
-/** Enter place mode, DRAG-select text within an element, then the place click fires
- *  on mouseup with the selection intact → text (selection) anchor. */
+/** Enter place mode, select a literal text run via the DOM Selection API, then dispatch a
+ *  click that preserves the live selection → the place handler reads window.getSelection()
+ *  and captures a text (selection) anchor. A real mouse-drag clears the selection on the
+ *  click's mousedown, so we build the Range explicitly and fire a synthetic click. */
 export async function placeTextSelection(page: Page, targetText: string, body: string) {
   await page.getByTestId('comments-place').click()
-  const el = page.getByText(targetText, { exact: false }).first()
-  const box = await el.boundingBox()
-  if (!box) throw new Error(`no bounding box for "${targetText}"`)
-  const y = box.y + box.height / 2
-  await page.mouse.move(box.x + 4, y)
-  await page.mouse.down()
-  await page.mouse.move(box.x + box.width - 4, y, { steps: 12 })
-  await page.mouse.up()
+  // Select `targetText` within whichever element contains it, then dispatch a click whose
+  // coordinates fall on the selected range. The handler reads getSelection() before reacting.
+  const ok = await page.evaluate((needle) => {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+    let node: Text | null = null
+    let idx = -1
+    while (walker.nextNode()) {
+      const t = walker.currentNode as Text
+      const at = (t.data ?? '').indexOf(needle)
+      if (at >= 0) {
+        node = t
+        idx = at
+        break
+      }
+    }
+    if (!node || idx < 0) return null
+    const range = document.createRange()
+    range.setStart(node, idx)
+    range.setEnd(node, idx + needle.length)
+    const sel = window.getSelection()
+    if (!sel) return null
+    sel.removeAllRanges()
+    sel.addRange(range)
+    const rect = range.getBoundingClientRect()
+    const x = rect.left + rect.width / 2
+    const y = rect.top + rect.height / 2
+    const el = (node.parentElement ?? document.body) as Element
+    // Synthetic click leaves the selection intact (a real pointer mousedown would collapse it).
+    el.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true, clientX: x, clientY: y }),
+    )
+    return true
+  }, targetText)
+  if (!ok) throw new Error(`could not select text "${targetText}"`)
   const draft = page.getByTestId('comments-draft')
   await expect(draft).toBeVisible()
   await draft.getByRole('textbox').fill(body)
