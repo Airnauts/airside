@@ -147,9 +147,10 @@ async function connectMongo(uri: string): Promise<Repository> {
 - `createMongoRepository({ db })` and `ensureIndexes(db)` stay exported — the pure,
   lifecycle-free factory (used by the contract tests and by advanced users who own
   their own connection). `mongoRepository` is layered on top of them.
-- `@airnauts/comments-adapter-mongo` gains `mongodb` as a **runtime dependency**
-  (it now owns the `MongoClient`), in addition to its existing `@airnauts/comments-server`
-  dep. `lazyRepository` is imported from `@airnauts/comments-server`.
+- `@airnauts/comments-adapter-mongo` **already** depends on `mongodb` and
+  `@airnauts/comments-server` at runtime, so no new deps are needed — it just now also
+  constructs the `MongoClient` (previously the host's job). `lazyRepository` is
+  imported from `@airnauts/comments-server`.
 
 ## Storage factories
 
