@@ -6,6 +6,11 @@ import type { PutBlob, PutResult, StorageAdapter } from '@airnauts/comments-serv
 
 export type FileSystemStorageOptions = {
   rootDir: string
+  /**
+   * Public URL base. When set, `put` returns `${baseUrl}/${key}` (a browser-served
+   * path) instead of a `file://` URL. A trailing slash is trimmed.
+   */
+  baseUrl?: string
 }
 
 function sanitizeName(name: string): string {
@@ -57,10 +62,17 @@ export class FileSystemStorage implements StorageAdapter {
     await writeFile(abs, bytes)
     return {
       key,
-      url: pathToFileURL(abs).href,
+      url: this.opts.baseUrl
+        ? `${this.opts.baseUrl.replace(/\/$/, '')}/${key}`
+        : pathToFileURL(abs).href,
       size: bytes.byteLength,
     }
   }
+}
+
+/** Construct a filesystem `StorageAdapter` (uniform `xxxStorage(config)` shape). */
+export function fileSystemStorage(opts: FileSystemStorageOptions): StorageAdapter {
+  return new FileSystemStorage(opts)
 }
 
 export const packageName = '@airnauts/comments-storage-fs'
