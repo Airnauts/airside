@@ -3,6 +3,8 @@ import type { AnchorPatch, ListQuery, NewComment, NewThread, Repository, Scope }
 
 // One connected Repository per cacheKey, memoized across warm serverless
 // invocations / HMR reloads via a single globalThis registry.
+// The registry is intentionally unbounded; cacheKey is expected to be
+// low-cardinality (e.g. one entry per database URL per process).
 const globalForRepos = globalThis as unknown as {
   __commentsRepos?: Map<string, Promise<Repository>>
 }
@@ -17,6 +19,10 @@ function registry(): Map<string, Promise<Repository>> {
  * server can be constructed at module load without awaiting) and connects on the
  * first method call. The connected repository is memoized under `cacheKey`; a
  * failed connect clears the entry so the next call retries.
+ *
+ * `cacheKey` must uniquely identify the connection configuration. Two calls
+ * with the same key but different `connect` functions share the first-connected
+ * instance — the second `connect` is never invoked.
  */
 export function lazyRepository(
   connect: () => Promise<Repository>,

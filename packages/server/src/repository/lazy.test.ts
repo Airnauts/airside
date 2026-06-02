@@ -75,4 +75,33 @@ describe('lazyRepository', () => {
     expect((await repo.listThreads(query)).nextCursor).toBe('ok')
     expect(connect).toHaveBeenCalledTimes(2)
   })
+
+  it('deduplicates concurrent first-calls into a single connect', async () => {
+    const connect = vi.fn(async () => stubRepo('x'))
+    const repo = lazyRepository(connect, { cacheKey: 'k5' })
+    const [r1, r2] = await Promise.all([repo.listThreads(query), repo.listThreads(query)])
+    expect(connect).toHaveBeenCalledTimes(1)
+    expect(r1.nextCursor).toBe('x')
+    expect(r2.nextCursor).toBe('x')
+  })
+
+  it('delegates every method to the underlying repository', async () => {
+    const inner = stubRepo('z')
+    const spies = {
+      createThread: vi.spyOn(inner, 'createThread'),
+      getThread: vi.spyOn(inner, 'getThread'),
+      listThreads: vi.spyOn(inner, 'listThreads'),
+      addComment: vi.spyOn(inner, 'addComment'),
+      setStatus: vi.spyOn(inner, 'setStatus'),
+      updateAnchor: vi.spyOn(inner, 'updateAnchor'),
+    }
+    const repo = lazyRepository(async () => inner, { cacheKey: 'k6' })
+    await repo.createThread({} as never)
+    await repo.getThread({ projectId: 'p' }, 'tid' as never)
+    await repo.listThreads(query)
+    await repo.addComment({ projectId: 'p' }, 'tid' as never, {} as never)
+    await repo.setStatus({ projectId: 'p' }, 'tid' as never, 'open', 'now')
+    await repo.updateAnchor({ projectId: 'p' }, 'tid' as never, {} as never, 'now')
+    for (const spy of Object.values(spies)) expect(spy).toHaveBeenCalledTimes(1)
+  })
 })
