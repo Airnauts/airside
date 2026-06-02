@@ -10,7 +10,8 @@
 
 Automate the integration proof that M9 left as a **manual smoke checklist**, and ship
 the **release path** that takes the already-prepared `@airnauts/comments-*` packages
-(at `0.1.0`, Changesets configured, never published) out to npm.
+(at `0.0.0`, Changesets configured with two pending changesets, never published) out
+to npm.
 
 Concretely, M10 delivers a **Playwright e2e** suite that drives `examples/nextjs-host`
 through the full v1 loop — including the riskiest behavior, **re-anchoring across
@@ -43,36 +44,50 @@ surface** in the host app. No package-code features, schemas, or endpoints. The
 verification exercises seams that already exist and are tested at the unit/contract
 level:
 
-- **`examples/nextjs-host`** (M9) — the App Router host app: `<CommentsLayer/>` in the
-  layout, a `createNextHandler` catch-all route, **env-switched persistence**
-  (`MONGODB_URI` → Mongo, else in-memory) and storage (`BLOB_READ_WRITE_TOKEN` →
-  Vercel Blob, else local `public/uploads/`), and three content routes
+- **`examples/nextjs-host`** (M9, updated by the refactor below) — the App Router host
+  app: `<CommentsLayer/>` in the layout, and a **`createCommentsRoute` catch-all route**
+  (from the new `@airnauts/comments-next`) with **env-switched persistence**
+  (`MONGODB_URI` → `mongoRepository({ uri })`, else `memoryRepository()`) and storage
+  (`BLOB_READ_WRITE_TOKEN` → `vercelBlobStorage()`, else `fileSystemStorage({ rootDir:
+  public/uploads, baseUrl: /uploads })`), and three content routes
   (landing / article / pricing) exercising element pins, text selection, and the
-  cross-page panel.
+  cross-page panel. The env-switched **fallback behavior is unchanged** by the refactor
+  — only the construction API changed.
 - **The M2b jsdom fixture corpus** — already proves scoring across all mutation
   classes headlessly. M10's browser mutation e2e is the *full-stack* complement, not
   a replacement: it proves capture → real reload → re-match/orphan end to end in a
   real engine, for a representative subset of mutation classes.
 - **Changesets** — `.changeset/config.json` (public access, `main` base, examples +
-  test-support ignored), the pending `initial-release.md` changeset, and the root
-  `release` script (`pnpm build && changeset publish`). M10 wires these into CI; it
-  does not reconfigure them.
+  test-support ignored), **two pending `minor` changesets** (`initial-release.md` +
+  `uniform-adapter-construction.md`, together covering all **8** public packages), and
+  the root `release` script (`pnpm build && changeset publish`). M10 wires these into
+  CI; it does not reconfigure them.
 - **The bundle-size harness** — `packages/client` `size-limit` entry
   (`@airnauts/comments-client` esm/brotli ≤ **300 kB**) and the root `pnpm size`,
   already a CI step.
 
-## ⚠️ Open dependency — repositories/storages refactor in flight
+## Resolved dependency — repositories/storages refactor (landed)
 
-The author is **refactoring the repository and storage layer** and will **push that to
-`main` before the implementation plan is written**. M10's e2e depends on the host
-app's **env-switched fallback behavior** (no `MONGODB_URI` → in-memory repo; no blob
-token → local `public/uploads/`), which that refactor touches.
+The "uniform adapter construction" refactor that this spec waited on has **landed on
+`main`** (`3230a0c`, ADR-0021/0022) and is merged into this worktree. The plan is
+written against this post-refactor code. What changed that M10 must target:
 
-The **design** is robust to the refactor because it depends on the *observable
-behavior* (hermetic in-memory + local-uploads fallback), not the internal structure.
-But the **plan must be written against the pushed code** — so the brainstorm →
-**spec** step completes now, and the **writing-plans** step is held until the refactor
-lands on `main`. (See "Sequencing" below.)
+- **In-memory repo extracted** to the new **`@airnauts/comments-adapter-memory`**
+  (`memoryRepository()`); it is **no longer exported from `@airnauts/comments-server`**
+  (BREAKING).
+- **New `@airnauts/comments-next`** package exposing **`createCommentsRoute(config)`**
+  — the host app's catch-all route now mounts this, not the old `createNextHandler`.
+- **Factory-per-adapter** construction (`memoryRepository()`, `mongoRepository({ uri })`,
+  `fileSystemStorage({ rootDir, baseUrl })`, `vercelBlobStorage()`), plus a
+  `lazyRepository` connection-memoization primitive in `server`.
+- **Public package surface grew from 6 → 8** (added `adapter-memory` + `next`).
+
+Crucially, the **env-switched fallback behavior the e2e relies on is unchanged** —
+unset `MONGODB_URI` → `memoryRepository()`, unset `BLOB_READ_WRITE_TOKEN` →
+`fileSystemStorage` under `public/uploads/`. The CI e2e stays hermetic as designed.
+One operational note for the plan: the host app's `.env.example` *defaults*
+`MONGODB_URI` to a local container, but that only takes effect via a manually-created
+`.env.local`; **CI must not set `MONGODB_URI`** so the in-memory fallback engages.
 
 ## Components
 
@@ -155,33 +170,36 @@ jobs:
         env: { NODE_AUTH_TOKEN / NPM_TOKEN }
 ```
 
-Publishing the **6 public `@airnauts/comments-*` packages** (examples + test-support
-are in the Changesets `ignore` list, so they never publish). The workflow runs **build
-+ tests before publish** (or is gated on a green CI run for the same commit) so a
-broken tag can't ship.
+Publishing the **8 public `@airnauts/comments-*` packages** (`core`, `client`,
+`server`, `next`, `adapter-memory`, `adapter-mongo`, `storage-fs`,
+`storage-vercel-blob`; the examples + `test-support` are in the Changesets `ignore`
+list, so they never publish). The workflow runs **build + tests before publish** (or is
+gated on a green CI run for the same commit) so a broken tag can't ship.
 
 **Release runbook** (documented in the repo — `docs/` or a `RELEASING.md`):
 
-1. `pnpm version-packages` — consumes the pending `initial-release.md` changeset and
-   writes the bumped versions + changelogs.
+1. `pnpm version-packages` — consumes **both** pending changesets (`initial-release` +
+   `uniform-adapter-construction`, both `minor`) and writes the bumped versions +
+   changelogs. From `0.0.0`, a `minor` bump yields **`0.1.0`** for all 8 public
+   packages.
 2. Commit the version bump to `main`.
-3. `git tag vX.Y.Z` matching the new version; `git push --tags`.
+3. `git tag v0.1.0` (matching the bumped version); `git push --tags`.
 4. The workflow runs `changeset publish`, which publishes any package whose
-   `package.json` version is not yet on the registry.
+   `package.json` version is not yet on the registry — for the first release, **all 8
+   at `0.1.0`**.
 
-**Two prerequisites flagged (setup, not blockers for the spec/plan):**
+**First release is clean — no reconciliation needed.** All public packages sit at
+`0.0.0`, nothing is on npm yet (verified: `npm view` 404s for the scope), and the two
+pending `minor` changesets together cover all 8 packages, so the first
+`version-packages` lands every package at `0.1.0` in one step. The earlier
+reconciliation concern (assumed `0.1.0` + a single leftover changeset) does not apply
+post-refactor.
+
+**One prerequisite flagged (setup, not a blocker for the spec/plan):**
 
 - **`NPM_TOKEN`** must be added as a repo/org Actions secret with publish rights to the
   `@airnauts` scope **before the first tag**. The plan will note this as a manual
   pre-step.
-- **First-release versioning reconciliation.** Packages already sit at `0.1.0` **and**
-  there is an unconsumed `initial-release.md` changeset. Running `version-packages`
-  will bump *past* `0.1.0` (a `minor` from `0.1.0` → `0.2.0` under Changesets' pre-1.0
-  rules unless the changeset is `patch`). The runbook step in the plan will **pin
-  exactly what the first published version is** — either by adjusting/removing the
-  pending changeset so the first publish is `0.1.0`, or by accepting the bump and
-  tagging the resulting version. Decided in the plan against the then-current
-  `.changeset/` state.
 
 ## Out of scope
 
@@ -201,17 +219,17 @@ broken tag can't ship.
 - CI (lint · typecheck · build · test · **e2e** · size · exports) is green on PR + push
   to `main`; `pnpm size` confirms the build under **300 kB**.
 - `release.yml` exists and, on a `v*` tag, runs build + `changeset publish`; the
-  **release runbook** is documented; `NPM_TOKEN` prerequisite and first-version
-  reconciliation are recorded for the operator.
+  **release runbook** is documented (first tag `v0.1.0`, all 8 public packages); the
+  `NPM_TOKEN` prerequisite is recorded for the operator.
 - A new **M11** is added to `milestones.md` carrying the deferred dogfood deployment +
   real-project adoption (and PRD §7's adoption acceptance bar).
 
 ## Sequencing
 
-1. **Now:** spec (this doc) approved + committed.
-2. **Blocked on:** author pushes the repositories/storages refactor to `main`.
-3. **Then:** `git merge --ff-only main` into the M10 worktree, re-read the refactored
-   fallback seams, and invoke **writing-plans** against the current code.
+1. ✅ Spec (this doc) approved + committed.
+2. ✅ Repositories/storages refactor landed on `main` (`3230a0c`) and merged into the
+   M10 worktree; this spec refreshed against the post-refactor seams.
+3. **Now:** invoke **writing-plans** against the current code.
 4. **Implement** §1–§4 + the `milestones.md` M10→done / M11-added edit.
 
 ## References
@@ -221,4 +239,6 @@ broken tag can't ship.
 - M9 design [`2026-06-01-m9-integration-host-app-design.md`](2026-06-01-m9-integration-host-app-design.md)
   (the host app + manual smoke checklist this milestone automates).
 - Architecture §9 (testing strategy); PRD §7 (success criteria).
-- Publish prep: ADR-0020 (`@airnauts` scope, Changesets, 6 public packages).
+- Publish prep: ADR-0020 (`@airnauts` scope, Changesets); uniform adapter construction:
+  ADR-0021/0022 (factory-per-adapter, `adapter-memory` + `next` packages → **8** public
+  packages total).
