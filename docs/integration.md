@@ -7,7 +7,7 @@ lifted from it.
 ## 1. Install
 
 ```bash
-pnpm add @airnauts/comments-client @airnauts/comments-server
+pnpm add @airnauts/comments-client @airnauts/comments-next @airnauts/comments-adapter-memory
 ```
 
 ## 2. Add the API route
@@ -15,23 +15,22 @@ pnpm add @airnauts/comments-client @airnauts/comments-server
 Create `app/api/comments/[...path]/route.ts`:
 
 ```ts
-import { createNextHandler } from '@airnauts/comments-server/next'
-import { createCommentsServer, InMemoryRepository } from '@airnauts/comments-server'
+import { createCommentsRoute } from '@airnauts/comments-next'
+import { memoryRepository } from '@airnauts/comments-adapter-memory'
 
-const server = createCommentsServer({
+export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
-  repository: new InMemoryRepository(),
+  repository: memoryRepository(),
   storage: { async put(blob) { return { url: `mem://${blob.name}`, key: blob.name, size: 0 } } },
   rateLimit: false,
 })
-
-export const { GET, POST, PATCH, OPTIONS } = createNextHandler(server)
 ```
 
-`createNextHandler` strips the mount prefix, so the server core does not need to
-know where it is mounted.
+`createCommentsRoute` builds the server and its four Next App Router handlers in one
+call (it also returns `server` for server-side reads or tests). The handler strips
+the mount prefix, so the server core does not need to know where it is mounted.
 
 ## 3. Mount the widget
 
@@ -74,15 +73,40 @@ pnpm add @airnauts/comments-adapter-mongo @airnauts/comments-storage-vercel-blob
 # (or @airnauts/comments-storage-fs for filesystem storage)
 ```
 
-Swap the two ephemeral pieces for real infrastructure:
+Every adapter ships a uniform factory, so swapping the two ephemeral pieces for real
+infrastructure is config — no bespoke glue:
 
-- **Persistence:** replace `InMemoryRepository` with `createMongoRepository({ db })`
-  from `@airnauts/comments-adapter-mongo`. Connect a `MongoClient`, call `ensureIndexes(db)`
-  once at startup, then pass the `db` to `createMongoRepository`.
-- **Storage:** replace the stub with `new VercelBlobStorage()` from
+- **Persistence:** replace `memoryRepository()` with `mongoRepository({ uri })` from
+  `@airnauts/comments-adapter-mongo`. It connects lazily on first use and memoizes the
+  connection (warm serverless / HMR reuse); the database name comes from the URI.
+- **Storage:** replace the stub with `vercelBlobStorage()` from
   `@airnauts/comments-storage-vercel-blob` (reads `BLOB_READ_WRITE_TOKEN`), or
-  `new FileSystemStorage({ rootDir })` from `@airnauts/comments-storage-fs`.
+  `fileSystemStorage({ rootDir, baseUrl })` from `@airnauts/comments-storage-fs`
+  (`baseUrl` makes `put` return a browser-served path instead of a `file://` URL).
 - **Origins:** set `allowedOrigins` to your real site origins.
 
-See [`examples/nextjs-host/lib/comments-server.ts`](../examples/nextjs-host/lib/comments-server.ts)
-for an env-switched build that does in-memory locally and Mongo + Blob in production.
+```ts
+// app/api/comments/[...path]/route.ts
+import { join } from 'node:path'
+import { createCommentsRoute } from '@airnauts/comments-next'
+import { memoryRepository } from '@airnauts/comments-adapter-memory'
+import { mongoRepository } from '@airnauts/comments-adapter-mongo'
+import { fileSystemStorage } from '@airnauts/comments-storage-fs'
+import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+
+export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
+  secretKey: process.env.COMMENTS_SECRET ?? 'dev-key',
+  projectId: 'my-app',
+  allowedOrigins: ['http://localhost:3000'],
+  repository: process.env.MONGODB_URI
+    ? mongoRepository({ uri: process.env.MONGODB_URI })
+    : memoryRepository(),
+  storage: process.env.BLOB_READ_WRITE_TOKEN
+    ? vercelBlobStorage()
+    : fileSystemStorage({ rootDir: join(process.cwd(), 'public', 'uploads'), baseUrl: '/uploads' }),
+  rateLimit: false,
+})
+```
+
+See [`examples/nextjs-host/app/api/comments/[...path]/route.ts`](../examples/nextjs-host/app/api/comments/%5B...path%5D/route.ts)
+for this env-switched build: in-memory locally, Mongo + Blob in production.
