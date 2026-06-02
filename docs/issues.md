@@ -80,3 +80,32 @@ bundler-compat decision, landing it should come with a short ADR note.
 A purely host-side alternative (a webpack `IgnorePlugin` for the optional deps in
 `next.config.ts`) also works but only fixes this one example app, not every
 downstream consumer — hence the adapter-side fix is preferred when we act.
+
+## Text-selection highlight is misaligned after window resize
+
+**Status:** open — bug.
+
+**Symptom.** The highlight rectangles drawn over selected text drift away from
+the text they belong to after the browser window is resized. In the captured
+example the blue highlight boxes sit well to the left of (and above) the actual
+selected words instead of covering them — the overlay no longer tracks the live
+DOM geometry. See `docs/screenshots/selection-off-after-resize.png`.
+
+**Likely root cause (unconfirmed).** Selection highlight rects appear to be
+computed once (e.g. cached `getBoundingClientRect()` / `Range` rects at selection
+time) and not recomputed on `resize` (and probably not on scroll or reflow
+either). When the layout reflows on resize, the cached coordinates go stale.
+
+**Expected.** Highlight rects should be recomputed against the current DOM
+geometry on resize/reflow so they stay locked to their text.
+
+## Selection highlight is not shown when its thread is opened
+
+**Status:** open — bug / missing behavior.
+
+**Symptom.** Opening a thread does not surface the text selection that the
+comment anchors to — there's no visual link between the open thread and the
+highlighted range in the document.
+
+**Expected.** When a thread is opened, its associated selection should be
+rendered/visible so the reader can see exactly what the comment refers to.
