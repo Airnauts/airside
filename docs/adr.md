@@ -1052,7 +1052,38 @@ with no token no longer typecheck. Ships as a minor (pre-1.0) BREAKING bump.
 
 ---
 
-## ADR-0029 — ThreadListItem carries a rootComment preview
+## ADR-0029: Notification seam + Slack notifier
+
+- **Date:** 2026-06-03
+- **Status:** accepted
+
+**Context.** Integrators want to be told when reviewers leave comments, starting with
+Slack, and more channels (email, …) are expected. We need an extension point that does
+not couple the server core to any one provider, and notification delivery must never be
+able to fail a comment write.
+
+**Decision.** Add a generic `Notifier` output port to `@airnauts/comments-server`
+(alongside `Repository` and `StorageAdapter`), injected via `notifiers?: Notifier[]` on
+`createCommentsServer`. The `createThread` and `addComment` use cases build a shared
+`NotificationEvent` after a successful write and fan it out through
+`dispatchNotifications`, which uses `Promise.allSettled` — a notifier that throws is
+logged (by `name`, never its credentials) and swallowed. Dispatch is **awaited** within
+the request rather than fire-and-forget, because a detached promise is dropped when a
+serverless function freezes after the response. The first concrete is a new publishable
+package, `@airnauts/comments-notifier-slack`, which POSTs Block Kit JSON to a Slack
+Incoming Webhook with a 3-second `AbortSignal.timeout` so a hung endpoint cannot stall
+the write.
+
+**Consequences.** New channels plug in with no core change. The notification round-trip
+is added to comment-POST latency (acceptable for v1; a future `waitUntil`-style hook can
+move it off the request path without changing the seam). The Slack link is the bare
+`pageUrl`: a recipient sees comments only if they already hold the activation key
+(localStorage or `?comments-key=…`); embedding the key and a `?comment=<threadId>`
+deep-link is a documented follow-up.
+
+---
+
+## ADR-0030 — ThreadListItem carries a rootComment preview
 
 - **Date:** 2026-06-03
 - **Status:** accepted

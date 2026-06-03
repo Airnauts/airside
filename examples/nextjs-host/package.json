@@ -14,6 +14,7 @@
     "@airnauts/comments-adapter-mongo": "workspace:*",
     "@airnauts/comments-client": "workspace:*",
     "@airnauts/comments-next": "workspace:*",
+    "@airnauts/comments-notifier-slack": "workspace:*",
     "@airnauts/comments-server": "workspace:*",
     "@airnauts/comments-storage-fs": "workspace:*",
     "@airnauts/comments-storage-vercel-blob": "workspace:*",

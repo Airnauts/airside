@@ -9,6 +9,7 @@ import { MarkerLayer } from '../marker/MarkerLayer'
 import { PanelDrawer } from '../panel/PanelDrawer'
 import { PanelProvider } from '../panel/PanelProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
+import { LoginLauncher } from '../ui/LoginLauncher'
 import { ToastProvider } from '../ui/toast'
 import { WidgetProvider } from './providers'
 
@@ -50,21 +51,27 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
           <ThreadsProvider client={client}>
             <PanelProvider client={client}>
               <DraftsProvider>
-                <MarkerLayer
-                  client={client}
-                  pageKey={pageKey}
-                  pageUrl={pageUrl}
-                  resolvePageKey={(url) => resolvePageKey(options, url)}
-                  identity={identity}
-                  onNeedIdentity={onNeedIdentity}
-                  provenance={options.provenance}
-                />
-                <PanelDrawer
-                  resolvePageKey={(url) => resolvePageKey(options, url)}
-                  client={client}
-                  identity={identity}
-                  onNeedIdentity={onNeedIdentity}
-                />
+                {identity ? (
+                  <>
+                    <MarkerLayer
+                      client={client}
+                      pageKey={pageKey}
+                      pageUrl={pageUrl}
+                      resolvePageKey={(url) => resolvePageKey(options, url)}
+                      identity={identity}
+                      onNeedIdentity={onNeedIdentity}
+                      provenance={options.provenance}
+                    />
+                    <PanelDrawer
+                      resolvePageKey={(url) => resolvePageKey(options, url)}
+                      client={client}
+                      identity={identity}
+                      onNeedIdentity={onNeedIdentity}
+                    />
+                  </>
+                ) : (
+                  <LoginLauncher onLogIn={() => setModalOpen(true)} />
+                )}
               </DraftsProvider>
             </PanelProvider>
             <IdentityModal

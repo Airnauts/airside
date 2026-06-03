@@ -12,10 +12,14 @@ pnpm add @airnauts/comments-storage-vercel-blob
 ## Usage
 
 ```ts
-import { VercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-const storage = new VercelBlobStorage() // reads BLOB_READ_WRITE_TOKEN
+const storage = vercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! })
 ```
+
+The token is passed explicitly — the adapter never reads `process.env` itself. Pass
+an optional `prefix` (e.g. `'staging/'`) to namespace keys. The `VercelBlobStorage`
+class is also exported if you prefer `new VercelBlobStorage(opts)`.
 
 Pass `storage` to `createCommentsServer` from `@airnauts/comments-server`.
 

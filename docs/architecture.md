@@ -50,6 +50,8 @@ endpoint with no client change.
   mongo driver).
 - **`@airnauts/comments-storage-vercel-blob`**, **`@airnauts/comments-storage-fs`** — storage
   concretes.
+- **`@airnauts/comments-notifier-slack`** — Slack Incoming Webhook notifier (first concrete
+  of the `Notifier` seam; posts new-comment notifications).
 - Seams with no v1 concrete: auth, other DBs, other frameworks, S3.
 
 **"Enable/disable via subpackage imports":** integrators install/import only the
@@ -123,10 +125,15 @@ createCommentsServer({
   secretKey,
   allowedOrigins,
   pageKey?,        // URL→key rule, shared with the client
+  notifiers?,      // outbound channels (e.g. @airnauts/comments-notifier-slack); failure-isolated
 })
 ```
 
 `Repository` and `StorageAdapter` are the only DB/IO seams.
+
+`Notifier` is a third, optional output seam: `createThread` / `addComment` fan a
+`NotificationEvent` out to every configured notifier after the write, with failures
+isolated so they can never break the write.
 
 **Next.js glue is near-zero** — Next passes a native Web `Request`:
 

@@ -3,6 +3,7 @@ import { buildCorsHeaders, isPreflight, preflightResponse } from './cors'
 import type { Ctx, IdFactory } from './ctx'
 import { defaultIds, makeCtx } from './ctx'
 import { RateLimitedError, toResponse } from './errors'
+import type { Notifier } from './notify/types'
 import { InMemoryRateLimiter, type RateLimitConfig, type RateLimiter } from './rate-limit'
 import type { Repository } from './repository/types'
 import { compileRoutes, dispatch, type UseCaseMap } from './router'
@@ -24,6 +25,8 @@ export type CreateCommentsServerOptions = {
   allowedOrigins: string[]
   repository: Repository
   storage: StorageAdapter
+  /** Outbound notification channels (e.g. Slack). Failures never break a write. */
+  notifiers?: Notifier[]
   /** false to disable; defaults to { writesPerMin: 60, readsPerMin: 600 }. */
   rateLimit?: RateLimitConfig | false
   /** Override the rate limiter implementation entirely. */
@@ -90,10 +93,12 @@ export function createCommentsServer(opts: CreateCommentsServerOptions): Comment
   const extractIp = opts.extractIp ?? defaultExtractIp
 
   const useCases: UseCaseMap = {
-    createThread: (input) => createThread(input as never, { repo: opts.repository }),
+    createThread: (input) =>
+      createThread(input as never, { repo: opts.repository, notifiers: opts.notifiers }),
     listThreads: (input) => listThreads(input as never, { repo: opts.repository }),
     getThread: (input) => getThread(input as never, { repo: opts.repository }),
-    addComment: (input) => addComment(input as never, { repo: opts.repository }),
+    addComment: (input) =>
+      addComment(input as never, { repo: opts.repository, notifiers: opts.notifiers }),
     setThreadStatus: (input) => setThreadStatus(input as never, { repo: opts.repository }),
     refreshAnchor: (input) => refreshAnchor(input as never, { repo: opts.repository }),
     uploadAttachment: (input) =>

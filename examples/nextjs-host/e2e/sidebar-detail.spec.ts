@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { activate, DEV_KEY, placeElementPin, urlFor } from './helpers'
+import { activate, DEV_KEY, login, placeElementPin, urlFor } from './helpers'
 
 test.describe('sidebar master–detail', () => {
   // Cold next start + cross-page navigation handoff can be slow.
@@ -10,6 +10,7 @@ test.describe('sidebar master–detail', () => {
     const body = 'Same-page sidebar detail body'
 
     await activate(page, '/pricing', ns)
+    await login(page)
     await placeElementPin(page, 'Starter', body)
 
     await page.getByTestId('comments-panel-open').click()
@@ -42,6 +43,7 @@ test.describe('sidebar master–detail', () => {
     const body = 'Popover coexist body'
 
     await activate(page, '/pricing', ns)
+    await login(page)
     // Placing a comment leaves its pin popover open.
     await placeElementPin(page, 'Starter', body)
     await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
@@ -62,10 +64,13 @@ test.describe('sidebar master–detail', () => {
 
     // Thread lives on /article.
     await activate(page, '/article', ns)
+    await login(page)
     await placeElementPin(page, 'disambiguate near-matches', body)
 
-    // From /pricing, open the panel and select the /article thread.
+    // From /pricing, open the panel and select the /article thread (identity persists in
+    // localStorage, so login() is a no-op here).
     await activate(page, '/pricing', ns)
+    await login(page)
     await page.getByTestId('comments-panel-open').click()
     await expect(page.getByTestId('comments-panel')).toBeVisible()
     const row = page.getByTestId('comments-panel-row').filter({ hasText: body })
@@ -85,6 +90,7 @@ test.describe('sidebar master–detail', () => {
     const body = 'Deep-link sidebar detail body'
 
     await activate(page, '/article', ns)
+    await login(page)
     await placeElementPin(page, 'disambiguate near-matches', body)
 
     // Read the thread id from its panel row wrapper (data-thread-id).

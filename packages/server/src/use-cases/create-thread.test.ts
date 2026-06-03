@@ -7,9 +7,10 @@ import {
   type ThreadId,
 } from '@airnauts/comments-core'
 import { makeCreateThreadBody } from '@airnauts/comments-test-support'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { ValidationError } from '../errors'
+import type { Notifier } from '../notify/types'
 import { createThread } from './create-thread'
 
 const attachment: Attachment = {
@@ -70,5 +71,33 @@ describe('createThread use-case', () => {
     await expect(
       createThread({ ctx, params: undefined, query: undefined, body }, { repo }),
     ).rejects.toBeInstanceOf(ValidationError)
+  })
+
+  it('dispatches a thread.created notification to notifiers', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({ projectId: 'proj_x' })
+    const notify = vi.fn(async () => {})
+    const notifier: Notifier = { name: 'spy', notify }
+    const body = makeCreateThreadBody()
+    await createThread(
+      { ctx, params: undefined, query: undefined, body },
+      { repo, notifiers: [notifier] },
+    )
+    expect(notify).toHaveBeenCalledOnce()
+    const event = notify.mock.calls[0]![0]
+    expect(event.type).toBe('thread.created')
+    expect(event.text).toBe('first comment')
+    expect(event.author.email).toBe('alice@example.com')
+    expect(event.pageUrl).toBe('https://example.com/about')
+    expect(event.pageTitle).toBe('About')
+    expect(event.threadId).toBeDefined()
+  })
+
+  it('does not require notifiers (no-op when omitted)', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({ projectId: 'proj_x' })
+    const body = makeCreateThreadBody()
+    const thread = await createThread({ ctx, params: undefined, query: undefined, body }, { repo })
+    expect(thread.id).toBeDefined()
   })
 })

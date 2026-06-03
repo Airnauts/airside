@@ -1,9 +1,12 @@
 import { ANCHOR_SCHEMA_VERSION, type CreateThreadBody, type Thread } from '@airnauts/comments-core'
 import type { Ctx } from '../ctx'
+import { buildNotificationEvent } from '../notify/build-event'
+import { dispatchNotifications } from '../notify/dispatch'
+import type { Notifier } from '../notify/types'
 import type { Repository } from '../repository/types'
 import { resolveAttachments } from './resolve-attachments'
 
-export type CreateThreadDeps = { repo: Repository }
+export type CreateThreadDeps = { repo: Repository; notifiers?: Notifier[] }
 
 export async function createThread(
   input: { ctx: Ctx; params: undefined; query: undefined; body: CreateThreadBody },
@@ -22,7 +25,7 @@ export async function createThread(
     attachments,
     createdAt: nowIso,
   }
-  return deps.repo.createThread({
+  const thread = await deps.repo.createThread({
     projectId: ctx.projectId,
     env: ctx.env,
     id: threadId,
@@ -42,4 +45,9 @@ export async function createThread(
     schemaVersion: ANCHOR_SCHEMA_VERSION,
     firstComment,
   })
+  await dispatchNotifications(
+    deps.notifiers,
+    buildNotificationEvent('thread.created', scope, thread, firstComment),
+  )
+  return thread
 }

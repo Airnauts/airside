@@ -1,9 +1,10 @@
 import { expect, test } from '@playwright/test'
-import { activate, placeElementPin, placeTextSelection, urlFor } from './helpers'
+import { activate, login, placeElementPin, placeTextSelection, urlFor } from './helpers'
 
 test.describe('anchoring', () => {
   test('text selection: highlight renders and re-renders after reload', async ({ page }) => {
     await activate(page, '/article', 'anchor-text')
+    await login(page)
     await placeTextSelection(page, 'Honoring that promise is the whole game', 'Comment on a quote')
     // A selection anchor renders a highlight rect.
     await expect(page.getByTestId('comments-highlight').first()).toBeVisible()
@@ -17,6 +18,7 @@ test.describe('anchoring', () => {
     test(`element pin re-anchors after ?variant=${variant}`, async ({ page }) => {
       const ns = `anchor-${variant}`
       await activate(page, '/article', ns)
+      await login(page)
       // Target the 2nd <li> by text unique to it ("Content signals" also occurs in a nearby <p>).
       await placeElementPin(page, 'disambiguate near-matches', `pin for ${variant}`)
       await expect(page.getByTestId('comments-pin')).toHaveCount(1)
@@ -32,6 +34,7 @@ test.describe('anchoring', () => {
   test('element pin orphans after ?variant=removed', async ({ page }) => {
     const ns = 'anchor-removed'
     await activate(page, '/article', ns)
+    await login(page)
     // Target the 2nd <li> by text unique to it ("Content signals" also occurs in a nearby <p>).
     await placeElementPin(page, 'disambiguate near-matches', 'pin that will orphan')
     await expect(page.getByTestId('comments-pin')).toHaveCount(1)

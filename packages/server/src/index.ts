@@ -14,10 +14,10 @@ export {
   UploadTooLargeError,
   ValidationError,
 } from './errors'
+export type { NotificationEvent, NotificationEventType, Notifier } from './notify/types'
 export type { CheckResult, RateLimitConfig, RateLimiter } from './rate-limit'
 export { InMemoryRateLimiter } from './rate-limit'
 export { lazyRepository } from './repository/lazy'
-
 export type {
   AnchorPatch,
   ListQuery,
@@ -28,7 +28,6 @@ export type {
   Scope,
 } from './repository/types'
 export type { CommentsServer, CreateCommentsServerOptions } from './server'
-
 export { createCommentsServer } from './server'
 export type { PutBlob, PutResult, StorageAdapter } from './storage/types'
 
