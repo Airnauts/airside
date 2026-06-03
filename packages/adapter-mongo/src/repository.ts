@@ -58,7 +58,9 @@ function toThread(doc: StoredThread): Thread {
 }
 
 function toListItem(doc: StoredThread): ThreadListItem {
-  // Strip server-only scope + thread-only payload (also absent under the list projection).
+  // The list projection slices comments to just the first (root); updateAnchor returns the
+  // full doc. Either way comments[0] is the root. Strip the rest of the thread-only payload.
+  const root = doc.comments?.[0]
   const {
     _id,
     projectId: _p,
@@ -68,7 +70,11 @@ function toListItem(doc: StoredThread): ThreadListItem {
     provenance: _pr,
     ...rest
   } = doc
-  return { id: _id as ThreadId, ...rest }
+  return {
+    id: _id as ThreadId,
+    ...rest,
+    rootComment: root ? { text: root.text, createdAt: root.createdAt } : null,
+  }
 }
 
 export function createMongoRepository({ db }: { db: Db }): Repository {
@@ -123,7 +129,7 @@ export function createMongoRepository({ db }: { db: Db }): Repository {
       }
       const docs = await col
         .find(filter as Filter<StoredThread>, {
-          projection: { comments: 0, captureContext: 0, provenance: 0 },
+          projection: { comments: { $slice: 1 }, captureContext: 0, provenance: 0 },
         })
         .sort({ updatedAt: -1, _id: -1 })
         .limit(limit + 1)
