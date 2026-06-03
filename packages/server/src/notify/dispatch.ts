@@ -1,0 +1,22 @@
+import type { NotificationEvent, Notifier } from './types'
+
+/**
+ * Fan an event out to every notifier. Never rejects: a notifier that throws is
+ * logged (name + reason) and swallowed, so a failed notification cannot break
+ * the comment write. Awaited by the caller so the delivery is not dropped when a
+ * serverless function freezes after the response.
+ */
+export async function dispatchNotifications(
+  notifiers: readonly Notifier[] | undefined,
+  event: NotificationEvent,
+  log: (message: string) => void = (m) => console.error(m),
+): Promise<void> {
+  if (!notifiers || notifiers.length === 0) return
+  const results = await Promise.allSettled(notifiers.map((n) => n.notify(event)))
+  results.forEach((result, i) => {
+    if (result.status === 'rejected') {
+      const name = notifiers[i]?.name ?? 'unknown'
+      log(`[comments] notifier "${name}" failed: ${String(result.reason)}`)
+    }
+  })
+}
