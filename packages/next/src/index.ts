@@ -10,12 +10,18 @@ type NextRouteHandlers = ReturnType<typeof createNextHandler>
  *
  *   export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute(config)
  *
- * Also returns `server` for hosts that need server-side reads, extra routes, or
- * server access in tests.
+ * Also returns `server` (absent when `disabled`) for hosts that need server-side
+ * reads, extra routes, or server access in tests.
  */
 export function createCommentsRoute(
-  config: CreateCommentsServerOptions,
-): NextRouteHandlers & { server: CommentsServer } {
+  config: CreateCommentsServerOptions & { disabled?: boolean },
+): NextRouteHandlers & { server?: CommentsServer } {
+  if (config.disabled) {
+    // `NextHandler` is not exported from the server package; an inline async
+    // arrow returning a Response structurally satisfies the handler signature.
+    const notFound = async () => new Response('Not Found', { status: 404 })
+    return { GET: notFound, POST: notFound, PATCH: notFound, OPTIONS: notFound }
+  }
   const server = createCommentsServer(config)
   return { ...createNextHandler(server), server }
 }

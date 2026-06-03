@@ -51,6 +51,24 @@ describe('createCommentsRoute', () => {
 
   it('also returns the underlying server', () => {
     const route = build()
-    expect(typeof route.server.handle).toBe('function')
+    expect(typeof route.server?.handle).toBe('function')
+  })
+
+  it('404s every handler and builds no server when disabled', async () => {
+    const route = createCommentsRoute({
+      disabled: true,
+      secretKey: 'sk_test',
+      projectId: 'proj_x',
+      allowedOrigins: ['https://app.example.com'],
+      repository: memoryRepository(),
+      storage: stubStorage,
+      rateLimit: false,
+    })
+    expect(route.server).toBeUndefined()
+    const ctx = { params: Promise.resolve({ path: ['threads'] }) }
+    for (const method of ['GET', 'POST', 'PATCH', 'OPTIONS'] as const) {
+      const res = await route[method](new Request('https://host/api/comments/threads'), ctx)
+      expect(res.status).toBe(404)
+    }
   })
 })
