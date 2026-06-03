@@ -10,6 +10,7 @@ export type InitOptions = {
   endpoint: string
   pageKey?: (url: string) => string
   keyParam?: string
+  threadParam?: string
   features?: Features
   provenance?: Provenance
 }

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { type ApiClient, createApiClient } from '../api/client'
 import { type InitOptions, resolvePageKey } from '../config'
+import { DraftsProvider } from '../drafts/DraftsProvider'
 import { WidgetErrorBoundary } from '../error-boundary'
 import { IdentityModal } from '../identity/IdentityModal'
 import { type Identity, loadIdentity, saveIdentity } from '../identity/storage'
@@ -48,21 +49,23 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
         <ToastProvider>
           <ThreadsProvider client={client}>
             <PanelProvider client={client}>
-              <MarkerLayer
-                client={client}
-                pageKey={pageKey}
-                pageUrl={pageUrl}
-                resolvePageKey={(url) => resolvePageKey(options, url)}
-                identity={identity}
-                onNeedIdentity={onNeedIdentity}
-                provenance={options.provenance}
-              />
-              <PanelDrawer
-                resolvePageKey={(url) => resolvePageKey(options, url)}
-                client={client}
-                identity={identity}
-                onNeedIdentity={onNeedIdentity}
-              />
+              <DraftsProvider>
+                <MarkerLayer
+                  client={client}
+                  pageKey={pageKey}
+                  pageUrl={pageUrl}
+                  resolvePageKey={(url) => resolvePageKey(options, url)}
+                  identity={identity}
+                  onNeedIdentity={onNeedIdentity}
+                  provenance={options.provenance}
+                />
+                <PanelDrawer
+                  resolvePageKey={(url) => resolvePageKey(options, url)}
+                  client={client}
+                  identity={identity}
+                  onNeedIdentity={onNeedIdentity}
+                />
+              </DraftsProvider>
             </PanelProvider>
             <IdentityModal
               open={modalOpen}

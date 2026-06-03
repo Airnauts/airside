@@ -1,12 +1,13 @@
 import { loadActivationKey, saveActivationKey } from './activation/storage'
-import { DEFAULT_KEY_PARAM, type InitOptions } from './config'
+import { DEFAULT_KEY_PARAM, DEFAULT_THREAD_PARAM, type InitOptions } from './config'
 import { isActivated, isUrlActivation } from './gate'
+import { FOCUS_STORAGE_KEY } from './panel/navigate'
 
 export const packageName = '@airnauts/comments-client'
 
 export * from './anchor'
 export type { InitOptions } from './config'
-export { DEFAULT_KEY_PARAM } from './config'
+export { DEFAULT_KEY_PARAM, DEFAULT_THREAD_PARAM } from './config'
 
 export type CommentsHandle = {
   destroy(): void
@@ -18,6 +19,24 @@ const NOOP_HANDLE: CommentsHandle = { destroy() {} }
 function stripKeyParam(keyParam: string): void {
   const url = new URL(window.location.href)
   url.searchParams.delete(keyParam)
+  window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
+}
+
+/**
+ * Translate a `?comments-thread=<id>` deep-link into the cross-page focus handoff
+ * (so the boot consumer opens that thread's sidebar detail), then strip the param
+ * from the address bar — mirroring the key-param handling.
+ */
+export function consumeThreadParam(param: string): void {
+  const url = new URL(window.location.href)
+  const id = url.searchParams.get(param)
+  if (!id) return
+  try {
+    sessionStorage.setItem(FOCUS_STORAGE_KEY, JSON.stringify({ id, openDetail: true }))
+  } catch {
+    /* storage unavailable — deep-link focus is best-effort */
+  }
+  url.searchParams.delete(param)
   window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash)
 }
 
@@ -45,6 +64,8 @@ export async function init(options: InitOptions): Promise<CommentsHandle> {
     saveActivationKey(options.key)
     stripKeyParam(keyParam)
   }
+
+  consumeThreadParam(options.threadParam ?? DEFAULT_THREAD_PARAM)
 
   const { mount } = await import('./app/mount')
   return mount(options)
