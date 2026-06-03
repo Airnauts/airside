@@ -97,7 +97,13 @@ export function MarkerLayer({
       .refresh()
       .then(() => {
         const handoff = takeFocusHandoff()
-        if (handoff) controller.requestFocus(handoff.id)
+        if (handoff) {
+          controller.requestFocus(handoff.id)
+          if (handoff.openDetail) {
+            void panel.openPanel()
+            panel.openDetail(handoff.id)
+          }
+        }
       })
       // The boot list is fire-and-forget; a failed fetch (offline, server down, or a hermetic
       // test with no backend) must degrade to "no threads yet", not surface as an unhandled
@@ -120,7 +126,7 @@ export function MarkerLayer({
       controller.registerRuntime(null)
       runtime.current = null
     }
-  }, [client, activeKey, dispatch, controller])
+  }, [client, activeKey, dispatch, controller, panel])
 
   // Toast + clear when the open thread orphaned during a re-match.
   useEffect(() => {

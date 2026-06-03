@@ -3,7 +3,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { installObserverSpies, mockRect } from '../../test/test-helpers/dom'
 import { WidgetProvider } from '../app/providers'
 import { DraftsProvider } from '../drafts/DraftsProvider'
-import { FOCUS_STORAGE_KEY } from '../panel/navigate'
+import { FOCUS_STORAGE_KEY, goToThread } from '../panel/navigate'
 import { PanelDrawer } from '../panel/PanelDrawer'
 import { PanelProvider } from '../panel/PanelProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
@@ -352,5 +352,14 @@ describe('MarkerLayer panel integration', () => {
     // boot handoff → controller.requestFocus('t1') → lazy getThread('t1')
     await waitFor(() => expect(getThread).toHaveBeenCalledWith('t1'))
     expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBeNull()
+  })
+
+  it('opens the panel detail for an openDetail handoff on boot', async () => {
+    goToThread(
+      { id: 't1', pageUrl: 'https://x.test/here', openDetail: true },
+      { storage: window.sessionStorage, assign: () => {} },
+    )
+    renderLayer(client())
+    expect(await screen.findByRole('button', { name: /back/i })).toBeInTheDocument()
   })
 })
