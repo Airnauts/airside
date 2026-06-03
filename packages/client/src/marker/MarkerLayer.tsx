@@ -96,8 +96,8 @@ export function MarkerLayer({
     void rt
       .refresh()
       .then(() => {
-        const focusId = takeFocusHandoff()
-        if (focusId) controller.requestFocus(focusId)
+        const handoff = takeFocusHandoff()
+        if (handoff) controller.requestFocus(handoff.id)
       })
       // The boot list is fire-and-forget; a failed fetch (offline, server down, or a hermetic
       // test with no backend) must degrade to "no threads yet", not surface as an unhandled

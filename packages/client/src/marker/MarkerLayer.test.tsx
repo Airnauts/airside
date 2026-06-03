@@ -4,6 +4,7 @@ import { installObserverSpies, mockRect } from '../../test/test-helpers/dom'
 import { WidgetProvider } from '../app/providers'
 import { FOCUS_STORAGE_KEY } from '../panel/navigate'
 import { PanelDrawer } from '../panel/PanelDrawer'
+import { DraftsProvider } from '../drafts/DraftsProvider'
 import { PanelProvider } from '../panel/PanelProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { ToastProvider } from '../ui/toast'
@@ -40,7 +41,9 @@ const renderMarker = (p: ReturnType<typeof props>) =>
   render(
     <ThreadsProvider client={p.client as never}>
       <PanelProvider client={p.client as never}>
-        <MarkerLayer {...p} />
+        <DraftsProvider>
+          <MarkerLayer {...p} />
+        </DraftsProvider>
       </PanelProvider>
     </ThreadsProvider>,
   )
@@ -300,15 +303,17 @@ function renderLayer(client: unknown) {
       <ToastProvider>
         <ThreadsProvider client={client as never}>
           <PanelProvider client={client as never}>
-            <MarkerLayer
-              client={client as never}
-              pageKey="x.test/here"
-              pageUrl="https://x.test/here"
-              resolvePageKey={() => 'x.test/here'}
-              identity={null}
-              onNeedIdentity={() => {}}
-            />
-            <PanelDrawer resolvePageKey={() => 'x.test/here'} />
+            <DraftsProvider>
+              <MarkerLayer
+                client={client as never}
+                pageKey="x.test/here"
+                pageUrl="https://x.test/here"
+                resolvePageKey={() => 'x.test/here'}
+                identity={null}
+                onNeedIdentity={() => {}}
+              />
+              <PanelDrawer resolvePageKey={() => 'x.test/here'} />
+            </DraftsProvider>
           </PanelProvider>
         </ThreadsProvider>
       </ToastProvider>

@@ -112,7 +112,9 @@ describe('PanelDrawer', () => {
     screen.getByText('open').click()
     await waitFor(() => screen.getByTestId('comments-panel-row'))
     act(() => screen.getByTestId('comments-panel-row').click())
-    expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBe('a')
+    expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBe(
+      JSON.stringify({ id: 'a', openDetail: false }),
+    )
   })
 
   it('same-page row click closes the drawer and writes no handoff', async () => {

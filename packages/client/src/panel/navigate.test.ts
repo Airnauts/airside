@@ -2,30 +2,47 @@
 import { describe, expect, it, vi } from 'vitest'
 import { FOCUS_STORAGE_KEY, goToThread, takeFocusHandoff } from './navigate'
 
-function fakeStorage(seed: Record<string, string> = {}): Storage {
-  const map = new Map(Object.entries(seed))
+function memStorage(): Storage {
+  const m = new Map<string, string>()
   return {
-    getItem: (k) => map.get(k) ?? null,
-    setItem: (k, v) => void map.set(k, v),
-    removeItem: (k) => void map.delete(k),
-    clear: () => map.clear(),
+    getItem: (k) => m.get(k) ?? null,
+    setItem: (k, v) => void m.set(k, v),
+    removeItem: (k) => void m.delete(k),
+    clear: () => m.clear(),
     key: () => null,
     length: 0,
   } as Storage
 }
 
 describe('focus handoff', () => {
-  it('takeFocusHandoff reads then clears the key (one-shot)', () => {
-    const storage = fakeStorage({ [FOCUS_STORAGE_KEY]: 't1' })
-    expect(takeFocusHandoff(storage)).toBe('t1')
-    expect(takeFocusHandoff(storage)).toBeNull()
+  it('round-trips an openDetail handoff', () => {
+    const storage = memStorage()
+    goToThread(
+      { id: 't1', pageUrl: 'https://x/a', openDetail: true },
+      { storage, assign: () => {} },
+    )
+    const handoff = takeFocusHandoff(storage)
+    expect(handoff).toEqual({ id: 't1', openDetail: true })
+    expect(takeFocusHandoff(storage)).toBeNull() // consumed once
+  })
+
+  it('tolerates a legacy bare-string id', () => {
+    const storage = memStorage()
+    storage.setItem('cmnt:focus', 't9')
+    expect(takeFocusHandoff(storage)).toEqual({ id: 't9', openDetail: false })
+  })
+
+  it('defaults openDetail to false when omitted', () => {
+    const storage = memStorage()
+    goToThread({ id: 't2', pageUrl: 'https://x/b' }, { storage, assign: () => {} })
+    expect(takeFocusHandoff(storage)).toEqual({ id: 't2', openDetail: false })
   })
 
   it('goToThread stashes the id and navigates to the page url', () => {
-    const storage = fakeStorage()
+    const storage = memStorage()
     const assign = vi.fn()
     goToThread({ id: 't1', pageUrl: 'https://x.test/pricing' }, { storage, assign })
-    expect(storage.getItem(FOCUS_STORAGE_KEY)).toBe('t1')
+    expect(storage.getItem(FOCUS_STORAGE_KEY)).toBe(JSON.stringify({ id: 't1', openDetail: false }))
     expect(assign).toHaveBeenCalledWith('https://x.test/pricing')
   })
 })
