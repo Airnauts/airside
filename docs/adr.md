@@ -901,3 +901,46 @@ documented decision and makes the server trust client-supplied `url`/`size`/`con
   it. Verified end-to-end through the real server handler (`pipeline.test.ts`): multipart
   upload → image-only comment referencing the returned id → fetched thread carries the
   resolved attachment; an unknown id returns 400.
+
+---
+
+## ADR-0025 — Verification milestone: Playwright e2e (Chromium, hermetic) + tag-triggered Changesets release; drive the widget via user-facing locators
+
+- **Date:** 2026-06-03
+- **Status:** accepted
+
+**Context.** M10 had to automate the manual smoke checklist M9 produced and give the
+already-prepared `@airnauts/comments-*` packages a way to ship. Forces: keep CI
+hermetic and fast (no external services); honor M10's "no package-code" scope; retain
+manual control over when a release goes out; and prove the riskiest behavior
+(re-anchoring across reload + DOM mutation) end to end in a real browser.
+
+**Decision.**
+- **Playwright e2e** drives `examples/nextjs-host` in **Chromium only**, against a
+  **hermetic** host app (no `MONGODB_URI`/`BLOB_READ_WRITE_TOKEN` → in-memory repository
+  + local `public/uploads/`). The webServer runs a production build + `next start`.
+  DOM-mutation re-anchor/orphan is exercised by a server-rendered `?variant=` surface on
+  the article page (test-support only).
+- **Per-test store isolation** via a `?ns=` namespace honored by the host mount's
+  `pageKey` override — the single in-memory store is shared across tests, so each test
+  partitions its threads (the cross-page panel is inherently cross-`pageKey`, so its
+  test asserts on `/pricing`, a page no other spec uses, rather than a total count).
+- The widget is driven through **user-facing locators** (`getByRole`/`getByLabel`/
+  `getByText`) plus the widget's **existing** `data-testid` hooks — **no new test hooks
+  or any other widget source change**, keeping the "no package-code" scope honest and
+  earning accessibility coverage.
+- **Releases** are **tag-triggered**: pushing a `v*` tag runs a **self-contained**
+  `release.yml` (re-runs lint/typecheck/build/test, then `changeset publish`) because
+  tag pushes do not trigger `ci.yml`. Versioning stays manual via `changeset version`.
+
+**Consequences.**
+- Cross-browser e2e (Firefox/WebKit), a Mongo-backed e2e, and the live **Vercel + Atlas
+  + Blob** dogfood deployment + real-project adoption are **deferred to M11**; PRD §7's
+  adoption bar lands there, not here.
+- Releases require a manual version + tag step (no auto "Version PR"); `NPM_TOKEN` must
+  be configured before the first tag (see `RELEASING.md`). The bundle-size budget stays
+  **confirm-only** at 300 kB.
+- The e2e is sensitive to a cold `next start`: the thread refresh after a post briefly
+  remounts the reply composer, so the smoke test attaches on the freshly-opened composer
+  and avoids back-to-back posts (a 90s per-test budget + one CI retry absorb cold-start
+  slowness). No prior ADR is superseded.
