@@ -1,9 +1,11 @@
 // packages/client/src/ui/ThreadConversation.test.tsx
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { Thread, ThreadListItem } from '@airnauts/comments-core'
 import { fireEvent, render, screen } from '@testing-library/react'
+import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { DraftsProvider, useDraft } from '../drafts/DraftsProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
+import { useDispatch } from '../threads/useThreads'
 import { ThreadConversation } from './ThreadConversation'
 
 const item = (over: Partial<ThreadListItem> = {}) =>
@@ -41,6 +43,51 @@ function Wired({ variant }: { variant: 'popover' | 'sidebar' }) {
     />
   )
 }
+
+function Seeder({ thread }: { thread: Thread }) {
+  const dispatch = useDispatch()
+  useEffect(() => {
+    dispatch({ type: 'DETAIL_LOADED', id: thread.id, thread })
+  }, [dispatch, thread])
+  return null
+}
+
+describe('ThreadConversation detail source', () => {
+  it('renders its own thread comments by item id, even when openId is null', async () => {
+    // Regression: the sidebar detail read comments via openId (detailById[openId]). The pin
+    // popover nulls openId on any outside interaction, so the sidebar showed an empty thread
+    // even though the detail was cached under its own id. The conversation must read by item.id.
+    const thread = {
+      id: 't1',
+      status: 'open',
+      comments: [
+        {
+          id: 'c1',
+          author: { email: 'a@b.c', name: 'Ann' },
+          text: 'detail body text',
+          attachments: [],
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    } as unknown as Thread
+    render(
+      <ThreadsProvider client={mockClient}>
+        <DraftsProvider>
+          {/* openId stays null — only the per-id detail cache is seeded. */}
+          <Seeder thread={thread} />
+          <ThreadConversation
+            item={item()}
+            client={mockClient}
+            identity={{ email: 'a@b.c' }}
+            onNeedIdentity={() => {}}
+            variant="sidebar"
+          />
+        </DraftsProvider>
+      </ThreadsProvider>,
+    )
+    expect(await screen.findByText('detail body text')).toBeInTheDocument()
+  })
+})
 
 describe('ThreadConversation shared draft', () => {
   it('mirrors composer text between popover and sidebar for the same thread', () => {

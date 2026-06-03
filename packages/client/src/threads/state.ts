@@ -168,9 +168,11 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
       return mapDetail(withItem, action.id, (t) => ({ ...t, status: action.status }))
     }
     case 'REQUEST_FOCUS':
+      // Focusing a pin pulses/scrolls it and lazy-loads its detail — but does NOT open its popover.
+      // (It used to set openId, which both opened the popover and keyed the detail read; the sidebar
+      // detail now owns that surface, so focus must not yank the popover open.)
       return {
         ...state,
-        openId: action.id,
         draft: null,
         pendingFocusId: action.id,
         focusedId: null,
@@ -193,9 +195,17 @@ export function visiblePlacements(state: ThreadsState): PlacedThread[] {
     const item = state.itemsById[id]
     const geo = state.placementsById[id]
     if (!item || !geo) continue
-    // Hide resolved threads unless showResolved — but never hide the one that's open, so
-    // resolving from its popover flips the pin to ✓ in place instead of making it vanish.
-    if (item.status === 'resolved' && !state.showResolved && id !== state.openId) continue
+    // Hide resolved threads unless showResolved — but never hide one that's open or being focused,
+    // so resolving from its popover flips the pin to ✓ in place (rather than vanishing) and focusing
+    // a resolved thread from the sidebar still finds its pin to pulse.
+    if (
+      item.status === 'resolved' &&
+      !state.showResolved &&
+      id !== state.openId &&
+      id !== state.pendingFocusId &&
+      id !== state.focusedId
+    )
+      continue
     out.push({ item, pin: geo.pin, highlight: geo.highlight })
   }
   return out

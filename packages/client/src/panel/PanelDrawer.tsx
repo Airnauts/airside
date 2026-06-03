@@ -8,7 +8,7 @@ import { usePortalContainer } from '../app/providers'
 import { useDraft } from '../drafts/DraftsProvider'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
-import { useController, useOpenThread } from '../threads/useThreads'
+import { useController, useThreadDetail } from '../threads/useThreads'
 import { ThreadConversation } from '../ui/ThreadConversation'
 import { goToThread } from './navigate'
 import { usePanelController, usePanelState } from './PanelProvider'
@@ -41,9 +41,11 @@ function DetailView({
   identity: Identity | null
   onNeedIdentity: PanelDrawerProps['onNeedIdentity']
 }) {
-  const { detail } = useOpenThread()
+  const { detail } = useThreadDetail(threadId)
   const draft = useDraft(threadId)
-  // Prefer the panel list item (instant); fall back to the loaded thread (cross-page boot).
+  // Prefer the panel list item (instant); fall back to the id-keyed loaded thread (cross-page /
+  // deep-link, where the thread isn't in the list). Reading by threadId — not openId — keeps the
+  // pane populated regardless of the popover's open state.
   const item = listItem ?? detail
   return (
     <div className="cmnt:flex-1 cmnt:overflow-y-auto cmnt:flex cmnt:flex-col cmnt:min-h-0">
@@ -86,8 +88,11 @@ export function PanelDrawer({
   function onSelect(row: { id: string; pageKey: string | null; pageUrl: string }) {
     const here = resolvePageKey(window.location.href)
     if (row.pageKey === here) {
+      // Same page: show the in-sidebar detail and focus (pulse) the pin. Do NOT open the pin's
+      // popover — the sidebar is the surface now. close() dismisses any popover left open from an
+      // earlier pin click; requestFocus pulses the pin + lazy-loads the detail (read by id below).
+      threads.close()
       panel.openDetail(row.id)
-      threads.openThread(row.id)
       threads.requestFocus(row.id)
     } else {
       goToThread({ id: row.id, pageUrl: row.pageUrl, openDetail: true })

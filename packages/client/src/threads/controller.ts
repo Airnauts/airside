@@ -22,8 +22,12 @@ export type Controller = {
    * mutation, clobbering the optimistic update (the pin would revert until a full reload).
    */
   registerRuntime(patch: ((id: string, status: ThreadStatus) => void) | null): void
-  /** Focus a pin: open + lazy-fetch like openThread, but also arm the focus effect (scroll + pulse). */
+  /** Focus a pin: arm the focus effect (scroll + pulse) and lazy-fetch its detail — WITHOUT opening
+   * its popover. The sidebar detail is the surface that shows the thread; the popover opens only on a
+   * direct pin click. */
   requestFocus(id: string): void
+  /** Re-fetch a thread's detail by id without opening its popover (the sidebar detail's retry path). */
+  refetch(id: string): void
   /** The panel registers here to refetch its list when a status change persists (drawer-open reconciliation). */
   registerStatusListener(fn: ((id: string, status: ThreadStatus) => void) | null): void
 }
@@ -91,6 +95,9 @@ export function createController(
     },
     requestFocus(id) {
       dispatch({ type: 'REQUEST_FOCUS', id })
+      lazyFetchDetail(id)
+    },
+    refetch(id) {
       lazyFetchDetail(id)
     },
     registerStatusListener(fn) {

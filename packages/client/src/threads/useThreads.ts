@@ -48,6 +48,24 @@ export function useOpenThread(): {
   }
 }
 
+/**
+ * Detail for a specific thread id, read from the per-id cache. Unlike {@link useOpenThread} this is
+ * NOT tied to `openId`, so a surface (the sidebar detail) keeps showing its thread even when the pin
+ * popover nulls `openId` on an outside interaction. The popover open-state still uses `openId`.
+ */
+export function useThreadDetail(id: string | null): {
+  detail: Thread | null
+  loading: boolean
+  error: boolean
+} {
+  const { state } = useCtx()
+  return {
+    detail: id ? (state.detailById[id] ?? null) : null,
+    loading: id ? Boolean(state.loadingDetail[id]) : false,
+    error: id ? Boolean(state.detailError[id]) : false,
+  }
+}
+
 export function useFocus(): { pendingFocusId: string | null; focusedId: string | null } {
   const { state } = useCtx()
   return { pendingFocusId: state.pendingFocusId, focusedId: state.focusedId }

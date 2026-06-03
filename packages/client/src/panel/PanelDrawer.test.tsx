@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
 import { DraftsProvider } from '../drafts/DraftsProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
-import { useController } from '../threads/useThreads'
+import { useController, useDispatch } from '../threads/useThreads'
 import { FOCUS_STORAGE_KEY } from './navigate'
 import { PanelDrawer } from './PanelDrawer'
 import { PanelProvider, usePanelController } from './PanelProvider'
@@ -53,6 +53,43 @@ function StatusProbe() {
   )
 }
 
+// Simulates a cross-page / deep-link open: the thread is NOT in the loaded list, its detail is
+// seeded under its own id, and openId stays null. The detail view must fall back to the id-keyed
+// detail (not openId) or it renders blank.
+function GhostOpener() {
+  const panel = usePanelController()
+  const dispatch = useDispatch()
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        dispatch({
+          type: 'DETAIL_LOADED',
+          id: 'ghost',
+          thread: {
+            id: 'ghost',
+            status: 'open',
+            comments: [
+              {
+                id: 'gc1',
+                author: { email: 'a@b.c', name: 'Ann' },
+                text: 'ghost detail body',
+                attachments: [],
+                createdAt: new Date().toISOString(),
+              },
+            ],
+            // biome-ignore lint/suspicious/noExplicitAny: test fixture, partial Thread is enough
+          } as any,
+        })
+        void panel.openPanel()
+        panel.openDetail('ghost')
+      }}
+    >
+      ghost
+    </button>
+  )
+}
+
 function setup(opts: {
   threads: ThreadListItem[]
   review?: ThreadListItem[]
@@ -86,6 +123,7 @@ function setup(opts: {
           <DraftsProvider>
             <Opener />
             <CloseProbe />
+            <GhostOpener />
             {opts.withProbes && <StatusProbe />}
             <PanelDrawer
               resolvePageKey={resolvePageKey}
@@ -171,6 +209,13 @@ describe('PanelDrawer', () => {
     await waitFor(() => screen.getByRole('button', { name: /back/i }))
     act(() => screen.getByRole('button', { name: /back/i }).click())
     await waitFor(() => expect(screen.getByTestId('comments-panel-row')).toBeInTheDocument())
+  })
+
+  it('detail view renders comments for a thread not in the list (cross-page fallback, openId null)', async () => {
+    setup({ threads: [item({ id: 'a' })] })
+    act(() => screen.getByText('ghost').click())
+    // Falls back to the id-keyed detail cache; must show the loaded comment, not a blank pane.
+    expect(await screen.findByText('ghost detail body')).toBeInTheDocument()
   })
 
   it('status change while panel is open triggers a refetch; closing removes the listener', async () => {

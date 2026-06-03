@@ -10,7 +10,7 @@ import type {
 import type { ApiClient } from '../api/client'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
-import { useController, useDispatch, useOpenThread } from '../threads/useThreads'
+import { useController, useDispatch, useThreadDetail } from '../threads/useThreads'
 import { CommentList } from './CommentList'
 import { Composer, type ComposerSubmit } from './Composer'
 import { useToast } from './toast'
@@ -44,7 +44,10 @@ export function ThreadConversation({
   const id = item.id
   const controller = useController()
   const dispatch = useDispatch()
-  const { detail, loading, error } = useOpenThread()
+  // Read detail by this thread's id — NOT openId — so the sidebar keeps showing its thread even when
+  // the pin popover nulls openId on an outside interaction. (Equivalent for the popover: item.id ===
+  // openId while it's open.)
+  const { detail, loading, error } = useThreadDetail(id)
   const toast = useToast()
   const resolved = (detail?.status ?? item.status) === 'resolved'
 
@@ -156,7 +159,7 @@ export function ThreadConversation({
         comments={detail?.comments ?? []}
         loading={loading}
         error={error}
-        onRetry={() => controller.openThread(id)}
+        onRetry={() => controller.refetch(id)}
       />
       {!loading && (
         <Composer

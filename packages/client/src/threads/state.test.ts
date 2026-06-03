@@ -182,16 +182,19 @@ describe('visiblePlacements selector', () => {
 })
 
 describe('focus actions', () => {
-  it('REQUEST_FOCUS opens the thread, arms pending focus, clears draft + prior focusedId', () => {
+  it('REQUEST_FOCUS arms pending focus and clears draft + prior focusedId WITHOUT opening the popover', () => {
     const next = reducer(
       {
         ...initialState,
+        openId: 'other',
         focusedId: 'old',
         draft: { anchor: {}, point: { x: 0, y: 0 }, pin: { x: 0, y: 0 } } as never,
       },
       { type: 'REQUEST_FOCUS', id: 't1' },
     )
-    expect(next.openId).toBe('t1')
+    // Focus must not touch openId — the sidebar detail owns the surface; the popover opens only on a
+    // direct pin click. A stray openId is left for the caller (onSelect) to close explicitly.
+    expect(next.openId).toBe('other')
     expect(next.pendingFocusId).toBe('t1')
     expect(next.focusedId).toBeNull()
     expect(next.draft).toBeNull()

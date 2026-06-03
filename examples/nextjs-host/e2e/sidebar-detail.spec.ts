@@ -24,6 +24,9 @@ test.describe('sidebar master–detail', () => {
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
     await expect(page.getByTestId('comments-panel')).toBeVisible()
     await expect(page.getByTestId('comments-pin-pulse')).toBeVisible()
+    // The thread's comment must actually render in the detail on the FIRST open (regression guard:
+    // the detail used to read comments via openId, which the pin popover nulled → empty on first open).
+    await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
     // No navigation occurred.
     await expect(page).toHaveURL(/\/pricing/)
 
@@ -52,6 +55,8 @@ test.describe('sidebar master–detail', () => {
     await expect(page).toHaveURL(/\/article/)
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
     await expect(page.getByTestId('comments-pin-pulse')).toBeVisible()
+    // The restored detail must render the thread's comment (cross-page fallback reads detail by id).
+    await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
   })
 
   test('?comments-thread deep-link opens the detail and strips the param', async ({ page }) => {
@@ -75,6 +80,7 @@ test.describe('sidebar master–detail', () => {
 
     // The detail opens automatically and the deep-link param is stripped from the URL.
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
+    await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
     await expect(page).not.toHaveURL(/comments-thread/)
   })
 })
