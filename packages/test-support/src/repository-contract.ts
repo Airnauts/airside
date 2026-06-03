@@ -156,6 +156,50 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
         expect(result.threads).toHaveLength(0)
       })
 
+      it('projects the root comment text into rootComment', async () => {
+        const input = makeNewThread({ firstComment: { text: 'the original' } })
+        await repo.createThread(input)
+        const result = await repo.listThreads({
+          projectId: input.projectId,
+          pageKey: input.pageKey ?? undefined,
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(result.threads[0]?.rootComment).toEqual({
+          text: 'the original',
+          createdAt: input.firstComment.createdAt,
+        })
+      })
+
+      it('projects empty rootComment text for an attachment-only root', async () => {
+        const input = makeNewThread({ firstComment: { text: '' } })
+        await repo.createThread(input)
+        const result = await repo.listThreads({
+          projectId: input.projectId,
+          pageKey: input.pageKey ?? undefined,
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(result.threads[0]?.rootComment?.text).toBe('')
+      })
+
+      it('keeps rootComment fixed to the first comment as replies are added', async () => {
+        const input = makeNewThread({ firstComment: { text: 'first' } })
+        await repo.createThread(input)
+        await repo.addComment(
+          { projectId: input.projectId },
+          input.id,
+          makeComment({ text: 'a reply' }),
+        )
+        const result = await repo.listThreads({
+          projectId: input.projectId,
+          pageKey: input.pageKey ?? undefined,
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(result.threads[0]?.rootComment?.text).toBe('first')
+      })
+
       it('paginates with cursor: no overlap, no gap, nextCursor null on last page', async () => {
         for (let i = 0; i < 25; i++) {
           await repo.createThread(
@@ -271,6 +315,18 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
 
         const refetched = await repo.getThread({ projectId: input.projectId }, input.id)
         expect(refetched?.anchor.selectors).toEqual(['main > h2', '.hero > .subtitle'])
+      })
+
+      it('updateAnchor returns a ThreadListItem carrying rootComment', async () => {
+        const input = makeNewThread({ firstComment: { text: 'anchored root' } })
+        await repo.createThread(input)
+        const item = await repo.updateAnchor(
+          { projectId: input.projectId },
+          input.id,
+          { anchorState: 'orphaned' },
+          '2026-05-28T11:00:00.000Z',
+        )
+        expect(item.rootComment?.text).toBe('anchored root')
       })
 
       it('persists selectionLost without flipping anchorState', async () => {
