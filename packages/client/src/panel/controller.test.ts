@@ -68,4 +68,24 @@ describe('panel controller', () => {
     expect(h.get().error).toBe(true)
     expect(h.get().loading).toBe(false)
   })
+
+  it('openDetail dispatches OPEN_DETAIL', () => {
+    const dispatched: unknown[] = []
+    const controller = createPanelController((a) => dispatched.push(a), {
+      client: { listThreads: async () => ({ threads: [], nextCursor: null }) },
+      getState: () => ({ ...initialState }),
+    })
+    controller.openDetail('t9')
+    expect(dispatched).toContainEqual({ type: 'OPEN_DETAIL', id: 't9' })
+  })
+
+  it('back dispatches BACK', () => {
+    const dispatched: unknown[] = []
+    const controller = createPanelController((a) => dispatched.push(a), {
+      client: { listThreads: async () => ({ threads: [], nextCursor: null }) },
+      getState: () => ({ ...initialState }),
+    })
+    controller.back()
+    expect(dispatched).toContainEqual({ type: 'BACK' })
+  })
 })

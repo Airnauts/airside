@@ -8,6 +8,8 @@ export type PanelController = {
   setFilter(filter: PanelFilter): Promise<void>
   loadMore(): Promise<void>
   refresh(): Promise<void>
+  openDetail(id: string): void
+  back(): void
 }
 
 export function createPanelController(
@@ -63,6 +65,12 @@ export function createPanelController(
       } catch {
         dispatch({ type: 'LOAD_MORE_ERROR' })
       }
+    },
+    openDetail(id) {
+      dispatch({ type: 'OPEN_DETAIL', id })
+    },
+    back() {
+      dispatch({ type: 'BACK' })
     },
   }
 }
