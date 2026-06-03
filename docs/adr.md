@@ -904,7 +904,57 @@ documented decision and makes the server trust client-supplied `url`/`size`/`con
 
 ---
 
-## ADR-0025 — Verification milestone: Playwright e2e (Chromium, hermetic) + publish-on-green-main (Changesets); drive the widget via user-facing locators
+## ADR-0025 — Emit the widget's utilities un-layered so a host's reset can't override them (amends ADR-0006)
+
+- **Date:** 2026-06-03
+- **Status:** accepted
+
+**Amends:** ADR-0006 (light-DOM isolation). That record already noted isolation is
+"not bulletproof — host rules with … tag selectors can leak in"; this fills the
+specific, *common* case it under-weighted.
+
+**Context.** The first real host integration (lear-frontend, a Tailwind v3 app)
+showed the widget's buttons rendering with no borders, radii, or padding. Root
+cause is a **CSS cascade-layer** conflict, not specificity. The widget's
+`widget.css` imported its utilities into a named layer
+(`@import "tailwindcss/utilities.css" layer(utilities) …`), so every utility lived
+in `@layer utilities`. The host ships an **un-layered** reset/Preflight — Tailwind
+v3 flattens `@tailwind base` to plain un-layered CSS, as do Normalize/reset.css and
+most hosts. Per the CSS cascade, **a normal un-layered author declaration beats any
+normal *layered* author declaration regardless of selector specificity.** So the
+host's un-layered `button { border-radius: 0; padding: 0 }` and
+`*,::before,::after { border: 0 solid … }` defeated the widget's higher-specificity
+`.cmnt\:rounded-full` / `.cmnt\:border-2` / `.cmnt\:p-3` — stripping exactly the
+properties the host reset touches while leaving colors/layout intact (the observed
+partial-styling symptom). `all: revert` on the root never addressed this: it
+neutralizes the root element only, not descendants, and cannot out-rank an
+un-layered host rule.
+
+**Decision.** Emit the widget's `cmnt:`-prefixed utilities **un-layered** (drop
+`layer(utilities)` from the `@import` in `widget.css`). Because every utility is
+`cmnt:`-prefixed it can only match elements inside our root, so un-layering carries
+**no leak risk**; meanwhile its `.cmnt\:…` selectors (specificity 0,1,0) now win
+over a host's element/universal reset (≤ 0,0,1). Theme variables and our scoped
+`@layer base` resets stay layered (and therefore below the utilities), preserving
+the intended theme < base < utilities ordering. Preflight remains un-imported
+(ADR-0006). Shadow DOM is still rejected.
+
+**Consequences.**
+- Robust against the *normal-declaration* reset every real host ships; verified in a
+  real browser against lear (host control `<button>` → `0` radius/padding while the
+  widget's `comments-place`/`comments-panel-open` buttons keep their pill radius and
+  padding under the identical host reset, with no leak onto the host button).
+- Still **not** bulletproof against a host that resets with `!important` (important
+  beats normal regardless of layer) — out of scope; revisit only if a real host hits
+  it. Scoped `!important` on utilities was rejected here because the pin positioning
+  sets dynamic inline `transform`, which `!important` utilities would override.
+- Guarded by a build-output unit test (`widget-css.test.ts`) asserting the generated
+  CSS contains the utilities but no `@layer utilities` wrapper, so the layer can't be
+  silently reintroduced.
+
+---
+
+## ADR-0026 — Verification milestone: Playwright e2e (Chromium, hermetic) + publish-on-green-main (Changesets); drive the widget via user-facing locators
 
 - **Date:** 2026-06-03
 - **Status:** accepted

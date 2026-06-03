@@ -330,7 +330,7 @@ deferred deployment/adoption.
 
 **Refs.** Design [`specs/2026-06-02-m10-verification-release-design.md`](../superpowers/specs/2026-06-02-m10-verification-release-design.md);
 Plan [`plans/2026-06-02-m10-verification-release.md`](../superpowers/plans/2026-06-02-m10-verification-release.md);
-ADR-0025; Spec §9; PRD §7.
+ADR-0026; Spec §9; PRD §7.
 
 ---
 
