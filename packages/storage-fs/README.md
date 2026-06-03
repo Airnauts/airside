@@ -12,10 +12,14 @@ pnpm add @airnauts/comments-storage-fs
 ## Usage
 
 ```ts
-import { FileSystemStorage } from '@airnauts/comments-storage-fs'
+import { fileSystemStorage } from '@airnauts/comments-storage-fs'
 
-const storage = new FileSystemStorage({ rootDir: './uploads' })
+const storage = fileSystemStorage({ rootDir: './uploads' })
 ```
+
+By default `put` returns `file://` URLs; set `baseUrl` (e.g. `'/uploads'`) to return
+browser-served paths instead. The `FileSystemStorage` class is also exported if you
+prefer `new FileSystemStorage(opts)`.
 
 Pass `storage` to `createCommentsServer` from `@airnauts/comments-server`.
 

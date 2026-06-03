@@ -13,19 +13,23 @@ pnpm add @airnauts/comments-server
 
 ```ts
 import { createNextHandler } from '@airnauts/comments-server/next'
-import { createCommentsServer, InMemoryRepository } from '@airnauts/comments-server'
+import { createCommentsServer } from '@airnauts/comments-server'
+import { memoryRepository } from '@airnauts/comments-adapter-memory'
 
 const server = createCommentsServer({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
-  repository: new InMemoryRepository(),
+  repository: memoryRepository(),
   storage: { async put(blob) { return { url: `mem://${blob.name}`, key: blob.name, size: 0 } } },
   rateLimit: false,
 })
 
 export const { GET, POST, PATCH, OPTIONS } = createNextHandler(server)
 ```
+
+On Next.js, `@airnauts/comments-next` wraps this server-and-handlers wiring into a
+single `createCommentsRoute(...)` call.
 
 Pair with a persistence adapter (`@airnauts/comments-adapter-mongo`) and a storage
 adapter (`@airnauts/comments-storage-vercel-blob` or `@airnauts/comments-storage-fs`)
