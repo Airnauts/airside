@@ -35,6 +35,8 @@ the mount prefix, so the server core does not need to know where it is mounted.
 Pass `disabled: true` to keep the route mounted but dormant — every handler returns
 `404` and no server is constructed (e.g. when a required backend env var is absent
 in local dev or a preview deploy). `route.server` is `undefined` in that case.
+`disabled` gates only the route, not the widget — gate the widget mount (step 3) on
+the same condition, or it will load and then 404 against its own dormant API.
 
 ## 3. Mount the widget
 
