@@ -15,7 +15,7 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
     : memoryRepository(),
   // Vercel Blob when its token is present, else local public/uploads.
   storage: process.env.BLOB_READ_WRITE_TOKEN
-    ? vercelBlobStorage()
+    ? vercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN })
     : fileSystemStorage({ rootDir: join(process.cwd(), 'public', 'uploads'), baseUrl: '/uploads' }),
   rateLimit: false,
 })

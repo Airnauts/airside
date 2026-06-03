@@ -32,6 +32,10 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
 call (it also returns `server` for server-side reads or tests). The handler strips
 the mount prefix, so the server core does not need to know where it is mounted.
 
+Pass `disabled: true` to keep the route mounted but dormant — every handler returns
+`404` and no server is constructed (e.g. when a required backend env var is absent
+in local dev or a preview deploy). `route.server` is `undefined` in that case.
+
 ## 3. Mount the widget
 
 In a client component rendered from your root layout:
@@ -79,8 +83,8 @@ infrastructure is config — no bespoke glue:
 - **Persistence:** replace `memoryRepository()` with `mongoRepository({ uri })` from
   `@airnauts/comments-adapter-mongo`. It connects lazily on first use and memoizes the
   connection (warm serverless / HMR reuse); the database name comes from the URI.
-- **Storage:** replace the stub with `vercelBlobStorage()` from
-  `@airnauts/comments-storage-vercel-blob` (reads `BLOB_READ_WRITE_TOKEN`), or
+- **Storage:** replace the stub with `vercelBlobStorage({ token })` from
+  `@airnauts/comments-storage-vercel-blob` (pass `BLOB_READ_WRITE_TOKEN` explicitly), or
   `fileSystemStorage({ rootDir, baseUrl })` from `@airnauts/comments-storage-fs`
   (`baseUrl` makes `put` return a browser-served path instead of a `file://` URL).
 - **Origins:** set `allowedOrigins` to your real site origins.
@@ -102,7 +106,7 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
     ? mongoRepository({ uri: process.env.MONGODB_URI })
     : memoryRepository(),
   storage: process.env.BLOB_READ_WRITE_TOKEN
-    ? vercelBlobStorage()
+    ? vercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN })
     : fileSystemStorage({ rootDir: join(process.cwd(), 'public', 'uploads'), baseUrl: '/uploads' }),
   rateLimit: false,
 })
