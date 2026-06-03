@@ -89,9 +89,9 @@ export function PanelDrawer({
     const here = resolvePageKey(window.location.href)
     if (row.pageKey === here) {
       // Same page: show the in-sidebar detail and focus (pulse) the pin. Do NOT open the pin's
-      // popover — the sidebar is the surface now. close() dismisses any popover left open from an
-      // earlier pin click; requestFocus pulses the pin + lazy-loads the detail (read by id below).
-      threads.close()
+      // popover (the sidebar is the surface) and do NOT close one that's already open — a pin thread
+      // the user opened stays open while they browse the sidebar. requestFocus pulses the pin and
+      // lazy-loads the detail (read by id below); it leaves openId untouched.
       panel.openDetail(row.id)
       threads.requestFocus(row.id)
     } else {

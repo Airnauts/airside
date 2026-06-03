@@ -47,10 +47,19 @@ export function ThreadPopover({
       </Popover.Trigger>
       <Popover.Portal container={container ?? undefined}>
         <Popover.Content
+          data-testid="comments-pin-popover"
           side="bottom"
           align="center"
           sideOffset={8}
           collisionPadding={8}
+          // The pin popover dismisses on host-page clicks, not on comments-UI clicks: keep it open
+          // when the interaction lands anywhere inside the widget root (the sidebar panel, the
+          // launcher, another popover). Switching to a different pin still closes it via the
+          // controlled `open={openId === id}`, so this can't strand two pin popovers open.
+          onInteractOutside={(e) => {
+            const target = e.detail.originalEvent.target as Element | null
+            if (target?.closest('[data-comments-root]')) e.preventDefault()
+          }}
           className="cmnt:pointer-events-auto"
         >
           <ThreadConversation

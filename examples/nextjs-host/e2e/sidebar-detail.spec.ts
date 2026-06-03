@@ -35,6 +35,27 @@ test.describe('sidebar master–detail', () => {
     await expect(page.getByTestId('comments-panel-row').filter({ hasText: body })).toBeVisible()
   })
 
+  test('an open pin popover survives opening and interacting with the sidebar', async ({
+    page,
+  }) => {
+    const ns = 'sidebar-popover-coexist'
+    const body = 'Popover coexist body'
+
+    await activate(page, '/pricing', ns)
+    // Placing a comment leaves its pin popover open.
+    await placeElementPin(page, 'Starter', body)
+    await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
+
+    // Opening the sidebar must NOT dismiss the open pin popover.
+    await page.getByTestId('comments-panel-open').click()
+    await expect(page.getByTestId('comments-panel')).toBeVisible()
+    await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
+
+    // Interacting with the sidebar (a filter chip) must NOT dismiss it either.
+    await page.getByRole('button', { name: 'All' }).click()
+    await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
+  })
+
   test('cross-page row click navigates and restores the detail view', async ({ page }) => {
     const ns = 'sidebar-cross'
     const body = 'Cross-page sidebar detail body'
