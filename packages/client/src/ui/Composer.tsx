@@ -4,6 +4,7 @@ import { type ChangeEvent, useEffect, useRef, useState } from 'react'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
 import { PendingAttachment, type PendingStatus } from './Attachment'
+import { Button } from './Button'
 
 export type ComposerSubmit = { text: string; attachmentIds: string[]; who: Identity }
 
@@ -158,14 +159,15 @@ export function Composer({
         />
       )}
       <div className="cmnt:flex cmnt:items-center cmnt:gap-2">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
           aria-label="Attach image"
           onClick={() => fileRef.current?.click()}
-          className="cmnt:bg-transparent cmnt:border-none cmnt:cursor-pointer cmnt:text-base cmnt:text-gray-400"
+          className="cmnt:text-base cmnt:text-gray-400"
         >
           📎
-        </button>
+        </Button>
         <input
           ref={fileRef}
           data-testid="composer-file"
@@ -192,27 +194,19 @@ export function Composer({
           className="cmnt:flex-1 cmnt:min-w-0 cmnt:border-none cmnt:outline-none cmnt:text-[13px] cmnt:bg-transparent"
         />
         {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="cmnt:bg-white cmnt:border cmnt:border-gray-300 cmnt:rounded-md cmnt:px-[11px] cmnt:py-[5px] cmnt:text-xs cmnt:font-semibold cmnt:text-gray-600 cmnt:cursor-pointer"
-          >
+          <Button variant="outline" size="sm" onClick={onCancel}>
             Cancel
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
+        <Button
+          variant="primary"
+          size="sm"
           onClick={onSendClick}
           disabled={!canSend}
-          className={cn(
-            'cmnt:text-white cmnt:rounded-md cmnt:px-[11px] cmnt:py-[5px] cmnt:text-xs cmnt:font-semibold cmnt:border-none',
-            canSend
-              ? 'cmnt:bg-blue-600 cmnt:cursor-pointer'
-              : 'cmnt:bg-[#93b4f5] cmnt:cursor-default',
-          )}
+          className={cn(!canSend && 'cmnt:bg-[#93b4f5]')}
         >
           Send
-        </button>
+        </Button>
       </div>
     </div>
   )

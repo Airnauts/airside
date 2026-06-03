@@ -11,6 +11,7 @@ import type { ApiClient } from '../api/client'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
 import { useController, useDispatch, useThreadDetail } from '../threads/useThreads'
+import { Button } from './Button'
 import { CommentList } from './CommentList'
 import { Composer, type ComposerSubmit } from './Composer'
 import { useToast } from './toast'
@@ -125,25 +126,18 @@ export function ThreadConversation({
             : `Open · ${item.commentCount} ${item.commentCount === 1 ? 'comment' : 'comments'}`}
         </span>
         <div className="cmnt:flex cmnt:items-center cmnt:gap-1.5 cmnt:text-gray-500">
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={toggleStatus}
-            className={cn(
-              'cmnt:border cmnt:border-gray-300 cmnt:rounded-md cmnt:px-2 cmnt:py-[3px] cmnt:text-[11px] cmnt:font-semibold cmnt:bg-white cmnt:cursor-pointer',
-              resolved ? 'cmnt:text-gray-500' : 'cmnt:text-green-600',
-            )}
+            className={cn(resolved ? 'cmnt:text-gray-500' : 'cmnt:text-green-600')}
           >
             {resolved ? '↺ Reopen' : '✓ Resolve'}
-          </button>
+          </Button>
           {variant === 'popover' && (
-            <button
-              type="button"
-              aria-label="Close"
-              onClick={() => controller.close()}
-              className="cmnt:border-none cmnt:bg-transparent cmnt:cursor-pointer cmnt:px-1.5 cmnt:py-0.5"
-            >
+            <Button variant="ghost" size="icon" aria-label="Close" onClick={() => controller.close()}>
               ✕
-            </button>
+            </Button>
           )}
         </div>
       </div>

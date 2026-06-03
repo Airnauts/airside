@@ -1,4 +1,5 @@
 // packages/client/src/ui/LoginLauncher.tsx
+import { Button } from './Button'
 
 export type LoginLauncherProps = {
   /** Open the login (identity) modal. */
@@ -10,15 +11,16 @@ export type LoginLauncherProps = {
 export function LoginLauncher({ onLogIn }: LoginLauncherProps) {
   return (
     <div className="cmnt:fixed cmnt:bottom-4 cmnt:right-4 cmnt:flex cmnt:items-center cmnt:pointer-events-auto">
-      <button
-        type="button"
+      <Button
+        variant="primary"
+        size="md"
         aria-label="Log in"
         data-testid="comments-login"
         onClick={onLogIn}
-        className="cmnt:inline-flex cmnt:items-center cmnt:gap-1.5 cmnt:rounded-full cmnt:px-4 cmnt:py-2 cmnt:bg-blue-600 cmnt:text-white cmnt:border-none cmnt:cursor-pointer cmnt:text-[13px] cmnt:font-semibold cmnt:shadow-[0_6px_20px_rgba(0,0,0,0.18)]"
+        className="cmnt:gap-1.5 cmnt:shadow-[0_6px_20px_rgba(0,0,0,0.18)]"
       >
         <span aria-hidden={true}>🔑</span> Log In
-      </button>
+      </Button>
     </div>
   )
 }
