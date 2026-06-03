@@ -21,6 +21,7 @@ const base = {
   updatedAt: '2026-05-27T11:47:26.611Z',
   lastActivityAt: '2026-05-27T11:47:26.611Z',
   schemaVersion: 1,
+  rootComment: null,
 }
 
 describe('thread schemas', () => {
@@ -39,5 +40,22 @@ describe('thread schemas', () => {
   })
   it('rejects an unknown status', () => {
     expect(() => ThreadListItem.parse({ ...base, status: 'archived' })).toThrow()
+  })
+  it('ThreadListItem carries a nullable rootComment preview', () => {
+    const withRoot = ThreadListItem.parse({
+      ...base,
+      rootComment: { text: 'hello', createdAt: '2026-05-28T10:00:00.000Z' },
+    })
+    expect(withRoot.rootComment).toEqual({
+      text: 'hello',
+      createdAt: '2026-05-28T10:00:00.000Z',
+    })
+
+    // empty text == attachment-only root; null == degenerate no-comment thread
+    expect(
+      ThreadListItem.parse({ ...base, rootComment: { text: '', createdAt: base.createdAt } })
+        .rootComment?.text,
+    ).toBe('')
+    expect(ThreadListItem.parse({ ...base, rootComment: null }).rootComment).toBeNull()
   })
 })

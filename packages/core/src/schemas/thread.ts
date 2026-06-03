@@ -30,7 +30,9 @@ const ThreadBase = z.object({
   schemaVersion: z.number().int().positive(),
 })
 
-export const ThreadListItem = ThreadBase.meta({ id: 'ThreadListItem' })
+export const ThreadListItem = ThreadBase.extend({
+  rootComment: z.object({ text: z.string(), createdAt: IsoTimestamp }).nullable(),
+}).meta({ id: 'ThreadListItem' })
 export type ThreadListItem = z.infer<typeof ThreadListItem>
 
 export const Thread = ThreadBase.extend({
