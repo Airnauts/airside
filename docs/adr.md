@@ -1049,3 +1049,21 @@ validate `uri`), no runtime guard is added — a caller defeating the type
 **Consequences.** Configuration is uniform and explicit across adapters. Breaking for
 `@airnauts/comments-storage-vercel-blob`: `vercelBlobStorage()` / `new VercelBlobStorage()`
 with no token no longer typecheck. Ships as a minor (pre-1.0) BREAKING bump.
+
+---
+
+## ADR-0029 — ThreadListItem carries a rootComment preview
+
+- **Date:** 2026-06-03
+- **Status:** accepted
+
+**Context.** The cross-page panel needs to show each thread's initial message inline;
+`ThreadListItem` carried only counts/authors, forcing an N+1 of `getThread` per row.
+
+**Decision.** Add an additive, nullable `rootComment { text, createdAt }` to
+`ThreadListItem` (not `Thread`), projected by both adapters from `comments[0]` via the
+shared `toListItem`; mongo widens the list projection with `$slice: 1`.
+
+**Consequences.** One list request renders previews; empty `text` denotes an
+attachment-only root; pre-1.0 `minor` bump across core/adapters/server/next; `Thread`
+is unchanged so `getThread`/`createThread` paths are untouched.
