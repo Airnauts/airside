@@ -4,8 +4,8 @@ import type { AttachmentId, Comment, ThreadListItem } from '@airnauts/comments-c
 import type { ApiClient } from '../api/client'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
-import { Button } from './Button'
 import { useController, useDispatch, useOpenThread } from '../threads/useThreads'
+import { Button } from './Button'
 import { CommentList } from './CommentList'
 import { Composer, type ComposerSubmit } from './Composer'
 import { useToast } from './toast'
@@ -104,12 +104,7 @@ export function ThreadCard({ item, client, identity, onNeedIdentity }: ThreadCar
           >
             {resolved ? '↺ Reopen' : '✓ Resolve'}
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Close"
-            onClick={() => controller.close()}
-          >
+          <Button variant="ghost" size="icon" aria-label="Close" onClick={() => controller.close()}>
             ✕
           </Button>
         </div>

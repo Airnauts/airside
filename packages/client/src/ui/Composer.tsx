@@ -3,8 +3,8 @@ import type { Attachment } from '@airnauts/comments-core'
 import { type ChangeEvent, useEffect, useRef, useState } from 'react'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
-import { Button } from './Button'
 import { PendingAttachment, type PendingStatus } from './Attachment'
+import { Button } from './Button'
 
 export type ComposerSubmit = { text: string; attachmentIds: string[]; who: Identity }
 
