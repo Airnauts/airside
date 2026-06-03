@@ -3,6 +3,7 @@ import type { ThreadListItem } from '@airnauts/comments-core'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
+import { DraftsProvider } from '../drafts/DraftsProvider'
 import type { PlacedThread } from '../threads/state'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { useController, useDispatch, useVisiblePlacements } from '../threads/useThreads'
@@ -23,7 +24,7 @@ const item = (over: Partial<ThreadListItem> = {}) =>
 function Harness({ client }: { client: never }) {
   const controller = useController()
   return (
-    <>
+    <DraftsProvider>
       <button type="button" onClick={() => controller.openThread('a')}>
         open-a
       </button>
@@ -34,7 +35,7 @@ function Harness({ client }: { client: never }) {
         identity={{ email: 'a@b.c', name: 'Ann' }}
         onNeedIdentity={(r) => r({ email: 'a@b.c', name: 'Ann' })}
       />
-    </>
+    </DraftsProvider>
   )
 }
 
@@ -315,7 +316,7 @@ describe('ThreadPopover', () => {
       highlight: [],
     }
     return (
-      <>
+      <DraftsProvider>
         <button
           type="button"
           onClick={() => dispatch({ type: 'INGEST_PLACEMENTS', placements: [placed] })}
@@ -335,7 +336,7 @@ describe('ThreadPopover', () => {
             onNeedIdentity={(r) => r({ email: 'a@b.c', name: 'Ann' })}
           />
         ))}
-      </>
+      </DraftsProvider>
     )
   }
 

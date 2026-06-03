@@ -5,6 +5,7 @@ import * as Popover from '@radix-ui/react-popover'
 import { useRef } from 'react'
 import type { ApiClient } from '../api/client'
 import { usePortalContainer } from '../app/providers'
+import { useDraft } from '../drafts/DraftsProvider'
 import type { Identity } from '../identity/storage'
 import type { XY } from '../positioning/coords'
 import { useController, useOpenThread } from '../threads/useThreads'
@@ -31,6 +32,7 @@ export function ThreadPopover({
   const id = item.id
   const controller = useController()
   const { openId } = useOpenThread()
+  const draft = useDraft(id)
   const container = usePortalContainer()
   const pinRef = useRef<HTMLButtonElement>(null)
   const open = openId === id
@@ -57,6 +59,10 @@ export function ThreadPopover({
             identity={identity}
             onNeedIdentity={onNeedIdentity}
             variant="popover"
+            draftText={draft.draft.text}
+            onDraftTextChange={draft.setText}
+            draftAttachment={draft.draft.attachment}
+            onDraftAttachmentChange={draft.setAttachment}
           />
         </Popover.Content>
       </Popover.Portal>
