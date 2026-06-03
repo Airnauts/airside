@@ -7,10 +7,10 @@ import {
   type ThreadId,
 } from '@airnauts/comments-core'
 import { makeCreateThreadBody } from '@airnauts/comments-test-support'
-import type { Notifier } from '../notify/types'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { ValidationError } from '../errors'
+import type { Notifier } from '../notify/types'
 import { createThread } from './create-thread'
 
 const attachment: Attachment = {
@@ -79,7 +79,10 @@ describe('createThread use-case', () => {
     const notify = vi.fn(async () => {})
     const notifier: Notifier = { name: 'spy', notify }
     const body = makeCreateThreadBody()
-    await createThread({ ctx, params: undefined, query: undefined, body }, { repo, notifiers: [notifier] })
+    await createThread(
+      { ctx, params: undefined, query: undefined, body },
+      { repo, notifiers: [notifier] },
+    )
     expect(notify).toHaveBeenCalledOnce()
     const event = notify.mock.calls[0]![0]
     expect(event.type).toBe('thread.created')

@@ -23,7 +23,12 @@ describe('dispatchNotifications', () => {
   })
 
   it('does not reject when a notifier throws, and still runs the others', async () => {
-    const bad: Notifier = { name: 'bad', notify: vi.fn(async () => { throw new Error('boom') }) }
+    const bad: Notifier = {
+      name: 'bad',
+      notify: vi.fn(async () => {
+        throw new Error('boom')
+      }),
+    }
     const good: Notifier = { name: 'good', notify: vi.fn(async () => {}) }
     const log = vi.fn()
     await expect(dispatchNotifications([bad, good], event, log)).resolves.toBeUndefined()

@@ -1,10 +1,10 @@
 import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import type { Attachment, AttachmentId, CommentId, ThreadId } from '@airnauts/comments-core'
 import { makeAuthor, makeNewThread } from '@airnauts/comments-test-support'
-import type { Notifier } from '../notify/types'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { NotFoundError, ValidationError } from '../errors'
+import type { Notifier } from '../notify/types'
 import { addComment } from './add-comment'
 
 const attachment: Attachment = {

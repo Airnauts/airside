@@ -38,7 +38,12 @@ describe('buildNotificationEvent', () => {
   })
 
   it('includes env when the scope carries one', () => {
-    const event = buildNotificationEvent('thread.created', { projectId: 'proj_x', env: 'staging' }, thread, comment)
+    const event = buildNotificationEvent(
+      'thread.created',
+      { projectId: 'proj_x', env: 'staging' },
+      thread,
+      comment,
+    )
     expect(event.env).toBe('staging')
   })
 })
