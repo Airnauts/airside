@@ -2,8 +2,8 @@ import type { PutBlob, PutResult, StorageAdapter } from '@airnauts/comments-serv
 import { put } from '@vercel/blob'
 
 export type VercelBlobStorageOptions = {
-  /** `BLOB_READ_WRITE_TOKEN`. If omitted, `@vercel/blob` reads it from `process.env`. */
-  token?: string
+  /** `BLOB_READ_WRITE_TOKEN`, passed explicitly (no ambient `process.env` read). */
+  token: string
   /**
    * Optional prefix (e.g. 'staging/') applied to every key. A trailing `/` is
    * appended automatically if missing, so `'staging'` and `'staging/'` behave
@@ -46,7 +46,7 @@ async function readAllBytes(data: Uint8Array | ReadableStream<Uint8Array>): Prom
 export class VercelBlobStorage implements StorageAdapter {
   private readonly prefix: string
 
-  constructor(private readonly opts: VercelBlobStorageOptions = {}) {
+  constructor(private readonly opts: VercelBlobStorageOptions) {
     const raw = opts.prefix ?? ''
     this.prefix = raw === '' || raw.endsWith('/') ? raw : `${raw}/`
   }
@@ -70,7 +70,7 @@ export class VercelBlobStorage implements StorageAdapter {
 }
 
 /** Construct a Vercel Blob `StorageAdapter` (uniform `xxxStorage(config)` shape). */
-export function vercelBlobStorage(opts: VercelBlobStorageOptions = {}): StorageAdapter {
+export function vercelBlobStorage(opts: VercelBlobStorageOptions): StorageAdapter {
   return new VercelBlobStorage(opts)
 }
 
