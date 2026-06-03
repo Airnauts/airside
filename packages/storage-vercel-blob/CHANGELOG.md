@@ -1,5 +1,14 @@
 # @airnauts/comments-storage-vercel-blob
 
+## 0.2.0
+
+### Minor Changes
+
+- 2af3552: BREAKING: `vercelBlobStorage` now requires an explicit `token`. The previous ambient read
+  of `BLOB_READ_WRITE_TOKEN` from `process.env` is gone — pass the value in, the same way as
+  `mongoRepository({ uri })`. `vercelBlobStorage()` and `new VercelBlobStorage()` with no
+  token no longer typecheck.
+
 ## 0.1.0
 
 ### Minor Changes
