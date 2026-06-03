@@ -30,8 +30,8 @@ describe('mount', () => {
     const style = host?.querySelector('[data-comments-style]')
     // Prefixed Tailwind output is present (proves the CSS pipeline ran).
     expect(style?.textContent).toContain('cmnt')
-    // The place button rendered inside the host.
-    expect(host?.querySelector('[data-comments-place]')).not.toBeNull()
+    // The widget rendered its logged-out entry point (the Log In button) inside the host.
+    expect(host?.querySelector('[data-testid="comments-login"]')).not.toBeNull()
 
     handle.destroy()
     expect(document.querySelector('[data-comments-root]')).toBeNull()

@@ -17,8 +17,12 @@ function mockClient(): ApiClient {
   } as ApiClient
 }
 
+// Logged-in state: seed identity so WidgetApp renders the full commenting UI (past the gate).
+function login() {
+  localStorage.setItem('comments:identity', JSON.stringify({ email: 'known@example.com' }))
+}
+
 function clickTarget() {
-  // Provide a target element to click after entering place mode.
   const target = document.createElement('p')
   target.id = 'place-target'
   document.body.appendChild(target)
@@ -40,44 +44,13 @@ function clickTarget() {
 describe('WidgetApp', () => {
   beforeEach(() => localStorage.clear())
 
-  it('prompts for identity on send, then creates after submit', async () => {
+  it('creates a comment for a logged-in user without prompting again', async () => {
+    login()
     const client = mockClient()
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
     const target = clickTarget()
 
     fireEvent.click(screen.getByTestId('comments-place'))
-    // Now in place mode — click the target element to open a draft popover.
-    fireEvent.click(target, { clientX: 50, clientY: 10 })
-    fireEvent.change(await screen.findByPlaceholderText(/add a comment/i), {
-      target: { value: 'Needs work' },
-    })
-    // No identity yet — Send opens the identity modal.
-    fireEvent.click(screen.getByRole('button', { name: /send/i }))
-    fireEvent.change(await screen.findByLabelText('Email'), {
-      target: { value: 'rev@example.com' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /start commenting/i }))
-
-    await waitFor(() => expect(client.createThread).toHaveBeenCalledOnce())
-    expect(client.createThread).toHaveBeenCalledWith(
-      expect.objectContaining({
-        author: expect.objectContaining({ email: 'rev@example.com' }),
-        comment: expect.objectContaining({ text: 'Needs work' }),
-      }),
-    )
-    // Identity persisted for next time.
-    expect(localStorage.getItem('comments:identity')).toContain('rev@example.com')
-    target.remove()
-  })
-
-  it('skips the modal when identity is already stored', async () => {
-    localStorage.setItem('comments:identity', JSON.stringify({ email: 'known@example.com' }))
-    const client = mockClient()
-    render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
-    const target = clickTarget()
-
-    fireEvent.click(screen.getByTestId('comments-place'))
-    // No identity modal — click the target to open the draft, then type and send.
     fireEvent.click(target, { clientX: 50, clientY: 10 })
     fireEvent.change(await screen.findByPlaceholderText(/add a comment/i), {
       target: { value: 'Looks good' },
@@ -86,13 +59,18 @@ describe('WidgetApp', () => {
 
     await waitFor(() => expect(client.createThread).toHaveBeenCalledOnce())
     expect(client.createThread).toHaveBeenCalledWith(
-      expect.objectContaining({ author: expect.objectContaining({ email: 'known@example.com' }) }),
+      expect.objectContaining({
+        author: expect.objectContaining({ email: 'known@example.com' }),
+        comment: expect.objectContaining({ text: 'Looks good' }),
+      }),
     )
+    // No identity prompt — the user is already logged in.
     expect(screen.queryByLabelText('Email')).not.toBeInTheDocument()
     target.remove()
   })
 
   it('re-lists threads when the SPA route changes the pageKey', async () => {
+    login()
     const client = mockClient()
     render(<WidgetApp options={{ key: 'k', endpoint: 'https://api.test' }} client={client} />)
     await waitFor(() => expect(client.listThreads).toHaveBeenCalledTimes(1))
@@ -101,14 +79,16 @@ describe('WidgetApp', () => {
     await waitFor(() => expect(client.listThreads.mock.calls.length).toBeGreaterThanOrEqual(2))
   })
 
-  it('renders the launcher with accessible controls', async () => {
+  it('renders the launcher with accessible controls when logged in', async () => {
+    login()
     const client = mockClient()
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
     expect(await screen.findByTestId('comments-place')).toBeInTheDocument()
     expect(screen.getByRole('switch', { name: /resolved/i })).toBeInTheDocument()
   })
 
-  it('renders the Launcher panel button (panel mounted)', () => {
+  it('renders the Launcher panel button when logged in', () => {
+    login()
     render(<WidgetApp options={{ key: 'k', endpoint: 'https://api.test' }} client={mockClient()} />)
     expect(screen.getByTestId('comments-panel-open')).toBeInTheDocument()
   })
