@@ -3,7 +3,7 @@
 import type { ApiClient } from '../api/client'
 import type { Identity } from '../identity/storage'
 import { useThreadsState } from '../threads/useThreads'
-import { ThreadCard } from './ThreadCard'
+import { ThreadConversation } from './ThreadConversation'
 
 export type DetachedThreadProps = {
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
@@ -27,11 +27,12 @@ export function DetachedThread({ client, identity, onNeedIdentity }: DetachedThr
       <div className="cmnt:mb-1 cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:flex cmnt:items-center cmnt:gap-1 cmnt:px-2 cmnt:py-1 cmnt:rounded cmnt:bg-amber-100 cmnt:text-amber-700 cmnt:text-[11px] cmnt:font-medium">
         <span aria-hidden={true}>⚠</span> This comment's anchor was lost
       </div>
-      <ThreadCard
+      <ThreadConversation
         item={detail}
         client={client}
         identity={identity}
         onNeedIdentity={onNeedIdentity}
+        variant="popover"
       />
     </div>
   )

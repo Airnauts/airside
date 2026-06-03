@@ -1,6 +1,12 @@
-// packages/client/src/ui/ThreadCard.tsx
+// packages/client/src/ui/ThreadConversation.tsx
 
-import type { AttachmentId, Comment, ThreadListItem } from '@airnauts/comments-core'
+import type {
+  Attachment,
+  AttachmentId,
+  Comment,
+  Thread,
+  ThreadListItem,
+} from '@airnauts/comments-core'
 import type { ApiClient } from '../api/client'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
@@ -11,14 +17,30 @@ import { useToast } from './toast'
 
 let nextTempId = 0
 
-export type ThreadCardProps = {
-  item: ThreadListItem
+export type ThreadConversationProps = {
+  item: ThreadListItem | Thread
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
   identity: Identity | null
   onNeedIdentity: (resume: (who: Identity) => void) => void
+  variant: 'popover' | 'sidebar'
+  /** Controlled draft text (shared-draft sync). */
+  draftText?: string
+  onDraftTextChange?: (text: string) => void
+  draftAttachment?: Attachment | null
+  onDraftAttachmentChange?: (a: Attachment | null) => void
 }
 
-export function ThreadCard({ item, client, identity, onNeedIdentity }: ThreadCardProps) {
+export function ThreadConversation({
+  item,
+  client,
+  identity,
+  onNeedIdentity,
+  variant,
+  draftText,
+  onDraftTextChange,
+  draftAttachment,
+  onDraftAttachmentChange,
+}: ThreadConversationProps) {
   const id = item.id
   const controller = useController()
   const dispatch = useDispatch()
@@ -76,8 +98,13 @@ export function ThreadCard({ item, client, identity, onNeedIdentity }: ThreadCar
     if (!ok) toast(`Failed to ${next === 'resolved' ? 'resolve' : 'reopen'} thread`)
   }
 
+  const wrapper =
+    variant === 'popover'
+      ? 'cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:overflow-hidden cmnt:text-[13px] cmnt:text-gray-900 cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]'
+      : 'cmnt:w-full cmnt:bg-white cmnt:text-[13px] cmnt:text-gray-900 cmnt:flex cmnt:flex-col cmnt:min-h-0 cmnt:flex-1'
+
   return (
-    <div className="cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:overflow-hidden cmnt:text-[13px] cmnt:text-gray-900 cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]">
+    <div className={wrapper}>
       <div
         className={cn(
           'cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-3 cmnt:py-2.5 cmnt:border-b cmnt:border-[#f1f3f5]',
@@ -105,16 +132,26 @@ export function ThreadCard({ item, client, identity, onNeedIdentity }: ThreadCar
           >
             {resolved ? '↺ Reopen' : '✓ Resolve'}
           </button>
-          <button
-            type="button"
-            aria-label="Close"
-            onClick={() => controller.close()}
-            className="cmnt:border-none cmnt:bg-transparent cmnt:cursor-pointer cmnt:px-1.5 cmnt:py-0.5"
-          >
-            ✕
-          </button>
+          {variant === 'popover' && (
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => controller.close()}
+              className="cmnt:border-none cmnt:bg-transparent cmnt:cursor-pointer cmnt:px-1.5 cmnt:py-0.5"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
+      {variant === 'sidebar' && (
+        <div className="cmnt:mx-3 cmnt:mt-2 cmnt:px-3 cmnt:py-2 cmnt:rounded-lg cmnt:bg-gray-50 cmnt:border cmnt:border-gray-200">
+          <div className="cmnt:text-[13px] cmnt:font-semibold cmnt:text-gray-900 cmnt:truncate">
+            {item.pageTitle ?? item.pageUrl}
+          </div>
+          <div className="cmnt:text-[11px] cmnt:text-gray-500 cmnt:truncate">{item.pageUrl}</div>
+        </div>
+      )}
       <CommentList
         comments={detail?.comments ?? []}
         loading={loading}
@@ -128,6 +165,10 @@ export function ThreadCard({ item, client, identity, onNeedIdentity }: ThreadCar
           onNeedIdentity={onNeedIdentity}
           onSubmit={submitReply}
           upload={client.upload}
+          value={draftText}
+          onValueChange={onDraftTextChange}
+          attachment={draftAttachment}
+          onAttachmentChange={onDraftAttachmentChange}
         />
       )}
     </div>

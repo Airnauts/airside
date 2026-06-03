@@ -9,7 +9,7 @@ import type { Identity } from '../identity/storage'
 import type { XY } from '../positioning/coords'
 import { useController, useOpenThread } from '../threads/useThreads'
 import { Pin } from './Pin'
-import { ThreadCard } from './ThreadCard'
+import { ThreadConversation } from './ThreadConversation'
 
 export type ThreadPopoverProps = {
   item: ThreadListItem
@@ -51,11 +51,12 @@ export function ThreadPopover({
           collisionPadding={8}
           className="cmnt:pointer-events-auto"
         >
-          <ThreadCard
+          <ThreadConversation
             item={item}
             client={client}
             identity={identity}
             onNeedIdentity={onNeedIdentity}
+            variant="popover"
           />
         </Popover.Content>
       </Popover.Portal>
