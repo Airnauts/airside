@@ -3,8 +3,12 @@ import type { ThreadListItem } from '@airnauts/comments-core'
 
 export type PanelFilter = 'open' | 'resolved' | 'all'
 
+export type PanelView = 'list' | 'detail'
+
 export type PanelState = {
   open: boolean
+  view: PanelView
+  detailThreadId: string | null
   filter: PanelFilter
   list: ThreadListItem[]
   nextCursor: string | null
@@ -16,6 +20,8 @@ export type PanelState = {
 
 export const initialState: PanelState = {
   open: false,
+  view: 'list',
+  detailThreadId: null,
   filter: 'open',
   list: [],
   nextCursor: null,
@@ -28,6 +34,8 @@ export const initialState: PanelState = {
 export type Action =
   | { type: 'OPEN' }
   | { type: 'CLOSE' }
+  | { type: 'OPEN_DETAIL'; id: string }
+  | { type: 'BACK' }
   | { type: 'SET_FILTER'; filter: PanelFilter }
   | { type: 'LOAD_START' }
   | {
@@ -46,7 +54,11 @@ export function reducer(state: PanelState, action: Action): PanelState {
     case 'OPEN':
       return { ...state, open: true }
     case 'CLOSE':
-      return { ...state, open: false }
+      return { ...state, open: false, view: 'list', detailThreadId: null }
+    case 'OPEN_DETAIL':
+      return { ...state, view: 'detail', detailThreadId: action.id }
+    case 'BACK':
+      return { ...state, view: 'list', detailThreadId: null }
     case 'SET_FILTER':
       return { ...state, filter: action.filter, list: [], nextCursor: null }
     case 'LOAD_START':

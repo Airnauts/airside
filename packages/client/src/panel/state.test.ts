@@ -3,6 +3,39 @@ import type { ThreadListItem } from '@airnauts/comments-core'
 import { describe, expect, it } from 'vitest'
 import { initialState, mainListExcludingReview, reducer } from './state'
 
+describe('detail view', () => {
+  it('starts on the list view', () => {
+    expect(initialState.view).toBe('list')
+    expect(initialState.detailThreadId).toBeNull()
+  })
+
+  it('OPEN_DETAIL switches to detail for a thread', () => {
+    const s = reducer(initialState, { type: 'OPEN_DETAIL', id: 't1' })
+    expect(s.view).toBe('detail')
+    expect(s.detailThreadId).toBe('t1')
+  })
+
+  it('BACK returns to the list without dropping the loaded list', () => {
+    const loaded = reducer(
+      { ...initialState, list: [{ id: 'a' } as never], nextCursor: 'c1' },
+      { type: 'OPEN_DETAIL', id: 'a' },
+    )
+    const s = reducer(loaded, { type: 'BACK' })
+    expect(s.view).toBe('list')
+    expect(s.detailThreadId).toBeNull()
+    expect(s.list).toHaveLength(1)
+    expect(s.nextCursor).toBe('c1')
+  })
+
+  it('CLOSE resets the view back to list', () => {
+    const detail = reducer(initialState, { type: 'OPEN_DETAIL', id: 't1' })
+    const s = reducer({ ...detail, open: true }, { type: 'CLOSE' })
+    expect(s.open).toBe(false)
+    expect(s.view).toBe('list')
+    expect(s.detailThreadId).toBeNull()
+  })
+})
+
 const item = (id: string, over: Partial<ThreadListItem> = {}): ThreadListItem =>
   ({ id, status: 'open', anchorState: 'anchored', unresolvedCount: 1 }) as ThreadListItem &
     typeof over
