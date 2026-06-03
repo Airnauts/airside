@@ -2,9 +2,9 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { installObserverSpies, mockRect } from '../../test/test-helpers/dom'
 import { WidgetProvider } from '../app/providers'
+import { DraftsProvider } from '../drafts/DraftsProvider'
 import { FOCUS_STORAGE_KEY } from '../panel/navigate'
 import { PanelDrawer } from '../panel/PanelDrawer'
-import { DraftsProvider } from '../drafts/DraftsProvider'
 import { PanelProvider } from '../panel/PanelProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { ToastProvider } from '../ui/toast'
@@ -312,7 +312,12 @@ function renderLayer(client: unknown) {
                 identity={null}
                 onNeedIdentity={() => {}}
               />
-              <PanelDrawer resolvePageKey={() => 'x.test/here'} />
+              <PanelDrawer
+                resolvePageKey={() => 'x.test/here'}
+                client={client as never}
+                identity={null}
+                onNeedIdentity={() => {}}
+              />
             </DraftsProvider>
           </PanelProvider>
         </ThreadsProvider>

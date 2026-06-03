@@ -4,6 +4,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { act } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
+import { DraftsProvider } from '../drafts/DraftsProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { useController } from '../threads/useThreads'
 import { FOCUS_STORAGE_KEY } from './navigate'
@@ -16,10 +17,12 @@ const item = (over: Partial<ThreadListItem>): ThreadListItem =>
     status: 'open',
     anchorState: 'anchored',
     unresolvedCount: 1,
+    commentCount: 1,
     pageUrl: 'https://x.test/pricing',
     pageKey: 'x.test/pricing',
     updatedAt: new Date().toISOString(),
     createdBy: { email: 'a@b.c', name: 'Ann' },
+    rootComment: { text: 'root comment', createdAt: new Date().toISOString() },
     ...over,
   }) as ThreadListItem
 
@@ -66,16 +69,31 @@ function setup(opts: {
     ),
     getThread: vi.fn().mockResolvedValue({ id: 'x', status: 'open', comments: [] }),
     setThreadStatus: vi.fn().mockResolvedValue(undefined),
+    addComment: vi.fn().mockResolvedValue({
+      id: 'c',
+      author: { email: 'a@b.c' },
+      text: '',
+      attachments: [],
+      createdAt: new Date().toISOString(),
+    }),
+    upload: vi.fn(),
   }
   const resolvePageKey = opts.resolvePageKey ?? (() => 'x.test/other')
   render(
     <WidgetProvider>
       <ThreadsProvider client={client as never}>
         <PanelProvider client={client as never}>
-          <Opener />
-          <CloseProbe />
-          {opts.withProbes && <StatusProbe />}
-          <PanelDrawer resolvePageKey={resolvePageKey} />
+          <DraftsProvider>
+            <Opener />
+            <CloseProbe />
+            {opts.withProbes && <StatusProbe />}
+            <PanelDrawer
+              resolvePageKey={resolvePageKey}
+              client={client as never}
+              identity={{ email: 'a@b.c', name: 'Ann' }}
+              onNeedIdentity={() => {}}
+            />
+          </DraftsProvider>
         </PanelProvider>
       </ThreadsProvider>
     </WidgetProvider>,
@@ -113,11 +131,11 @@ describe('PanelDrawer', () => {
     await waitFor(() => screen.getByTestId('comments-panel-row'))
     act(() => screen.getByTestId('comments-panel-row').click())
     expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBe(
-      JSON.stringify({ id: 'a', openDetail: false }),
+      JSON.stringify({ id: 'a', openDetail: true }),
     )
   })
 
-  it('same-page row click closes the drawer and writes no handoff', async () => {
+  it('same-page row click opens the in-sidebar detail (panel stays open, no handoff)', async () => {
     setup({
       threads: [item({ id: 'a', pageKey: 'x.test/here' })],
       resolvePageKey: () => 'x.test/here',
@@ -125,8 +143,34 @@ describe('PanelDrawer', () => {
     screen.getByText('open').click()
     await waitFor(() => screen.getByTestId('comments-panel-row'))
     act(() => screen.getByTestId('comments-panel-row').click())
-    await waitFor(() => expect(screen.queryByTestId('comments-panel')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument())
+    expect(screen.queryByTestId('comments-panel')).toBeInTheDocument()
     expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBeNull()
+  })
+
+  it('detail view hides the list filters', async () => {
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/here' })],
+      resolvePageKey: () => 'x.test/here',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => screen.getByTestId('comments-panel-row'))
+    act(() => screen.getByTestId('comments-panel-row').click())
+    await waitFor(() => expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: 'Open' })).not.toBeInTheDocument()
+  })
+
+  it('Back returns to the list', async () => {
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/here' })],
+      resolvePageKey: () => 'x.test/here',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => screen.getByTestId('comments-panel-row'))
+    act(() => screen.getByTestId('comments-panel-row').click())
+    await waitFor(() => screen.getByRole('button', { name: /back/i }))
+    act(() => screen.getByRole('button', { name: /back/i }).click())
+    await waitFor(() => expect(screen.getByTestId('comments-panel-row')).toBeInTheDocument())
   })
 
   it('status change while panel is open triggers a refetch; closing removes the listener', async () => {

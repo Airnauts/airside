@@ -1,46 +1,76 @@
 // packages/client/src/panel/PanelRow.tsx
 import type { ThreadListItem } from '@airnauts/comments-core'
-import { cn } from '../lib/cn'
 import { relativeTime } from '../threads/relativeTime'
+import { avatarColor, initials } from '../ui/avatar'
 
-export type PanelRowProps = { item: ThreadListItem; onSelect: () => void }
+export type PanelRowProps = {
+  item: ThreadListItem
+  onSelect: () => void
+  onReply: () => void
+}
 
-export function PanelRow({ item, onSelect }: PanelRowProps) {
-  const resolved = item.status === 'resolved'
+export function PanelRow({ item, onSelect, onReply }: PanelRowProps) {
   const orphaned = item.anchorState === 'orphaned'
-  const countLabel = `${item.commentCount} ${item.commentCount === 1 ? 'comment' : 'comments'}`
-  const label = `${resolved ? 'Resolved' : 'Open'} comment thread (${countLabel}) on ${item.pageTitle ?? item.pageUrl}${orphaned ? ', anchor lost' : ''}`
+  const replies = Math.max(0, item.commentCount - 1)
+  const rootText = item.rootComment?.text ?? ''
+  const author = item.createdBy
+  const context = item.pageTitle ?? item.pageUrl
+
   return (
-    <button
-      type="button"
-      data-testid="comments-panel-row"
-      data-thread-id={item.id}
-      aria-label={label}
-      onClick={onSelect}
-      className="cmnt:w-full cmnt:flex cmnt:items-start cmnt:gap-2 cmnt:px-3 cmnt:py-2.5 cmnt:text-left cmnt:bg-transparent cmnt:border-0 cmnt:border-b cmnt:border-[#f1f3f5] cmnt:cursor-pointer cmnt:hover:bg-gray-50"
-    >
-      <span
-        aria-hidden={true}
-        className={cn(
-          'cmnt:mt-1 cmnt:w-2 cmnt:h-2 cmnt:rounded-full cmnt:shrink-0',
-          resolved ? 'cmnt:bg-gray-400' : 'cmnt:bg-blue-600',
-        )}
-      />
-      <span className="cmnt:flex-1 cmnt:min-w-0">
-        <span className="cmnt:block cmnt:text-[13px] cmnt:text-gray-900 cmnt:truncate">
-          {item.pageTitle ?? item.pageUrl}
+    <div data-thread-id={item.id} className="cmnt:border-b cmnt:border-[#f1f3f5]">
+      <button
+        type="button"
+        data-testid="comments-panel-row"
+        onClick={onSelect}
+        aria-label={`Open thread on ${context}`}
+        className="cmnt:w-full cmnt:flex cmnt:items-start cmnt:gap-2 cmnt:px-3 cmnt:pt-2.5 cmnt:pb-1 cmnt:text-left cmnt:bg-transparent cmnt:border-0 cmnt:cursor-pointer cmnt:hover:bg-gray-50"
+      >
+        <span
+          aria-hidden={true}
+          className="cmnt:shrink-0 cmnt:w-[26px] cmnt:h-[26px] cmnt:rounded-full cmnt:text-white cmnt:flex cmnt:items-center cmnt:justify-center cmnt:text-[11px] cmnt:font-semibold"
+          style={{ backgroundColor: avatarColor(author.email) }}
+        >
+          {initials(author)}
         </span>
-        <span className="cmnt:mt-0.5 cmnt:flex cmnt:items-center cmnt:gap-1.5 cmnt:text-[11px] cmnt:text-gray-500">
-          <span>{resolved ? 'Resolved' : countLabel}</span>
-          <span aria-hidden={true}>·</span>
-          <span>{relativeTime(item.updatedAt)}</span>
-          {orphaned && (
-            <span className="cmnt:ml-1 cmnt:px-1.5 cmnt:py-0.5 cmnt:rounded cmnt:bg-amber-100 cmnt:text-amber-700 cmnt:font-medium">
-              <span aria-hidden={true}>⚠</span> anchor lost
+        <span className="cmnt:flex-1 cmnt:min-w-0">
+          <span className="cmnt:flex cmnt:items-center cmnt:gap-1.5">
+            <b className="cmnt:text-xs cmnt:truncate">{author.name ?? author.email}</b>
+            <span className="cmnt:text-gray-400 cmnt:text-[11px]">
+              {relativeTime(item.updatedAt)}
             </span>
-          )}
+            {orphaned && (
+              <span className="cmnt:ml-1 cmnt:px-1.5 cmnt:py-0.5 cmnt:rounded cmnt:bg-amber-100 cmnt:text-amber-700 cmnt:font-medium cmnt:text-[11px]">
+                <span aria-hidden={true}>⚠</span> anchor lost
+              </span>
+            )}
+          </span>
+          <span className="cmnt:mt-0.5 cmnt:block cmnt:text-[13px] cmnt:text-gray-900 cmnt:truncate">
+            {rootText !== '' ? rootText : <span className="cmnt:text-gray-400">📎 Attachment</span>}
+          </span>
+          <span className="cmnt:mt-0.5 cmnt:block cmnt:text-[11px] cmnt:text-gray-400 cmnt:truncate">
+            {context}
+          </span>
         </span>
-      </span>
-    </button>
+      </button>
+      <div className="cmnt:px-3 cmnt:pb-2 cmnt:pl-[46px] cmnt:flex cmnt:items-center">
+        {replies > 0 ? (
+          <button
+            type="button"
+            onClick={onSelect}
+            className="cmnt:bg-transparent cmnt:border-0 cmnt:p-0 cmnt:text-[11px] cmnt:font-medium cmnt:text-gray-500 cmnt:cursor-pointer cmnt:hover:underline"
+          >
+            {replies} {replies === 1 ? 'Reply' : 'Replies'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onReply}
+            className="cmnt:bg-transparent cmnt:border-0 cmnt:p-0 cmnt:text-[11px] cmnt:font-medium cmnt:text-blue-600 cmnt:cursor-pointer cmnt:hover:underline"
+          >
+            Reply
+          </button>
+        )}
+      </div>
+    </div>
   )
 }

@@ -57,7 +57,12 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
                 onNeedIdentity={onNeedIdentity}
                 provenance={options.provenance}
               />
-              <PanelDrawer resolvePageKey={(url) => resolvePageKey(options, url)} />
+              <PanelDrawer
+                resolvePageKey={(url) => resolvePageKey(options, url)}
+                client={client}
+                identity={identity}
+                onNeedIdentity={onNeedIdentity}
+              />
             </PanelProvider>
             <IdentityModal
               open={modalOpen}
