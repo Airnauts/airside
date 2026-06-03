@@ -8,7 +8,12 @@ import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
   secretKey: 'dev-key', // demo only — replace with a real secret in production
   projectId: 'nextjs-host',
-  allowedOrigins: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  allowedOrigins: [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:3100',
+    'http://127.0.0.1:3100',
+  ],
   // Mongo when MONGODB_URI is set, else ephemeral in-memory.
   repository: process.env.MONGODB_URI
     ? mongoRepository({ uri: process.env.MONGODB_URI })

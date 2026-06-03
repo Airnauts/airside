@@ -93,10 +93,18 @@ export function MarkerLayer({
     // (reposition/rematchAll, fired by scroll/resize and the popover's own DOM mutation)
     // doesn't clobber the resolved pin back to 'open' until a reload.
     controller.registerRuntime((id, status) => rt.setItemStatus(id, status))
-    void rt.refresh().then(() => {
-      const focusId = takeFocusHandoff()
-      if (focusId) controller.requestFocus(focusId)
-    })
+    void rt
+      .refresh()
+      .then(() => {
+        const focusId = takeFocusHandoff()
+        if (focusId) controller.requestFocus(focusId)
+      })
+      // The boot list is fire-and-forget; a failed fetch (offline, server down, or a hermetic
+      // test with no backend) must degrade to "no threads yet", not surface as an unhandled
+      // rejection. Swallow with a debug breadcrumb, matching the runtime's refreshAnchor catches.
+      .catch((err) => {
+        console.debug('[comments] initial thread load failed', err)
+      })
     const stop = observeReposition({
       targets: [],
       onReposition: () => rt.reposition(),

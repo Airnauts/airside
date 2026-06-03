@@ -246,7 +246,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 ---
 
-### Task 4: Record ADR-0025 and ADR-0026
+### Task 4: Record ADR-0027 and ADR-0028
 
 **Files:**
 - Modify: `docs/adr.md` (append, newest-last)
@@ -256,7 +256,7 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 Append to the end of `docs/adr.md` (keep the file's existing heading style; match the format of ADR-0024 above it):
 
 ```md
-## ADR-0025: Route-level `disabled` flag on `createCommentsRoute`
+## ADR-0027: Route-level `disabled` flag on `createCommentsRoute`
 
 **Date:** 2026-06-03
 **Status:** accepted
@@ -280,7 +280,7 @@ flag", not a discriminated union — chosen for minimal type machinery).
 (`route.server?.…`). When disabled, no rate limiter is built and the lazy
 repository/storage are never touched. Ships as a minor (pre-1.0) BREAKING bump.
 
-## ADR-0026: Explicit `token` for `vercelBlobStorage` (no ambient env read)
+## ADR-0028: Explicit `token` for `vercelBlobStorage` (no ambient env read)
 
 **Date:** 2026-06-03
 **Status:** accepted
@@ -307,7 +307,7 @@ for `@airnauts/comments-storage-vercel-blob`: `vercelBlobStorage()` /
 
 ```bash
 git add docs/adr.md
-git commit -m "docs(adr): ADR-0025 disabled route flag, ADR-0026 explicit blob token
+git commit -m "docs(adr): ADR-0027 disabled route flag, ADR-0028 explicit blob token
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 ```

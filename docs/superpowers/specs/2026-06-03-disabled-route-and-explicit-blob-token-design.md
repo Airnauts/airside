@@ -201,9 +201,9 @@ ternary. Both are valid — the host chooses.)
   mention the `disabled` flag where the route is introduced.
 
 **ADRs (`docs/adr.md`, newest-last):**
-- ADR-0025 — route-level `disabled` flag on `createCommentsRoute` (context: dormant
+- ADR-0027 — route-level `disabled` flag on `createCommentsRoute` (context: dormant
   route without hand-rolled handlers; consequence: `server` widens to optional).
-- ADR-0026 — explicit `vercelBlobStorage` token (context: ambient `process.env`
+- ADR-0028 — explicit `vercelBlobStorage` token (context: ambient `process.env`
   read is inconsistent with other adapters; consequence: breaking, type-level not
   runtime guard).
 
