@@ -42,3 +42,44 @@ jobs:
 
       - name: Verify subpath exports
         run: pnpm check:exports
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Build the widget + host app so the Playwright webServer's turbo build is a cache hit
+      # and `next start` serves the freshly built widget.
+      - name: Build
+        run: pnpm build
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @airnauts/comments-nextjs-host exec playwright install --with-deps chromium
+
+      # Hermetic: no MONGODB_URI / BLOB_READ_WRITE_TOKEN in the env, so the host app falls
+      # back to the in-memory repository + local public/uploads. A fresh runner means a cold
+      # `next start` with no stale servers; Playwright's webServer manages start/stop.
+      - name: Run e2e
+        run: pnpm --filter @airnauts/comments-nextjs-host test:e2e
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: examples/nextjs-host/playwright-report/
+          retention-days: 7
