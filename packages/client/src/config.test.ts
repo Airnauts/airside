@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { buildCaptureContext, DEFAULT_KEY_PARAM, resolvePageKey } from './config'
+import {
+  buildCaptureContext,
+  DEFAULT_KEY_PARAM,
+  DEFAULT_THREAD_PARAM,
+  resolvePageKey,
+  threadLink,
+} from './config'
 
 describe('config', () => {
   it('exposes the default key param name', () => {
@@ -30,5 +36,14 @@ describe('config', () => {
       devicePixelRatio: 2,
       userAgent: 'UA',
     })
+  })
+})
+
+describe('threadLink', () => {
+  it('appends the thread param to a page URL', () => {
+    expect(threadLink('https://site.com/a?x=1', 't42')).toBe(
+      'https://site.com/a?x=1&comments-thread=t42',
+    )
+    expect(DEFAULT_THREAD_PARAM).toBe('comments-thread')
   })
 })

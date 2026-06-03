@@ -101,4 +101,19 @@ describe('PanelRow', () => {
     fireEvent.click(screen.getByRole('button', { name: /resolve/i }))
     expect(onResolve).toHaveBeenCalled()
   })
+
+  it('copies a deep link when Copy link is clicked', () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, { clipboard: { writeText } })
+    render(
+      <PanelRow
+        item={item({ id: 't42', pageUrl: 'https://site.com/a', pageTitle: undefined })}
+        onSelect={() => {}}
+        onReply={() => {}}
+        onResolve={() => {}}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /copy link/i }))
+    expect(writeText).toHaveBeenCalledWith('https://site.com/a?comments-thread=t42')
+  })
 })

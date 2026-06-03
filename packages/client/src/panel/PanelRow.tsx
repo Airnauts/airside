@@ -1,5 +1,6 @@
 // packages/client/src/panel/PanelRow.tsx
 import type { ThreadListItem } from '@airnauts/comments-core'
+import { threadLink } from '../config'
 import { relativeTime } from '../threads/relativeTime'
 import { avatarColor, initials } from '../ui/avatar'
 
@@ -78,6 +79,16 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
           className="cmnt:ml-3 cmnt:bg-transparent cmnt:border-0 cmnt:p-0 cmnt:text-[11px] cmnt:font-semibold cmnt:cursor-pointer cmnt:text-green-600 cmnt:hover:underline"
         >
           {item.status === 'resolved' ? '↺ Reopen' : '✓ Resolve'}
+        </button>
+        <button
+          type="button"
+          aria-label="Copy link"
+          onClick={() =>
+            void navigator.clipboard?.writeText(threadLink(item.pageUrl, item.id))?.catch(() => {})
+          }
+          className="cmnt:ml-3 cmnt:bg-transparent cmnt:border-0 cmnt:p-0 cmnt:text-[11px] cmnt:font-medium cmnt:text-gray-500 cmnt:cursor-pointer cmnt:hover:underline"
+        >
+          Copy link
         </button>
       </div>
     </div>
