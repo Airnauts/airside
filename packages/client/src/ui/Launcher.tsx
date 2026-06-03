@@ -1,4 +1,5 @@
 // packages/client/src/ui/Launcher.tsx
+import { Button } from './Button'
 import { cn } from '../lib/cn'
 
 export type LauncherProps = {
@@ -20,15 +21,16 @@ export function Launcher({
 }: LauncherProps) {
   return (
     <div className="cmnt:fixed cmnt:bottom-4 cmnt:right-4 cmnt:flex cmnt:items-center cmnt:gap-2 cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-full cmnt:py-1.5 cmnt:pl-3 cmnt:pr-2 cmnt:pointer-events-auto cmnt:shadow-[0_6px_20px_rgba(0,0,0,0.18)]">
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon"
         aria-label="Open comments panel"
         data-testid="comments-panel-open"
         onClick={onTogglePanel}
-        className="cmnt:inline-flex cmnt:items-center cmnt:justify-center cmnt:w-7 cmnt:h-7 cmnt:rounded-full cmnt:bg-transparent cmnt:border-0 cmnt:cursor-pointer cmnt:text-gray-500 cmnt:hover:bg-gray-100"
+        className="cmnt:hover:bg-gray-100"
       >
         <span aria-hidden={true}>☰</span>
-      </button>
+      </Button>
       <button
         type="button"
         role="switch"
@@ -53,19 +55,17 @@ export function Launcher({
         </span>
         Resolved
       </button>
-      <button
-        type="button"
+      <Button
+        variant="primary"
+        size="md"
         data-comments-place
         data-testid="comments-place"
         aria-pressed={placing}
         onClick={onTogglePlace}
-        className={cn(
-          'cmnt:rounded-full cmnt:px-3.5 cmnt:py-2 cmnt:text-white cmnt:border-none cmnt:cursor-pointer cmnt:text-[13px] cmnt:font-semibold',
-          placing ? 'cmnt:bg-blue-800' : 'cmnt:bg-blue-600',
-        )}
+        className={cn(placing && 'cmnt:bg-blue-800')}
       >
         {placing ? 'Click to comment…' : `+ Comment${openCount ? ` (${openCount})` : ''}`}
-      </button>
+      </Button>
     </div>
   )
 }
