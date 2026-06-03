@@ -67,4 +67,24 @@ describe('CommentList', () => {
     render(<CommentList loading={false} error={false} comments={[comment()]} />)
     expect(screen.getByText(/just now|ago|^\d+[mhd]$/i)).toBeInTheDocument()
   })
+
+  it('scrolls the list to the bottom when a new comment is added', () => {
+    const { rerender } = render(
+      <CommentList loading={false} error={false} comments={[comment({ id: 'c1' })]} />,
+    )
+    const list = screen.getByTestId('comment-list-scroll')
+    // jsdom has no layout — fake a scrollable height so scrollTop has somewhere to go.
+    Object.defineProperty(list, 'scrollHeight', { value: 500, configurable: true })
+    list.scrollTop = 0
+
+    rerender(
+      <CommentList
+        loading={false}
+        error={false}
+        comments={[comment({ id: 'c1' }), comment({ id: 'c2', text: 'A reply.' })]}
+      />,
+    )
+
+    expect(list.scrollTop).toBe(500)
+  })
 })

@@ -1,5 +1,6 @@
 // packages/client/src/ui/CommentList.tsx
 import type { Comment } from '@airnauts/comments-core'
+import { useEffect, useRef } from 'react'
 import { relativeTime } from '../threads/relativeTime'
 import { avatarColor, initials } from './avatar'
 
@@ -14,6 +15,15 @@ const LINK =
   'cmnt:bg-transparent cmnt:border-none cmnt:text-blue-600 cmnt:cursor-pointer cmnt:p-0 cmnt:underline'
 
 export function CommentList({ comments, loading, error, onRetry }: CommentListProps) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  // Keep the most recent comment in view: when a message is added (or the
+  // thread first opens), pin the list to the bottom.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll on count change, not on the array identity
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [comments.length])
+
   if (error) {
     return (
       <div className="cmnt:p-3 cmnt:text-[13px] cmnt:text-gray-500">
@@ -55,7 +65,11 @@ export function CommentList({ comments, loading, error, onRetry }: CommentListPr
     )
   }
   return (
-    <div className="cmnt:max-h-[230px] cmnt:overflow-auto cmnt:p-3">
+    <div
+      ref={scrollRef}
+      data-testid="comment-list-scroll"
+      className="cmnt:max-h-[230px] cmnt:overflow-auto cmnt:p-3"
+    >
       {comments.map((c) => (
         <div key={c.id} className="cmnt:flex cmnt:gap-[9px] cmnt:mb-3.5">
           <div
