@@ -109,3 +109,63 @@ highlighted range in the document.
 
 **Expected.** When a thread is opened, its associated selection should be
 rendered/visible so the reader can see exactly what the comment refers to.
+
+## Signal-less element cannot re-anchor under structural mutation
+
+**Status:** open — known limitation of the v1 scoring policy. Surfaced by the M10 e2e.
+
+**Symptom.** An element pin placed on a plain `<li>` (no `id`, `class`, `role`,
+`data-*`, or `data-testid`) **orphans** when the page reloads with the list wrapped in
+an extra container (`?variant=wrapped` in the e2e article page). The positional selector
+(`li:nth-of-type(2)`) breaks under wrapping, re-match falls to the scored path, and the
+element scores below the accept threshold.
+
+**Root cause.** `packages/core/src/anchor/weights.ts`:
+`stableAttrs 0.40 · text 0.25 · classes 0.15 · role 0.10 · sibling 0.05 · ancestor 0.05`,
+`accept = 0.60`. A signal-less element's maximum score is `text + sibling + ancestor =
+0.35`, below `accept`, so `decide()` returns `orphaned: belowAccept`. The ceiling is
+strict: even `text + classes (0.40)` is still below — **only a stable attribute (`id` or
+a `data-*`, weight 0.40) lifts a content element over the line** (`0.25 + 0.40 = 0.65`).
+Selectors are built only from `id`/`data-testid`, so a non-id `data-*` raises the score
+without making the selector survive wrapping — the only way a content element re-anchors
+via the **scored** path.
+
+**Impact.** Pins on generic structural elements (bare `<li>`, `<div>`, short-text `<p>`)
+don't survive wrapper/restructuring mutations; they orphan. Targets with an `id`, a
+`data-*`, or distinctive longer text fare better. May be acceptable v1 behavior, or may
+warrant revisiting the weight/threshold calibration (the M2b scoring corpus).
+
+**How the e2e relates.** The mutation re-anchor tests give the target `<li>` a
+`data-anchor` attribute so the scored re-anchor path is exercised above threshold; the
+bare-element ceiling is documented here rather than asserted.
+
+## Tag-only fast-path agreement produces a confidently-wrong pin on sibling removal
+
+**Status:** open — correctness bug (more serious than the re-anchor ceiling above).
+Surfaced by the M10 e2e.
+
+**Symptom.** An element pin on a plain `<li>` whose anchored node is **removed**
+(`?variant=removed`) does not always orphan — for a signal-less element the pin can
+re-anchor onto the **wrong surviving sibling**, i.e. a confidently-wrong pin.
+
+**Root cause.** `packages/client/src/anchor/rematch.ts` `signalsAgree()` checks only tag
++ `stableAttrs`. For a signal-less element `stableAttrs` is empty, so it returns `true`
+on a **tag match alone**. When the original `<li>` is removed, the stored positional
+selector `li:nth-of-type(2)` re-resolves (uniquely) onto the next surviving `<li>`;
+`resolveUnique` hits it, `signalsAgree` accepts it on tag, and `finishMatch` anchors the
+pin there. Element anchors have no `selection` quote to disambiguate, so nothing catches
+the substitution.
+
+**Impact.** Exactly the "a confidently wrong pin is worse than an honest needs-review"
+failure the product copy warns against: a reviewer's comment silently moves to a
+different element after the original is deleted. Trust-eroding for the re-anchor
+guarantee in PRD §7.
+
+**Validated fix (deferred — not applied).** Require a corroborating signal beyond tag
+before the fast path accepts when the stored element had no `stableAttrs` (e.g. fall
+through to scoring, or require minimum text/structural agreement). Backend/client logic
+is built test-first (ADR-0010), so this wants a failing rematch test first (bare element
++ removed sibling ⇒ `orphaned`), then the guard.
+
+**How the e2e relates.** The orphan test gives the target a `data-anchor` so
+`signalsAgree` rejects the wrong sibling; the bare-element mis-anchor is documented here.

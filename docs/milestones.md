@@ -36,7 +36,10 @@ M2a Core: domain & HTTP contract  (Shared)   ← freezes the HTTP contract + anc
         M9 Integration host app & docs  (Integration)
                        │
                        ▼
-        M10 Verification & dogfooding  (Integration)
+        M10 Verification & release CI  (Integration)
+                       │
+                       ▼
+        M11 Dogfood deployment & adoption  (Integration)
 ```
 
 M2b (the pure scoring policy + jsdom fixture corpus) depends only on M2a's frozen
@@ -297,26 +300,59 @@ Spec §9; PRD §7.
 
 ---
 
-## M10 — Verification & dogfooding  ·  Integration  ·  M
+## M10 — Verification & release CI  ·  Integration  ·  M  ·  delivered
 
-**Goal.** Automate the integration proof and meet the PRD's acceptance bar in
-production.
+**Goal.** Automate the integration proof M9 left as a manual smoke checklist, and ship
+the release path for the prepared `@airnauts/comments-*` packages.
 
-**In scope.** **Playwright e2e** of the full loop including **reload + DOM-mutation →
-re-anchor/orphan**, text selection, and panel navigation (driving
-`examples/nextjs-host`); **e2e wired into CI** (headless); **tighten/confirm the
-bundle-size budget**; a **Vercel + Atlas + Blob** dogfood deployment; integration
-into at least one real project in place of Vercel Comments.
+**Scope delivered (slimmed from the original M10).** **Playwright e2e** of the full
+loop — activation/identity, comment → reply → attach → resolve → reopen, **reload +
+DOM-mutation → re-anchor/orphan** (via switchable `?variant=` article pages), text
+selection, and cross-page panel navigation (driving `examples/nextjs-host`, Chromium,
+hermetic in-memory + local uploads); **e2e wired into CI** (headless `e2e` job);
+**bundle-size budget confirmed** (300 kB, confirm-only); **publish-on-green-`main`**
+(`changeset publish`, gated on `ci + e2e`) + `RELEASING.md`. The e2e surfaced three product
+findings (one fixed: attachmentIds persistence ADR-0024; two documented in
+[`issues.md`](issues.md)).
 
-**Out of scope.** New features.
+**Deferred to M11.** The live **Vercel + Atlas + Blob** dogfood deployment and
+**real-project adoption** (PRD §7's adoption bar) — they depend on external infra and
+an organizational decision, not in-repo work.
+
+**Out of scope.** New features, schemas, or endpoints (no widget source changes).
 
 **Depends on.** M9.
 
-**Exit criteria (PRD §7).** Time-to-integrate measured in minutes; comments reliably
-re-anchor across repeated redeploys (e2e + the dogfood project); our team adopts it
-on at least one real project in place of Vercel Comments.
+**Exit criteria.** e2e covers the full loop + mutation re-anchor/orphan and passes
+headless in CI; `pnpm size` confirms < 300 kB; the `publish` job (gated on `ci + e2e`)
+`changeset publish`es the 8 public packages on a green push to `main`; M11 carries the
+deferred deployment/adoption.
 
-**Refs.** Spec §9; PRD §7.
+**Refs.** Design [`specs/2026-06-02-m10-verification-release-design.md`](../superpowers/specs/2026-06-02-m10-verification-release-design.md);
+Plan [`plans/2026-06-02-m10-verification-release.md`](../superpowers/plans/2026-06-02-m10-verification-release.md);
+ADR-0026; Spec §9; PRD §7.
+
+---
+
+## M11 — Dogfood deployment & real-project adoption  ·  Integration  ·  M
+
+**Goal.** Meet PRD §7's adoption bar in production: a live deployment and real use.
+
+**In scope.** A **Vercel + MongoDB Atlas + Vercel Blob** dogfood deployment of
+`examples/nextjs-host` (or a thin equivalent); the published `@airnauts/comments-*`
+packages consumed **from npm** (not workspace); **integration into at least one real
+project** in place of Vercel Comments; capture time-to-integrate and re-anchor
+reliability across repeated redeploys.
+
+**Out of scope.** New features, schemas, or endpoints.
+
+**Depends on.** M10 (e2e green + packages publishable).
+
+**Exit criteria (PRD §7).** Time-to-integrate measured in minutes; comments reliably
+re-anchor across repeated redeploys (the dogfood project); our team adopts it on at
+least one real project in place of Vercel Comments.
+
+**Refs.** PRD §7; Spec §9.
 
 ---
 
