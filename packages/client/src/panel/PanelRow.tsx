@@ -8,7 +8,8 @@ export type PanelRowProps = { item: ThreadListItem; onSelect: () => void }
 export function PanelRow({ item, onSelect }: PanelRowProps) {
   const resolved = item.status === 'resolved'
   const orphaned = item.anchorState === 'orphaned'
-  const label = `${resolved ? 'Resolved' : `${item.unresolvedCount} open`} comment thread on ${item.pageTitle ?? item.pageUrl}${orphaned ? ', anchor lost' : ''}`
+  const countLabel = `${item.commentCount} ${item.commentCount === 1 ? 'comment' : 'comments'}`
+  const label = `${resolved ? 'Resolved' : 'Open'} comment thread (${countLabel}) on ${item.pageTitle ?? item.pageUrl}${orphaned ? ', anchor lost' : ''}`
   return (
     <button
       type="button"
@@ -30,7 +31,7 @@ export function PanelRow({ item, onSelect }: PanelRowProps) {
           {item.pageTitle ?? item.pageUrl}
         </span>
         <span className="cmnt:mt-0.5 cmnt:flex cmnt:items-center cmnt:gap-1.5 cmnt:text-[11px] cmnt:text-gray-500">
-          <span>{resolved ? 'Resolved' : `${item.unresolvedCount} open`}</span>
+          <span>{resolved ? 'Resolved' : countLabel}</span>
           <span aria-hidden={true}>·</span>
           <span>{relativeTime(item.updatedAt)}</span>
           {orphaned && (

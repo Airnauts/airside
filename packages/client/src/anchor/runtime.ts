@@ -10,6 +10,13 @@ export type RuntimeOptions = {
   pageKey: string
   onPlacements: (placements: PlacedThread[]) => void
   root?: ParentNode
+  /**
+   * Resolve the page key for the CURRENT document URL. Used to detect that a client-side
+   * route change is in flight: when this no longer equals `pageKey`, this runtime is keyed
+   * to the page being left and the live DOM already belongs to the destination route, so
+   * rematching would falsely orphan our threads. Omitted in tests that don't exercise nav.
+   */
+  currentPageKey?: () => string
 }
 
 type RetainedMatch = { item: ThreadListItem; el: Element; anchor: Anchor; highlight: Box[] }
@@ -57,10 +64,19 @@ export function createRuntime(opts: RuntimeOptions) {
       void opts.client
         .refreshAnchor(item.id, { anchorState: 'anchored', selectionLost: true })
         .catch(() => {})
+    } else if (item.anchorState === 'orphaned') {
+      // Clean fast-path re-anchor (no heal payload) of a thread the server still has flagged
+      // orphaned — e.g. a transient orphan written during an SPA route transition. Without this
+      // write-back the comment renders fine but the stored flag never clears, so the API and the
+      // cross-page panel keep showing it as anchor-lost. Patch the retained item to 'anchored'
+      // below so repeated rematches don't re-POST.
+      void opts.client.refreshAnchor(item.id, { anchorState: 'anchored' }).catch(() => {})
     }
     const highlight =
       res.kind === 'anchored' && res.range ? mapRects(Array.from(res.range.getClientRects())) : []
-    return { item, el: res.el, anchor: nextAnchor, highlight }
+    const nextItem: ThreadListItem =
+      item.anchorState === 'orphaned' ? { ...item, anchorState: 'anchored' } : item
+    return { item: nextItem, el: res.el, anchor: nextAnchor, highlight }
   }
 
   const resizeObs = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => emit()) : null
@@ -80,6 +96,12 @@ export function createRuntime(opts: RuntimeOptions) {
   }
 
   function rematchAll() {
+    // Bail if a client-side route change is in flight: the URL has already moved to another
+    // page, so the live DOM belongs to the destination route, not opts.pageKey. Mutations from
+    // the host swapping page content would otherwise make our retained threads miss and get
+    // persisted `orphaned` — patching anchors for the page we're leaving. The re-keyed runtime
+    // (created on the route change) matches the destination page's threads instead.
+    if (opts.currentPageKey && opts.currentPageKey() !== opts.pageKey) return
     // Re-match from the RETAINED anchor (p.anchor), which may already be self-healed —
     // matching M6 semantics so drift isn't re-detected (and re-POSTed) every mutation frame.
     placed = placed

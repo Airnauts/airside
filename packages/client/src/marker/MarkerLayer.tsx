@@ -82,6 +82,10 @@ export function MarkerLayer({
     const rt = createRuntime({
       client,
       pageKey: activeKey,
+      // Lets the runtime detect an in-flight client-side route change (the URL has already moved
+      // to another page) and skip rematch, so it can't orphan the leaving page's anchors against
+      // the destination DOM before this runtime is re-keyed/disposed on the route change.
+      currentPageKey: () => (resolvePageKey ? resolvePageKey(window.location.href) : pageKey),
       onPlacements: (next) => dispatch({ type: 'INGEST_PLACEMENTS', placements: next }),
     })
     runtime.current = rt

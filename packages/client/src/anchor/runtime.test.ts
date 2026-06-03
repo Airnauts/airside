@@ -15,11 +15,15 @@ const anchorFor = (sel: string): Anchor => {
   }
 }
 
-const li = (id: string, anchor: Anchor): ThreadListItem =>
+const li = (
+  id: string,
+  anchor: Anchor,
+  anchorState: 'anchored' | 'orphaned' = 'anchored',
+): ThreadListItem =>
   ({
     id,
     status: 'open',
-    anchorState: 'anchored',
+    anchorState,
     unresolvedCount: 1,
     commentCount: 1,
     createdBy: { email: 'a@b.c' },
@@ -84,6 +88,56 @@ describe('createRuntime.refresh', () => {
       'th3',
       expect.objectContaining({ anchorState: 'anchored' }),
     )
+  })
+
+  it('clears a stale orphaned flag when a clean (fast-path) re-anchor succeeds', async () => {
+    // The thread re-anchors cleanly via the fast path (unique selector + agreeing signals),
+    // so there is no heal payload. But the server still has it flagged orphaned (e.g. a
+    // transient orphan written during SPA navigation). The runtime must write back anchored
+    // so the stale flag clears — otherwise the comment renders fine but the API/panel keep
+    // showing it as anchor-lost forever.
+    document.body.innerHTML = '<main><p id="stale" class="lead">hello world</p></main>'
+    mockRect(document.querySelector('#stale') as Element, {
+      left: 0,
+      top: 0,
+      width: 100,
+      height: 20,
+    })
+    const client = fakeClient([li('thstale', anchorFor('#stale'), 'orphaned')])
+    const onPlacements = vi.fn()
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
+    await rt.refresh()
+    expect(client.refreshAnchor).toHaveBeenCalledWith('thstale', { anchorState: 'anchored' })
+    // and it is placed like any anchored thread
+    expect(onPlacements.mock.calls.at(-1)?.[0]).toHaveLength(1)
+  })
+
+  it('does not re-post when an already-anchored thread re-anchors cleanly', async () => {
+    document.body.innerHTML = '<main><p id="ok2" class="lead">hello world</p></main>'
+    mockRect(document.querySelector('#ok2') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    const client = fakeClient([li('thok', anchorFor('#ok2'))])
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements: vi.fn() })
+    await rt.refresh()
+    expect(client.refreshAnchor).not.toHaveBeenCalled()
+  })
+
+  it('clears a stale orphaned flag only once across repeated rematches', async () => {
+    document.body.innerHTML = '<main><p id="once" class="lead">hello world</p></main>'
+    mockRect(document.querySelector('#once') as Element, {
+      left: 0,
+      top: 0,
+      width: 100,
+      height: 20,
+    })
+    const client = fakeClient([li('thonce', anchorFor('#once'), 'orphaned')])
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements: vi.fn() })
+    await rt.refresh()
+    rt.rematchAll()
+    rt.rematchAll()
+    const anchoredCalls = client.refreshAnchor.mock.calls.filter(
+      ([, body]) => body.anchorState === 'anchored',
+    )
+    expect(anchoredCalls).toHaveLength(1)
   })
 
   it('reports selectionLost via refreshAnchor and keeps the element pin', async () => {
@@ -201,5 +255,59 @@ describe('createRuntime.rematchAll', () => {
     // placed should now be empty and onPlacements called with []
     expect(rt.placed).toHaveLength(0)
     expect(onPlacements.mock.calls.at(-1)?.[0]).toHaveLength(0)
+  })
+
+  it('skips rematch (and does not orphan) once the URL has navigated to another page', async () => {
+    // Reproduces the SPA-navigation false orphan: during a client-side route change the host
+    // swaps page content, firing the MutationObserver while THIS runtime (keyed to the page being
+    // left) is still mounted. Matching its threads against the destination DOM would falsely orphan
+    // and persist them. The runtime must detect the URL has already moved on and bail.
+    document.body.innerHTML = '<main><p id="leaving" class="lead">on page A</p></main>'
+    mockRect(document.querySelector('#leaving') as Element, {
+      left: 0,
+      top: 0,
+      width: 100,
+      height: 20,
+    })
+    let currentKey = 'A'
+    const client = fakeClient([li('thnav', anchorFor('#leaving'))])
+    const onPlacements = vi.fn()
+    const rt = createRuntime({
+      client: client as never,
+      pageKey: 'A',
+      currentPageKey: () => currentKey,
+      onPlacements,
+    })
+    await rt.refresh()
+    expect(rt.placed).toHaveLength(1)
+    // Client-side nav to page B: the URL/pageKey changes and the DOM swaps to B's content.
+    currentKey = 'B'
+    document.body.innerHTML = '<main><span>page B content</span></main>'
+    rt.rematchAll()
+    // The page-A thread must NOT be orphaned against page-B's DOM, and must stay retained.
+    expect(client.refreshAnchor).not.toHaveBeenCalled()
+    expect(rt.placed).toHaveLength(1)
+  })
+
+  it('still rematches on same-page DOM mutation when currentPageKey matches', async () => {
+    document.body.innerHTML = '<main><p id="same" class="lead">same page text</p></main>'
+    mockRect(document.querySelector('#same') as Element, {
+      left: 0,
+      top: 0,
+      width: 100,
+      height: 20,
+    })
+    const client = fakeClient([li('thsame', anchorFor('#same'))])
+    const rt = createRuntime({
+      client: client as never,
+      pageKey: 'A',
+      currentPageKey: () => 'A',
+      onPlacements: vi.fn(),
+    })
+    await rt.refresh()
+    // Genuine in-page removal: the element is gone while still on page A -> orphan as before.
+    document.body.innerHTML = '<main><span>something else</span></main>'
+    rt.rematchAll()
+    expect(client.refreshAnchor).toHaveBeenCalledWith('thsame', { anchorState: 'orphaned' })
   })
 })

@@ -46,6 +46,11 @@ describe('CommentList', () => {
     expect(screen.getByText('Ann')).toBeInTheDocument()
     expect(screen.getByText('Sentence case please.')).toBeInTheDocument()
     expect(screen.getByRole('img', { name: 'shot.png' })).toHaveAttribute('src', 'https://x/y.png')
+    // The attachment opens its raw URL in a new tab (with safe rel).
+    const link = screen.getByRole('link', { name: /open shot\.png in a new tab/i })
+    expect(link).toHaveAttribute('href', 'https://x/y.png')
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
   })
   it('renders an inline retry on error', () => {
     render(<CommentList comments={[]} loading={false} error onRetry={() => {}} />)

@@ -2,17 +2,21 @@
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true
   },
-  "hooks": {
-    "WorktreeCreate": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree-create.sh\"",
-            "timeout": 300
-          }
-        ]
-      }
+  "worktree": {
+    "baseRef": "head",
+    "symlinkDirectories": [
+      "node_modules",
+      "packages/adapter-memory/node_modules",
+      "packages/adapter-mongo/node_modules",
+      "packages/client/node_modules",
+      "packages/core/node_modules",
+      "packages/next/node_modules",
+      "packages/server/node_modules",
+      "packages/storage-fs/node_modules",
+      "packages/storage-vercel-blob/node_modules",
+      "packages/test-support/node_modules",
+      "examples/nextjs-host/node_modules",
+      "examples/playground/node_modules"
     ]
   }
 }

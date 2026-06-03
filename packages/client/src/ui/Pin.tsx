@@ -20,7 +20,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
   const resolved = item.status === 'resolved'
   const label = resolved
     ? `Resolved comment thread by ${item.createdBy.name ?? item.createdBy.email}`
-    : `Comment thread by ${item.createdBy.name ?? item.createdBy.email}, ${item.unresolvedCount} unresolved`
+    : `Comment thread by ${item.createdBy.name ?? item.createdBy.email}, ${item.commentCount} ${item.commentCount === 1 ? 'comment' : 'comments'}`
   return (
     <button
       // Radix's <Popover.Trigger asChild> injects its own onClick/aria/data-state/ref here.
@@ -72,12 +72,12 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       >
         {resolved ? '✓' : initials(item.createdBy)}
       </span>
-      {!resolved && item.unresolvedCount > 0 && (
+      {!resolved && item.commentCount > 0 && (
         <span
           aria-hidden={true}
           className="cmnt:absolute cmnt:-top-1.5 cmnt:-right-[7px] cmnt:min-w-[22px] cmnt:h-[22px] cmnt:rounded-[11px] cmnt:bg-gray-900 cmnt:text-white cmnt:text-[11px] cmnt:font-bold cmnt:flex cmnt:items-center cmnt:justify-center cmnt:px-[5px] cmnt:border-2 cmnt:border-white cmnt:leading-[0]"
         >
-          {item.unresolvedCount}
+          {item.commentCount}
         </span>
       )}
     </button>

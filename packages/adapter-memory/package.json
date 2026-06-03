@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/comments-adapter-memory",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "In-memory repository adapter for the Airnauts commenting tool server.",
   "keywords": [
     "comments",

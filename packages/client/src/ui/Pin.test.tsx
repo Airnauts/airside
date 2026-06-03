@@ -9,14 +9,15 @@ const item = (over: Partial<ThreadListItem> = {}) =>
     id: 'a',
     status: 'open',
     anchorState: 'anchored',
-    unresolvedCount: 3,
+    // unresolvedCount is a binary thread-status flag (1 when open); the badge must NOT read it.
+    unresolvedCount: 1,
     commentCount: 3,
     createdBy: { email: 'a@b.c', name: 'Ann Lee' },
     ...over,
   }) as unknown as ThreadListItem
 
 describe('Pin', () => {
-  it('renders initials, an unresolved count, and an aria-label; click fires onOpen', () => {
+  it('renders initials, the comment count, and an aria-label; click fires onOpen', () => {
     const onOpen = vi.fn()
     render(<Pin item={item()} pin={{ x: 5, y: 6 }} onOpen={onOpen} />)
     const btn = screen.getByRole('button', { name: /Ann Lee/i })
@@ -26,20 +27,23 @@ describe('Pin', () => {
     expect(onOpen).toHaveBeenCalled()
   })
 
-  it('resolved pins show a check, not a count, and label as resolved', () => {
-    render(
-      <Pin
-        item={item({ status: 'resolved', unresolvedCount: 0 })}
-        pin={{ x: 0, y: 0 }}
-        onOpen={() => {}}
-      />,
-    )
-    const btn = screen.getByRole('button', { name: /resolved/i })
-    expect(btn).toHaveTextContent('✓')
+  it('shows the full comment count, not the binary unresolved flag', () => {
+    // Regression: an open thread with many comments reports unresolvedCount: 1 but commentCount: 5.
+    render(<Pin item={item({ commentCount: 5 })} pin={{ x: 0, y: 0 }} onOpen={() => {}} />)
+    const btn = screen.getByRole('button', { name: /Ann Lee/i })
+    expect(btn).toHaveTextContent('5')
+    expect(btn).not.toHaveTextContent('1')
   })
 
-  it('shows no count pill for an open thread with 0 unresolved', () => {
-    render(<Pin item={item({ unresolvedCount: 0 })} pin={{ x: 0, y: 0 }} onOpen={() => {}} />)
+  it('resolved pins show a check, not a count, and label as resolved', () => {
+    render(<Pin item={item({ status: 'resolved' })} pin={{ x: 0, y: 0 }} onOpen={() => {}} />)
+    const btn = screen.getByRole('button', { name: /resolved/i })
+    expect(btn).toHaveTextContent('✓')
+    expect(btn).not.toHaveTextContent('3')
+  })
+
+  it('shows no count pill for a thread with 0 comments', () => {
+    render(<Pin item={item({ commentCount: 0 })} pin={{ x: 0, y: 0 }} onOpen={() => {}} />)
     const btn = screen.getByRole('button', { name: /Ann Lee/i })
     expect(btn).not.toHaveTextContent('0')
   })
@@ -48,7 +52,8 @@ describe('Pin', () => {
     const baseItem = {
       id: 't1',
       status: 'open',
-      unresolvedCount: 2,
+      unresolvedCount: 1,
+      commentCount: 2,
       createdBy: { email: 'a@b.c', name: 'Ann' },
     } as never
     const { rerender } = render(<Pin item={baseItem} pin={{ x: 0, y: 0 }} focused />)
