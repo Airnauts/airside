@@ -38,11 +38,14 @@ export function formatSlackMessage(event: NotificationEvent): SlackMessage {
   const who = event.author.name
     ? `${event.author.name} (${event.author.email})`
     : event.author.email
-  const quoted = event.text.replace(/\n/g, '\n>')
+  // Image-only comments are allowed (empty text + an attachment), so fall back to
+  // a label rather than rendering an empty quote / dangling "by … :".
+  const body = event.text.trim() === '' ? '(image comment)' : event.text
+  const quoted = body.replace(/\n/g, '\n>')
 
   return {
     // Plain-text fallback for notifications / accessibility.
-    text: `${heading} by ${who}: ${event.text}`,
+    text: `${heading} by ${who}: ${body}`,
     blocks: [
       {
         type: 'section',

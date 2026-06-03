@@ -36,6 +36,20 @@ describe('dispatchNotifications', () => {
     expect(log).toHaveBeenCalledWith(expect.stringContaining('bad'))
   })
 
+  it('does not reject when a notifier throws synchronously, and still runs the others', async () => {
+    const sync: Notifier = {
+      name: 'sync',
+      notify: () => {
+        throw new Error('sync boom')
+      },
+    }
+    const good: Notifier = { name: 'good', notify: vi.fn(async () => {}) }
+    const log = vi.fn()
+    await expect(dispatchNotifications([sync, good], event, log)).resolves.toBeUndefined()
+    expect(good.notify).toHaveBeenCalled()
+    expect(log).toHaveBeenCalledWith(expect.stringContaining('sync'))
+  })
+
   it('is a no-op for empty or undefined notifiers', async () => {
     await expect(dispatchNotifications([], event)).resolves.toBeUndefined()
     await expect(dispatchNotifications(undefined, event)).resolves.toBeUndefined()

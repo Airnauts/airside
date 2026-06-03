@@ -61,4 +61,10 @@ describe('formatSlackMessage', () => {
     const msg = formatSlackMessage({ ...event, author: { email: 'bob@example.com' } })
     expect(msg.text).toContain('bob@example.com')
   })
+
+  it('uses an image-comment fallback when the text is empty', () => {
+    const msg = formatSlackMessage({ ...event, text: '' })
+    expect(msg.text).toContain('(image comment)')
+    expect(JSON.stringify(msg.blocks)).toContain('(image comment)')
+  })
 })
