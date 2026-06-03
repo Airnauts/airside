@@ -83,3 +83,45 @@ jobs:
           name: playwright-report
           path: examples/nextjs-host/playwright-report/
           retention-days: 7
+
+  # Publish to npm on every push to main, but only after ci + e2e are green.
+  # `changeset publish` is idempotent: it publishes only packages whose version is not
+  # already on the registry, so a push without a version bump is a safe no-op. To release,
+  # land a version bump on main (`pnpm version-packages`, see RELEASING.md).
+  publish:
+    needs: [ci, e2e]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    concurrency:
+      group: npm-publish
+      cancel-in-progress: false # never interrupt an in-flight publish
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+
+      # Publishes the 8 public @airnauts/comments-* packages whose version isn't yet on npm.
+      - name: Publish to npm
+        run: pnpm exec changeset publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

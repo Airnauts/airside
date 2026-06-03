@@ -310,8 +310,8 @@ loop — activation/identity, comment → reply → attach → resolve → reope
 DOM-mutation → re-anchor/orphan** (via switchable `?variant=` article pages), text
 selection, and cross-page panel navigation (driving `examples/nextjs-host`, Chromium,
 hermetic in-memory + local uploads); **e2e wired into CI** (headless `e2e` job);
-**bundle-size budget confirmed** (300 kB, confirm-only); a **tag-triggered
-`changeset publish`** release workflow + `RELEASING.md`. The e2e surfaced three product
+**bundle-size budget confirmed** (300 kB, confirm-only); **publish-on-green-`main`**
+(`changeset publish`, gated on `ci + e2e`) + `RELEASING.md`. The e2e surfaced three product
 findings (one fixed: attachmentIds persistence ADR-0024; two documented in
 [`issues.md`](issues.md)).
 
@@ -324,8 +324,9 @@ an organizational decision, not in-repo work.
 **Depends on.** M9.
 
 **Exit criteria.** e2e covers the full loop + mutation re-anchor/orphan and passes
-headless in CI; `pnpm size` confirms < 300 kB; `release.yml` publishes the 8 public
-packages on a `v*` tag; M11 carries the deferred deployment/adoption.
+headless in CI; `pnpm size` confirms < 300 kB; the `publish` job (gated on `ci + e2e`)
+`changeset publish`es the 8 public packages on a green push to `main`; M11 carries the
+deferred deployment/adoption.
 
 **Refs.** Design [`specs/2026-06-02-m10-verification-release-design.md`](../superpowers/specs/2026-06-02-m10-verification-release-design.md);
 Plan [`plans/2026-06-02-m10-verification-release.md`](../superpowers/plans/2026-06-02-m10-verification-release.md);

@@ -1,7 +1,13 @@
 # Releasing `@airnauts/comments-*`
 
-Packages are published to npm by [`.github/workflows/release.yml`](.github/workflows/release.yml),
-triggered by pushing a `v*` tag. Versioning is managed by [Changesets](https://github.com/changesets/changesets).
+Publishing is **automatic on `main`**: the `publish` job in
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push to `main`,
+**after** the `ci` and `e2e` jobs pass, and runs `changeset publish`. That command is
+**idempotent** — it publishes only packages whose `package.json` version is **not already
+on npm**, so a push without a version bump is a safe no-op. Versioning is managed by
+[Changesets](https://github.com/changesets/changesets).
+
+**In short: to release, land a version bump on `main`.** No tags required.
 
 ## Prerequisite (one-time)
 
@@ -9,43 +15,38 @@ Add an **`NPM_TOKEN`** Actions secret (organization or repository) with **publis
 rights to the `@airnauts` scope:
 repo → Settings → Secrets and variables → Actions → New repository secret.
 
-### First release (now)
+## First release (now)
 
 The two initial changesets have already been consumed on `main` (`chore: version
 packages`), so **all 8 public packages are at `0.1.0`** with no pending changesets and
-nothing is published yet. To cut the first release, just tag the current version:
-
-```bash
-git tag v0.1.0
-git push && git push --tags
-```
-
-The **Release** workflow runs the gates (lint · typecheck · build · test) and
-`changeset publish`, publishing all 8 packages at `0.1.0`. Verify:
+nothing is published yet. The first green push to `main` (with `NPM_TOKEN` set) will
+publish all 8 at `0.1.0` automatically. Verify:
 
 ```bash
 npm view @airnauts/comments-core version
 ```
 
-### Subsequent releases
+(If you want to publish the current `main` state without waiting for another push, re-run
+the latest **CI** workflow run on `main` from the Actions tab.)
 
-1. Ensure `main` is green and the changes you want to ship carry **changesets**
-   (`pnpm changeset` per change — committed alongside the work).
-2. Bump versions + changelogs from the pending changesets:
+## Subsequent releases
+
+1. Each change that should ship carries a **changeset** (`pnpm changeset`, committed
+   alongside the work).
+2. When ready to release, bump versions + changelogs from the pending changesets:
    ```bash
    pnpm version-packages   # = changeset version
    ```
-3. Commit the version bump:
+3. Commit the version bump and merge it to `main`:
    ```bash
    git add -A && git commit -m "chore(release): vX.Y.Z"
    ```
-4. Tag and push (match the bumped version):
-   ```bash
-   git tag vX.Y.Z
-   git push && git push --tags
-   ```
-5. The **Release** workflow gates and `changeset publish`es the packages whose version
-   is not yet on the registry.
+4. Once that lands on `main` and **ci + e2e** are green, the `publish` job publishes the
+   packages whose version is not yet on the registry. No tagging step.
+
+> Tip: keep the version bump (`pnpm version-packages`) as its **own** commit/PR so the
+> publishing push is a deliberate, reviewable step rather than a side effect of unrelated
+> work.
 
 ## Public packages (8)
 
