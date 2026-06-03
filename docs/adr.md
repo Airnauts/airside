@@ -901,3 +901,48 @@ documented decision and makes the server trust client-supplied `url`/`size`/`con
   it. Verified end-to-end through the real server handler (`pipeline.test.ts`): multipart
   upload → image-only comment referencing the returned id → fetched thread carries the
   resolved attachment; an unknown id returns 400.
+
+## ADR-0025 — Route-level `disabled` flag on `createCommentsRoute`
+
+- **Date:** 2026-06-03
+- **Status:** accepted
+
+**Context.** A Next.js host often wants the commenting tool live only when its backends
+are provisioned (e.g. both `MONGODB_URI` and `BLOB_READ_WRITE_TOKEN`). When a backend is
+absent — local dev, preview deploys — the mounted route should answer `404` to every
+method and the widget should stay dormant. Hosts expressed this with a ternary that
+hand-builds a `{ GET: notFound, POST: notFound, ... }` object.
+
+**Decision.** Add an optional `disabled?: boolean` to `createCommentsRoute`'s parameter
+type only — `CreateCommentsServerOptions` (the server core) stays unaware of it. When
+truthy, the function returns four handlers that each respond `404 Not Found` and never
+calls `createCommentsServer`. The returned `server` is therefore widened to optional
+(`server?: CommentsServer`) and is `undefined` on the disabled path. The other config
+fields stay required — an "added optional flag", not a discriminated union, chosen for
+minimal type machinery.
+
+**Consequences.** Hosts drop the hand-rolled `notFound` boilerplate. Breaking for
+`@airnauts/comments-next`: consumers reading `route.server` must now narrow it
+(`route.server?.…`). When disabled, no rate limiter is built and the lazy
+repository/storage are never touched. Ships as a minor (pre-1.0) BREAKING bump.
+
+## ADR-0026 — Explicit `token` for `vercelBlobStorage` (no ambient env read)
+
+- **Date:** 2026-06-03
+- **Status:** accepted
+
+**Context.** `vercelBlobStorage`'s `token` was optional; when omitted, `@vercel/blob` read
+`BLOB_READ_WRITE_TOKEN` from `process.env` automatically. That ambient read was
+inconsistent with the other adapters — `mongoRepository({ uri })` and
+`fileSystemStorage({ rootDir, baseUrl })` take their configuration explicitly.
+
+**Decision.** Make `token: string` required on `VercelBlobStorageOptions` and drop the
+`= {}` default from both the `VercelBlobStorage` class constructor and the
+`vercelBlobStorage` factory. The host passes the env value in explicitly, mirroring
+`mongoRepository`. Enforcement is type-level only: like `mongoRepository` (which does not
+validate `uri`), no runtime guard is added — a caller defeating the type
+(`undefined as string`) would still hit `@vercel/blob`'s env fallback.
+
+**Consequences.** Configuration is uniform and explicit across adapters. Breaking for
+`@airnauts/comments-storage-vercel-blob`: `vercelBlobStorage()` / `new VercelBlobStorage()`
+with no token no longer typecheck. Ships as a minor (pre-1.0) BREAKING bump.
