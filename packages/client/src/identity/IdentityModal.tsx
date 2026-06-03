@@ -26,7 +26,7 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
       <Dialog.Portal container={container ?? undefined}>
         <Dialog.Overlay className="cmnt:fixed cmnt:inset-0 cmnt:bg-black/40 cmnt:pointer-events-auto" />
         <Dialog.Content className="cmnt:fixed cmnt:top-1/2 cmnt:left-1/2 cmnt:-translate-x-1/2 cmnt:-translate-y-1/2 cmnt:bg-white cmnt:p-6 cmnt:rounded-xl cmnt:min-w-80 cmnt:pointer-events-auto">
-          <Dialog.Title className="cmnt:mt-0">Enter your email</Dialog.Title>
+          <Dialog.Title className="cmnt:mt-0">Log in to comment</Dialog.Title>
           <Dialog.Description>
             Used only to label your comments. No verification, and no email is ever sent.
           </Dialog.Description>
@@ -52,7 +52,7 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
               type="submit"
               className="cmnt:bg-blue-600 cmnt:text-white cmnt:rounded-md cmnt:px-3 cmnt:py-2 cmnt:border-none cmnt:cursor-pointer"
             >
-              Start commenting
+              Log in
             </button>
           </form>
         </Dialog.Content>
