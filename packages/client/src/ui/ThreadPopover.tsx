@@ -5,6 +5,7 @@ import * as Popover from '@radix-ui/react-popover'
 import { useRef } from 'react'
 import type { ApiClient } from '../api/client'
 import { usePortalContainer } from '../app/providers'
+import { keepOpenThroughIdentityModal } from '../identity/modal-guard'
 import type { Identity } from '../identity/storage'
 import type { XY } from '../positioning/coords'
 import { useController, useOpenThread } from '../threads/useThreads'
@@ -49,6 +50,9 @@ export function ThreadPopover({
           align="center"
           sideOffset={8}
           collisionPadding={8}
+          // Don't close the pin when the identity modal opens over it (the modal steals focus,
+          // which Radix would otherwise read as an outside interaction and dismiss this popover).
+          onInteractOutside={keepOpenThroughIdentityModal}
           className="cmnt:pointer-events-auto"
         >
           <ThreadCard

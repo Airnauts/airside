@@ -7,6 +7,7 @@ import type { ApiClient } from '../api/client'
 import { ApiError } from '../api/errors'
 import { usePortalContainer } from '../app/providers'
 import { buildCaptureContext } from '../config'
+import { keepOpenThroughIdentityModal } from '../identity/modal-guard'
 import type { Identity } from '../identity/storage'
 import { takeFocusHandoff } from '../panel/navigate'
 import { usePanelController } from '../panel/PanelProvider'
@@ -241,6 +242,8 @@ export function MarkerLayer({
                 sideOffset={8}
                 collisionPadding={8}
                 onOpenAutoFocus={(e) => e.preventDefault()}
+                // Keep the draft open when the identity modal opens over it (see modal-guard).
+                onInteractOutside={keepOpenThroughIdentityModal}
                 data-testid="comments-draft"
                 className="cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:pointer-events-auto cmnt:overflow-hidden cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
               >

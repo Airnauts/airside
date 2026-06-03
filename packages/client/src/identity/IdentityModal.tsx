@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { type FormEvent, useState } from 'react'
 import { usePortalContainer } from '../app/providers'
+import { IDENTITY_MODAL_ATTR } from './modal-guard'
 import type { Identity } from './storage'
 
 export type IdentityModalProps = {
@@ -24,8 +25,16 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal container={container ?? undefined}>
-        <Dialog.Overlay className="cmnt:fixed cmnt:inset-0 cmnt:bg-black/40 cmnt:pointer-events-auto" />
-        <Dialog.Content className="cmnt:fixed cmnt:top-1/2 cmnt:left-1/2 cmnt:-translate-x-1/2 cmnt:-translate-y-1/2 cmnt:bg-white cmnt:p-6 cmnt:rounded-xl cmnt:min-w-80 cmnt:pointer-events-auto">
+        {/* Mark overlay + content so an open thread/draft popover behind the modal can tell a
+            focus/pointer dismiss event came from here and stay open (incl. overlay-click cancel). */}
+        <Dialog.Overlay
+          {...{ [IDENTITY_MODAL_ATTR]: '' }}
+          className="cmnt:fixed cmnt:inset-0 cmnt:bg-black/40 cmnt:pointer-events-auto"
+        />
+        <Dialog.Content
+          {...{ [IDENTITY_MODAL_ATTR]: '' }}
+          className="cmnt:fixed cmnt:top-1/2 cmnt:left-1/2 cmnt:-translate-x-1/2 cmnt:-translate-y-1/2 cmnt:bg-white cmnt:p-6 cmnt:rounded-xl cmnt:min-w-80 cmnt:pointer-events-auto"
+        >
           <Dialog.Title className="cmnt:mt-0">Enter your email</Dialog.Title>
           <Dialog.Description>
             Used only to label your comments. No verification, and no email is ever sent.
