@@ -116,3 +116,29 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
 
 See [`examples/nextjs-host/app/api/comments/[...path]/route.ts`](../examples/nextjs-host/app/api/comments/%5B...path%5D/route.ts)
 for this env-switched build: in-memory locally, Mongo + Blob in production.
+
+## Slack notifications
+
+Send a Slack message whenever a reviewer creates a thread or replies — with the author,
+the comment text, and a link to the page.
+
+1. In Slack, create (or pick) an app and enable **Incoming Webhooks**.
+2. **Add New Webhook to Workspace**, choose the channel, and copy the
+   `https://hooks.slack.com/services/…` URL. The channel is baked into the URL — there is
+   no separate channel name or bot token.
+3. Set it as `COMMENTS_SLACK_WEBHOOK_URL` and wire the notifier:
+
+```ts
+import { slackNotifier } from '@airnauts/comments-notifier-slack'
+
+createCommentsServer({
+  repository,
+  storage,
+  notifiers: [slackNotifier({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! })],
+})
+```
+
+A notification failure never breaks the comment write, and the webhook request is bounded
+by a 3-second timeout. The link points at the page; a recipient sees the comments only if
+they already hold the activation key (it is remembered after the first `?comments-key=…`
+activation).
