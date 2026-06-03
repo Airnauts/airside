@@ -17,6 +17,13 @@ export type ComposerProps = {
   onCancel?: () => void
   /** Focus the text input on mount. */
   autoFocus?: boolean
+  /** Controlled text. When provided, the parent owns the draft text (shared-draft sync). */
+  value?: string
+  onValueChange?: (text: string) => void
+  /** Controlled stored attachment (after upload). When `onAttachmentChange` is provided,
+   *  a completed upload is lifted to the parent and rendered from `attachment.url`. */
+  attachment?: Attachment | null
+  onAttachmentChange?: (attachment: Attachment | null) => void
 }
 
 type Pending = { name: string; status: PendingStatus; id?: string; file: File; previewUrl: string }
@@ -29,8 +36,19 @@ export function Composer({
   upload,
   onCancel,
   autoFocus,
+  value,
+  onValueChange,
+  attachment,
+  onAttachmentChange,
 }: ComposerProps) {
-  const [text, setText] = useState('')
+  const [internalText, setInternalText] = useState('')
+  const textControlled = value !== undefined
+  const text = textControlled ? value : internalText
+  const setText = (next: string) => {
+    if (textControlled) onValueChange?.(next)
+    else setInternalText(next)
+  }
+  const attControlled = onAttachmentChange !== undefined
   const [pending, setPending] = useState<Pending | null>(null)
   const [sending, setSending] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
@@ -52,8 +70,10 @@ export function Composer({
   )
 
   const attachmentReady = !pending || pending.status === 'ready'
+  const readyAttachment = attControlled ? (attachment ?? null) : null
   // A ready attachment is enough on its own — image-only comments are allowed.
-  const hasContent = text.trim().length > 0 || pending?.status === 'ready'
+  const hasContent =
+    text.trim().length > 0 || pending?.status === 'ready' || readyAttachment !== null
   const canSend = hasContent && attachmentReady && !sending
 
   // Drop the pending attachment and revoke its preview URL (remove, send, or replace).
@@ -71,9 +91,14 @@ export function Composer({
     previewUrlRef.current = previewUrl
     setPending({ name: file.name, status: 'uploading', file, previewUrl })
     upload(file)
-      .then((att) =>
-        setPending((p) => (p && p.file === file ? { ...p, status: 'ready', id: att.id } : p)),
-      )
+      .then((att) => {
+        if (attControlled) {
+          onAttachmentChange?.(att)
+          clearPending() // server URL now drives the thumbnail in both surfaces
+        } else {
+          setPending((p) => (p && p.file === file ? { ...p, status: 'ready', id: att.id } : p))
+        }
+      })
       .catch(() => setPending((p) => (p && p.file === file ? { ...p, status: 'error' } : p)))
   }
 
@@ -84,12 +109,19 @@ export function Composer({
   }
 
   function doSend(who: Identity) {
-    const attachmentIds = pending?.id ? [pending.id] : []
+    const attachmentIds = attControlled
+      ? readyAttachment
+        ? [readyAttachment.id]
+        : []
+      : pending?.id
+        ? [pending.id]
+        : []
     setSending(true)
     onSubmit({ text: text.trim(), attachmentIds, who })
       .then(() => {
         setText('')
-        clearPending()
+        if (attControlled) onAttachmentChange?.(null)
+        else clearPending()
       })
       .catch(() => {
         /* caller surfaces the error (toast); keep the draft so the user can retry */
@@ -114,6 +146,15 @@ export function Composer({
           previewUrl={pending.previewUrl}
           onRemove={clearPending}
           onRetry={() => startUpload(pending.file)}
+        />
+      )}
+      {!pending && readyAttachment && (
+        <PendingAttachment
+          name={readyAttachment.name}
+          status="ready"
+          previewUrl={readyAttachment.url}
+          onRemove={() => onAttachmentChange?.(null)}
+          onRetry={() => {}}
         />
       )}
       <div className="cmnt:flex cmnt:items-center cmnt:gap-2">

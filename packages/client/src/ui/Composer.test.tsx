@@ -198,4 +198,44 @@ describe('Composer', () => {
     fireEvent.click(screen.getByRole('button', { name: /remove attachment/i }))
     expect(screen.getByRole('button', { name: /send/i })).toBeEnabled()
   })
+
+  it('is controlled over text when value/onValueChange are provided', () => {
+    const onValueChange = vi.fn()
+    render(
+      <Composer
+        mode="reply"
+        identity={{ email: 'a@b.c' }}
+        onNeedIdentity={() => {}}
+        onSubmit={async () => {}}
+        upload={async () => ({}) as never}
+        value="seed"
+        onValueChange={onValueChange}
+      />,
+    )
+    const input = screen.getByPlaceholderText(/reply/i) as HTMLInputElement
+    expect(input.value).toBe('seed')
+    fireEvent.change(input, { target: { value: 'seed!' } })
+    expect(onValueChange).toHaveBeenCalledWith('seed!')
+  })
+
+  it('clears via onValueChange/onAttachmentChange after a successful send', async () => {
+    const onValueChange = vi.fn()
+    const onAttachmentChange = vi.fn()
+    render(
+      <Composer
+        mode="reply"
+        identity={{ email: 'a@b.c' }}
+        onNeedIdentity={() => {}}
+        onSubmit={async () => {}}
+        upload={async () => ({}) as never}
+        value="hello"
+        onValueChange={onValueChange}
+        attachment={null}
+        onAttachmentChange={onAttachmentChange}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(onValueChange).toHaveBeenLastCalledWith(''))
+    expect(onAttachmentChange).toHaveBeenLastCalledWith(null)
+  })
 })
