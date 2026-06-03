@@ -65,6 +65,9 @@ importers:
       '@airnauts/comments-next':
         specifier: workspace:*
         version: link:../../packages/next
+      '@airnauts/comments-notifier-slack':
+        specifier: workspace:*
+        version: link:../../packages/notifier-slack
       '@airnauts/comments-server':
         specifier: workspace:*
         version: link:../../packages/server
