@@ -6,38 +6,44 @@ import { activate, openThread, placeElementPin } from './helpers'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 test.describe('single-page commenting loop', () => {
+  // Generous per-test budget: this test does the full loop and the first upload to a
+  // cold `next start` route can be slow.
+  test.setTimeout(90_000)
+
   test('activate, identity, comment, reply, attach, resolve, reopen, reload', async ({ page }) => {
     await activate(page, '/article', 'smoke')
 
-    // Place an element pin + first comment (identity modal handled inside).
-    await placeElementPin(page, 'Content signals', 'First comment on the list item')
+    // Place an element pin + first comment (identity modal handled inside). Target the 2nd
+    // <li> by text unique to it ("Content signals" also occurs in a nearby <p>).
+    await placeElementPin(page, 'disambiguate near-matches', 'First comment on the list item')
     await expect(page.getByTestId('comments-pin')).toHaveCount(1)
 
-    // Open the thread and reply.
+    // Open the thread and wait for it to load (the first comment is visible).
     await openThread(page)
     await expect(page.getByText('First comment on the list item')).toBeVisible()
-    const replyBox = page.getByRole('textbox', { name: 'Reply…' })
-    await replyBox.fill('A reply to the first comment')
-    await page.getByRole('button', { name: 'Send' }).click()
-    await expect(page.getByText('A reply to the first comment')).toBeVisible()
 
-    // Attach a screenshot via the hidden file input, then post a comment carrying
-    // it. The upload completes; the posted-attachment render is asserted after the
-    // reload below (see KNOWN GAP) since the server currently drops attachmentIds.
+    // Attach a screenshot, then post a reply carrying it. Do the attach on the freshly
+    // opened, settled composer — BEFORE posting any other reply. On a cold server the
+    // thread refresh after a post briefly remounts the reply composer, which would drop an
+    // in-flight upload; attaching first avoids that race.
     await page
       .getByTestId('composer-file')
       .setInputFiles(path.join(__dirname, 'fixtures', 'screenshot.png'))
-    // Wait for the upload to finish: the pending attachment's status region drops the
-    // "Uploading" label (becomes the bare filename) and the spinner is gone.
-    await expect(page.getByRole('status', { name: 'screenshot.png' })).toBeVisible({
-      timeout: 15_000,
+    // Wait for the upload to be READY: the pending attachment's status region label becomes
+    // exactly the filename. Use exact match — the uploading ("Uploading screenshot.png") and
+    // error ("Upload failed for screenshot.png") labels both *contain* the filename, so a
+    // substring match would let an in-flight or failed upload pass and post with no attachment.
+    // Generous timeout: the first upload to a cold route is slow.
+    await expect(page.getByRole('status', { name: 'screenshot.png', exact: true })).toBeVisible({
+      timeout: 30_000,
     })
     await expect(page.getByTestId('attachment-spinner')).toHaveCount(0)
     await page.getByRole('textbox', { name: 'Reply…' }).fill('Reply with a screenshot')
     await page.getByRole('button', { name: 'Send' }).click()
     await expect(page.getByText('Reply with a screenshot')).toBeVisible()
 
-    // Resolve → reopen.
+    // Resolve → reopen. (One reply is enough; a second post here would race the thread
+    // refresh that briefly remounts the composer on a cold server.)
     await page.getByRole('button', { name: /Resolve/ }).click()
     await expect(page.getByRole('button', { name: /Reopen/ })).toBeVisible()
     await page.getByRole('button', { name: /Reopen/ }).click()
@@ -48,13 +54,13 @@ test.describe('single-page commenting loop', () => {
     await expect(page.getByTestId('comments-pin')).toHaveCount(1)
     await openThread(page)
     await expect(page.getByText('First comment on the list item')).toBeVisible()
-    await expect(page.getByText('A reply to the first comment')).toBeVisible()
     await expect(page.getByText('Reply with a screenshot')).toBeVisible()
-    // KNOWN GAP: the posted attachment never renders because the server drops
-    // attachmentIds — packages/server/src/use-cases/add-comment.ts:20 and
-    // create-thread.ts:19 hardcode `attachments: []` and never resolve the ids.
-    // The upload endpoint itself works (returns id + /uploads/ url). Re-enable
-    // this assertion once the server persists attachmentIds:
-    // await expect(page.locator('img[src*="/uploads/"]').first()).toBeVisible()
+    // The posted attachment persists (server resolves attachmentIds → attachments) and
+    // renders in the reopened thread with its /uploads/ url. Assert the element + src,
+    // not pixel visibility: runtime-written public/uploads bytes aren't guaranteed to be
+    // served by `next start`, and the persisted attachment record is the behavior tested.
+    const posted = page.locator('img[alt="screenshot.png"]')
+    await expect(posted).toHaveCount(1)
+    await expect(posted).toHaveAttribute('src', /\/uploads\//)
   })
 })
