@@ -32,7 +32,7 @@ export default async function ArticlePage({
   // Under ?variant=wrapped the positional selector breaks → scoring runs → the unchanged <li>
   // re-anchors via its data-anchor match. Under ?variant=removed the <li> is gone, the positional
   // selector re-resolves onto a sibling that lacks data-anchor → fast path rejected → orphan.
-  // The bare-<li> limits this attribute papers over are documented in /issues.md (Findings A & B).
+  // The bare-<li> limits this attribute papers over are documented in docs/issues.md.
   const items = variant === 'reordered' ? [...ITEMS].reverse() : ITEMS
   const list = (
     <ul className={variant === 'renamed' ? 'mutated-list' : undefined}>

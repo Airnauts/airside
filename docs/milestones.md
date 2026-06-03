@@ -313,7 +313,7 @@ hermetic in-memory + local uploads); **e2e wired into CI** (headless `e2e` job);
 **bundle-size budget confirmed** (300 kB, confirm-only); a **tag-triggered
 `changeset publish`** release workflow + `RELEASING.md`. The e2e surfaced three product
 findings (one fixed: attachmentIds persistence ADR-0024; two documented in
-[`issues.md`](../../issues.md)).
+[`issues.md`](issues.md)).
 
 **Deferred to M11.** The live **Vercel + Atlas + Blob** dogfood deployment and
 **real-project adoption** (PRD §7's adoption bar) — they depend on external infra and

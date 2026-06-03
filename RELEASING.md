@@ -9,29 +9,43 @@ Add an **`NPM_TOKEN`** Actions secret (organization or repository) with **publis
 rights to the `@airnauts` scope:
 repo → Settings → Secrets and variables → Actions → New repository secret.
 
-## Cutting a release
+### First release (now)
 
-1. Ensure `main` is green and all intended changesets are merged.
+The two initial changesets have already been consumed on `main` (`chore: version
+packages`), so **all 8 public packages are at `0.1.0`** with no pending changesets and
+nothing is published yet. To cut the first release, just tag the current version:
+
+```bash
+git tag v0.1.0
+git push && git push --tags
+```
+
+The **Release** workflow runs the gates (lint · typecheck · build · test) and
+`changeset publish`, publishing all 8 packages at `0.1.0`. Verify:
+
+```bash
+npm view @airnauts/comments-core version
+```
+
+### Subsequent releases
+
+1. Ensure `main` is green and the changes you want to ship carry **changesets**
+   (`pnpm changeset` per change — committed alongside the work).
 2. Bump versions + changelogs from the pending changesets:
    ```bash
    pnpm version-packages   # = changeset version
    ```
-   For the **first release**, all 8 public packages go `0.0.0 → 0.1.0` (the two pending
-   `minor` changesets: `initial-release` + `uniform-adapter-construction`).
 3. Commit the version bump:
    ```bash
    git add -A && git commit -m "chore(release): vX.Y.Z"
    ```
-4. Tag and push:
+4. Tag and push (match the bumped version):
    ```bash
-   git tag vX.Y.Z      # match the bumped version, e.g. v0.1.0
+   git tag vX.Y.Z
    git push && git push --tags
    ```
-5. The **Release** workflow runs the gates (lint · typecheck · build · test) and
-   `changeset publish`, publishing the 8 public packages. Verify on npm:
-   ```bash
-   npm view @airnauts/comments-core version
-   ```
+5. The **Release** workflow gates and `changeset publish`es the packages whose version
+   is not yet on the registry.
 
 ## Public packages (8)
 
