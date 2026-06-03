@@ -1,0 +1,80 @@
+import { expect, test } from '@playwright/test'
+import { activate, DEV_KEY, placeElementPin, urlFor } from './helpers'
+
+test.describe('sidebar master–detail', () => {
+  // Cold next start + cross-page navigation handoff can be slow.
+  test.setTimeout(90_000)
+
+  test('same-page row click opens the in-sidebar detail and focuses the pin', async ({ page }) => {
+    const ns = 'sidebar-same'
+    const body = 'Same-page sidebar detail body'
+
+    await activate(page, '/pricing', ns)
+    await placeElementPin(page, 'Starter', body)
+
+    await page.getByTestId('comments-panel-open').click()
+    await expect(page.getByTestId('comments-panel')).toBeVisible()
+
+    // Click this test's row (root text appears in the card).
+    const row = page.getByTestId('comments-panel-row').filter({ hasText: body })
+    await expect(row).toHaveCount(1)
+    await row.first().click()
+
+    // The in-sidebar detail opens (Back button) while the panel stays open and the pin focuses.
+    await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
+    await expect(page.getByTestId('comments-panel')).toBeVisible()
+    await expect(page.getByTestId('comments-pin-pulse')).toBeVisible()
+    // No navigation occurred.
+    await expect(page).toHaveURL(/\/pricing/)
+
+    // Back returns to the list.
+    await page.getByRole('button', { name: /back/i }).click()
+    await expect(page.getByTestId('comments-panel-row').filter({ hasText: body })).toBeVisible()
+  })
+
+  test('cross-page row click navigates and restores the detail view', async ({ page }) => {
+    const ns = 'sidebar-cross'
+    const body = 'Cross-page sidebar detail body'
+
+    // Thread lives on /article.
+    await activate(page, '/article', ns)
+    await placeElementPin(page, 'disambiguate near-matches', body)
+
+    // From /pricing, open the panel and select the /article thread.
+    await activate(page, '/pricing', ns)
+    await page.getByTestId('comments-panel-open').click()
+    await expect(page.getByTestId('comments-panel')).toBeVisible()
+    const row = page.getByTestId('comments-panel-row').filter({ hasText: body })
+    await expect(row).toHaveCount(1)
+    await row.first().click()
+
+    // Navigates to /article and reopens the sidebar detail there, with the pin focused.
+    await expect(page).toHaveURL(/\/article/)
+    await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
+    await expect(page.getByTestId('comments-pin-pulse')).toBeVisible()
+  })
+
+  test('?comments-thread deep-link opens the detail and strips the param', async ({ page }) => {
+    const ns = 'sidebar-deeplink'
+    const body = 'Deep-link sidebar detail body'
+
+    await activate(page, '/article', ns)
+    await placeElementPin(page, 'disambiguate near-matches', body)
+
+    // Read the thread id from its panel row wrapper (data-thread-id).
+    await page.getByTestId('comments-panel-open').click()
+    const rowWrapper = page.locator('[data-thread-id]').filter({ hasText: body })
+    await expect(rowWrapper).toHaveCount(1)
+    const id = await rowWrapper.first().getAttribute('data-thread-id')
+    expect(id).toBeTruthy()
+
+    // Load the article fresh with the deep-link param.
+    await page.goto(
+      urlFor('/article', { ns, 'comments-key': DEV_KEY, 'comments-thread': id as string }),
+    )
+
+    // The detail opens automatically and the deep-link param is stripped from the URL.
+    await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
+    await expect(page).not.toHaveURL(/comments-thread/)
+  })
+})
