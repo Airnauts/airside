@@ -78,29 +78,38 @@ The list payload carries no comment body today — only `commentCount`, `created
 timestamps. Rendering the root message in each card without an N+1 of `getThread`
 requires extending the contract.
 
-**Schema change** (`packages/core/src/schemas/thread.ts`), additive:
+**Schema change** (`packages/core/src/schemas/thread.ts`), additive — on
+**`ThreadListItem` only** (not `ThreadBase`/`Thread`, which keep the full `comments`
+array):
 
 ```
-rootComment: { text: string | null; createdAt: IsoTimestamp } | null
+rootComment: { text: string; createdAt: IsoTimestamp } | null
 ```
 
 - The author of the root comment is already `ThreadBase.createdBy`; its time is already
   `createdAt`. The only missing datum is the **text**, so the field is intentionally
-  minimal. `text: null` covers an **attachment-only** root comment; the whole field is
-  `null` only for the degenerate no-comments thread (not normally reachable, but the
-  schema stays total).
+  minimal. `text` is a plain `z.string()` (comments are never null) — it is **empty
+  (`''`) for an attachment-only root**, since a comment always carries text *or* an
+  attachment. `rootComment` itself is `null` only for the degenerate no-comments thread
+  (not normally reachable, but the schema stays total). The card renders the text, or a
+  "📎 Attachment" placeholder when the text is empty.
 - `replies = commentCount - 1`. The card shows `N Replies` when `> 0`, else a `Reply`
   link. No new count field.
 
 **Built test-first (ADR-0010):**
 
 1. Extend the **core zod schema** + its unit test first (red).
-2. Extend the **shared adapter contract suite** — a thread with a root comment projects
-   `rootComment.text`; an attachment-only root projects `text: null`. This is the
-   executable spec both adapters must satisfy.
-3. Make `adapter-memory` then `adapter-mongo` project `rootComment` (root = the
-   earliest comment) in their `listThreads` mapping. `server` passes it through (it
-   serializes whatever the repository returns against the contract).
+2. Extend the **shared adapter contract suite** — a thread with a text root projects
+   `rootComment.text === '<text>'`; an attachment-only root projects `text === ''`;
+   and `updateAnchor` (the `refreshAnchor` path) also returns a `ThreadListItem`
+   carrying `rootComment`. This is the executable spec both adapters must satisfy.
+3. Make `adapter-memory` then `adapter-mongo` compute `rootComment` from `comments[0]`
+   (the earliest comment = root) in the **shared `toListItem` helper**, which both
+   `listThreads` and `updateAnchor` already route through. `adapter-mongo`'s
+   `listThreads` projection currently excludes `comments`; widen it to
+   `{ comments: { $slice: 1 }, captureContext: 0, provenance: 0 }` so the root is
+   available (`$slice` is permitted alongside exclusions). `server` passes the field
+   through (it serializes whatever the repository returns against the contract).
 
 **Release mechanics:** additive contract field → **`minor`** bump pre-1.0 (per the
 changeset policy) across the affected publishable packages (`core`, both adapters,
@@ -244,8 +253,9 @@ Per architecture §9 (client/widget testing) plus TDD for the contract change (�
 - `navigate`: handoff round-trips the `{ id, openDetail }` payload and tolerates a legacy
   bare-string id.
 - **Adapter contract suite**: `listThreads` projects `rootComment.text` for a normal
-  thread and `text: null` for an attachment-only root — run against **both**
-  `adapter-memory` and `adapter-mongo`.
+  thread and `text === ''` for an attachment-only root; `updateAnchor` returns a
+  `ThreadListItem` carrying `rootComment` — run against **both** `adapter-memory` and
+  `adapter-mongo`.
 
 **Component**
 
