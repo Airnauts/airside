@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { activate, placeElementPin } from './helpers'
+import { activate, login, placeElementPin } from './helpers'
 
 test.describe('cross-page panel', () => {
   // Cold next start: page loads + the cross-page navigation handoff can be slow.
@@ -13,10 +13,12 @@ test.describe('cross-page panel', () => {
     // A thread on the pricing page — no other spec touches /pricing, so its panel row is
     // unique even though the in-memory store is shared across the whole suite.
     await activate(page, '/pricing', ns)
+    await login(page)
     await placeElementPin(page, 'Starter', 'Comment on the Starter plan')
 
     // A thread on the article page.
     await activate(page, '/article', ns)
+    await login(page) // no-op: identity persists from the first login
     await placeElementPin(page, 'disambiguate near-matches', 'Comment on the article')
 
     // Open the panel. It lists threads across pages; the shared store means other specs'

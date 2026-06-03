@@ -17,8 +17,12 @@ export function urlFor(path: string, params: Record<string, string> = {}) {
  *  (and carry the same `ns` on any later navigation/reload within that test). */
 export async function activate(page: Page, path = '/', ns = '') {
   await page.goto(urlFor(path, { ns, 'comments-key': DEV_KEY }))
-  // Logged out: the Log In button proves the widget activated.
-  await expect(page.getByTestId('comments-login')).toBeVisible()
+  // The widget mounted — either the logged-out Log In pill or, if identity is already in
+  // localStorage (a later navigation within a logged-in test), the full launcher. `login()`
+  // drives the actual sign-in; it is idempotent, so calling it after every activate is safe.
+  await expect(
+    page.getByTestId('comments-login').or(page.getByTestId('comments-place')),
+  ).toBeVisible()
 }
 
 /** Log in with a self-asserted email so the full commenting UI unlocks. Idempotent: a no-op
