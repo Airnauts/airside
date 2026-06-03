@@ -67,6 +67,20 @@ describe('Button', () => {
     expect(onClick).toHaveBeenCalledOnce()
   })
 
+  it('renders the link variant + inline size as a padding-less text affordance', () => {
+    render(
+      <Button variant="link" size="inline" className="cmnt:text-gray-500">
+        Reply
+      </Button>,
+    )
+    const cls = screen.getByRole('button', { name: 'Reply' }).className
+    expect(cls).toContain('cmnt:bg-transparent') // link
+    expect(cls).toContain('cmnt:hover:underline') // link
+    expect(cls).toContain('cmnt:p-0') // inline
+    expect(cls).toContain('cmnt:text-gray-500') // className colour override
+    expect(cls).not.toContain('cmnt:text-blue-600') // override drops the link default colour
+  })
+
   it('honors an explicit type override', () => {
     render(
       <Button variant="outline" size="sm" type="submit">

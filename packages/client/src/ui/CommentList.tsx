@@ -3,6 +3,7 @@ import type { Comment } from '@airnauts/comments-core'
 import { useEffect, useRef } from 'react'
 import { relativeTime } from '../threads/relativeTime'
 import { avatarColor, initials } from './avatar'
+import { Button } from './Button'
 
 export type CommentListProps = {
   comments: Comment[]
@@ -10,9 +11,6 @@ export type CommentListProps = {
   error: boolean
   onRetry?: () => void
 }
-
-const LINK =
-  'cmnt:bg-transparent cmnt:border-none cmnt:text-blue-600 cmnt:cursor-pointer cmnt:p-0 cmnt:underline'
 
 export function CommentList({ comments, loading, error, onRetry }: CommentListProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -29,9 +27,14 @@ export function CommentList({ comments, loading, error, onRetry }: CommentListPr
       <div className="cmnt:p-3 cmnt:text-[13px] cmnt:text-gray-500">
         Couldn't load this thread.{' '}
         {onRetry && (
-          <button type="button" onClick={onRetry} className={LINK}>
+          <Button
+            variant="link"
+            size="inline"
+            onClick={onRetry}
+            className="cmnt:font-normal cmnt:underline"
+          >
             Retry
-          </button>
+          </Button>
         )}
       </div>
     )

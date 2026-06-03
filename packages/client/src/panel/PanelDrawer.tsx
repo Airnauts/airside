@@ -9,6 +9,7 @@ import { useDraft } from '../drafts/DraftsProvider'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
 import { useController, useThreadDetail } from '../threads/useThreads'
+import { Button } from '../ui/Button'
 import { ThreadConversation } from '../ui/ThreadConversation'
 import { goToThread } from './navigate'
 import { usePanelController, usePanelState } from './PanelProvider'
@@ -127,11 +128,10 @@ export function PanelDrawer({
                 </button>
                 <Dialog.Title className="cmnt:sr-only">Thread</Dialog.Title>
                 <Dialog.Description className="cmnt:sr-only">Thread detail</Dialog.Description>
-                <Dialog.Close
-                  aria-label="Close panel"
-                  className="cmnt:border-0 cmnt:bg-transparent cmnt:cursor-pointer cmnt:text-gray-500 cmnt:px-1"
-                >
-                  ✕
+                <Dialog.Close asChild>
+                  <Button variant="ghost" size="icon" aria-label="Close panel">
+                    ✕
+                  </Button>
                 </Dialog.Close>
               </div>
               <DetailView
@@ -151,11 +151,10 @@ export function PanelDrawer({
                 <Dialog.Description className="cmnt:sr-only">
                   Comment threads across all pages
                 </Dialog.Description>
-                <Dialog.Close
-                  aria-label="Close panel"
-                  className="cmnt:border-0 cmnt:bg-transparent cmnt:cursor-pointer cmnt:text-gray-500 cmnt:px-1"
-                >
-                  ✕
+                <Dialog.Close asChild>
+                  <Button variant="ghost" size="icon" aria-label="Close panel">
+                    ✕
+                  </Button>
                 </Dialog.Close>
               </div>
 
@@ -217,13 +216,14 @@ export function PanelDrawer({
                 {state.error && !state.loading && (
                   <div className="cmnt:px-3 cmnt:py-6 cmnt:text-center cmnt:text-xs cmnt:text-gray-500">
                     Couldn't load comments.
-                    <button
-                      type="button"
+                    <Button
+                      variant="link"
+                      size="inline"
                       onClick={() => void panel.refresh()}
-                      className="cmnt:ml-1 cmnt:underline cmnt:bg-transparent cmnt:border-0 cmnt:cursor-pointer cmnt:text-blue-600"
+                      className="cmnt:ml-1 cmnt:font-normal cmnt:underline"
                     >
                       Retry
-                    </button>
+                    </Button>
                   </div>
                 )}
 
@@ -252,15 +252,16 @@ export function PanelDrawer({
                 ))}
 
                 {state.nextCursor && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="link"
+                    size="inline"
                     data-testid="comments-panel-loadmore"
                     onClick={() => void panel.loadMore()}
                     disabled={state.loadingMore}
-                    className="cmnt:w-full cmnt:py-2.5 cmnt:text-xs cmnt:font-medium cmnt:text-blue-600 cmnt:bg-transparent cmnt:border-0 cmnt:border-t cmnt:border-gray-200 cmnt:cursor-pointer"
+                    className="cmnt:w-full cmnt:py-2.5 cmnt:text-xs cmnt:border-t cmnt:border-gray-200 cmnt:hover:no-underline"
                   >
                     {state.loadingMore ? 'Loading…' : 'Load more'}
-                  </button>
+                  </Button>
                 )}
               </div>
             </>

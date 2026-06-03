@@ -3,6 +3,7 @@ import type { ThreadListItem } from '@airnauts/comments-core'
 import { threadLink } from '../config'
 import { relativeTime } from '../threads/relativeTime'
 import { avatarColor, initials } from '../ui/avatar'
+import { Button } from '../ui/Button'
 
 export type PanelRowProps = {
   item: ThreadListItem
@@ -56,40 +57,39 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
       </button>
       <div className="cmnt:px-3 cmnt:pb-2 cmnt:pl-[46px] cmnt:flex cmnt:items-center">
         {replies > 0 ? (
-          <button
-            type="button"
+          <Button
+            variant="link"
+            size="inline"
             onClick={onSelect}
-            className="cmnt:bg-transparent cmnt:border-0 cmnt:p-0 cmnt:text-[11px] cmnt:font-medium cmnt:text-gray-500 cmnt:cursor-pointer cmnt:hover:underline"
+            className="cmnt:text-[11px] cmnt:text-gray-500"
           >
             {replies} {replies === 1 ? 'Reply' : 'Replies'}
-          </button>
+          </Button>
         ) : (
-          <button
-            type="button"
-            onClick={onReply}
-            className="cmnt:bg-transparent cmnt:border-0 cmnt:p-0 cmnt:text-[11px] cmnt:font-medium cmnt:text-blue-600 cmnt:cursor-pointer cmnt:hover:underline"
-          >
+          <Button variant="link" size="inline" onClick={onReply} className="cmnt:text-[11px]">
             Reply
-          </button>
+          </Button>
         )}
-        <button
-          type="button"
+        <Button
+          variant="link"
+          size="inline"
           onClick={onResolve}
           aria-label={item.status === 'resolved' ? 'Reopen thread' : 'Resolve thread'}
-          className="cmnt:ml-3 cmnt:bg-transparent cmnt:border-0 cmnt:p-0 cmnt:text-[11px] cmnt:font-semibold cmnt:cursor-pointer cmnt:text-green-600 cmnt:hover:underline"
+          className="cmnt:ml-3 cmnt:text-[11px] cmnt:font-semibold cmnt:text-green-600"
         >
           {item.status === 'resolved' ? '↺ Reopen' : '✓ Resolve'}
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="link"
+          size="inline"
           aria-label="Copy link"
           onClick={() =>
             void navigator.clipboard?.writeText(threadLink(item.pageUrl, item.id))?.catch(() => {})
           }
-          className="cmnt:ml-3 cmnt:bg-transparent cmnt:border-0 cmnt:p-0 cmnt:text-[11px] cmnt:font-medium cmnt:text-gray-500 cmnt:cursor-pointer cmnt:hover:underline"
+          className="cmnt:ml-3 cmnt:text-[11px] cmnt:text-gray-500"
         >
           Copy link
-        </button>
+        </Button>
       </div>
     </div>
   )

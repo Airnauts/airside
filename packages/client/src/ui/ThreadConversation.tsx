@@ -135,7 +135,12 @@ export function ThreadConversation({
             {resolved ? '↺ Reopen' : '✓ Resolve'}
           </Button>
           {variant === 'popover' && (
-            <Button variant="ghost" size="icon" aria-label="Close" onClick={() => controller.close()}>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Close"
+              onClick={() => controller.close()}
+            >
               ✕
             </Button>
           )}

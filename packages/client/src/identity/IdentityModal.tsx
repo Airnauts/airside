@@ -1,6 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { type FormEvent, useState } from 'react'
 import { usePortalContainer } from '../app/providers'
+import { Button } from '../ui/Button'
 import type { Identity } from './storage'
 
 export type IdentityModalProps = {
@@ -48,12 +49,9 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
               placeholder="Name (optional)"
               className="cmnt:block cmnt:w-full cmnt:my-3 cmnt:p-2 cmnt:border cmnt:border-gray-300 cmnt:rounded"
             />
-            <button
-              type="submit"
-              className="cmnt:bg-blue-600 cmnt:text-white cmnt:rounded-md cmnt:px-3 cmnt:py-2 cmnt:border-none cmnt:cursor-pointer"
-            >
+            <Button variant="primary" size="md" type="submit">
               Log in
-            </button>
+            </Button>
           </form>
         </Dialog.Content>
       </Dialog.Portal>
