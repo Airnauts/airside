@@ -31,5 +31,6 @@ export type { CommentsServer, CreateCommentsServerOptions } from './server'
 
 export { createCommentsServer } from './server'
 export type { PutBlob, PutResult, StorageAdapter } from './storage/types'
+export type { NotificationEvent, NotificationEventType, Notifier } from './notify/types'
 
 export { ALLOWED_UPLOAD_TYPES } from './use-cases/upload-attachment'
