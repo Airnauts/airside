@@ -24,7 +24,7 @@ const item = (over: Partial<ThreadListItem> = {}): ThreadListItem =>
 describe('PanelRow', () => {
   it('shows the root comment text, author, page context, and a reply count; row click selects', () => {
     const onSelect = vi.fn()
-    render(<PanelRow item={item()} onSelect={onSelect} onReply={() => {}} />)
+    render(<PanelRow item={item()} onSelect={onSelect} onReply={() => {}} onResolve={() => {}} />)
     expect(screen.getByText('root msg')).toBeInTheDocument()
     expect(screen.getByText('Ann')).toBeInTheDocument()
     expect(screen.getByText('Pricing')).toBeInTheDocument()
@@ -35,7 +35,14 @@ describe('PanelRow', () => {
 
   it('shows a Reply affordance and calls onReply when there are no replies', () => {
     const onReply = vi.fn()
-    render(<PanelRow item={item({ commentCount: 1 })} onSelect={() => {}} onReply={onReply} />)
+    render(
+      <PanelRow
+        item={item({ commentCount: 1 })}
+        onSelect={() => {}}
+        onReply={onReply}
+        onResolve={() => {}}
+      />,
+    )
     fireEvent.click(screen.getByRole('button', { name: 'Reply' }))
     expect(onReply).toHaveBeenCalled()
   })
@@ -46,6 +53,7 @@ describe('PanelRow', () => {
         item={item({ commentCount: 1, rootComment: { text: '', createdAt: ISO } })}
         onSelect={() => {}}
         onReply={() => {}}
+        onResolve={() => {}}
       />,
     )
     expect(screen.getByText(/attachment/i)).toBeInTheDocument()
@@ -53,20 +61,44 @@ describe('PanelRow', () => {
 
   it('falls back to the page url for context when there is no title', () => {
     render(
-      <PanelRow item={item({ pageTitle: undefined })} onSelect={() => {}} onReply={() => {}} />,
+      <PanelRow
+        item={item({ pageTitle: undefined })}
+        onSelect={() => {}}
+        onReply={() => {}}
+        onResolve={() => {}}
+      />,
     )
     expect(screen.getByText('https://x.test/pricing')).toBeInTheDocument()
   })
 
   it('shows an anchor-lost badge for orphaned threads', () => {
     render(
-      <PanelRow item={item({ anchorState: 'orphaned' })} onSelect={() => {}} onReply={() => {}} />,
+      <PanelRow
+        item={item({ anchorState: 'orphaned' })}
+        onSelect={() => {}}
+        onReply={() => {}}
+        onResolve={() => {}}
+      />,
     )
     expect(screen.getByText(/anchor lost/i)).toBeInTheDocument()
   })
 
   it('exposes a descriptive aria-label', () => {
-    render(<PanelRow item={item()} onSelect={() => {}} onReply={() => {}} />)
+    render(<PanelRow item={item()} onSelect={() => {}} onReply={() => {}} onResolve={() => {}} />)
     expect(screen.getByTestId('comments-panel-row')).toHaveAccessibleName(/open thread on Pricing/i)
+  })
+
+  it('calls onResolve when the resolve button is clicked', () => {
+    const onResolve = vi.fn()
+    render(
+      <PanelRow
+        item={item({ status: 'open' })}
+        onSelect={() => {}}
+        onReply={() => {}}
+        onResolve={onResolve}
+      />,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /resolve/i }))
+    expect(onResolve).toHaveBeenCalled()
   })
 })

@@ -188,6 +188,12 @@ export function PanelDrawer({
                         item={t}
                         onSelect={() => onSelect(t)}
                         onReply={() => onSelect(t)}
+                        onResolve={() =>
+                          void threads.setStatus(
+                            t.id,
+                            t.status === 'resolved' ? 'open' : 'resolved',
+                          )
+                        }
                       />
                     ))}
                     <div className="cmnt:h-px cmnt:bg-gray-200" />
@@ -234,6 +240,9 @@ export function PanelDrawer({
                     item={t}
                     onSelect={() => onSelect(t)}
                     onReply={() => onSelect(t)}
+                    onResolve={() =>
+                      void threads.setStatus(t.id, t.status === 'resolved' ? 'open' : 'resolved')
+                    }
                   />
                 ))}
 

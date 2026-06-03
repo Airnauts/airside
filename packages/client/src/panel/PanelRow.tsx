@@ -7,9 +7,10 @@ export type PanelRowProps = {
   item: ThreadListItem
   onSelect: () => void
   onReply: () => void
+  onResolve: () => void
 }
 
-export function PanelRow({ item, onSelect, onReply }: PanelRowProps) {
+export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) {
   const orphaned = item.anchorState === 'orphaned'
   const replies = Math.max(0, item.commentCount - 1)
   const rootText = item.rootComment?.text ?? ''
@@ -70,6 +71,14 @@ export function PanelRow({ item, onSelect, onReply }: PanelRowProps) {
             Reply
           </button>
         )}
+        <button
+          type="button"
+          onClick={onResolve}
+          aria-label={item.status === 'resolved' ? 'Reopen thread' : 'Resolve thread'}
+          className="cmnt:ml-3 cmnt:bg-transparent cmnt:border-0 cmnt:p-0 cmnt:text-[11px] cmnt:font-semibold cmnt:cursor-pointer cmnt:text-green-600 cmnt:hover:underline"
+        >
+          {item.status === 'resolved' ? '↺ Reopen' : '✓ Resolve'}
+        </button>
       </div>
     </div>
   )
