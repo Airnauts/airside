@@ -1,7 +1,8 @@
 import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import type { Attachment, AttachmentId, CommentId, ThreadId } from '@airnauts/comments-core'
 import { makeAuthor, makeNewThread } from '@airnauts/comments-test-support'
-import { describe, expect, it } from 'vitest'
+import type { Notifier } from '../notify/types'
+import { describe, expect, it, vi } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { NotFoundError, ValidationError } from '../errors'
 import { addComment } from './add-comment'
@@ -94,5 +95,28 @@ describe('addComment use-case', () => {
         { repo },
       ),
     ).rejects.toBeInstanceOf(NotFoundError)
+  })
+
+  it('dispatches a comment.added notification carrying the thread page context', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({ projectId: 'proj_x' })
+    const thread = await repo.createThread(makeNewThread({ projectId: 'proj_x' }))
+    const notify = vi.fn(async () => {})
+    const notifier: Notifier = { name: 'spy', notify }
+    await addComment(
+      {
+        ctx,
+        params: { id: thread.id },
+        query: undefined,
+        body: { text: 'reply', author: makeAuthor() },
+      },
+      { repo, notifiers: [notifier] },
+    )
+    expect(notify).toHaveBeenCalledOnce()
+    const event = notify.mock.calls[0]![0]
+    expect(event.type).toBe('comment.added')
+    expect(event.text).toBe('reply')
+    expect(event.threadId).toBe(thread.id)
+    expect(event.pageUrl).toBe('https://example.com/about')
   })
 })
