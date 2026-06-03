@@ -1,7 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
-import { activate, openThread, placeElementPin } from './helpers'
+import { activate, login, openThread, placeElementPin } from './helpers'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -12,6 +12,7 @@ test.describe('single-page commenting loop', () => {
 
   test('activate, identity, comment, reply, attach, resolve, reopen, reload', async ({ page }) => {
     await activate(page, '/article', 'smoke')
+    await login(page)
 
     // Place an element pin + first comment (identity modal handled inside). Target the 2nd
     // <li> by text unique to it ("Content signals" also occurs in a nearby <p>).

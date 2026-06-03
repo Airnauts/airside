@@ -17,20 +17,25 @@ export function urlFor(path: string, params: Record<string, string> = {}) {
  *  (and carry the same `ns` on any later navigation/reload within that test). */
 export async function activate(page: Page, path = '/', ns = '') {
   await page.goto(urlFor(path, { ns, 'comments-key': DEV_KEY }))
-  // Launcher place button proves the widget activated.
-  await expect(page.getByTestId('comments-place')).toBeVisible()
+  // The widget mounted — either the logged-out Log In pill or, if identity is already in
+  // localStorage (a later navigation within a logged-in test), the full launcher. `login()`
+  // drives the actual sign-in; it is idempotent, so calling it after every activate is safe.
+  await expect(
+    page.getByTestId('comments-login').or(page.getByTestId('comments-place')),
+  ).toBeVisible()
 }
 
-/** Fill the self-asserted email identity modal if it is showing. Idempotent.
- *  Keyed off the identity-specific "Start commenting" button, not a generic
- *  dialog role (the draft composer is also a Radix dialog). */
-export async function ensureIdentity(page: Page, email = 'reviewer@example.com') {
-  const submit = page.getByRole('button', { name: 'Start commenting' })
-  if (await submit.isVisible().catch(() => false)) {
-    await page.getByRole('textbox', { name: 'Email', exact: true }).fill(email)
-    await submit.click()
-    await expect(submit).toBeHidden()
-  }
+/** Log in with a self-asserted email so the full commenting UI unlocks. Idempotent: a no-op
+ *  if the Log In button isn't showing (already logged in). */
+export async function login(page: Page, email = 'reviewer@example.com') {
+  const trigger = page.getByTestId('comments-login')
+  if (!(await trigger.isVisible().catch(() => false))) return
+  await trigger.click()
+  const dialog = page.getByRole('dialog')
+  await dialog.getByRole('textbox', { name: 'Email', exact: true }).fill(email)
+  await dialog.getByRole('button', { name: 'Log in' }).click()
+  // The full launcher proves login completed.
+  await expect(page.getByTestId('comments-place')).toBeVisible()
 }
 
 /** Enter place mode, click an element target, fill the draft composer, submit. */
@@ -41,8 +46,6 @@ export async function placeElementPin(page: Page, targetText: string, body: stri
   await expect(draft).toBeVisible()
   await draft.getByRole('textbox').fill(body)
   await draft.getByRole('button', { name: 'Send' }).click()
-  // The first submit triggers the identity gate; on submit it resumes and posts.
-  await ensureIdentity(page)
   await expect(page.getByTestId('comments-pin').first()).toBeVisible()
 }
 
@@ -90,8 +93,6 @@ export async function placeTextSelection(page: Page, targetText: string, body: s
   await expect(draft).toBeVisible()
   await draft.getByRole('textbox').fill(body)
   await draft.getByRole('button', { name: 'Send' }).click()
-  // The first submit triggers the identity gate; on submit it resumes and posts.
-  await ensureIdentity(page)
 }
 
 /** Ensure the thread popover is open. The pin is a Radix Popover trigger, so a

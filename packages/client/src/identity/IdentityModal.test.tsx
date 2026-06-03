@@ -14,7 +14,7 @@ describe('IdentityModal', () => {
 
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'rev@example.com' } })
     fireEvent.change(screen.getByLabelText('Name (optional)'), { target: { value: 'Rev' } })
-    fireEvent.click(screen.getByRole('button', { name: /start commenting/i }))
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }))
 
     expect(onSubmit).toHaveBeenCalledWith({ email: 'rev@example.com', name: 'Rev' })
   })
@@ -26,7 +26,7 @@ describe('IdentityModal', () => {
         <IdentityModal open onOpenChange={() => {}} onSubmit={onSubmit} />
       </WidgetProvider>,
     )
-    fireEvent.click(screen.getByRole('button', { name: /start commenting/i }))
+    fireEvent.click(screen.getByRole('button', { name: /log in/i }))
     expect(onSubmit).not.toHaveBeenCalled()
   })
 })
