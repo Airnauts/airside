@@ -24,7 +24,7 @@ export function DetachedThread({ client, identity, onNeedIdentity }: DetachedThr
       data-testid="comments-detached"
       className="cmnt:fixed cmnt:top-4 cmnt:left-1/2 cmnt:-translate-x-1/2 cmnt:z-50 cmnt:pointer-events-auto"
     >
-      <div className="cmnt:mb-1 cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:flex cmnt:items-center cmnt:gap-1 cmnt:px-2 cmnt:py-1 cmnt:rounded cmnt:bg-amber-100 cmnt:text-amber-700 cmnt:text-[11px] cmnt:font-medium">
+      <div className="cmnt:mb-1 cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:flex cmnt:items-center cmnt:gap-1 cmnt:px-2 cmnt:py-1 cmnt:rounded-[4px] cmnt:bg-amber-100 cmnt:text-amber-700 cmnt:text-[11px] cmnt:font-medium">
         <span aria-hidden={true}>⚠</span> This comment's anchor was lost
       </div>
       <ThreadConversation

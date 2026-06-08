@@ -63,8 +63,8 @@ export function CommentList({
           <div key={i} className="cmnt:flex cmnt:gap-[9px] cmnt:mb-3.5">
             <div className="cmnt:w-[26px] cmnt:h-[26px] cmnt:rounded-full cmnt:bg-gray-200" />
             <div className="cmnt:flex-1">
-              <div className="cmnt:w-2/5 cmnt:h-2.5 cmnt:bg-gray-200 cmnt:rounded" />
-              <div className="cmnt:w-[85%] cmnt:h-2.5 cmnt:bg-gray-100 cmnt:rounded cmnt:mt-1.5" />
+              <div className="cmnt:w-2/5 cmnt:h-2.5 cmnt:bg-gray-200 cmnt:rounded-[4px]" />
+              <div className="cmnt:w-[85%] cmnt:h-2.5 cmnt:bg-gray-100 cmnt:rounded-[4px] cmnt:mt-1.5" />
             </div>
           </div>
         ))}
@@ -124,7 +124,7 @@ export function CommentList({
                 <img src={a.url} alt={a.name} className="cmnt:max-w-[160px] cmnt:block" />
                 <span
                   aria-hidden
-                  className="cmnt:absolute cmnt:top-1 cmnt:right-1 cmnt:flex cmnt:items-center cmnt:justify-center cmnt:w-5 cmnt:h-5 cmnt:rounded cmnt:bg-black/55 cmnt:text-white cmnt:opacity-80 cmnt:group-hover:opacity-100 cmnt:transition-opacity"
+                  className="cmnt:absolute cmnt:top-1 cmnt:right-1 cmnt:flex cmnt:items-center cmnt:justify-center cmnt:w-5 cmnt:h-5 cmnt:rounded-[4px] cmnt:bg-black/55 cmnt:text-white cmnt:opacity-80 cmnt:group-hover:opacity-100 cmnt:transition-opacity"
                 >
                   <svg
                     viewBox="0 0 24 24"

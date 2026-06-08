@@ -20,6 +20,26 @@
 @import "tailwindcss/theme.css" layer(theme) prefix(cmnt);
 @import "tailwindcss/utilities.css" prefix(cmnt);
 
+/* Pin the widget's scale to fixed px — independent of the host's root font-size.
+   `rem` ALWAYS resolves against the document <html>, so a host that scales its root
+   font-size responsively (e.g. `html { font-size: clamp(0.8rem, 1vw, 1rem); }`) would
+   stretch every rem-based token here: the pin internals (the avatar + count badge sit
+   on `--spacing` via top-1.5/left-1.5) drift, and the panel/popover chrome balloons.
+   Neither pinning font-size on our root nor Shadow DOM can re-anchor `rem` — only
+   px-valued tokens can. Tailwind's default theme is rem-based, so we override every
+   token we use to its px equivalent (rem × 16). The no-`rem` regression guard in
+   widget-css.test.ts keeps this honest: if a new utility pulls in an un-overridden rem
+   token, the test fails — add it here. */
+@theme {
+  --spacing: 4px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+}
+
 /* Scan widget source (relative to this file = src/app) for prefixed classes. */
 @source "../**/*.{ts,tsx}";
 

@@ -43,7 +43,8 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
         'cmnt:absolute cmnt:w-[42px] cmnt:h-[42px] cmnt:-ml-[21px] cmnt:-mt-[42px] cmnt:p-0 cmnt:border-none cmnt:bg-transparent cmnt:cursor-pointer cmnt:pointer-events-auto',
         className,
       )}
-      style={{ transform: `translate(${pin.x}px, ${pin.y}px)`, ...style }}
+      // round to whole pixels so the teardrop tip renders crisp (no sub-pixel blur)
+      style={{ transform: `translate(${Math.round(pin.x)}px, ${Math.round(pin.y)}px)`, ...style }}
     >
       {focused && (
         <span

@@ -39,7 +39,7 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="cmnt:block cmnt:w-full cmnt:my-3 cmnt:p-2 cmnt:border cmnt:border-gray-300 cmnt:rounded"
+              className="cmnt:block cmnt:w-full cmnt:my-3 cmnt:p-2 cmnt:border cmnt:border-gray-300 cmnt:rounded-[4px]"
             />
             <input
               aria-label="Name (optional)"
@@ -47,7 +47,7 @@ export function IdentityModal({ open, onOpenChange, onSubmit }: IdentityModalPro
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Name (optional)"
-              className="cmnt:block cmnt:w-full cmnt:my-3 cmnt:p-2 cmnt:border cmnt:border-gray-300 cmnt:rounded"
+              className="cmnt:block cmnt:w-full cmnt:my-3 cmnt:p-2 cmnt:border cmnt:border-gray-300 cmnt:rounded-[4px]"
             />
             <Button variant="primary" size="md" type="submit">
               Log in
