@@ -21,7 +21,7 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
   const context = item.pageTitle ?? item.pageUrl
 
   const [copied, setCopied] = useState(false)
-  const copiedTimer = useRef<ReturnType<typeof setTimeout>>()
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   useEffect(() => () => clearTimeout(copiedTimer.current), [])
 
   const onCopy = () => {
