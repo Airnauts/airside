@@ -22,7 +22,10 @@ export interface EmailTransport {
 export type EmailNotifierOptions = {
   /** Where to send: smtpTransport(...) | resendTransport(...) | your own. */
   transport: EmailTransport
-  /** Static recipient list. */
+  /**
+   * Static recipient list. Must be non-empty; length 0 is a misconfiguration
+   * and the resulting behaviour is transport-defined.
+   */
   to: string[]
   /** Verified sender address. */
   from: string
@@ -48,5 +51,5 @@ export function emailNotifier(opts: EmailNotifierOptions): Notifier {
   }
 }
 
-export { escapeHtml, formatEmail } from './format'
+export { formatEmail } from './format'
 export type { EmailFormat, FormatEmailOptions } from './format'
