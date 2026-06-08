@@ -8,6 +8,7 @@ const event: NotificationEvent = {
   projectId: 'proj_x',
   threadId: 't_1' as ThreadId,
   pageUrl: 'https://example.com/about',
+  threadUrl: 'https://example.com/about?comments-thread=t_1',
   text: 'hi',
   author: { email: 'alice@example.com' },
   createdAt: '2026-06-03T10:00:00.000Z',

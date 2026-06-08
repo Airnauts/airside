@@ -1,16 +1,19 @@
-import type { Author, ThreadId } from '@airnauts/comments-core'
+import { type Author, type ThreadId, threadLink } from '@airnauts/comments-core'
 import type { NotificationEvent, NotificationEventType } from './types'
 
 /**
  * Single source of the notification payload, shared by createThread and
- * addComment so the two event shapes cannot drift. Optional fields are added
- * only when present (keeps the payload clean under exactOptionalPropertyTypes).
+ * addComment so the two event shapes cannot drift. The deep-link is built here
+ * (not per notifier) from the server's configured threadParam. Optional fields
+ * are added only when present (keeps the payload clean under
+ * exactOptionalPropertyTypes).
  */
 export function buildNotificationEvent(
   type: NotificationEventType,
   scope: { projectId: string; env?: string },
   thread: { id: ThreadId; pageUrl: string; pageTitle?: string },
   comment: { text: string; author: Author; createdAt: string },
+  threadParam: string,
 ): NotificationEvent {
   const author: NotificationEvent['author'] = { email: comment.author.email }
   if (comment.author.name !== undefined) author.name = comment.author.name
@@ -20,6 +23,7 @@ export function buildNotificationEvent(
     projectId: scope.projectId,
     threadId: thread.id,
     pageUrl: thread.pageUrl,
+    threadUrl: threadLink(thread.pageUrl, thread.id, threadParam),
     text: comment.text,
     author,
     createdAt: comment.createdAt,

@@ -10,6 +10,7 @@ export type NotificationEvent = {
   threadId: ThreadId
   pageUrl: string
   pageTitle?: string
+  threadUrl: string
   text: string
   author: { email: string; name?: string }
   createdAt: string // ISO

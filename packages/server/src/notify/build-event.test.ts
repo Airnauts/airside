@@ -10,18 +10,36 @@ const comment = {
 }
 
 describe('buildNotificationEvent', () => {
-  it('maps thread + comment into a thread.created event', () => {
-    const event = buildNotificationEvent('thread.created', { projectId: 'proj_x' }, thread, comment)
+  it('maps thread + comment into a thread.created event with a deep-link', () => {
+    const event = buildNotificationEvent(
+      'thread.created',
+      { projectId: 'proj_x' },
+      thread,
+      comment,
+      'comments-thread',
+    )
     expect(event).toEqual({
       type: 'thread.created',
       projectId: 'proj_x',
       threadId: 't_1',
       pageUrl: 'https://example.com/about',
       pageTitle: 'About',
+      threadUrl: 'https://example.com/about?comments-thread=t_1',
       text: 'Looks off here',
       author: { email: 'alice@example.com', name: 'Alice' },
       createdAt: '2026-06-03T10:00:00.000Z',
     })
+  })
+
+  it('builds the deep-link with a custom param', () => {
+    const event = buildNotificationEvent(
+      'thread.created',
+      { projectId: 'proj_x' },
+      thread,
+      comment,
+      'c-thread',
+    )
+    expect(event.threadUrl).toBe('https://example.com/about?c-thread=t_1')
   })
 
   it('omits env, pageTitle and name when absent', () => {
@@ -30,6 +48,7 @@ describe('buildNotificationEvent', () => {
       { projectId: 'proj_x' },
       { id: 't_2' as ThreadId, pageUrl: 'https://example.com/' },
       { text: 'hi', author: { email: 'bob@example.com' }, createdAt: '2026-06-03T11:00:00.000Z' },
+      'comments-thread',
     )
     expect(event.env).toBeUndefined()
     expect(event.pageTitle).toBeUndefined()
@@ -43,6 +62,7 @@ describe('buildNotificationEvent', () => {
       { projectId: 'proj_x', env: 'staging' },
       thread,
       comment,
+      'comments-thread',
     )
     expect(event.env).toBe('staging')
   })
