@@ -159,6 +159,7 @@ export function ThreadConversation({
         loading={loading}
         error={error}
         onRetry={() => controller.refetch(id)}
+        variant={variant}
       />
       {!loading && (
         <Composer
