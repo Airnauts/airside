@@ -163,6 +163,9 @@ export function ThreadConversation({
       {!loading && (
         <Composer
           mode="reply"
+          // Sidebar detail mounts fresh on every entry (Reply click, row select, cross-page
+          // focus handoff) — focus the reply input each time so the user can type immediately.
+          autoFocus={variant === 'sidebar'}
           identity={identity}
           onNeedIdentity={onNeedIdentity}
           onSubmit={submitReply}

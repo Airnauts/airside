@@ -117,7 +117,7 @@ export function PanelDrawer({
         >
           {state.view === 'detail' && state.detailThreadId ? (
             <>
-              <div className="cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-2 cmnt:py-2 cmnt:border-b cmnt:border-gray-200">
+              <div className="cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200">
                 <button
                   type="button"
                   onClick={() => panel.back()}
@@ -144,7 +144,7 @@ export function PanelDrawer({
             </>
           ) : (
             <>
-              <div className="cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-3 cmnt:py-2.5 cmnt:border-b cmnt:border-gray-200">
+              <div className="cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200">
                 <Dialog.Title className="cmnt:text-sm cmnt:font-semibold cmnt:text-gray-900">
                   Comments
                 </Dialog.Title>

@@ -89,6 +89,32 @@ describe('ThreadConversation detail source', () => {
   })
 })
 
+describe('ThreadConversation reply focus', () => {
+  it('focuses the reply input on mount in the sidebar (Reply/select/cross-page entry)', async () => {
+    render(
+      <ThreadsProvider client={mockClient}>
+        <DraftsProvider>
+          <Wired variant="sidebar" />
+        </DraftsProvider>
+      </ThreadsProvider>,
+    )
+    const input = await screen.findByPlaceholderText(/reply/i)
+    expect(document.activeElement).toBe(input)
+  })
+
+  it('does not steal focus in the popover variant', async () => {
+    render(
+      <ThreadsProvider client={mockClient}>
+        <DraftsProvider>
+          <Wired variant="popover" />
+        </DraftsProvider>
+      </ThreadsProvider>,
+    )
+    const input = await screen.findByPlaceholderText(/reply/i)
+    expect(document.activeElement).not.toBe(input)
+  })
+})
+
 describe('ThreadConversation shared draft', () => {
   it('mirrors composer text between popover and sidebar for the same thread', () => {
     render(
