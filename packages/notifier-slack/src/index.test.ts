@@ -33,6 +33,17 @@ describe('slackNotifier', () => {
     expect(JSON.stringify(body.blocks)).toContain('https://example.com/about')
   })
 
+  it('links to the thread deep-link, not the bare page', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 200 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await slackNotifier({ webhookUrl: 'https://hooks.slack.com/x' }).notify(event)
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    const blocks = JSON.stringify(JSON.parse(init.body as string).blocks)
+    expect(blocks).toContain('https://example.com/about?comments-thread=t_1')
+  })
+
   it('exposes a stable name', () => {
     expect(slackNotifier({ webhookUrl: 'https://hooks.slack.com/x' }).name).toBe('slack')
   })
@@ -66,5 +77,16 @@ describe('formatSlackMessage', () => {
     const msg = formatSlackMessage({ ...event, text: '' })
     expect(msg.text).toContain('(image comment)')
     expect(JSON.stringify(msg.blocks)).toContain('(image comment)')
+  })
+
+  it('links each block to the thread deep-link', () => {
+    const blocks = JSON.stringify(formatSlackMessage(event).blocks)
+    expect(blocks).toContain('https://example.com/about?comments-thread=t_1')
+    expect(blocks).not.toContain('|https://example.com/about>') // never a bare page link
+  })
+
+  it('honours a custom thread param', () => {
+    const blocks = JSON.stringify(formatSlackMessage(event, { threadParam: 'c-thread' }))
+    expect(blocks).toContain('https://example.com/about?c-thread=t_1')
   })
 })
