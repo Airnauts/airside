@@ -238,6 +238,25 @@ importers:
         specifier: workspace:*
         version: link:../test-support
 
+  packages/notifier-email:
+    dependencies:
+      '@airnauts/comments-core':
+        specifier: workspace:^
+        version: link:../core
+      '@airnauts/comments-server':
+        specifier: workspace:^
+        version: link:../server
+    devDependencies:
+      '@airnauts/comments-test-support':
+        specifier: workspace:*
+        version: link:../test-support
+      '@types/nodemailer':
+        specifier: ^6.4.0
+        version: 6.4.23
+      nodemailer:
+        specifier: ^6.9.0
+        version: 6.10.1
+
   packages/notifier-slack:
     dependencies:
       '@airnauts/comments-core':
@@ -1924,6 +1943,9 @@ packages:
   '@types/node@22.19.19':
     resolution: {integrity: sha512-dyh/xO2Fh5bYrfWaaqGrRQQGkNdmYw6AmaAUvYeUMNTWQtvb796ikLdmTchRmOlOiIJ1TDXfWgVx1QkUlQ6Hew==}
 
+  '@types/nodemailer@6.4.23':
+    resolution: {integrity: sha512-aFV3/NsYFLSx9mbb5gtirBSXJnAlrusoKNuPbxsASWc7vrKLmIrTQRpdcxNcSFL3VW2A2XpeLEavwb2qMi6nlQ==}
+
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
     peerDependencies:
@@ -2723,6 +2745,10 @@ packages:
   node-releases@2.0.46:
     resolution: {integrity: sha512-GYVXHE2KnrzAfsAjl4uP++evGFCrAU1jta4ubEjIG7YWt/64Gqv66a30yKwWczVjA6j3bM4nBwH7Pk1JmDHaxQ==}
     engines: {node: '>=18'}
+
+  nodemailer@6.10.1:
+    resolution: {integrity: sha512-Z+iLaBGVaSjbIzQ4pX6XV41HrooLsQ10ZWPUehGmuantvzWoDVBnmsdUcOIDM1t+yPor5pDhVlDESgOMEGxhHA==}
+    engines: {node: '>=6.0.0'}
 
   nwsapi@2.2.23:
     resolution: {integrity: sha512-7wfH4sLbt4M0gCDzGE6vzQBo0bfTKjU7Sfpqy/7gs1qBfYz2vEJH6vXcBKpO3+6Yu1telwd0t9HpyOoLEQQbIQ==}
@@ -4678,6 +4704,10 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
+  '@types/nodemailer@6.4.23':
+    dependencies:
+      '@types/node': 22.19.19
+
   '@types/react-dom@19.2.3(@types/react@19.2.15)':
     dependencies:
       '@types/react': 19.2.15
@@ -5472,6 +5502,8 @@ snapshots:
   node-addon-api@7.1.1: {}
 
   node-releases@2.0.46: {}
+
+  nodemailer@6.10.1: {}
 
   nwsapi@2.2.23: {}
 
