@@ -21,4 +21,14 @@ describe('ctx', () => {
     expect(ctx.now()).toBe(fixed)
     expect(ctx.ids.thread()).toBe('t_fixed')
   })
+
+  it('defaults threadParam to "comments-thread"', () => {
+    const ctx = makeCtx({ projectId: 'p' })
+    expect(ctx.threadParam).toBe('comments-thread')
+  })
+
+  it('accepts a custom threadParam', () => {
+    const ctx = makeCtx({ projectId: 'p', threadParam: 'c-thread' })
+    expect(ctx.threadParam).toBe('c-thread')
+  })
 })
