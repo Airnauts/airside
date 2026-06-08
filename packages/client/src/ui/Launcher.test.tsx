@@ -4,49 +4,28 @@ import { describe, expect, it, vi } from 'vitest'
 import { Launcher } from './Launcher'
 
 describe('Launcher', () => {
-  it('toggles place mode and reflects the active label', () => {
+  it('toggles place mode and reflects the active state', () => {
     const onTogglePlace = vi.fn()
     const { rerender } = render(
       <Launcher
         placing={false}
         onTogglePlace={onTogglePlace}
-        showResolved={false}
-        onShowResolved={() => {}}
         openCount={2}
         onTogglePanel={() => {}}
       />,
     )
-    expect(screen.getByTestId('comments-place')).toHaveTextContent(/\+ Comment \(2\)/i)
-    fireEvent.click(screen.getByTestId('comments-place'))
+    const place = screen.getByTestId('comments-place')
+    // Icon-only: the open count shows as a badge, not inline text.
+    expect(place).toHaveTextContent('2')
+    expect(place).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(place)
     expect(onTogglePlace).toHaveBeenCalled()
     rerender(
-      <Launcher
-        placing
-        onTogglePlace={onTogglePlace}
-        showResolved={false}
-        onShowResolved={() => {}}
-        openCount={2}
-        onTogglePanel={() => {}}
-      />,
+      <Launcher placing onTogglePlace={onTogglePlace} openCount={2} onTogglePanel={() => {}} />,
     )
-    expect(screen.getByTestId('comments-place')).toHaveTextContent(/click/i)
     expect(screen.getByTestId('comments-place')).toHaveAttribute('aria-pressed', 'true')
-  })
-
-  it('toggles show-resolved via a labelled switch', () => {
-    const onShowResolved = vi.fn()
-    render(
-      <Launcher
-        placing={false}
-        onTogglePlace={() => {}}
-        showResolved={false}
-        onShowResolved={onShowResolved}
-        openCount={0}
-        onTogglePanel={() => {}}
-      />,
-    )
-    fireEvent.click(screen.getByRole('switch', { name: /resolved/i }))
-    expect(onShowResolved).toHaveBeenCalledWith(true)
+    // While placing, the badge is hidden in favour of the active-state icon.
+    expect(screen.getByTestId('comments-place')).not.toHaveTextContent('2')
   })
 
   it('opens the panel via the list button', () => {
@@ -55,8 +34,6 @@ describe('Launcher', () => {
       <Launcher
         placing={false}
         onTogglePlace={() => {}}
-        showResolved={false}
-        onShowResolved={() => {}}
         openCount={0}
         onTogglePanel={onTogglePanel}
       />,

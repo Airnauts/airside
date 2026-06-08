@@ -1,4 +1,6 @@
 // packages/client/src/ui/LoginLauncher.tsx
+import { useDraggablePosition } from '../launcher/useDraggablePosition'
+import { cn } from '../lib/cn'
 import { Button } from './Button'
 
 export type LoginLauncherProps = {
@@ -7,10 +9,20 @@ export type LoginLauncherProps = {
 }
 
 /** Logged-out entry point: a fixed pill with a single "Log In" button. Rendered at app
- *  level because the full Launcher lives inside MarkerLayer, which is unmounted until login. */
+ *  level because the full Launcher lives inside MarkerLayer, which is unmounted until login.
+ *  Draggable to either edge, sharing the launcher's persisted position. */
 export function LoginLauncher({ onLogIn }: LoginLauncherProps) {
+  const { style, dragging, onPointerDown, onClickCapture } = useDraggablePosition()
   return (
-    <div className="cmnt:fixed cmnt:bottom-4 cmnt:right-4 cmnt:flex cmnt:items-center cmnt:pointer-events-auto">
+    <div
+      style={style}
+      onPointerDown={onPointerDown}
+      onClickCapture={onClickCapture}
+      className={cn(
+        'cmnt:fixed cmnt:flex cmnt:items-center cmnt:pointer-events-auto cmnt:select-none cmnt:touch-none',
+        dragging ? 'cmnt:cursor-grabbing' : 'cmnt:cursor-grab',
+      )}
+    >
       <Button
         variant="primary"
         size="md"

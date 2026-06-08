@@ -273,8 +273,6 @@ export function MarkerLayer({
       <Launcher
         placing={placing}
         onTogglePlace={() => setPlacing((p) => !p)}
-        showResolved={state.showResolved}
-        onShowResolved={(v) => controller.setShowResolved(v)}
         openCount={openCount}
         onTogglePanel={() => void panel.openPanel()}
       />

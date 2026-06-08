@@ -8,7 +8,7 @@ import { usePortalContainer } from '../app/providers'
 import { useDraft } from '../drafts/DraftsProvider'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
-import { useController, useThreadDetail } from '../threads/useThreads'
+import { useController, useShowResolved, useThreadDetail } from '../threads/useThreads'
 import { Button } from '../ui/Button'
 import { ThreadConversation } from '../ui/ThreadConversation'
 import { goToThread } from './navigate'
@@ -76,6 +76,7 @@ export function PanelDrawer({
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
+  const showResolved = useShowResolved()
   const container = usePortalContainer()
   const mainList = mainListExcludingReview(state)
 
@@ -182,6 +183,33 @@ export function PanelDrawer({
                   ))}
                 </div>
               </fieldset>
+
+              <div className="cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200">
+                <span className="cmnt:text-xs cmnt:text-gray-500">Show resolved pins on page</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={showResolved}
+                  aria-label="Show resolved threads"
+                  onClick={() => threads.setShowResolved(!showResolved)}
+                  className="cmnt:inline-flex cmnt:items-center cmnt:bg-transparent cmnt:border-0 cmnt:cursor-pointer cmnt:p-0"
+                >
+                  <span
+                    aria-hidden={true}
+                    className={cn(
+                      'cmnt:w-7 cmnt:h-4 cmnt:rounded-full cmnt:relative cmnt:transition-colors',
+                      showResolved ? 'cmnt:bg-blue-600' : 'cmnt:bg-gray-300',
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'cmnt:absolute cmnt:top-0.5 cmnt:w-3 cmnt:h-3 cmnt:rounded-full cmnt:bg-white cmnt:transition-all',
+                        showResolved ? 'cmnt:left-[14px]' : 'cmnt:left-0.5',
+                      )}
+                    />
+                  </span>
+                </button>
+              </div>
 
               <div className="cmnt:flex-1 cmnt:overflow-y-auto">
                 {state.needsReview.length > 0 && (

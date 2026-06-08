@@ -1,27 +1,30 @@
 // packages/client/src/ui/Launcher.tsx
 
+import { useDraggablePosition } from '../launcher/useDraggablePosition'
 import { cn } from '../lib/cn'
 import { Button } from './Button'
 
 export type LauncherProps = {
   placing: boolean
   onTogglePlace: () => void
-  showResolved: boolean
-  onShowResolved: (value: boolean) => void
   openCount: number
   onTogglePanel: () => void
 }
 
-export function Launcher({
-  placing,
-  onTogglePlace,
-  showResolved,
-  onShowResolved,
-  openCount,
-  onTogglePanel,
-}: LauncherProps) {
+/** Compact, icon-only launcher pill. Drag anywhere on it to stick it to either window edge;
+ *  the position persists. (The show-resolved toggle now lives in the panel sidebar.) */
+export function Launcher({ placing, onTogglePlace, openCount, onTogglePanel }: LauncherProps) {
+  const { style, dragging, onPointerDown, onClickCapture } = useDraggablePosition()
   return (
-    <div className="cmnt:fixed cmnt:bottom-4 cmnt:right-4 cmnt:flex cmnt:items-center cmnt:gap-2 cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-full cmnt:py-1.5 cmnt:pl-3 cmnt:pr-2 cmnt:pointer-events-auto cmnt:shadow-[0_6px_20px_rgba(0,0,0,0.18)]">
+    <div
+      style={style}
+      onPointerDown={onPointerDown}
+      onClickCapture={onClickCapture}
+      className={cn(
+        'cmnt:fixed cmnt:flex cmnt:items-center cmnt:gap-1 cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-full cmnt:p-1 cmnt:pointer-events-auto cmnt:select-none cmnt:touch-none cmnt:shadow-[0_6px_20px_rgba(0,0,0,0.18)]',
+        dragging ? 'cmnt:cursor-grabbing' : 'cmnt:cursor-grab',
+      )}
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -32,40 +35,25 @@ export function Launcher({
       >
         <span aria-hidden={true}>☰</span>
       </Button>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={showResolved}
-        aria-label="Show resolved threads"
-        onClick={() => onShowResolved(!showResolved)}
-        className="cmnt:inline-flex cmnt:items-center cmnt:gap-1.5 cmnt:bg-transparent cmnt:border-none cmnt:cursor-pointer cmnt:text-xs cmnt:text-gray-500"
-      >
-        <span
-          aria-hidden={true}
-          className={cn(
-            'cmnt:w-7 cmnt:h-4 cmnt:rounded-full cmnt:relative cmnt:transition-colors',
-            showResolved ? 'cmnt:bg-blue-600' : 'cmnt:bg-gray-300',
-          )}
-        >
-          <span
-            className={cn(
-              'cmnt:absolute cmnt:top-0.5 cmnt:w-3 cmnt:h-3 cmnt:rounded-full cmnt:bg-white cmnt:transition-all',
-              showResolved ? 'cmnt:left-[14px]' : 'cmnt:left-0.5',
-            )}
-          />
-        </span>
-        Resolved
-      </button>
       <Button
         variant="primary"
-        size="md"
+        size="icon"
         data-comments-place
         data-testid="comments-place"
         aria-pressed={placing}
+        aria-label={placing ? 'Click on the page to comment' : 'Add comment'}
         onClick={onTogglePlace}
-        className={cn(placing && 'cmnt:bg-blue-800')}
+        className={cn('cmnt:relative', placing && 'cmnt:bg-blue-800')}
       >
-        {placing ? 'Click to comment…' : `+ Comment${openCount ? ` (${openCount})` : ''}`}
+        <span aria-hidden={true}>{placing ? '✎' : '＋'}</span>
+        {!placing && openCount > 0 && (
+          <span
+            aria-hidden={true}
+            className="cmnt:absolute cmnt:-top-1 cmnt:-right-1 cmnt:min-w-4 cmnt:h-4 cmnt:px-1 cmnt:rounded-full cmnt:bg-blue-800 cmnt:text-white cmnt:text-[10px] cmnt:leading-4 cmnt:text-center cmnt:pointer-events-none"
+          >
+            {openCount}
+          </span>
+        )}
       </Button>
     </div>
   )

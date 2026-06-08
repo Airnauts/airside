@@ -84,7 +84,7 @@ describe('WidgetApp', () => {
     const client = mockClient()
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
     expect(await screen.findByTestId('comments-place')).toBeInTheDocument()
-    expect(screen.getByRole('switch', { name: /resolved/i })).toBeInTheDocument()
+    expect(screen.getByTestId('comments-panel-open')).toBeInTheDocument()
   })
 
   it('renders the Launcher panel button when logged in', () => {
