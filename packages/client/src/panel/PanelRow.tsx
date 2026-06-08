@@ -42,7 +42,7 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
               {relativeTime(item.updatedAt)}
             </span>
             {orphaned && (
-              <span className="cmnt:ml-1 cmnt:px-1.5 cmnt:py-0.5 cmnt:rounded cmnt:bg-amber-100 cmnt:text-amber-700 cmnt:font-medium cmnt:text-[11px]">
+              <span className="cmnt:ml-1 cmnt:px-1.5 cmnt:py-0.5 cmnt:rounded-[4px] cmnt:bg-amber-100 cmnt:text-amber-700 cmnt:font-medium cmnt:text-[11px]">
                 <span aria-hidden={true}>⚠</span> anchor lost
               </span>
             )}

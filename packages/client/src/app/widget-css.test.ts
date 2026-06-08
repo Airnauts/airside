@@ -22,3 +22,16 @@ describe('widget.css cascade-layer policy (ADR-0025)', () => {
     expect(widgetCss).toMatch(/@layer\s+base/i)
   })
 })
+
+// The widget embeds into the host's light DOM, where `rem` ALWAYS resolves against the
+// host's <html> font-size. A host that scales its root font-size responsively (e.g.
+// `html { font-size: clamp(0.8rem, 1vw, 1rem); }`) would stretch every rem-based token —
+// drifting the pin internals and ballooning the chrome. We override the theme tokens to
+// px in widget.css so the widget is independent of the host root font-size. This guard
+// fails if any `rem` survives into the generated CSS (e.g. a new utility pulling in an
+// un-overridden rem token) — add the missing token to the `@theme` block in widget.css.
+describe('host-font-size independence', () => {
+  it('emits NO rem units (tokens are pinned to px)', () => {
+    expect(widgetCss).not.toMatch(/rem/)
+  })
+})
