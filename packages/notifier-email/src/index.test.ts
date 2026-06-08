@@ -18,14 +18,20 @@ const event: NotificationEvent = {
 /** Records the last message it was asked to send. */
 function fakeTransport(): EmailTransport & { sent: EmailMessage[] } {
   const sent: EmailMessage[] = []
-  return { name: 'fake', sent, async send(message) { sent.push(message) } }
+  return {
+    name: 'fake',
+    sent,
+    async send(message) {
+      sent.push(message)
+    },
+  }
 }
 
 describe('emailNotifier', () => {
   it('exposes a stable name', () => {
-    expect(emailNotifier({ transport: fakeTransport(), to: ['a@b.com'], from: 'c@d.com' }).name).toBe(
-      'email',
-    )
+    expect(
+      emailNotifier({ transport: fakeTransport(), to: ['a@b.com'], from: 'c@d.com' }).name,
+    ).toBe('email')
   })
 
   it('addresses a single recipient in "to"', async () => {

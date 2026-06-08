@@ -51,5 +51,5 @@ export function emailNotifier(opts: EmailNotifierOptions): Notifier {
   }
 }
 
-export { formatEmail } from './format'
 export type { EmailFormat, FormatEmailOptions } from './format'
+export { formatEmail } from './format'

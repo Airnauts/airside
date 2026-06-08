@@ -17,7 +17,9 @@ const event: NotificationEvent = {
 
 describe('escapeHtml', () => {
   it('escapes the five significant characters', () => {
-    expect(escapeHtml(`<b>"x" & 'y'</b>`)).toBe('&lt;b&gt;&quot;x&quot; &amp; &#39;y&#39;&lt;/b&gt;')
+    expect(escapeHtml(`<b>"x" & 'y'</b>`)).toBe(
+      '&lt;b&gt;&quot;x&quot; &amp; &#39;y&#39;&lt;/b&gt;',
+    )
   })
 })
 
@@ -31,7 +33,9 @@ describe('formatEmail', () => {
   })
 
   it('applies a subject prefix', () => {
-    expect(formatEmail(event, { subjectPrefix: '[Acme] ' }).subject).toBe('[Acme] New comment on About')
+    expect(formatEmail(event, { subjectPrefix: '[Acme] ' }).subject).toBe(
+      '[Acme] New comment on About',
+    )
   })
 
   it('falls back to the page URL when there is no title', () => {

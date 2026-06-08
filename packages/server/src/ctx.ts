@@ -1,4 +1,10 @@
-import { type AttachmentId, type AuthorId, type CommentId, DEFAULT_THREAD_PARAM, type ThreadId } from '@airnauts/comments-core'
+import {
+  type AttachmentId,
+  type AuthorId,
+  type CommentId,
+  DEFAULT_THREAD_PARAM,
+  type ThreadId,
+} from '@airnauts/comments-core'
 import { nanoid } from 'nanoid'
 
 export type IdFactory = {
