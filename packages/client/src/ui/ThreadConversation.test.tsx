@@ -1,6 +1,6 @@
 // packages/client/src/ui/ThreadConversation.test.tsx
 import type { Thread, ThreadListItem } from '@airnauts/comments-core'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { DraftsProvider, useDraft } from '../drafts/DraftsProvider'
@@ -99,7 +99,10 @@ describe('ThreadConversation reply focus', () => {
       </ThreadsProvider>,
     )
     const input = await screen.findByPlaceholderText(/reply/i)
-    expect(document.activeElement).toBe(input)
+    // Focus is deferred to the next animation frame (so it wins against the Radix Dialog's
+    // focus scope), so wait for it. The authoritative real-browser check lives in the
+    // sidebar-detail e2e (jsdom can't observe the Dialog focus interaction).
+    await waitFor(() => expect(document.activeElement).toBe(input))
   })
 
   it('does not steal focus in the popover variant', async () => {
@@ -111,6 +114,8 @@ describe('ThreadConversation reply focus', () => {
       </ThreadsProvider>,
     )
     const input = await screen.findByPlaceholderText(/reply/i)
+    // Give the deferred focus a frame to (not) fire.
+    await new Promise((r) => requestAnimationFrame(r))
     expect(document.activeElement).not.toBe(input)
   })
 })

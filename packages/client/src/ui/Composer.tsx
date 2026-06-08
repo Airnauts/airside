@@ -59,7 +59,12 @@ export function Composer({
   const previewUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (autoFocus) inputRef.current?.focus()
+    if (!autoFocus) return
+    // Defer past the Radix Dialog's own focus handling: a synchronous mount-time focus() is
+    // reclaimed by the dialog's focus scope, leaving the input blurred. Focusing on the next
+    // frame lets the reply input reliably win.
+    const raf = requestAnimationFrame(() => inputRef.current?.focus())
+    return () => cancelAnimationFrame(raf)
   }, [autoFocus])
 
   // Revoke any outstanding object URL when the composer unmounts.

@@ -68,6 +68,18 @@ describe('CommentList', () => {
     expect(screen.getByText(/just now|ago|^\d+[mhd]$/i)).toBeInTheDocument()
   })
 
+  it('sidebar list sizes to content (no flex-1) so the composer hugs the last message', () => {
+    // Regression: flex-1 stretched the list to fill the drawer and pinned the composer to the
+    // bottom with a large gap. It must size to content while still scrolling when long.
+    render(
+      <CommentList loading={false} error={false} comments={[comment()]} variant="sidebar" />,
+    )
+    const list = screen.getByTestId('comment-list-scroll')
+    expect(list.className).not.toContain('cmnt:flex-1')
+    expect(list.className).toContain('cmnt:min-h-0')
+    expect(list.className).toContain('cmnt:overflow-auto')
+  })
+
   it('scrolls the list to the bottom when a new comment is added', () => {
     const { rerender } = render(
       <CommentList loading={false} error={false} comments={[comment({ id: 'c1' })]} />,

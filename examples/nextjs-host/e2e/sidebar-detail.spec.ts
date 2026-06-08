@@ -28,6 +28,10 @@ test.describe('sidebar master–detail', () => {
     // The thread's comment must actually render in the detail on the FIRST open (regression guard:
     // the detail used to read comments via openId, which the pin popover nulled → empty on first open).
     await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
+    // The reply input is focused on detail entry so the user can type immediately. This is the
+    // real-browser check: the Composer mounts inside a Radix Dialog (which has its own focus
+    // management) — jsdom can't observe that interaction.
+    await expect(page.getByTestId('comments-panel').getByPlaceholder(/reply/i)).toBeFocused()
     // No navigation occurred.
     await expect(page).toHaveURL(/\/pricing/)
 
@@ -83,6 +87,9 @@ test.describe('sidebar master–detail', () => {
     await expect(page.getByTestId('comments-pin-pulse')).toBeVisible()
     // The restored detail must render the thread's comment (cross-page fallback reads detail by id).
     await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
+    // Cross-page focus: the reply input is focused after the fresh-page Dialog open + restore.
+    // This is the path most at risk (Radix open-autofocus competing with the Composer mount).
+    await expect(page.getByTestId('comments-panel').getByPlaceholder(/reply/i)).toBeFocused()
   })
 
   test('?comments-thread deep-link opens the detail and strips the param', async ({ page }) => {

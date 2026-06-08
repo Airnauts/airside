@@ -84,7 +84,11 @@ export function CommentList({
       data-testid="comment-list-scroll"
       className={
         variant === 'sidebar'
-          ? 'cmnt:flex-1 cmnt:min-h-0 cmnt:overflow-auto cmnt:p-3'
+          ? // Size to content so the composer hugs the last message (no empty gap), but keep
+            // min-h-0 + overflow so a long thread shrinks and scrolls within the drawer instead
+            // of pushing the composer off-screen. NOT flex-1 — that stretched the list to fill
+            // the drawer and pinned the composer to the bottom.
+            'cmnt:min-h-0 cmnt:overflow-auto cmnt:p-3'
           : 'cmnt:max-h-[230px] cmnt:overflow-auto cmnt:p-3'
       }
     >

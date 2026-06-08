@@ -113,6 +113,9 @@ export function PanelDrawer({
         <Dialog.Content
           data-testid="comments-panel"
           onInteractOutside={(e) => e.preventDefault()}
+          // Don't let the dialog grab focus on open (e.g. onto the close button). The detail
+          // view's reply composer focuses itself; on the list view nothing should be focused.
+          onOpenAutoFocus={(e) => e.preventDefault()}
           className="cmnt:fixed cmnt:top-0 cmnt:right-0 cmnt:bottom-0 cmnt:w-[360px] cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border-l cmnt:border-gray-200 cmnt:flex cmnt:flex-col cmnt:pointer-events-auto cmnt:shadow-[-8px_0_24px_rgba(0,0,0,0.12)]"
         >
           {state.view === 'detail' && state.detailThreadId ? (
