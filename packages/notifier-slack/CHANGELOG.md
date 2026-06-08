@@ -1,5 +1,16 @@
 # @airnauts/comments-notifier-slack
 
+## 0.5.0
+
+### Minor Changes
+
+- f8d56a7: Slack notifications now link straight to the specific thread (the same `?comments-thread=<id>` deep-link as the widget's "Copy link"), so clicking through opens the focused comment instead of just the page. Add `threadParam` to `slackNotifier` if your host page uses a custom thread query param.
+
+### Patch Changes
+
+- @airnauts/comments-core@0.5.0
+- @airnauts/comments-server@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes

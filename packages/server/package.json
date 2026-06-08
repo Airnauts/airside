@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/comments-server",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Server runtime for the Airnauts embeddable commenting tool: HTTP router, use-cases, CORS/security, and framework adapters (dev server, Next.js).",
   "keywords": [
     "comments",

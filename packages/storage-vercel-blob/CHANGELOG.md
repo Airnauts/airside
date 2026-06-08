@@ -1,5 +1,12 @@
 # @airnauts/comments-storage-vercel-blob
 
+## 0.5.0
+
+### Patch Changes
+
+- @airnauts/comments-core@0.5.0
+- @airnauts/comments-server@0.5.0
+
 ## 0.4.0
 
 ### Minor Changes
