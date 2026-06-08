@@ -142,6 +142,22 @@ describe('threads reducer', () => {
     expect(s.itemsById.a.unresolvedCount).toBe(1)
   })
 
+  it('BUMP_COMMENT_COUNT adjusts the list item count, clamped at zero', () => {
+    let s = reducer(initialState, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
+    expect(s.itemsById.a.commentCount).toBe(1)
+    s = reducer(s, { type: 'BUMP_COMMENT_COUNT', id: 'a', delta: 1 })
+    expect(s.itemsById.a.commentCount).toBe(2)
+    s = reducer(s, { type: 'BUMP_COMMENT_COUNT', id: 'a', delta: -1 })
+    expect(s.itemsById.a.commentCount).toBe(1)
+    s = reducer(s, { type: 'BUMP_COMMENT_COUNT', id: 'a', delta: -5 })
+    expect(s.itemsById.a.commentCount).toBe(0)
+  })
+
+  it('BUMP_COMMENT_COUNT is a no-op for an unknown id', () => {
+    const s = reducer(initialState, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
+    expect(reducer(s, { type: 'BUMP_COMMENT_COUNT', id: 'missing', delta: 1 })).toBe(s)
+  })
+
   it('SET_SHOW_RESOLVED toggles the flag', () => {
     const s = reducer(initialState, { type: 'SET_SHOW_RESOLVED', value: true })
     expect(s.showResolved).toBe(true)

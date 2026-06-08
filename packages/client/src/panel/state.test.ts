@@ -85,6 +85,27 @@ describe('panel reducer', () => {
     expect(next.loadingMore).toBe(false)
   })
 
+  it('BUMP_COMMENT_COUNT adjusts the matching row in list and needsReview, clamped at zero', () => {
+    const withCount = (id: string, commentCount: number): ThreadListItem =>
+      ({ ...item(id), commentCount }) as ThreadListItem
+    let state = {
+      ...initialState,
+      list: [withCount('a', 2), withCount('b', 5)],
+      needsReview: [withCount('b', 5)],
+    }
+    state = reducer(state, { type: 'BUMP_COMMENT_COUNT', id: 'b', delta: 1 })
+    expect(state.list.map((t) => t.commentCount)).toEqual([2, 6])
+    expect(state.needsReview[0].commentCount).toBe(6)
+    state = reducer(state, { type: 'BUMP_COMMENT_COUNT', id: 'a', delta: -10 })
+    expect(state.list[0].commentCount).toBe(0)
+  })
+
+  it('BUMP_COMMENT_COUNT leaves the list reference untouched for an unknown id', () => {
+    const state = { ...initialState, list: [item('a')] }
+    const next = reducer(state, { type: 'BUMP_COMMENT_COUNT', id: 'missing', delta: 1 })
+    expect(next.list).toBe(state.list)
+  })
+
   it('mainListExcludingReview drops ids already in needsReview', () => {
     const state = {
       ...initialState,

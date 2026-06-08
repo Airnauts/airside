@@ -56,6 +56,7 @@ export type Action =
   | { type: 'REPLACE_OPTIMISTIC_COMMENT'; id: string; tempId: string; comment: Comment }
   | { type: 'REMOVE_OPTIMISTIC_COMMENT'; id: string; tempId: string }
   | { type: 'SET_STATUS'; id: string; status: ThreadStatus }
+  | { type: 'BUMP_COMMENT_COUNT'; id: string; delta: number }
   | { type: 'REQUEST_FOCUS'; id: string }
   | { type: 'FOCUS_PLACED'; id: string }
   | { type: 'CLEAR_FOCUS' }
@@ -166,6 +167,21 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
           }
         : state
       return mapDetail(withItem, action.id, (t) => ({ ...t, status: action.status }))
+    }
+    case 'BUMP_COMMENT_COUNT': {
+      // Keep the list item's count in sync with an optimistic reply so the pin badge reacts
+      // immediately (the sidebar/popover header reads the live detail instead). itemsById is
+      // rebuilt from the runtime cache on every reposition emit, so the controller also patches
+      // that cache — without it the next scroll/resize would clobber this back to the listed count.
+      const item = state.itemsById[action.id]
+      if (!item) return state
+      return {
+        ...state,
+        itemsById: {
+          ...state.itemsById,
+          [action.id]: { ...item, commentCount: Math.max(0, item.commentCount + action.delta) },
+        },
+      }
     }
     case 'REQUEST_FOCUS':
       // Focusing a pin pulses/scrolls it and lazy-loads its detail — but does NOT open its popover.
