@@ -64,4 +64,12 @@ describe('smtpTransport', () => {
       text: 'hi',
     })
   })
+
+  it('reuses one transporter across sends', async () => {
+    const transport = smtpTransport({ host: 'h', port: 587, auth: { user: 'u', pass: 'p' } })
+    await transport.send(message)
+    await transport.send(message)
+    expect(createTransport).toHaveBeenCalledTimes(1)
+    expect(sendMail).toHaveBeenCalledTimes(2)
+  })
 })
