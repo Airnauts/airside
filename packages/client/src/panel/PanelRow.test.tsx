@@ -1,6 +1,6 @@
 // packages/client/src/panel/PanelRow.test.tsx
 import type { ThreadListItem } from '@airnauts/comments-core'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { PanelRow } from './PanelRow'
 
@@ -115,5 +115,18 @@ describe('PanelRow', () => {
     )
     fireEvent.click(screen.getByRole('button', { name: /copy link/i }))
     expect(writeText).toHaveBeenCalledWith('https://site.com/a?comments-thread=t42')
+  })
+
+  it('flips the label to "Copied!" briefly after copying, then back', () => {
+    vi.useFakeTimers()
+    Object.assign(navigator, { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } })
+    render(<PanelRow item={item()} onSelect={() => {}} onReply={() => {}} onResolve={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: /copy link/i }))
+    expect(screen.getByText('Copied!')).toBeInTheDocument()
+    act(() => {
+      vi.advanceTimersByTime(1000)
+    })
+    expect(screen.getByText('Copy link')).toBeInTheDocument()
+    vi.useRealTimers()
   })
 })
