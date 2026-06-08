@@ -1,5 +1,18 @@
 # @airnauts/comments-next
 
+## 0.4.0
+
+### Minor Changes
+
+- All `@airnauts/comments-*` packages now share a single, synchronized version line
+  (starting at 0.4.0) and are released together. Adopters can pin one version across
+  the whole set instead of reconciling per-package versions.
+
+### Patch Changes
+
+- Updated dependencies
+  - @airnauts/comments-server@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

@@ -2,7 +2,19 @@
   "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "@airnauts/comments-adapter-memory",
+      "@airnauts/comments-adapter-mongo",
+      "@airnauts/comments-client",
+      "@airnauts/comments-core",
+      "@airnauts/comments-next",
+      "@airnauts/comments-notifier-slack",
+      "@airnauts/comments-server",
+      "@airnauts/comments-storage-fs",
+      "@airnauts/comments-storage-vercel-blob"
+    ]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",
