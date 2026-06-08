@@ -63,7 +63,7 @@ export function ThreadPopover({
             const target = e.detail.originalEvent.target as Element | null
             if (target?.closest('[data-comments-root]')) e.preventDefault()
           }}
-          className="cmnt:pointer-events-auto"
+          className="cmnt:z-40 cmnt:pointer-events-auto"
         >
           <ThreadConversation
             item={item}
