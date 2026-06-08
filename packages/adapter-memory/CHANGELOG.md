@@ -1,5 +1,12 @@
 # @airnauts/comments-adapter-memory
 
+## 0.5.1
+
+### Patch Changes
+
+- @airnauts/comments-core@0.5.1
+- @airnauts/comments-server@0.5.1
+
 ## 0.5.0
 
 ### Patch Changes

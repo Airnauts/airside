@@ -1,5 +1,22 @@
 # @airnauts/comments-client
 
+## 0.5.1
+
+### Patch Changes
+
+- 16a35ed: The "Copy link" action in the comments panel now briefly shows "Copied!" after you
+  click it, then reverts, giving clear feedback that the thread link reached your clipboard.
+- 38081e9: The launcher is now a compact, icon-only pill that you can drag to either side of the
+  window — it snaps to the left or right edge and remembers its vertical position across
+  reloads. The "show resolved" toggle has moved from the launcher into the comments panel.
+- 8ef18e6: The comments panel header rows are now uniform in height: the widget resets the
+  browser's default heading margins inside its root, so the "Comments" title (an
+  `<h2>`) no longer renders taller than the other header rows.
+- 1af7d00: Comment counts now update instantly when you post a reply: the pin badge, the thread
+  header ("Open · N comments"), and the panel list rows all reflect the new total right
+  away, instead of staying stale until a reload.
+  - @airnauts/comments-core@0.5.1
+
 ## 0.5.0
 
 ### Patch Changes
