@@ -1,5 +1,21 @@
 # @airnauts/comments-storage-vercel-blob
 
+## 0.2.1
+
+### Patch Changes
+
+- cd42711: Update package READMEs to match the current API. The server example no longer
+  references the removed `InMemoryRepository` (use `memoryRepository()` from
+  `@airnauts/comments-adapter-memory`), the Vercel Blob example passes the token
+  explicitly via `vercelBlobStorage({ token })` instead of an ambient env read, the
+  filesystem and Mongo adapters document their `fileSystemStorage()` / `mongoRepository()`
+  factories, and the Next.js example is now self-contained.
+- Updated dependencies [cd42711]
+- Updated dependencies [ab680eb]
+- Updated dependencies [5cf77fd]
+  - @airnauts/comments-server@0.2.0
+  - @airnauts/comments-core@0.2.0
+
 ## 0.2.0
 
 ### Minor Changes

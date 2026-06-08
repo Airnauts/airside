@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/comments-client",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Embeddable commenting widget and React wrapper for the Airnauts commenting tool.",
   "keywords": [
     "comments",

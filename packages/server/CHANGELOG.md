@@ -1,5 +1,28 @@
 # @airnauts/comments-server
 
+## 0.2.0
+
+### Minor Changes
+
+- ab680eb: Thread list items now include a `rootComment` preview (the first comment's text and
+  timestamp), so list UIs can show what a thread is about without fetching the full thread.
+- 5cf77fd: Add Slack notifications. The server now accepts `notifiers: [...]`, a generic outbound
+  channel seam, and the new `@airnauts/comments-notifier-slack` package posts a message to a
+  Slack channel (via an Incoming Webhook) whenever a reviewer creates a thread or replies —
+  showing who commented, the text, and a link to the page. Notification failures never break
+  a comment write.
+
+### Patch Changes
+
+- cd42711: Update package READMEs to match the current API. The server example no longer
+  references the removed `InMemoryRepository` (use `memoryRepository()` from
+  `@airnauts/comments-adapter-memory`), the Vercel Blob example passes the token
+  explicitly via `vercelBlobStorage({ token })` instead of an ambient env read, the
+  filesystem and Mongo adapters document their `fileSystemStorage()` / `mongoRepository()`
+  factories, and the Next.js example is now self-contained.
+- Updated dependencies [ab680eb]
+  - @airnauts/comments-core@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

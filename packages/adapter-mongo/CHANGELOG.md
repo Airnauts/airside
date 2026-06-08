@@ -1,5 +1,26 @@
 # @airnauts/comments-adapter-mongo
 
+## 0.2.0
+
+### Minor Changes
+
+- ab680eb: Thread list items now include a `rootComment` preview (the first comment's text and
+  timestamp), so list UIs can show what a thread is about without fetching the full thread.
+
+### Patch Changes
+
+- cd42711: Update package READMEs to match the current API. The server example no longer
+  references the removed `InMemoryRepository` (use `memoryRepository()` from
+  `@airnauts/comments-adapter-memory`), the Vercel Blob example passes the token
+  explicitly via `vercelBlobStorage({ token })` instead of an ambient env read, the
+  filesystem and Mongo adapters document their `fileSystemStorage()` / `mongoRepository()`
+  factories, and the Next.js example is now self-contained.
+- Updated dependencies [cd42711]
+- Updated dependencies [ab680eb]
+- Updated dependencies [5cf77fd]
+  - @airnauts/comments-server@0.2.0
+  - @airnauts/comments-core@0.2.0
+
 ## 0.1.0
 
 ### Minor Changes

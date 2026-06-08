@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/comments-core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Framework-agnostic core for the Airnauts embeddable commenting tool: zod schemas, page-key normalization, the scoring/threshold policy, and the OpenAPI contract.",
   "keywords": [
     "comments",

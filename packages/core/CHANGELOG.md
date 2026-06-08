@@ -1,5 +1,12 @@
 # @airnauts/comments-core
 
+## 0.2.0
+
+### Minor Changes
+
+- ab680eb: Thread list items now include a `rootComment` preview (the first comment's text and
+  timestamp), so list UIs can show what a thread is about without fetching the full thread.
+
 ## 0.1.0
 
 ### Minor Changes
