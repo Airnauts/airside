@@ -9,7 +9,7 @@ import { usePortalContainer } from '../app/providers'
 import { buildCaptureContext } from '../config'
 import type { Identity } from '../identity/storage'
 import { takeFocusHandoff } from '../panel/navigate'
-import { usePanelController } from '../panel/PanelProvider'
+import { usePanelController, usePanelState } from '../panel/PanelProvider'
 import { pinXY } from '../positioning/coords'
 import { PinLayer } from '../positioning/layer'
 import { observeReposition } from '../positioning/lifecycle'
@@ -58,6 +58,7 @@ export function MarkerLayer({
   const openCount = Object.values(state.itemsById).filter((i) => i.status === 'open').length
 
   const panel = usePanelController()
+  const panelOpen = usePanelState().open
   const pendingFocusId = state.pendingFocusId
   const placed = pendingFocusId ? Boolean(state.placementsById[pendingFocusId]) : false
   // getElement must be stable: MarkerLayer re-renders on every INGEST_PLACEMENTS (scroll/resize/
@@ -274,7 +275,8 @@ export function MarkerLayer({
         placing={placing}
         onTogglePlace={() => setPlacing((p) => !p)}
         openCount={openCount}
-        onTogglePanel={() => void panel.openPanel()}
+        panelOpen={panelOpen}
+        onTogglePanel={() => void (panelOpen ? panel.closePanel() : panel.openPanel())}
       />
     </>
   )

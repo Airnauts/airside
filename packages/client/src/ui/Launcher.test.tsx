@@ -11,6 +11,7 @@ describe('Launcher', () => {
         placing={false}
         onTogglePlace={onTogglePlace}
         openCount={2}
+        panelOpen={false}
         onTogglePanel={() => {}}
       />,
     )
@@ -21,24 +22,43 @@ describe('Launcher', () => {
     fireEvent.click(place)
     expect(onTogglePlace).toHaveBeenCalled()
     rerender(
-      <Launcher placing onTogglePlace={onTogglePlace} openCount={2} onTogglePanel={() => {}} />,
+      <Launcher
+        placing
+        onTogglePlace={onTogglePlace}
+        openCount={2}
+        panelOpen={false}
+        onTogglePanel={() => {}}
+      />,
     )
     expect(screen.getByTestId('comments-place')).toHaveAttribute('aria-pressed', 'true')
     // While placing, the badge is hidden in favour of the active-state icon.
     expect(screen.getByTestId('comments-place')).not.toHaveTextContent('2')
   })
 
-  it('opens the panel via the list button', () => {
+  it('toggles the panel via the list button, reflecting open state', () => {
     const onTogglePanel = vi.fn()
-    render(
+    const { rerender } = render(
       <Launcher
         placing={false}
         onTogglePlace={() => {}}
         openCount={0}
+        panelOpen={false}
         onTogglePanel={onTogglePanel}
       />,
     )
-    fireEvent.click(screen.getByRole('button', { name: /comments panel/i }))
+    fireEvent.click(screen.getByRole('button', { name: /open comments panel/i }))
     expect(onTogglePanel).toHaveBeenCalled()
+    // When the panel is open the same button is labelled (and announced) as a close affordance.
+    rerender(
+      <Launcher
+        placing={false}
+        onTogglePlace={() => {}}
+        openCount={0}
+        panelOpen
+        onTogglePanel={onTogglePanel}
+      />,
+    )
+    const toggle = screen.getByRole('button', { name: /close comments panel/i })
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
   })
 })

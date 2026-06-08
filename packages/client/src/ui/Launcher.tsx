@@ -8,12 +8,19 @@ export type LauncherProps = {
   placing: boolean
   onTogglePlace: () => void
   openCount: number
+  panelOpen: boolean
   onTogglePanel: () => void
 }
 
 /** Compact, icon-only launcher pill. Drag anywhere on it to stick it to either window edge;
  *  the position persists. (The show-resolved toggle now lives in the panel sidebar.) */
-export function Launcher({ placing, onTogglePlace, openCount, onTogglePanel }: LauncherProps) {
+export function Launcher({
+  placing,
+  onTogglePlace,
+  openCount,
+  panelOpen,
+  onTogglePanel,
+}: LauncherProps) {
   const { style, dragging, onPointerDown, onClickCapture } = useDraggablePosition()
   return (
     <div
@@ -28,7 +35,8 @@ export function Launcher({ placing, onTogglePlace, openCount, onTogglePanel }: L
       <Button
         variant="ghost"
         size="icon"
-        aria-label="Open comments panel"
+        aria-label={panelOpen ? 'Close comments panel' : 'Open comments panel'}
+        aria-expanded={panelOpen}
         data-testid="comments-panel-open"
         onClick={onTogglePanel}
         className="cmnt:hover:bg-gray-100"
