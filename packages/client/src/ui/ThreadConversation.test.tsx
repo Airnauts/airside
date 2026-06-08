@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { DraftsProvider, useDraft } from '../drafts/DraftsProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
-import { useDispatch } from '../threads/useThreads'
+import { useDispatch, useThreadsState } from '../threads/useThreads'
 import { ThreadConversation } from './ThreadConversation'
 
 const item = (over: Partial<ThreadListItem> = {}) =>
@@ -86,6 +86,96 @@ describe('ThreadConversation detail source', () => {
       </ThreadsProvider>,
     )
     expect(await screen.findByText('detail body text')).toBeInTheDocument()
+  })
+})
+
+describe('ThreadConversation header count', () => {
+  it('counts from the live detail, not the (stale) list item, so new replies show up', async () => {
+    // The list item carries the count from the last list fetch (commentCount: 1). After a reply the
+    // detail has two comments but the list item is not refetched — the header must follow the detail.
+    const thread = {
+      id: 't1',
+      status: 'open',
+      comments: [
+        { id: 'c1', author: { email: 'a@b.c' }, text: 'root', attachments: [], createdAt: 'x' },
+        { id: 'c2', author: { email: 'a@b.c' }, text: 'reply', attachments: [], createdAt: 'y' },
+      ],
+    } as unknown as Thread
+    render(
+      <ThreadsProvider client={mockClient}>
+        <DraftsProvider>
+          <Seeder thread={thread} />
+          <ThreadConversation
+            item={item({ commentCount: 1 })}
+            client={mockClient}
+            identity={{ email: 'a@b.c' }}
+            onNeedIdentity={() => {}}
+            variant="sidebar"
+          />
+        </DraftsProvider>
+      </ThreadsProvider>,
+    )
+    expect(await screen.findByText(/Open · 2 comments/)).toBeInTheDocument()
+  })
+})
+
+describe('ThreadConversation reply count', () => {
+  it('posting a reply bumps the list-item count (the pin badge) via the controller', async () => {
+    const thread = {
+      id: 't1',
+      status: 'open',
+      comments: [
+        { id: 'c1', author: { email: 'a@b.c' }, text: 'root', attachments: [], createdAt: 'x' },
+      ],
+    } as unknown as Thread
+    const client = {
+      ...(mockClient as object),
+      addComment: vi.fn().mockResolvedValue({
+        id: 'c2',
+        author: { email: 'a@b.c' },
+        text: 'my reply',
+        attachments: [],
+        createdAt: 'y',
+      }),
+    } as never
+
+    function Probe() {
+      const state = useThreadsState()
+      return <span data-testid="count">{state.itemsById.t1?.commentCount ?? '?'}</span>
+    }
+    function Seed() {
+      const dispatch = useDispatch()
+      useEffect(() => {
+        dispatch({
+          type: 'INGEST_PLACEMENTS',
+          placements: [{ item: item({ commentCount: 1 }), pin: { x: 0, y: 0 }, highlight: [] }],
+        })
+        dispatch({ type: 'DETAIL_LOADED', id: 't1', thread })
+      }, [dispatch])
+      return null
+    }
+
+    render(
+      <ThreadsProvider client={client}>
+        <DraftsProvider>
+          <Seed />
+          <Probe />
+          <ThreadConversation
+            item={item({ commentCount: 1 })}
+            client={client}
+            identity={{ email: 'a@b.c' }}
+            onNeedIdentity={() => {}}
+            variant="sidebar"
+          />
+        </DraftsProvider>
+      </ThreadsProvider>,
+    )
+
+    expect(screen.getByTestId('count')).toHaveTextContent('1')
+    const input = await screen.findByPlaceholderText(/reply/i)
+    fireEvent.change(input, { target: { value: 'my reply' } })
+    fireEvent.click(screen.getByText('Send'))
+    await waitFor(() => expect(screen.getByTestId('count')).toHaveTextContent('2'))
   })
 })
 

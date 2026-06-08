@@ -87,6 +87,13 @@ export function PanelDrawer({
     return () => threads.registerStatusListener(null)
   }, [state.open, threads, panel])
 
+  // Keep the list rows' counts in sync with an optimistic reply posted from the open detail.
+  useEffect(() => {
+    if (!state.open) return
+    threads.registerCommentCountListener((id, delta) => panel.bumpCommentCount(id, delta))
+    return () => threads.registerCommentCountListener(null)
+  }, [state.open, threads, panel])
+
   function onSelect(row: { id: string; pageKey: string | null; pageUrl: string }) {
     const here = resolvePageKey(window.location.href)
     if (row.pageKey === here) {

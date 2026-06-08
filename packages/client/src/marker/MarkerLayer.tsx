@@ -89,10 +89,13 @@ export function MarkerLayer({
       onPlacements: (next) => dispatch({ type: 'INGEST_PLACEMENTS', placements: next }),
     })
     runtime.current = rt
-    // Bridge optimistic status changes into the runtime's cached list so its next emit
+    // Bridge optimistic status/count changes into the runtime's cached list so its next emit
     // (reposition/rematchAll, fired by scroll/resize and the popover's own DOM mutation)
-    // doesn't clobber the resolved pin back to 'open' until a reload.
-    controller.registerRuntime((id, status) => rt.setItemStatus(id, status))
+    // doesn't clobber the optimistic pin (resolved → 'open', or the reply count) until a reload.
+    controller.registerRuntime({
+      setStatus: (id, status) => rt.setItemStatus(id, status),
+      bumpCommentCount: (id, delta) => rt.bumpCommentCount(id, delta),
+    })
     void rt
       .refresh()
       .then(() => {
