@@ -10,9 +10,20 @@ export type CommentListProps = {
   loading: boolean
   error: boolean
   onRetry?: () => void
+  /**
+   * popover: cap the list at a fixed height so the floating pin popover stays compact.
+   * sidebar: flex to fill the drawer's remaining height (scrolls within that space).
+   */
+  variant?: 'popover' | 'sidebar'
 }
 
-export function CommentList({ comments, loading, error, onRetry }: CommentListProps) {
+export function CommentList({
+  comments,
+  loading,
+  error,
+  onRetry,
+  variant = 'popover',
+}: CommentListProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   // Keep the most recent comment in view: when a message is added (or the
   // thread first opens), pin the list to the bottom.
@@ -71,7 +82,11 @@ export function CommentList({ comments, loading, error, onRetry }: CommentListPr
     <div
       ref={scrollRef}
       data-testid="comment-list-scroll"
-      className="cmnt:max-h-[230px] cmnt:overflow-auto cmnt:p-3"
+      className={
+        variant === 'sidebar'
+          ? 'cmnt:flex-1 cmnt:min-h-0 cmnt:overflow-auto cmnt:p-3'
+          : 'cmnt:max-h-[230px] cmnt:overflow-auto cmnt:p-3'
+      }
     >
       {comments.map((c) => (
         <div key={c.id} className="cmnt:flex cmnt:gap-[9px] cmnt:mb-3.5">
