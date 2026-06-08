@@ -21,7 +21,7 @@ export function Launcher({ placing, onTogglePlace, openCount, onTogglePanel }: L
       onPointerDown={onPointerDown}
       onClickCapture={onClickCapture}
       className={cn(
-        'cmnt:fixed cmnt:flex cmnt:items-center cmnt:gap-1 cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-full cmnt:p-1 cmnt:pointer-events-auto cmnt:select-none cmnt:touch-none cmnt:shadow-[0_6px_20px_rgba(0,0,0,0.18)]',
+        'cmnt:fixed cmnt:z-50 cmnt:flex cmnt:items-center cmnt:gap-1 cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-full cmnt:p-1 cmnt:pointer-events-auto cmnt:select-none cmnt:touch-none cmnt:shadow-[0_6px_20px_rgba(0,0,0,0.18)]',
         dragging ? 'cmnt:cursor-grabbing' : 'cmnt:cursor-grab',
       )}
     >

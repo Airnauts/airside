@@ -19,7 +19,7 @@ export function LoginLauncher({ onLogIn }: LoginLauncherProps) {
       onPointerDown={onPointerDown}
       onClickCapture={onClickCapture}
       className={cn(
-        'cmnt:fixed cmnt:flex cmnt:items-center cmnt:pointer-events-auto cmnt:select-none cmnt:touch-none',
+        'cmnt:fixed cmnt:z-50 cmnt:flex cmnt:items-center cmnt:pointer-events-auto cmnt:select-none cmnt:touch-none',
         dragging ? 'cmnt:cursor-grabbing' : 'cmnt:cursor-grab',
       )}
     >
