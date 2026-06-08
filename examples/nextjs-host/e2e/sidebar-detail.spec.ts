@@ -77,9 +77,7 @@ test.describe('sidebar master–detail', () => {
     await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
     // The popover's reply input is focused on open (deferred-rAF autofocus beats Radix's
     // open-autofocus, which we prevent on the popover content).
-    await expect(
-      page.getByTestId('comments-pin-popover').getByPlaceholder(/reply/i),
-    ).toBeFocused()
+    await expect(page.getByTestId('comments-pin-popover').getByPlaceholder(/reply/i)).toBeFocused()
   })
 
   test('cross-page row click navigates and restores the detail view', async ({ page }) => {
