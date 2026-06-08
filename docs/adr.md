@@ -1098,3 +1098,44 @@ shared `toListItem`; mongo widens the list projection with `$slice: 1`.
 **Consequences.** One list request renders previews; empty `text` denotes an
 attachment-only root; pre-1.0 `minor` bump across core/adapters/server/next; `Thread`
 is unchanged so `getThread`/`createThread` paths are untouched.
+
+## ADR-0031 — Server owns the thread deep-link
+
+**Date:** 2026-06-08. **Status:** accepted.
+
+**Context.** The thread deep-link (`pageUrl?comments-thread=<id>`) is a contract between the
+widget (reads the param to focus a thread) and notifiers (write it). The Slack notifier
+re-declared its own `DEFAULT_THREAD_PARAM` and `threadParam` option, duplicating the client's
+constant with nothing enforcing they match; each new channel would copy it again.
+
+**Decision.** Move `DEFAULT_THREAD_PARAM` and `threadLink()` into `@airnauts/comments-core` as the
+single source of truth. `createCommentsServer` gains an optional `threadParam` (default from core),
+carried on `Ctx`; `buildNotificationEvent` builds the full link once and adds `threadUrl` to
+`NotificationEvent`. Notifiers read `event.threadUrl` and never construct links. The widget and
+server defaults both come from the core constant, so the zero-config case agrees automatically.
+
+**Consequences.** Removing `threadParam` from `SlackNotifierOptions` is breaking (pre-1.0 → minor).
+`NotificationEvent` carries one more field. A host that renames the param sets it in two places
+(widget + server), never per-notifier. Supersedes the per-notifier link handling introduced in
+ADR-0029.
+
+## ADR-0032 — Email notifier with a pluggable transport port
+
+**Date:** 2026-06-08. **Status:** accepted.
+
+**Context.** Email is the second notification channel (after Slack, ADR-0029). Unlike a Slack
+webhook (destination baked into the URL), email needs an explicit recipient list and a sender, and
+hosts run on different providers and runtimes (Node servers vs. serverless/edge).
+
+**Decision.** Ship `@airnauts/comments-notifier-email`: `emailNotifier({ transport, to, from, … })`
+implements the `Notifier` port and delegates delivery to an injected `EmailTransport` port. Two
+built-in transports as subpath exports — `/smtp` (nodemailer, optional peer dep) and `/resend`
+(fetch) — keep the package root dependency-free; any provider can be added by implementing the
+port. Recipients are a static list (single → `to`; multiple → `bcc` for privacy). Bodies are
+HTML + plain-text multipart with HTML-escaped user content.
+
+**Consequences.** `nodemailer` is CJS/Node-only — the SMTP transport will not run on edge; Resend
+will. Under ADR-0029 (dispatch awaited in-request to survive serverless freeze), the SMTP
+connection handshake adds more comment-POST latency than the HTTP-based Slack/Resend channels.
+Dynamic/participant recipients, mention events, and host-overridable templates are deferred; the
+ports accommodate them later with no core change.

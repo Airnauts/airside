@@ -9,6 +9,7 @@
       "@airnauts/comments-client",
       "@airnauts/comments-core",
       "@airnauts/comments-next",
+      "@airnauts/comments-notifier-email",
       "@airnauts/comments-notifier-slack",
       "@airnauts/comments-server",
       "@airnauts/comments-storage-fs",
