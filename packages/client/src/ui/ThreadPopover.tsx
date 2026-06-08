@@ -52,6 +52,9 @@ export function ThreadPopover({
           align="center"
           sideOffset={8}
           collisionPadding={8}
+          // Let the reply Composer's own (deferred) autofocus take focus instead of Radix
+          // focusing the first button on open — so clicking a pin lands the caret in the reply input.
+          onOpenAutoFocus={(e) => e.preventDefault()}
           // The pin popover dismisses on host-page clicks, not on comments-UI clicks: keep it open
           // when the interaction lands anywhere inside the widget root (the sidebar panel, the
           // launcher, another popover). Switching to a different pin still closes it via the

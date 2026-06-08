@@ -16,7 +16,9 @@ export type ComposerProps = {
   upload: (file: File) => Promise<Attachment>
   /** When set, renders a Cancel button left of Send (used by the new-comment draft). */
   onCancel?: () => void
-  /** Focus the text input on mount. */
+  /** Focus the text input on mount (deferred a frame to win against Radix focus scopes).
+   *  Defaults to true — every composer placement (popover reply, sidebar reply, new-thread
+   *  draft) grabs the input so the user can type immediately. */
   autoFocus?: boolean
   /** Controlled text. When provided, the parent owns the draft text (shared-draft sync). */
   value?: string
@@ -36,7 +38,7 @@ export function Composer({
   onSubmit,
   upload,
   onCancel,
-  autoFocus,
+  autoFocus = true,
   value,
   onValueChange,
   attachment,

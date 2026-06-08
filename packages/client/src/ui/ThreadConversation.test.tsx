@@ -105,7 +105,7 @@ describe('ThreadConversation reply focus', () => {
     await waitFor(() => expect(document.activeElement).toBe(input))
   })
 
-  it('does not steal focus in the popover variant', async () => {
+  it('focuses the reply input on mount in the popover too (clicking a pin)', async () => {
     render(
       <ThreadsProvider client={mockClient}>
         <DraftsProvider>
@@ -114,9 +114,8 @@ describe('ThreadConversation reply focus', () => {
       </ThreadsProvider>,
     )
     const input = await screen.findByPlaceholderText(/reply/i)
-    // Give the deferred focus a frame to (not) fire.
-    await new Promise((r) => requestAnimationFrame(r))
-    expect(document.activeElement).not.toBe(input)
+    // Focus is deferred to the next frame (so it wins against Radix focus scopes).
+    await waitFor(() => expect(document.activeElement).toBe(input))
   })
 })
 

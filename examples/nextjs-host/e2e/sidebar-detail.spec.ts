@@ -62,6 +62,26 @@ test.describe('sidebar master–detail', () => {
     await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
   })
 
+  test('clicking a pin opens the popover with the reply input focused', async ({ page }) => {
+    const ns = 'pin-focus'
+    const body = 'Pin focus body'
+
+    await activate(page, '/pricing', ns)
+    await login(page)
+    await placeElementPin(page, 'Starter', body)
+
+    // Reload so the popover starts closed, then open it by clicking the pin.
+    await activate(page, '/pricing', ns)
+    await login(page)
+    await page.getByTestId('comments-pin').first().click()
+    await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
+    // The popover's reply input is focused on open (deferred-rAF autofocus beats Radix's
+    // open-autofocus, which we prevent on the popover content).
+    await expect(
+      page.getByTestId('comments-pin-popover').getByPlaceholder(/reply/i),
+    ).toBeFocused()
+  })
+
   test('cross-page row click navigates and restores the detail view', async ({ page }) => {
     const ns = 'sidebar-cross'
     const body = 'Cross-page sidebar detail body'
