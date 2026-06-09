@@ -1,7 +1,7 @@
 import type { ThreadId } from '@airnauts/comments-core'
 import type { NotificationEvent } from '@airnauts/comments-server'
 import { describe, expect, it } from 'vitest'
-import { type EmailMessage, type EmailTransport, emailNotifier } from './index'
+import { type EmailMessage, type EmailTransport, emailNotifications } from './index'
 
 // A reply with one prior participant already active in the thread.
 const event: NotificationEvent = {
@@ -29,14 +29,18 @@ function fakeTransport(): EmailTransport & { sent: EmailMessage[] } {
   }
 }
 
-describe('emailNotifier', () => {
-  it('exposes a stable name', () => {
-    expect(emailNotifier({ transport: fakeTransport(), from: 'c@d.com' }).name).toBe('email')
+describe('emailNotifications', () => {
+  it('returns a single notification extension named "email"', () => {
+    const extensions = emailNotifications({ transport: fakeTransport(), from: 'c@d.com' })
+    expect(extensions).toHaveLength(1)
+    expect(extensions[0]!.kind).toBe('notification')
+    expect(extensions[0]!.name).toBe('email')
+    expect(typeof extensions[0]!.onEvent).toBe('function')
   })
 
   it('sends to the thread participants (server already excluded the author)', async () => {
     const transport = fakeTransport()
-    await emailNotifier({ transport, from: 'noreply@d.com' }).notify({
+    await emailNotifications({ transport, from: 'noreply@d.com' })[0]!.onEvent({
       ...event,
       participants: ['solo@b.com'],
     })
@@ -48,7 +52,7 @@ describe('emailNotifier', () => {
 
   it('bcc-fans multiple participants and puts the sender in "to"', async () => {
     const transport = fakeTransport()
-    await emailNotifier({ transport, from: 'noreply@d.com' }).notify({
+    await emailNotifications({ transport, from: 'noreply@d.com' })[0]!.onEvent({
       ...event,
       participants: ['x@b.com', 'y@b.com'],
     })
@@ -59,13 +63,18 @@ describe('emailNotifier', () => {
 
   it('sends nothing when the thread has no other participants', async () => {
     const transport = fakeTransport()
-    await emailNotifier({ transport, from: 'c@d.com' }).notify({ ...event, participants: [] })
+    await emailNotifications({ transport, from: 'c@d.com' })[0]!.onEvent({
+      ...event,
+      participants: [],
+    })
     expect(transport.sent).toHaveLength(0)
   })
 
   it('passes the rendered subject/html/text through', async () => {
     const transport = fakeTransport()
-    await emailNotifier({ transport, from: 'c@d.com', subjectPrefix: '[Acme] ' }).notify(event)
+    await emailNotifications({ transport, from: 'c@d.com', subjectPrefix: '[Acme] ' })[0]!.onEvent(
+      event,
+    )
     const msg = transport.sent[0]!
     expect(msg.subject).toBe('[Acme] New reply on About')
     expect(msg.html).toContain('href="https://example.com/about?comments-thread=t_1"')
@@ -74,13 +83,15 @@ describe('emailNotifier', () => {
 
   it('sets reply-to only when provided', async () => {
     const withReply = fakeTransport()
-    await emailNotifier({ transport: withReply, from: 'c@d.com', replyTo: 'team@d.com' }).notify(
-      event,
-    )
+    await emailNotifications({
+      transport: withReply,
+      from: 'c@d.com',
+      replyTo: 'team@d.com',
+    })[0]!.onEvent(event)
     expect(withReply.sent[0]!.replyTo).toBe('team@d.com')
 
     const without = fakeTransport()
-    await emailNotifier({ transport: without, from: 'c@d.com' }).notify(event)
+    await emailNotifications({ transport: without, from: 'c@d.com' })[0]!.onEvent(event)
     expect(without.sent[0]!.replyTo).toBeUndefined()
   })
 
@@ -91,8 +102,8 @@ describe('emailNotifier', () => {
         throw new Error('smtp 550')
       },
     }
-    await expect(emailNotifier({ transport: boom, from: 'c@d.com' }).notify(event)).rejects.toThrow(
-      'smtp 550',
-    )
+    await expect(
+      emailNotifications({ transport: boom, from: 'c@d.com' })[0]!.onEvent(event),
+    ).rejects.toThrow('smtp 550')
   })
 })
