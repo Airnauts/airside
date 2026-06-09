@@ -17,6 +17,14 @@ export type Controller = {
    */
   patchStatus(id: string, status: ThreadStatus): void
   /**
+   * Run a server-evaluated thread action (e.g. "create Jira issue"). Marks the action in-flight so
+   * the toolbar can disable/spin, calls the API, and on success replaces the cached detail with the
+   * returned {@link ThreadView} — refreshing BOTH `actions` and `externalLinks` (a now-unavailable
+   * action disappears, a new link appears). Notifies the status listener (status may have changed)
+   * and returns `true`; on failure clears the flag and returns `false` (never throws — the UI toasts).
+   */
+  runAction(id: string, actionId: string): Promise<boolean>
+  /**
    * MarkerLayer registers the live anchor-runtime here so status changes also patch its cached
    * item list. Without this, the runtime re-emits stale 'open' placements on the next reposition/
    * mutation, clobbering the optimistic update (the pin would revert until a full reload).
@@ -40,7 +48,7 @@ export type Controller = {
 export function createController(
   dispatch: (a: Action) => void,
   deps: {
-    client: Pick<ApiClient, 'getThread' | 'setThreadStatus'>
+    client: Pick<ApiClient, 'getThread' | 'setThreadStatus' | 'runThreadAction'>
     isCached: (id: string) => boolean
     isLoading: (id: string) => boolean
   },
@@ -90,6 +98,19 @@ export function createController(
         return true
       } catch {
         patchStatus(id, prev)
+        return false
+      }
+    },
+    async runAction(id, actionId) {
+      dispatch({ type: 'ACTION_RUNNING', id, actionId })
+      try {
+        const view = await deps.client.runThreadAction(id, actionId)
+        dispatch({ type: 'DETAIL_LOADED', id, thread: view }) // replaces actions + externalLinks
+        dispatch({ type: 'ACTION_DONE', id })
+        statusListener?.(id, view.status) // keep panel in sync if status changed
+        return true
+      } catch {
+        dispatch({ type: 'ACTION_DONE', id })
         return false
       }
     },

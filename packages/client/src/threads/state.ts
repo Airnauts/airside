@@ -1,5 +1,11 @@
 // packages/client/src/threads/state.ts
-import type { Anchor, Comment, Thread, ThreadListItem, ThreadStatus } from '@airnauts/comments-core'
+import type {
+  Anchor,
+  Comment,
+  ThreadListItem,
+  ThreadStatus,
+  ThreadView,
+} from '@airnauts/comments-core'
 import type { Box, XY } from '../positioning/coords'
 
 /** A matched thread plus its on-screen geometry — what the runtime emits to the store. */
@@ -13,9 +19,11 @@ export type ThreadsState = {
   placementsById: Record<string, { pin: XY; highlight: Box[] }>
   order: string[]
   openId: string | null
-  detailById: Record<string, Thread>
+  detailById: Record<string, ThreadView>
   loadingDetail: Record<string, boolean>
   detailError: Record<string, boolean>
+  /** Thread id → the action id currently running on it (in-flight), absent when idle. */
+  runningActionById: Record<string, string | null>
   draft: Draft | null
   showResolved: boolean
   /** Set when an open thread orphaned out of an ingest; the view toasts + clears it. */
@@ -34,6 +42,7 @@ export const initialState: ThreadsState = {
   detailById: {},
   loadingDetail: {},
   detailError: {},
+  runningActionById: {},
   draft: null,
   showResolved: false,
   lostOpenId: null,
@@ -50,8 +59,10 @@ export type Action =
   | { type: 'CLEAR_LOST_OPEN' }
   | { type: 'SET_SHOW_RESOLVED'; value: boolean }
   | { type: 'DETAIL_LOADING'; id: string }
-  | { type: 'DETAIL_LOADED'; id: string; thread: Thread }
+  | { type: 'DETAIL_LOADED'; id: string; thread: ThreadView }
   | { type: 'DETAIL_ERROR'; id: string }
+  | { type: 'ACTION_RUNNING'; id: string; actionId: string }
+  | { type: 'ACTION_DONE'; id: string }
   | { type: 'ADD_OPTIMISTIC_COMMENT'; id: string; comment: Comment }
   | { type: 'REPLACE_OPTIMISTIC_COMMENT'; id: string; tempId: string; comment: Comment }
   | { type: 'REMOVE_OPTIMISTIC_COMMENT'; id: string; tempId: string }
@@ -61,7 +72,11 @@ export type Action =
   | { type: 'CLEAR_FOCUS' }
   | { type: 'CLEAR_PENDING_FOCUS' }
 
-function mapDetail(state: ThreadsState, id: string, fn: (t: Thread) => Thread): ThreadsState {
+function mapDetail(
+  state: ThreadsState,
+  id: string,
+  fn: (t: ThreadView) => ThreadView,
+): ThreadsState {
   const t = state.detailById[id]
   // Safe no-op: optimistic actions are only dispatched from an open thread, whose detail is always loaded.
   if (!t) return state
@@ -133,6 +148,15 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
         loadingDetail: loading,
         detailError: { ...state.detailError, [action.id]: true },
       }
+    }
+    case 'ACTION_RUNNING':
+      return {
+        ...state,
+        runningActionById: { ...state.runningActionById, [action.id]: action.actionId },
+      }
+    case 'ACTION_DONE': {
+      const { [action.id]: _r, ...running } = state.runningActionById
+      return { ...state, runningActionById: running }
     }
     case 'ADD_OPTIMISTIC_COMMENT':
       return mapDetail(state, action.id, (t) => ({

@@ -1,6 +1,6 @@
 // packages/client/src/threads/useThreads.ts
 
-import type { Thread } from '@airnauts/comments-core'
+import type { ExternalLink, Thread, ThreadActionDescriptor } from '@airnauts/comments-core'
 import { useContext } from 'react'
 import { type PlacedThread, visiblePlacements } from './state'
 import { ThreadsContext } from './ThreadsProvider'
@@ -63,6 +63,25 @@ export function useThreadDetail(id: string | null): {
     detail: id ? (state.detailById[id] ?? null) : null,
     loading: id ? Boolean(state.loadingDetail[id]) : false,
     error: id ? Boolean(state.detailError[id]) : false,
+  }
+}
+
+/**
+ * Server-evaluated actions + persisted external links for a thread, plus the id of any action
+ * currently running on it. Read from the per-id detail cache (a {@link ThreadView}) and the
+ * in-flight map; defaults are empty/null when the thread isn't loaded yet.
+ */
+export function useThreadActions(id: string | null): {
+  actions: ThreadActionDescriptor[]
+  externalLinks: ExternalLink[]
+  runningActionId: string | null
+} {
+  const { state } = useCtx()
+  const detail = id ? state.detailById[id] : undefined
+  return {
+    actions: detail?.actions ?? [],
+    externalLinks: detail?.externalLinks ?? [],
+    runningActionId: id ? (state.runningActionById[id] ?? null) : null,
   }
 }
 

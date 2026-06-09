@@ -1,5 +1,5 @@
 // packages/client/src/threads/state.test.ts
-import type { Comment, Thread, ThreadListItem } from '@airnauts/comments-core'
+import type { Comment, ThreadListItem, ThreadView } from '@airnauts/comments-core'
 import { describe, expect, it } from 'vitest'
 import type { PlacedThread } from './state'
 import { initialState, reducer, visiblePlacements } from './state'
@@ -21,7 +21,8 @@ const placed = (id: string, status: 'open' | 'resolved' = 'open'): PlacedThread 
   highlight: [],
 })
 
-const thread = (id: string): Thread => ({ id, status: 'open', comments: [] }) as unknown as Thread
+const thread = (id: string): ThreadView =>
+  ({ id, status: 'open', comments: [], actions: [] }) as unknown as ThreadView
 
 const comment = (id: string): Comment =>
   ({
@@ -145,6 +146,36 @@ describe('threads reducer', () => {
   it('SET_SHOW_RESOLVED toggles the flag', () => {
     const s = reducer(initialState, { type: 'SET_SHOW_RESOLVED', value: true })
     expect(s.showResolved).toBe(true)
+  })
+
+  it('ACTION_RUNNING sets the in-flight action id; ACTION_DONE clears it', () => {
+    let s = reducer(initialState, { type: 'ACTION_RUNNING', id: 'a', actionId: 'jira.createIssue' })
+    expect(s.runningActionById.a).toBe('jira.createIssue')
+    s = reducer(s, { type: 'ACTION_DONE', id: 'a' })
+    expect(s.runningActionById.a).toBeUndefined()
+  })
+
+  it('DETAIL_LOADED carries actions and externalLinks into the cache', () => {
+    const view = {
+      id: 'a',
+      status: 'open',
+      comments: [],
+      actions: [
+        { id: 'jira.createIssue', provider: 'jira', label: 'Create issue', slot: 'thread-toolbar' },
+      ],
+      externalLinks: [
+        {
+          provider: 'jira',
+          externalId: 'PROJ-1',
+          label: 'PROJ-1',
+          url: 'https://j/1',
+          createdAt: 'x',
+        },
+      ],
+    } as unknown as ThreadView
+    const s = reducer(initialState, { type: 'DETAIL_LOADED', id: 'a', thread: view })
+    expect(s.detailById.a.actions.map((x) => x.id)).toEqual(['jira.createIssue'])
+    expect(s.detailById.a.externalLinks?.map((x) => x.externalId)).toEqual(['PROJ-1'])
   })
 })
 
