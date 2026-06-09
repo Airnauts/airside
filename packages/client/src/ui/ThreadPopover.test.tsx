@@ -62,6 +62,7 @@ function client(over: Record<string, unknown> = {}) {
       createdAt: new Date().toISOString(),
     }),
     setThreadStatus: vi.fn().mockResolvedValue({ id: 'a', status: 'resolved' }),
+    runThreadAction: vi.fn().mockResolvedValue({ id: 'a', status: 'open', comments: [] }),
     upload: vi.fn(),
     ...over,
   } as never
@@ -362,5 +363,74 @@ describe('ThreadPopover', () => {
     expect(screen.getByTestId('comments-pin')).toHaveTextContent('✓')
     // ...and the popover stays open with a Resolved header.
     expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument()
+  })
+
+  it('renders a thread-toolbar action, runs it, and shows the resulting external link', async () => {
+    const runThreadAction = vi.fn().mockResolvedValue({
+      id: 'a',
+      status: 'open',
+      comments: [
+        {
+          id: 'c1',
+          author: { email: 'a@b.c', name: 'Ann' },
+          text: 'first',
+          attachments: [],
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      actions: [],
+      externalLinks: [
+        {
+          provider: 'jira',
+          externalId: '10042',
+          key: 'WEB-123',
+          label: 'Jira WEB-123',
+          url: 'https://co.atlassian.net/browse/WEB-123',
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    })
+    const c = client({
+      getThread: vi.fn().mockResolvedValue({
+        id: 'a',
+        status: 'open',
+        comments: [
+          {
+            id: 'c1',
+            author: { email: 'a@b.c', name: 'Ann' },
+            text: 'first',
+            attachments: [],
+            createdAt: new Date().toISOString(),
+          },
+        ],
+        externalLinks: [],
+        actions: [
+          {
+            id: 'jira.createIssue',
+            provider: 'jira',
+            label: 'Create Jira issue',
+            slot: 'thread-toolbar',
+            presentation: { style: 'primary' },
+          },
+        ],
+      }),
+      runThreadAction,
+    })
+    render(
+      <ThreadsProvider client={c}>
+        <Harness client={c} />
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByText('open-a'))
+    // The toolbar action surfaces once the thread loads.
+    const runBtn = await screen.findByRole('button', { name: /create jira issue/i })
+    fireEvent.click(runBtn)
+    await waitFor(() => expect(runThreadAction).toHaveBeenCalledWith('a', 'jira.createIssue'))
+    // After the action resolves: the button is gone (actions: []) and the new external link shows.
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /create jira issue/i })).not.toBeInTheDocument(),
+    )
+    const link = await screen.findByRole('link', { name: /jira web-123/i })
+    expect(link).toHaveAttribute('href', 'https://co.atlassian.net/browse/WEB-123')
   })
 })

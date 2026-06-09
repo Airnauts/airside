@@ -10,10 +10,17 @@ import type {
 import type { ApiClient } from '../api/client'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
-import { useController, useDispatch, useThreadDetail } from '../threads/useThreads'
+import {
+  useController,
+  useDispatch,
+  useThreadActions,
+  useThreadDetail,
+} from '../threads/useThreads'
 import { Button } from './Button'
 import { CommentList } from './CommentList'
 import { Composer, type ComposerSubmit } from './Composer'
+import { ThreadActions } from './ThreadActions'
+import { ThreadMetadata } from './ThreadMetadata'
 import { useToast } from './toast'
 
 let nextTempId = 0
@@ -49,6 +56,7 @@ export function ThreadConversation({
   // the pin popover nulls openId on an outside interaction. (Equivalent for the popover: item.id ===
   // openId while it's open.)
   const { detail, loading, error } = useThreadDetail(id)
+  const { actions, externalLinks } = useThreadActions(id)
   const toast = useToast()
   const resolved = (detail?.status ?? item.status) === 'resolved'
 
@@ -126,6 +134,7 @@ export function ThreadConversation({
             : `Open · ${item.commentCount} ${item.commentCount === 1 ? 'comment' : 'comments'}`}
         </span>
         <div className="cmnt:flex cmnt:items-center cmnt:gap-1.5 cmnt:text-gray-500">
+          <ThreadActions id={id} actions={actions} controller={controller} />
           <Button
             variant="outline"
             size="sm"
@@ -146,6 +155,11 @@ export function ThreadConversation({
           )}
         </div>
       </div>
+      {externalLinks.length > 0 && (
+        <div className="cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-[#f1f3f5]">
+          <ThreadMetadata links={externalLinks} />
+        </div>
+      )}
       {variant === 'sidebar' && (
         <div className="cmnt:mx-3 cmnt:mt-2 cmnt:px-3 cmnt:py-2 cmnt:rounded-lg cmnt:bg-gray-50 cmnt:border cmnt:border-gray-200">
           <div className="cmnt:text-[13px] cmnt:font-semibold cmnt:text-gray-900 cmnt:truncate">
