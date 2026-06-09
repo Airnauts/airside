@@ -8,6 +8,7 @@
       "@airnauts/comments-adapter-mongo",
       "@airnauts/comments-client",
       "@airnauts/comments-core",
+      "@airnauts/comments-integration-jira",
       "@airnauts/comments-next",
       "@airnauts/comments-notifier-email",
       "@airnauts/comments-notifier-slack",
