@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ERROR_CODES } from './errors'
 import { operations } from './operations'
+import { ThreadActionParam } from './requests'
 
 const EXPECTED_IDS = [
   'createThread',
@@ -10,10 +11,11 @@ const EXPECTED_IDS = [
   'setThreadStatus',
   'refreshAnchor',
   'uploadAttachment',
+  'runThreadAction',
 ]
 
 describe('operation table', () => {
-  it('contains exactly the seven frozen data operations', () => {
+  it('contains exactly the eight frozen data operations', () => {
     expect(operations.map((o) => o.operationId).sort()).toEqual([...EXPECTED_IDS].sort())
   })
   it('has a unique method+path per operation', () => {
@@ -32,5 +34,22 @@ describe('operation table', () => {
       expect(op.success.status).toBeGreaterThanOrEqual(200)
       expect(op.success.schema).toBeDefined()
     }
+  })
+})
+
+describe('runThreadAction operation', () => {
+  it('is registered with the generic action path', () => {
+    const op = operations.find((o) => o.operationId === 'runThreadAction')
+    expect(op).toBeDefined()
+    expect(op?.method).toBe('POST')
+    expect(op?.path).toBe('/threads/:id/actions/:actionId')
+    expect(op?.errors).toEqual(expect.arrayContaining(['NOT_FOUND', 'CONFLICT']))
+  })
+
+  it('ThreadActionParam parses id and actionId', () => {
+    expect(ThreadActionParam.parse({ id: 't1', actionId: 'jira.createIssue' })).toEqual({
+      id: 't1',
+      actionId: 'jira.createIssue',
+    })
   })
 })

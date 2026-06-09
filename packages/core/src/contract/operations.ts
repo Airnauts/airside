@@ -1,6 +1,6 @@
 import type { z } from 'zod'
 import { Attachment, Comment } from '../schemas/comment'
-import { Thread, ThreadListItem } from '../schemas/thread'
+import { ThreadListItemView, ThreadView } from '../schemas/thread'
 import type { ErrorCode } from './errors'
 import {
   AddCommentBody,
@@ -8,6 +8,7 @@ import {
   ListThreadsQuery,
   RefreshAnchorBody,
   SetThreadStatusBody,
+  ThreadActionParam,
   ThreadIdParam,
 } from './requests'
 import { ThreadListResponse } from './responses'
@@ -33,7 +34,7 @@ export const operations: Operation[] = [
     path: '/threads',
     summary: 'Create a thread with its first comment',
     body: CreateThreadBody,
-    success: { status: 201, schema: Thread },
+    success: { status: 201, schema: ThreadView },
     errors: ['VALIDATION_FAILED', ...AUTH_ERRORS],
   },
   {
@@ -51,7 +52,7 @@ export const operations: Operation[] = [
     path: '/threads/:id',
     summary: 'Get a single thread with its comments',
     params: ThreadIdParam,
-    success: { status: 200, schema: Thread },
+    success: { status: 200, schema: ThreadView },
     errors: ['NOT_FOUND', ...AUTH_ERRORS],
   },
   {
@@ -71,7 +72,7 @@ export const operations: Operation[] = [
     summary: 'Resolve or reopen a thread',
     params: ThreadIdParam,
     body: SetThreadStatusBody,
-    success: { status: 200, schema: Thread },
+    success: { status: 200, schema: ThreadView },
     errors: ['VALIDATION_FAILED', 'NOT_FOUND', 'CONFLICT', ...AUTH_ERRORS],
   },
   {
@@ -81,8 +82,17 @@ export const operations: Operation[] = [
     summary: 'Report a re-match result (self-heal the stored anchor)',
     params: ThreadIdParam,
     body: RefreshAnchorBody,
-    success: { status: 200, schema: ThreadListItem },
+    success: { status: 200, schema: ThreadListItemView },
     errors: ['VALIDATION_FAILED', 'NOT_FOUND', ...AUTH_ERRORS],
+  },
+  {
+    operationId: 'runThreadAction',
+    method: 'POST',
+    path: '/threads/:id/actions/:actionId',
+    summary: 'Run a registered manual thread action (e.g. create a Jira issue)',
+    params: ThreadActionParam,
+    success: { status: 200, schema: ThreadView },
+    errors: ['VALIDATION_FAILED', 'NOT_FOUND', 'CONFLICT', 'INTEGRATION_ERROR', ...AUTH_ERRORS],
   },
   {
     operationId: 'uploadAttachment',

@@ -9,6 +9,7 @@ export const ERROR_CODES = [
   'UPLOAD_TOO_LARGE',
   'RATE_LIMITED',
   'INTERNAL',
+  'INTEGRATION_ERROR',
 ] as const
 
 export const ErrorCode = z.enum(ERROR_CODES)
@@ -34,4 +35,5 @@ export const ERROR_STATUS: Record<ErrorCode, number> = {
   UPLOAD_TOO_LARGE: 413,
   RATE_LIMITED: 429,
   INTERNAL: 500,
+  INTEGRATION_ERROR: 502,
 }

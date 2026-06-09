@@ -43,6 +43,12 @@ export type ListThreadsQuery = z.infer<typeof ListThreadsQuery>
 export const ThreadIdParam = z.object({ id: ThreadId })
 export type ThreadIdParam = z.infer<typeof ThreadIdParam>
 
+export const ThreadActionParam = z.object({
+  id: ThreadId,
+  actionId: z.string().min(1),
+})
+export type ThreadActionParam = z.infer<typeof ThreadActionParam>
+
 export const AddCommentBody = z
   .object({
     text: z.string(),

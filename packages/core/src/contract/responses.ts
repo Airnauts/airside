@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { ThreadListItem } from '../schemas/thread'
+import { ThreadListItemView } from '../schemas/thread'
 
 export const ThreadListResponse = z
   .object({
-    threads: z.array(ThreadListItem),
+    threads: z.array(ThreadListItemView),
     nextCursor: z.string().nullable(),
   })
   .meta({ id: 'ThreadListResponse' })
