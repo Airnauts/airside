@@ -49,7 +49,21 @@ describe('smtpTransport', () => {
       secure: true,
       auth: { user: 'u', pass: 'p' },
       pool: undefined,
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 10_000,
     })
+  })
+
+  it('applies a custom timeout to all three connection caps', () => {
+    smtpTransport({ host: 'h', port: 587, auth: { user: 'u', pass: 'p' }, timeout: 2000 })
+    expect(createTransport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        connectionTimeout: 2000,
+        greetingTimeout: 2000,
+        socketTimeout: 2000,
+      }),
+    )
   })
 
   it('maps an EmailMessage onto sendMail', async () => {

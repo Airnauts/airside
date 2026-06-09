@@ -1,8 +1,16 @@
 # @airnauts/comments-notifier-email
 
 Email notifier for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool)
-server. Emails a fixed recipient list whenever a reviewer creates a thread or replies, via a
-pluggable transport.
+server. When a reviewer replies on a thread, it emails the **people already active in that
+thread** (the other comment authors), via a pluggable transport.
+
+## Who gets notified
+
+Recipients are derived per event from the thread itself — there is no recipient list to
+configure. On a reply (`comment.added`) the email goes to every other person who has commented on
+the thread, **excluding** the author of the reply (you are never emailed about your own comment).
+A brand-new thread (`thread.created`) has no other participants yet, so **no email is sent** until
+someone replies.
 
 ## Transports
 
@@ -29,7 +37,6 @@ createCommentsServer({
   notifiers: [
     emailNotifier({
       transport: resendTransport({ apiKey: process.env.RESEND_API_KEY! }),
-      to: ['design-team@acme.com'],
       from: 'Comments <noreply@acme.com>',
     }),
   ],
@@ -48,11 +55,14 @@ emailNotifier({
     port: 587,
     auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASS! },
   }),
-  to: ['a@acme.com', 'b@acme.com'], // >1 → sent via bcc
   from: 'noreply@acme.com',
 })
 ```
 
-A notification failure never breaks the comment write. With more than one recipient the list is
-sent via `bcc` so reviewers don't see each other's addresses. The thread deep-link in each email
-is built by the server (`event.threadUrl`).
+`emailNotifier` also takes optional `replyTo` and `subjectPrefix`. The SMTP transport accepts an
+optional `timeout` (ms, default `10000`) capping connection/greeting/socket so a hung server can't
+stall the comment write.
+
+A notification failure never breaks the comment write. When a thread has more than one other
+participant the addresses go in `bcc` so participants don't see each other's emails. The thread
+deep-link in each email is built by the server (`event.threadUrl`).

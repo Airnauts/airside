@@ -10,6 +10,7 @@ const event: NotificationEvent = {
   pageUrl: 'https://example.com/about',
   pageTitle: 'About',
   threadUrl: 'https://example.com/about?comments-thread=t_1',
+  participants: [],
   text: 'Looks off here',
   author: { email: 'alice@example.com', name: 'Alice' },
   createdAt: '2026-06-03T10:00:00.000Z',
@@ -36,6 +37,13 @@ describe('formatEmail', () => {
     expect(formatEmail(event, { subjectPrefix: '[Acme] ' }).subject).toBe(
       '[Acme] New comment on About',
     )
+  })
+
+  it('folds CR/LF in the subject so a crafted pageTitle cannot inject headers', () => {
+    const out = formatEmail({ ...event, pageTitle: 'About\r\nBcc: evil@x.com' })
+    expect(out.subject).toBe('New comment on About Bcc: evil@x.com')
+    expect(out.subject).not.toContain('\n')
+    expect(out.subject).not.toContain('\r')
   })
 
   it('falls back to the page URL when there is no title', () => {
