@@ -68,4 +68,20 @@ describe('createApiClient', () => {
     expect(err).toBeInstanceOf(ApiError)
     expect(err).toMatchObject({ status: 502, code: 'UNKNOWN' })
   })
+
+  it('runThreadAction issues POST to /threads/:id/actions/:actionId and returns ThreadView', async () => {
+    const calls: { url: string; init?: RequestInit }[] = []
+    const threadView = { id: 't1', comments: [], actions: [] }
+    const fakeFetch: FetchLike = async (url, init) => {
+      calls.push({ url, init })
+      return jsonResponse(threadView)
+    }
+    const client = createApiClient({ endpoint: 'http://x/api/', key: 'k', fetch: fakeFetch })
+    const result = await client.runThreadAction('t1', 'jira.createIssue')
+    expect(calls[0]?.url).toBe('http://x/api/threads/t1/actions/jira.createIssue')
+    expect(calls[0]?.init?.method).toBe('POST')
+    const headers = calls[0]?.init?.headers as Record<string, string>
+    expect(headers['x-comments-key']).toBe('k')
+    expect(result).toEqual(threadView)
+  })
 })

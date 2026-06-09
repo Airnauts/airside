@@ -6,10 +6,10 @@ import {
   KEY_HEADER_NAME,
   type RefreshAnchorBody,
   type SetThreadStatusBody,
-  type Thread,
   type ThreadListItem,
   type ThreadListResponse,
   type ThreadStatus,
+  type ThreadView,
 } from '@airnauts/comments-core'
 import { ApiError } from './errors'
 
@@ -29,13 +29,14 @@ export type ListParams = {
 }
 
 export interface ApiClient {
-  createThread(body: CreateThreadBody): Promise<Thread>
+  createThread(body: CreateThreadBody): Promise<ThreadView>
   listThreads(params?: ListParams): Promise<ThreadListResponse>
-  getThread(id: string): Promise<Thread>
+  getThread(id: string): Promise<ThreadView>
   addComment(id: string, body: AddCommentBody): Promise<Comment>
-  setThreadStatus(id: string, body: SetThreadStatusBody): Promise<Thread>
+  setThreadStatus(id: string, body: SetThreadStatusBody): Promise<ThreadView>
   refreshAnchor(id: string, body: RefreshAnchorBody): Promise<ThreadListItem>
   upload(file: File): Promise<Attachment>
+  runThreadAction(id: string, actionId: string): Promise<ThreadView>
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -92,12 +93,13 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
   const id = (raw: string) => encodeURIComponent(raw)
 
   return {
-    createThread: (body) => request<Thread>('POST', '/threads', body),
+    createThread: (body) => request<ThreadView>('POST', '/threads', body),
     listThreads: (params) => request<ThreadListResponse>('GET', `/threads${qs(params)}`),
-    getThread: (threadId) => request<Thread>('GET', `/threads/${id(threadId)}`),
+    getThread: (threadId) => request<ThreadView>('GET', `/threads/${id(threadId)}`),
     addComment: (threadId, body) =>
       request<Comment>('POST', `/threads/${id(threadId)}/comments`, body),
-    setThreadStatus: (threadId, body) => request<Thread>('PATCH', `/threads/${id(threadId)}`, body),
+    setThreadStatus: (threadId, body) =>
+      request<ThreadView>('PATCH', `/threads/${id(threadId)}`, body),
     refreshAnchor: (threadId, body) =>
       request<ThreadListItem>('PATCH', `/threads/${id(threadId)}/anchor`, body),
     upload: (file) => {
@@ -105,5 +107,7 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       fd.append('file', file)
       return request<Attachment>('POST', '/uploads', fd, true)
     },
+    runThreadAction: (threadId, actionId) =>
+      request<ThreadView>('POST', `/threads/${id(threadId)}/actions/${id(actionId)}`),
   }
 }
