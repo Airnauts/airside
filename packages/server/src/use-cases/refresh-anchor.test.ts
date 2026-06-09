@@ -4,9 +4,11 @@ import { makeNewThread } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { makeCtx } from '../ctx'
 import { NotFoundError } from '../errors'
+import { buildExtensionRegistry } from '../extensions/registry'
 import { refreshAnchor } from './refresh-anchor'
 
 const ctx = (now: string) => makeCtx({ projectId: 'proj_x', now: () => new Date(now) })
+const registry = buildExtensionRegistry([])
 
 describe('refreshAnchor use-case', () => {
   it('flips anchorState and persists a new fingerprint', async () => {
@@ -28,10 +30,11 @@ describe('refreshAnchor use-case', () => {
           },
         },
       },
-      { repo },
+      { repo, registry },
     )
     expect(out.anchorState).toBe('orphaned')
     expect(out.updatedAt).toBe('2026-06-01T00:00:00.000Z')
+    expect(out.actions).toEqual([])
   })
 
   it('throws NotFoundError when the thread does not exist', async () => {
@@ -44,7 +47,7 @@ describe('refreshAnchor use-case', () => {
           query: undefined,
           body: { anchorState: 'anchored' },
         },
-        { repo },
+        { repo, registry },
       ),
     ).rejects.toBeInstanceOf(NotFoundError)
   })

@@ -4,9 +4,11 @@ import { makeNewThread } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { makeCtx } from '../ctx'
 import { NotFoundError } from '../errors'
+import { buildExtensionRegistry } from '../extensions/registry'
 import { setThreadStatus } from './set-thread-status'
 
 const ctx = (now: string) => makeCtx({ projectId: 'proj_x', now: () => new Date(now) })
+const registry = buildExtensionRegistry([])
 
 describe('setThreadStatus use-case', () => {
   it('resolves an open thread', async () => {
@@ -19,10 +21,11 @@ describe('setThreadStatus use-case', () => {
         query: undefined,
         body: { status: 'resolved' },
       },
-      { repo },
+      { repo, registry },
     )
     expect(out.status).toBe('resolved')
     expect(out.updatedAt).toBe('2026-06-01T00:00:00.000Z')
+    expect(out.actions).toEqual([])
   })
 
   it('is a no-op when status already matches', async () => {
@@ -37,7 +40,7 @@ describe('setThreadStatus use-case', () => {
         query: undefined,
         body: { status: 'open' },
       },
-      { repo },
+      { repo, registry },
     )
     expect(out.status).toBe('open')
     expect(out.updatedAt).toBe('2026-06-01T00:00:00.000Z')
@@ -53,7 +56,7 @@ describe('setThreadStatus use-case', () => {
           query: undefined,
           body: { status: 'resolved' },
         },
-        { repo },
+        { repo, registry },
       ),
     ).rejects.toBeInstanceOf(NotFoundError)
   })

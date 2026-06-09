@@ -2,26 +2,26 @@ import type {
   RefreshAnchorBody,
   ThreadId,
   ThreadIdParam,
-  ThreadListItem,
+  ThreadListItemView,
 } from '@airnauts/comments-core'
 import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
+import type { ExtensionRegistry } from '../extensions/registry'
 import type { Repository } from '../repository/types'
+import { toThreadListItemView } from './view'
 
-export type RefreshAnchorDeps = { repo: Repository }
+export type RefreshAnchorDeps = { repo: Repository; registry: ExtensionRegistry }
 
 export async function refreshAnchor(
   input: { ctx: Ctx; params: ThreadIdParam; query: undefined; body: RefreshAnchorBody },
   deps: RefreshAnchorDeps,
-): Promise<ThreadListItem> {
+): Promise<ThreadListItemView> {
   const { ctx, params, body } = input
-  const existing = await deps.repo.getThread(
-    { projectId: ctx.projectId, env: ctx.env },
-    params.id as ThreadId,
-  )
+  const scope = { projectId: ctx.projectId, env: ctx.env }
+  const existing = await deps.repo.getThread(scope, params.id as ThreadId)
   if (!existing) throw new NotFoundError(`thread ${params.id} not found`)
-  return deps.repo.updateAnchor(
-    { projectId: ctx.projectId, env: ctx.env },
+  const updated = await deps.repo.updateAnchor(
+    scope,
     params.id as ThreadId,
     {
       selectors: body.selectors,
@@ -31,4 +31,5 @@ export async function refreshAnchor(
     },
     ctx.now().toISOString(),
   )
+  return toThreadListItemView(updated, deps.registry, scope)
 }

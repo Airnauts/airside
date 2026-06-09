@@ -1,24 +1,30 @@
-import type { SetThreadStatusBody, Thread, ThreadId, ThreadIdParam } from '@airnauts/comments-core'
+import type {
+  SetThreadStatusBody,
+  ThreadId,
+  ThreadIdParam,
+  ThreadView,
+} from '@airnauts/comments-core'
 import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
+import type { ExtensionRegistry } from '../extensions/registry'
 import type { Repository } from '../repository/types'
+import { toThreadView } from './view'
 
-export type SetThreadStatusDeps = { repo: Repository }
+export type SetThreadStatusDeps = { repo: Repository; registry: ExtensionRegistry }
 
 export async function setThreadStatus(
   input: { ctx: Ctx; params: ThreadIdParam; query: undefined; body: SetThreadStatusBody },
   deps: SetThreadStatusDeps,
-): Promise<Thread> {
+): Promise<ThreadView> {
   const { ctx, params, body } = input
-  const existing = await deps.repo.getThread(
-    { projectId: ctx.projectId, env: ctx.env },
-    params.id as ThreadId,
-  )
+  const scope = { projectId: ctx.projectId, env: ctx.env }
+  const existing = await deps.repo.getThread(scope, params.id as ThreadId)
   if (!existing) throw new NotFoundError(`thread ${params.id} not found`)
-  return deps.repo.setStatus(
-    { projectId: ctx.projectId, env: ctx.env },
+  const updated = await deps.repo.setStatus(
+    scope,
     params.id as ThreadId,
     body.status,
     ctx.now().toISOString(),
   )
+  return toThreadView(updated, deps.registry, scope)
 }

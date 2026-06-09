@@ -10,8 +10,11 @@ import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { ValidationError } from '../errors'
+import { buildExtensionRegistry } from '../extensions/registry'
 import type { NotificationExtension } from '../extensions/types'
 import { createThread } from './create-thread'
+
+const registry = buildExtensionRegistry([])
 
 const attachment: Attachment = {
   id: 'at_1' as AttachmentId,
@@ -35,7 +38,10 @@ describe('createThread use-case', () => {
       },
     })
     const body = makeCreateThreadBody()
-    const thread = await createThread({ ctx, params: undefined, query: undefined, body }, { repo })
+    const thread = await createThread(
+      { ctx, params: undefined, query: undefined, body },
+      { repo, registry },
+    )
     expect(thread.id).toBe('t_fixed')
     expect(thread.status).toBe('open')
     expect(thread.anchorState).toBe('anchored')
@@ -46,6 +52,7 @@ describe('createThread use-case', () => {
     expect(thread.comments).toHaveLength(1)
     expect(thread.comments[0]?.id).toBe('c_fixed')
     expect(thread.comments[0]?.text).toBe('first comment')
+    expect(thread.actions).toEqual([])
 
     const stored = await repo.getThread({ projectId: 'proj_x' }, thread.id)
     expect(stored?.id).toBe(thread.id)
@@ -58,7 +65,10 @@ describe('createThread use-case', () => {
     const body = makeCreateThreadBody({
       comment: { text: '', attachmentIds: [attachment.id] },
     })
-    const thread = await createThread({ ctx, params: undefined, query: undefined, body }, { repo })
+    const thread = await createThread(
+      { ctx, params: undefined, query: undefined, body },
+      { repo, registry },
+    )
     expect(thread.comments[0]?.attachments).toEqual([attachment])
   })
 
@@ -69,7 +79,7 @@ describe('createThread use-case', () => {
       comment: { text: 'hi', attachmentIds: ['at_missing' as AttachmentId] },
     })
     await expect(
-      createThread({ ctx, params: undefined, query: undefined, body }, { repo }),
+      createThread({ ctx, params: undefined, query: undefined, body }, { repo, registry }),
     ).rejects.toBeInstanceOf(ValidationError)
   })
 
@@ -81,7 +91,7 @@ describe('createThread use-case', () => {
     const body = makeCreateThreadBody()
     await createThread(
       { ctx, params: undefined, query: undefined, body },
-      { repo, notifications: [extension] },
+      { repo, registry, notifications: [extension] },
     )
     expect(onEvent).toHaveBeenCalledOnce()
     const event = onEvent.mock.calls[0]![0]
@@ -97,7 +107,10 @@ describe('createThread use-case', () => {
     const repo = new InMemoryRepository()
     const ctx = makeCtx({ projectId: 'proj_x' })
     const body = makeCreateThreadBody()
-    const thread = await createThread({ ctx, params: undefined, query: undefined, body }, { repo })
+    const thread = await createThread(
+      { ctx, params: undefined, query: undefined, body },
+      { repo, registry },
+    )
     expect(thread.id).toBeDefined()
   })
 })

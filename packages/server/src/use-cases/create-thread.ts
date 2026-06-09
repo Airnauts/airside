@@ -1,17 +1,27 @@
-import { ANCHOR_SCHEMA_VERSION, type CreateThreadBody, type Thread } from '@airnauts/comments-core'
+import {
+  ANCHOR_SCHEMA_VERSION,
+  type CreateThreadBody,
+  type ThreadView,
+} from '@airnauts/comments-core'
 import type { Ctx } from '../ctx'
+import type { ExtensionRegistry } from '../extensions/registry'
 import type { NotificationExtension } from '../extensions/types'
 import { buildNotificationEvent } from '../notify/build-event'
 import { dispatchNotifications } from '../notify/dispatch'
 import type { Repository } from '../repository/types'
 import { resolveAttachments } from './resolve-attachments'
+import { toThreadView } from './view'
 
-export type CreateThreadDeps = { repo: Repository; notifications?: NotificationExtension[] }
+export type CreateThreadDeps = {
+  repo: Repository
+  registry: ExtensionRegistry
+  notifications?: NotificationExtension[]
+}
 
 export async function createThread(
   input: { ctx: Ctx; params: undefined; query: undefined; body: CreateThreadBody },
   deps: CreateThreadDeps,
-): Promise<Thread> {
+): Promise<ThreadView> {
   const { ctx, body } = input
   const scope = { projectId: ctx.projectId, env: ctx.env }
   const nowIso = ctx.now().toISOString()
@@ -49,5 +59,5 @@ export async function createThread(
     deps.notifications,
     buildNotificationEvent('thread.created', scope, thread, firstComment, ctx.threadParam),
   )
-  return thread
+  return toThreadView(thread, deps.registry, scope)
 }

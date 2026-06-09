@@ -4,9 +4,11 @@ import { makeNewThread } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { makeCtx } from '../ctx'
 import { ValidationError } from '../errors'
+import { buildExtensionRegistry } from '../extensions/registry'
 import { listThreads } from './list-threads'
 
 const ctx = makeCtx({ projectId: 'proj_x' })
+const registry = buildExtensionRegistry([])
 
 async function seed(repo: InMemoryRepository, n: number) {
   for (let i = 0; i < n; i++) {
@@ -27,7 +29,7 @@ describe('listThreads use-case', () => {
     await seed(repo, 6)
     const result = await listThreads(
       { ctx, params: undefined, query: { pageKey: '/a' }, body: undefined },
-      { repo },
+      { repo, registry },
     )
     expect(result.threads.every((t) => t.pageKey === '/a')).toBe(true)
   })
@@ -37,10 +39,13 @@ describe('listThreads use-case', () => {
     await seed(repo, 6)
     const result = await listThreads(
       { ctx, params: undefined, query: {}, body: undefined },
-      { repo },
+      { repo, registry },
     )
     expect(result.threads).toHaveLength(6)
     expect(result.nextCursor).toBeNull()
+    expect(result.threads.every((t) => Array.isArray(t.actions) && t.actions.length === 0)).toBe(
+      true,
+    )
   })
 
   it('filters by status', async () => {
@@ -54,7 +59,7 @@ describe('listThreads use-case', () => {
     )
     const open = await listThreads(
       { ctx, params: undefined, query: { status: 'open' }, body: undefined },
-      { repo },
+      { repo, registry },
     )
     expect(open.threads.every((t) => t.status === 'open')).toBe(true)
   })
@@ -64,7 +69,7 @@ describe('listThreads use-case', () => {
     await seed(repo, 25)
     const first = await listThreads(
       { ctx, params: undefined, query: {}, body: undefined },
-      { repo, defaultLimit: 10 },
+      { repo, registry, defaultLimit: 10 },
     )
     expect(first.threads).toHaveLength(10)
     expect(first.nextCursor).not.toBeNull()
@@ -72,7 +77,7 @@ describe('listThreads use-case', () => {
     if (cursor === null) throw new Error('expected cursor')
     const second = await listThreads(
       { ctx, params: undefined, query: { cursor }, body: undefined },
-      { repo, defaultLimit: 10 },
+      { repo, registry, defaultLimit: 10 },
     )
     expect(second.threads).toHaveLength(10)
     expect(second.threads.find((t) => first.threads.some((x) => x.id === t.id))).toBeUndefined()
@@ -83,7 +88,7 @@ describe('listThreads use-case', () => {
     await expect(
       listThreads(
         { ctx, params: undefined, query: { cursor: '!!!not-base64!!!' }, body: undefined },
-        { repo },
+        { repo, registry },
       ),
     ).rejects.toBeInstanceOf(ValidationError)
   })
