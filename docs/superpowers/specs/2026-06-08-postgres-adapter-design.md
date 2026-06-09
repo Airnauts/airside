@@ -179,7 +179,7 @@ remains the broader document-model fidelity backstop.
 
 ## 7. Conventions & follow-on
 
-- **ADR-0030** (2026-06-08), "Postgres repository adapter": records choosing a
+- **ADR-0035** (2026-06-08), "Postgres repository adapter": records choosing a
   new database (CLAUDE.md mandates an ADR for a database choice) and **amends
   ADR-0003**, which currently states v1 has no other DB concretes. Added to
   `docs/adr.md` as an explicit step in the implementation plan (the ADR is not

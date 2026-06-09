@@ -26,7 +26,7 @@
 - `tsconfig.json` (root) — add the project reference
 - `.changeset/config.json` — add the package to the `fixed` version group
 - `.changeset/<name>.md` — the release changeset (minor)
-- `docs/adr.md` — ADR-0030
+- `docs/adr.md` — ADR-0035
 - `docs/architecture.md` — note the new concrete
 
 **Why these boundaries:** `schema.ts` owns the connection-seam type and DDL (no dependency on `repository.ts`); `repository.ts` imports from `schema.ts` (one direction, no cycle). Each file has one responsibility and stays small enough to hold in context.
@@ -812,16 +812,16 @@ git commit -m "docs(adapter-postgres): README with both entry points"
 ## Task 6: ADR, architecture note, and changeset
 
 **Files:**
-- Modify: `docs/adr.md` (append ADR-0030)
+- Modify: `docs/adr.md` (append ADR-0035)
 - Modify: `docs/architecture.md` (§2 adapter list + §1 decisions table)
 - Create: `.changeset/postgres-adapter.md`
 
-- [ ] **Step 1: Append ADR-0030 to `docs/adr.md`**
+- [ ] **Step 1: Append ADR-0035 to `docs/adr.md`**
 
 Add at the end of the file (newest-last):
 
 ```markdown
-## ADR-0030: PostgreSQL repository adapter
+## ADR-0035: PostgreSQL repository adapter
 
 - **Date:** 2026-06-08
 - **Status:** Accepted. Amends ADR-0003 (which scoped v1 to a single MongoDB
@@ -876,7 +876,7 @@ In the monorepo package list in §2, add a bullet after the
 ```
 
 And in the §1 "Decisions at a glance" table, update the ADR-0003 row's decision
-text to note the added concrete, appending: ` PostgreSQL added in ADR-0030.`
+text to note the added concrete, appending: ` PostgreSQL added in ADR-0035.`
 
 - [ ] **Step 3: Create the changeset**
 
@@ -902,7 +902,7 @@ Expected: lists `@airnauts/comments-adapter-postgres` (and the fixed-group sibli
 
 ```bash
 git add docs/adr.md docs/architecture.md .changeset/postgres-adapter.md
-git commit -m "docs(adapter-postgres): ADR-0030, architecture note, changeset"
+git commit -m "docs(adapter-postgres): ADR-0035, architecture note, changeset"
 ```
 
 ---
