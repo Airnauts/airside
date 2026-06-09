@@ -1,6 +1,7 @@
 // packages/client/src/positioning/layer.tsx
 import type { ApiClient } from '../api/client'
 import type { Identity } from '../identity/storage'
+import { usePanelState } from '../panel/PanelProvider'
 import type { PlacedThread } from '../threads/state'
 import { useFocus } from '../threads/useThreads'
 import { ThreadPopover } from '../ui/ThreadPopover'
@@ -16,6 +17,9 @@ export type PinLayerProps = {
 
 export function PinLayer({ placements, client, identity, onNeedIdentity }: PinLayerProps) {
   const { focusedId } = useFocus()
+  // The thread open in the sidebar panel detail view: its on-page pin is highlighted as active
+  // even though selecting it in the panel never opens the pin's popover.
+  const { detailThreadId } = usePanelState()
   return (
     <div data-comments-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
       {placements.flatMap((p) =>
@@ -36,6 +40,7 @@ export function PinLayer({ placements, client, identity, onNeedIdentity }: PinLa
           item={p.item}
           pin={p.pin}
           focused={p.item.id === focusedId}
+          selected={p.item.id === detailThreadId}
           client={client}
           identity={identity}
           onNeedIdentity={onNeedIdentity}

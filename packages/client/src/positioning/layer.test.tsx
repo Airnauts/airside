@@ -2,6 +2,7 @@ import type { ThreadListItem } from '@airnauts/comments-core'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { DraftsProvider } from '../drafts/DraftsProvider'
+import { PanelProvider } from '../panel/PanelProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { PinLayer } from './layer'
 
@@ -22,6 +23,7 @@ function mockClient() {
     addComment: vi.fn().mockResolvedValue({}),
     setThreadStatus: vi.fn().mockResolvedValue({}),
     upload: vi.fn().mockResolvedValue({ id: 'at1' }),
+    listThreads: vi.fn().mockResolvedValue({ threads: [], nextCursor: null }),
   } as never
 }
 
@@ -29,14 +31,16 @@ const renderLayer = (placements: Parameters<typeof PinLayer>[0]['placements']) =
   const c = mockClient()
   return render(
     <ThreadsProvider client={c}>
-      <DraftsProvider>
-        <PinLayer
-          placements={placements}
-          client={c}
-          identity={{ email: 'a@b.c', name: 'A' }}
-          onNeedIdentity={(r) => r({ email: 'a@b.c', name: 'A' })}
-        />
-      </DraftsProvider>
+      <PanelProvider client={c}>
+        <DraftsProvider>
+          <PinLayer
+            placements={placements}
+            client={c}
+            identity={{ email: 'a@b.c', name: 'A' }}
+            onNeedIdentity={(r) => r({ email: 'a@b.c', name: 'A' })}
+          />
+        </DraftsProvider>
+      </PanelProvider>
     </ThreadsProvider>,
   )
 }
