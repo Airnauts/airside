@@ -1,7 +1,8 @@
 import type { ThreadId } from '@airnauts/comments-core'
 import { describe, expect, it, vi } from 'vitest'
+import type { NotificationExtension } from '../extensions/types'
 import { dispatchNotifications } from './dispatch'
-import type { NotificationEvent, Notifier } from './types'
+import type { NotificationEvent } from './types'
 
 const event: NotificationEvent = {
   type: 'thread.created',
@@ -16,43 +17,53 @@ const event: NotificationEvent = {
 }
 
 describe('dispatchNotifications', () => {
-  it('calls notify on every notifier', async () => {
-    const a: Notifier = { name: 'a', notify: vi.fn(async () => {}) }
-    const b: Notifier = { name: 'b', notify: vi.fn(async () => {}) }
+  it('calls onEvent on every extension', async () => {
+    const a: NotificationExtension = { kind: 'notification', name: 'a', onEvent: vi.fn(async () => {}) }
+    const b: NotificationExtension = { kind: 'notification', name: 'b', onEvent: vi.fn(async () => {}) }
     await dispatchNotifications([a, b], event)
-    expect(a.notify).toHaveBeenCalledWith(event)
-    expect(b.notify).toHaveBeenCalledWith(event)
+    expect(a.onEvent).toHaveBeenCalledWith(event)
+    expect(b.onEvent).toHaveBeenCalledWith(event)
   })
 
-  it('does not reject when a notifier throws, and still runs the others', async () => {
-    const bad: Notifier = {
+  it('does not reject when an extension throws, and still runs the others', async () => {
+    const bad: NotificationExtension = {
+      kind: 'notification',
       name: 'bad',
-      notify: vi.fn(async () => {
+      onEvent: vi.fn(async () => {
         throw new Error('boom')
       }),
     }
-    const good: Notifier = { name: 'good', notify: vi.fn(async () => {}) }
+    const good: NotificationExtension = {
+      kind: 'notification',
+      name: 'good',
+      onEvent: vi.fn(async () => {}),
+    }
     const log = vi.fn()
     await expect(dispatchNotifications([bad, good], event, log)).resolves.toBeUndefined()
-    expect(good.notify).toHaveBeenCalled()
+    expect(good.onEvent).toHaveBeenCalled()
     expect(log).toHaveBeenCalledWith(expect.stringContaining('bad'))
   })
 
-  it('does not reject when a notifier throws synchronously, and still runs the others', async () => {
-    const sync: Notifier = {
+  it('does not reject when an extension throws synchronously, and still runs the others', async () => {
+    const sync: NotificationExtension = {
+      kind: 'notification',
       name: 'sync',
-      notify: () => {
+      onEvent: () => {
         throw new Error('sync boom')
       },
     }
-    const good: Notifier = { name: 'good', notify: vi.fn(async () => {}) }
+    const good: NotificationExtension = {
+      kind: 'notification',
+      name: 'good',
+      onEvent: vi.fn(async () => {}),
+    }
     const log = vi.fn()
     await expect(dispatchNotifications([sync, good], event, log)).resolves.toBeUndefined()
-    expect(good.notify).toHaveBeenCalled()
+    expect(good.onEvent).toHaveBeenCalled()
     expect(log).toHaveBeenCalledWith(expect.stringContaining('sync'))
   })
 
-  it('is a no-op for empty or undefined notifiers', async () => {
+  it('is a no-op for empty or undefined extensions', async () => {
     await expect(dispatchNotifications([], event)).resolves.toBeUndefined()
     await expect(dispatchNotifications(undefined, event)).resolves.toBeUndefined()
   })

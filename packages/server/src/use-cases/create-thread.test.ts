@@ -10,7 +10,7 @@ import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { ValidationError } from '../errors'
-import type { Notifier } from '../notify/types'
+import type { NotificationExtension } from '../extensions/types'
 import { createThread } from './create-thread'
 
 const attachment: Attachment = {
@@ -73,18 +73,18 @@ describe('createThread use-case', () => {
     ).rejects.toBeInstanceOf(ValidationError)
   })
 
-  it('dispatches a thread.created notification to notifiers', async () => {
+  it('dispatches a thread.created notification to extensions', async () => {
     const repo = new InMemoryRepository()
     const ctx = makeCtx({ projectId: 'proj_x' })
-    const notify = vi.fn(async () => {})
-    const notifier: Notifier = { name: 'spy', notify }
+    const onEvent = vi.fn(async () => {})
+    const extension: NotificationExtension = { kind: 'notification', name: 'spy', onEvent }
     const body = makeCreateThreadBody()
     await createThread(
       { ctx, params: undefined, query: undefined, body },
-      { repo, notifiers: [notifier] },
+      { repo, notifications: [extension] },
     )
-    expect(notify).toHaveBeenCalledOnce()
-    const event = notify.mock.calls[0]![0]
+    expect(onEvent).toHaveBeenCalledOnce()
+    const event = onEvent.mock.calls[0]![0]
     expect(event.type).toBe('thread.created')
     expect(event.text).toBe('first comment')
     expect(event.author.email).toBe('alice@example.com')
@@ -93,7 +93,7 @@ describe('createThread use-case', () => {
     expect(event.threadId).toBeDefined()
   })
 
-  it('does not require notifiers (no-op when omitted)', async () => {
+  it('does not require notifications (no-op when omitted)', async () => {
     const repo = new InMemoryRepository()
     const ctx = makeCtx({ projectId: 'proj_x' })
     const body = makeCreateThreadBody()

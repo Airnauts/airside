@@ -1,13 +1,13 @@
 import type { AddCommentBody, Comment, ThreadId, ThreadIdParam } from '@airnauts/comments-core'
 import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
+import type { NotificationExtension } from '../extensions/types'
 import { buildNotificationEvent } from '../notify/build-event'
 import { dispatchNotifications } from '../notify/dispatch'
-import type { Notifier } from '../notify/types'
 import type { Repository } from '../repository/types'
 import { resolveAttachments } from './resolve-attachments'
 
-export type AddCommentDeps = { repo: Repository; notifiers?: Notifier[] }
+export type AddCommentDeps = { repo: Repository; notifications?: NotificationExtension[] }
 
 export async function addComment(
   input: { ctx: Ctx; params: ThreadIdParam; query: undefined; body: AddCommentBody },
@@ -30,7 +30,7 @@ export async function addComment(
   }
   const saved = await deps.repo.addComment(scope, params.id as ThreadId, comment)
   await dispatchNotifications(
-    deps.notifiers,
+    deps.notifications,
     buildNotificationEvent('comment.added', scope, existing, saved, ctx.threadParam),
   )
   return saved

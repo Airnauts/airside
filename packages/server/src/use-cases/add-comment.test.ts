@@ -4,7 +4,7 @@ import { makeAuthor, makeNewThread } from '@airnauts/comments-test-support'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { NotFoundError, ValidationError } from '../errors'
-import type { Notifier } from '../notify/types'
+import type { NotificationExtension } from '../extensions/types'
 import { addComment } from './add-comment'
 
 const attachment: Attachment = {
@@ -101,8 +101,8 @@ describe('addComment use-case', () => {
     const repo = new InMemoryRepository()
     const ctx = makeCtx({ projectId: 'proj_x' })
     const thread = await repo.createThread(makeNewThread({ projectId: 'proj_x' }))
-    const notify = vi.fn(async () => {})
-    const notifier: Notifier = { name: 'spy', notify }
+    const onEvent = vi.fn(async () => {})
+    const extension: NotificationExtension = { kind: 'notification', name: 'spy', onEvent }
     await addComment(
       {
         ctx,
@@ -110,10 +110,10 @@ describe('addComment use-case', () => {
         query: undefined,
         body: { text: 'reply', author: makeAuthor() },
       },
-      { repo, notifiers: [notifier] },
+      { repo, notifications: [extension] },
     )
-    expect(notify).toHaveBeenCalledOnce()
-    const event = notify.mock.calls[0]![0]
+    expect(onEvent).toHaveBeenCalledOnce()
+    const event = onEvent.mock.calls[0]![0]
     expect(event.type).toBe('comment.added')
     expect(event.text).toBe('reply')
     expect(event.threadId).toBe(thread.id)
