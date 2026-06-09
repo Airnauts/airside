@@ -25,11 +25,23 @@ export type Controller = {
    */
   runAction(id: string, actionId: string): Promise<boolean>
   /**
-   * MarkerLayer registers the live anchor-runtime here so status changes also patch its cached
-   * item list. Without this, the runtime re-emits stale 'open' placements on the next reposition/
-   * mutation, clobbering the optimistic update (the pin would revert until a full reload).
+   * Optimistically adjust a thread's comment count by `delta` (+1 on an optimistic reply, -1 to roll
+   * back a failed one). Patches the store (pin badge) AND the runtime cache (so the next reposition/
+   * mutation re-emit doesn't clobber it) AND notifies the panel so its list rows stay in sync. The
+   * sidebar/popover header reads the live detail's comment list directly, so it needs no patch here.
    */
-  registerRuntime(patch: ((id: string, status: ThreadStatus) => void) | null): void
+  bumpCommentCount(id: string, delta: number): void
+  /**
+   * MarkerLayer registers the live anchor-runtime here so status/count changes also patch its cached
+   * item list. Without this, the runtime re-emits stale placements on the next reposition/mutation,
+   * clobbering the optimistic update (the pin would revert until a full reload).
+   */
+  registerRuntime(
+    patch: {
+      setStatus: (id: string, status: ThreadStatus) => void
+      bumpCommentCount: (id: string, delta: number) => void
+    } | null,
+  ): void
   /** Focus a pin: arm the focus effect (scroll + pulse) and lazy-fetch its detail — WITHOUT opening
    * its popover. The sidebar detail is the surface that shows the thread; the popover opens only on a
    * direct pin click. */
@@ -38,6 +50,8 @@ export type Controller = {
   refetch(id: string): void
   /** The panel registers here to refetch its list when a status change persists (drawer-open reconciliation). */
   registerStatusListener(fn: ((id: string, status: ThreadStatus) => void) | null): void
+  /** The panel registers here to keep its list rows' counts in sync with an optimistic reply. */
+  registerCommentCountListener(fn: ((id: string, delta: number) => void) | null): void
 }
 
 /**
@@ -53,8 +67,12 @@ export function createController(
     isLoading: (id: string) => boolean
   },
 ): Controller {
-  let patchRuntime: ((id: string, status: ThreadStatus) => void) | null = null
+  let runtime: {
+    setStatus: (id: string, status: ThreadStatus) => void
+    bumpCommentCount: (id: string, delta: number) => void
+  } | null = null
   let statusListener: ((id: string, status: ThreadStatus) => void) | null = null
+  let commentCountListener: ((id: string, delta: number) => void) | null = null
 
   const lazyFetchDetail = (id: string) => {
     if (deps.isCached(id) || deps.isLoading(id)) return
@@ -69,7 +87,16 @@ export function createController(
   // exposed directly for the reply flow (which persists separately, after the reply is saved).
   const patchStatus = (id: string, status: ThreadStatus) => {
     dispatch({ type: 'SET_STATUS', id, status })
-    patchRuntime?.(id, status)
+    runtime?.setStatus(id, status)
+  }
+
+  // Optimistic comment-count adjustment with no network. Store (pin badge) + runtime cache
+  // (so the next re-emit doesn't clobber it) + panel notify (its list rows). The reply flow
+  // calls +1 when it adds an optimistic comment and -1 if the save fails.
+  const bumpCommentCount = (id: string, delta: number) => {
+    dispatch({ type: 'BUMP_COMMENT_COUNT', id, delta })
+    runtime?.bumpCommentCount(id, delta)
+    commentCountListener?.(id, delta)
   }
 
   return {
@@ -84,9 +111,10 @@ export function createController(
       dispatch({ type: 'SET_SHOW_RESOLVED', value })
     },
     registerRuntime(patch) {
-      patchRuntime = patch
+      runtime = patch
     },
     patchStatus,
+    bumpCommentCount,
     async setStatus(id, status) {
       const prev: ThreadStatus = status === 'resolved' ? 'open' : 'resolved'
       // Optimistic: update the store (instant pin/header) AND the runtime cache (so the next
@@ -123,6 +151,9 @@ export function createController(
     },
     registerStatusListener(fn) {
       statusListener = fn
+    },
+    registerCommentCountListener(fn) {
+      commentCountListener = fn
     },
   }
 }

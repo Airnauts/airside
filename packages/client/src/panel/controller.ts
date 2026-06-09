@@ -10,6 +10,8 @@ export type PanelController = {
   refresh(): Promise<void>
   openDetail(id: string): void
   back(): void
+  /** Optimistically adjust a list row's comment count (mirrors an optimistic reply in the detail). */
+  bumpCommentCount(id: string, delta: number): void
 }
 
 export function createPanelController(
@@ -71,6 +73,9 @@ export function createPanelController(
     },
     back() {
       dispatch({ type: 'BACK' })
+    },
+    bumpCommentCount(id, delta) {
+      dispatch({ type: 'BUMP_COMMENT_COUNT', id, delta })
     },
   }
 }

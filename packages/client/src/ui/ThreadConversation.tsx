@@ -59,6 +59,10 @@ export function ThreadConversation({
   const { actions, externalLinks } = useThreadActions(id)
   const toast = useToast()
   const resolved = (detail?.status ?? item.status) === 'resolved'
+  // Prefer the live detail's comment list for the count: it carries optimistic replies and is never
+  // rebuilt by a reposition emit, so the header is correct regardless of where `item` came from
+  // (the panel list, or an id-loaded detached thread). Falls back to the list item while loading.
+  const commentCount = detail ? detail.comments.length : item.commentCount
 
   async function submitReply({ text, attachmentIds, who }: ComposerSubmit) {
     const tempId = `temp-${nextTempId++}`
@@ -70,6 +74,9 @@ export function ThreadConversation({
       createdAt: new Date().toISOString(),
     } as unknown as Comment
     dispatch({ type: 'ADD_OPTIMISTIC_COMMENT', id, comment: optimistic })
+    // Bump the list-item count so the pin badge and panel rows react immediately (the header below
+    // reads the live detail). Rolled back with -1 if the save fails.
+    controller.bumpCommentCount(id, 1)
     const wasResolved = resolved
     // Reply reopens optimistically: patch the store AND the runtime cache together (a plain
     // SET_STATUS would be clobbered by the next re-emit) — but only the UI, no network yet. The
@@ -84,6 +91,7 @@ export function ThreadConversation({
       })
     } catch {
       dispatch({ type: 'REMOVE_OPTIMISTIC_COMMENT', id, tempId })
+      controller.bumpCommentCount(id, -1)
       if (wasResolved) controller.patchStatus(id, 'resolved')
       toast('Failed to post reply')
       return
@@ -131,7 +139,7 @@ export function ThreadConversation({
         >
           {resolved
             ? '✓ Resolved'
-            : `Open · ${item.commentCount} ${item.commentCount === 1 ? 'comment' : 'comments'}`}
+            : `Open · ${commentCount} ${commentCount === 1 ? 'comment' : 'comments'}`}
         </span>
         <div className="cmnt:flex cmnt:items-center cmnt:gap-1.5 cmnt:text-gray-500">
           <ThreadActions id={id} actions={actions} controller={controller} />

@@ -1,5 +1,6 @@
 // packages/client/src/panel/PanelRow.tsx
 import type { ThreadListItem } from '@airnauts/comments-core'
+import { useEffect, useRef, useState } from 'react'
 import { threadLink } from '../config'
 import { relativeTime } from '../threads/relativeTime'
 import { avatarColor, initials } from '../ui/avatar'
@@ -18,6 +19,17 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
   const rootText = item.rootComment?.text ?? ''
   const author = item.createdBy
   const context = item.pageTitle ?? item.pageUrl
+
+  const [copied, setCopied] = useState(false)
+  const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  useEffect(() => () => clearTimeout(copiedTimer.current), [])
+
+  const onCopy = () => {
+    void navigator.clipboard?.writeText(threadLink(item.pageUrl, item.id))?.catch(() => {})
+    setCopied(true)
+    clearTimeout(copiedTimer.current)
+    copiedTimer.current = setTimeout(() => setCopied(false), 1000)
+  }
 
   return (
     <div data-thread-id={item.id} className="cmnt:border-b cmnt:border-[#f1f3f5]">
@@ -83,12 +95,10 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
           variant="link"
           size="inline"
           aria-label="Copy link"
-          onClick={() =>
-            void navigator.clipboard?.writeText(threadLink(item.pageUrl, item.id))?.catch(() => {})
-          }
+          onClick={onCopy}
           className="cmnt:ml-3 cmnt:text-[11px] cmnt:text-gray-500"
         >
-          Copy link
+          {copied ? 'Copied!' : 'Copy link'}
         </Button>
       </div>
     </div>

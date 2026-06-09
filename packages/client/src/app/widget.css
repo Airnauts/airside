@@ -64,4 +64,17 @@
   [data-comments-root] *::after {
     box-sizing: border-box;
   }
+
+  /* No Preflight means headings keep their UA `margin-block` and `font-size`
+     (e.g. Radix's `Dialog.Title` renders an <h2> with `1.5em`/`0.83em` margins).
+     That UA margin made the panel's "Comments" header row taller than the detail
+     view's button-only header. Strip it and let headings inherit type from the
+     `cmnt:` utilities, scoped to the widget root so host headings are untouched
+     (this mirrors Preflight's heading reset). Layered below the utilities, so an
+     explicit `cmnt:text-*`/`cmnt:font-*` still wins. */
+  [data-comments-root] :is(h1, h2, h3, h4, h5, h6) {
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
+  }
 }

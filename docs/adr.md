@@ -1194,3 +1194,47 @@ was explicitly requested. `actions` is response-only — it must never be writte
 `notifier-slack` / `notifier-email` public factory APIs change (pre-1.0 breaking) to return
 notification extensions. Concurrent duplicate creation is not fully prevented in v1 (practical
 mitigation only); documented as a known limitation.
+
+---
+
+## ADR-0035: PostgreSQL repository adapter
+
+- **Date:** 2026-06-08
+- **Status:** Accepted. Amends ADR-0003 (which scoped v1 to a single MongoDB
+  repository concrete and listed "other DBs" as a designed-but-unbuilt seam).
+
+### Context
+
+Adopters who run PostgreSQL rather than MongoDB had no persistence path. The
+`Repository` seam and its shared conformance suite (`repositoryContract`) were
+built to make a second concrete cheap; the open question was how to add Postgres
+without (a) coupling to a specific driver and (b) breaking on serverless hosts,
+where raw Postgres connections exhaust unlike the pooled mongo driver.
+
+### Decision
+
+Add `@airnauts/comments-adapter-postgres` as a second `Repository` concrete:
+
+- **Driver-agnostic executor seam.** `createPostgresRepository({ sql })` accepts
+  any `{ query(text, params): Promise<{ rows }> }` (pg.Pool, Neon Pool, PGlite),
+  mirroring how `createMongoRepository({ db })` takes a connected `Db`. The host
+  owns pooling, so the same adapter works on long-lived and serverless hosts. A
+  `postgresRepository({ connectionString })` convenience covers the simple case
+  via an optional `pg` peer dependency.
+- **Hybrid storage.** One `comments_threads` table with scalar columns for the
+  filtered/sorted fields plus a `doc jsonb` holding the full wire Thread; a
+  `comments_attachments` table alongside. `updated_at` is stored as text (exact
+  ISO string) so keyset pagination stays byte-for-byte consistent with the
+  cursor; `env` is `NOT NULL DEFAULT ''`.
+- **Idempotent `ensureSchema`**, mirroring mongo's `ensureIndexes`.
+- **Hermetic tests** via PGlite (in-process WASM Postgres) running the shared
+  contract suite; documented to gate SQL correctness, not concurrency (every
+  write is single-statement atomic by construction).
+
+### Consequences
+
+- Postgres becomes a drop-in alternative to Mongo behind the unchanged seam.
+- The executor seam pushes connection lifecycle to the host — the price of
+  serverless portability.
+- MySQL and Redis remain unbuilt seams; a shared SQL core is deliberately NOT
+  abstracted until a second SQL adapter exists (rule of three).

@@ -311,3 +311,34 @@ describe('createRuntime.rematchAll', () => {
     expect(client.refreshAnchor).toHaveBeenCalledWith('thsame', { anchorState: 'orphaned' })
   })
 })
+
+describe('createRuntime.bumpCommentCount', () => {
+  it('patches the cached item count so the next emit carries the optimistic reply', async () => {
+    document.body.innerHTML = '<main><p id="bc" class="lead">bump count target</p></main>'
+    mockRect(document.querySelector('#bc') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    const client = fakeClient([li('thbc', anchorFor('#bc'))])
+    const onPlacements = vi.fn()
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
+    await rt.refresh()
+    expect(onPlacements.mock.calls.at(-1)?.[0][0].item.commentCount).toBe(1)
+    rt.bumpCommentCount('thbc', 1)
+    expect(onPlacements.mock.calls.at(-1)?.[0][0].item.commentCount).toBe(2)
+    // a subsequent reposition re-emit still carries the bumped count (not the listed 1)
+    rt.reposition()
+    expect(onPlacements.mock.calls.at(-1)?.[0][0].item.commentCount).toBe(2)
+  })
+
+  it('clamps at zero and is a no-op (no emit) for an unknown id', async () => {
+    document.body.innerHTML = '<main><p id="bc2" class="lead">bump count target two</p></main>'
+    mockRect(document.querySelector('#bc2') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    const client = fakeClient([li('thbc2', anchorFor('#bc2'))])
+    const onPlacements = vi.fn()
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
+    await rt.refresh()
+    const callsBefore = onPlacements.mock.calls.length
+    rt.bumpCommentCount('nope', 1)
+    expect(onPlacements.mock.calls.length).toBe(callsBefore)
+    rt.bumpCommentCount('thbc2', -5)
+    expect(onPlacements.mock.calls.at(-1)?.[0][0].item.commentCount).toBe(0)
+  })
+})

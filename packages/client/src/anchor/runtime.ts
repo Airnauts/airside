@@ -125,6 +125,18 @@ export function createRuntime(opts: RuntimeOptions) {
     if (changed) emit()
   }
 
+  // Patch a cached item's comment count so subsequent emits carry the optimistic reply count
+  // instead of clobbering it back to the listed value — same reason as setItemStatus.
+  function bumpCommentCount(id: string, delta: number) {
+    let changed = false
+    placed = placed.map((p) => {
+      if (p.item.id !== id) return p
+      changed = true
+      return { ...p, item: { ...p.item, commentCount: Math.max(0, p.item.commentCount + delta) } }
+    })
+    if (changed) emit()
+  }
+
   function dispose() {
     resizeObs?.disconnect()
   }
@@ -134,6 +146,7 @@ export function createRuntime(opts: RuntimeOptions) {
     reposition: emit,
     rematchAll,
     setItemStatus,
+    bumpCommentCount,
     dispose,
     get placed() {
       return placed

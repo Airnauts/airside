@@ -90,10 +90,13 @@ export function MarkerLayer({
       onPlacements: (next) => dispatch({ type: 'INGEST_PLACEMENTS', placements: next }),
     })
     runtime.current = rt
-    // Bridge optimistic status changes into the runtime's cached list so its next emit
+    // Bridge optimistic status/count changes into the runtime's cached list so its next emit
     // (reposition/rematchAll, fired by scroll/resize and the popover's own DOM mutation)
-    // doesn't clobber the resolved pin back to 'open' until a reload.
-    controller.registerRuntime((id, status) => rt.setItemStatus(id, status))
+    // doesn't clobber the optimistic pin (resolved → 'open', or the reply count) until a reload.
+    controller.registerRuntime({
+      setStatus: (id, status) => rt.setItemStatus(id, status),
+      bumpCommentCount: (id, delta) => rt.bumpCommentCount(id, delta),
+    })
     void rt
       .refresh()
       .then(() => {
@@ -249,7 +252,7 @@ export function MarkerLayer({
                 collisionPadding={8}
                 onOpenAutoFocus={(e) => e.preventDefault()}
                 data-testid="comments-draft"
-                className="cmnt:z-40 cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:pointer-events-auto cmnt:overflow-hidden cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
+                className="cmnt:z-[var(--cmnt-z-surface)] cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:pointer-events-auto cmnt:overflow-hidden cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
               >
                 {state.draft.anchor.selection?.quote && (
                   <div className="cmnt:mx-3 cmnt:mt-2 cmnt:px-2 cmnt:py-1.5 cmnt:border-l-[3px] cmnt:border-blue-600 cmnt:bg-[#f3f6fc] cmnt:text-xs cmnt:text-gray-700 cmnt:italic">

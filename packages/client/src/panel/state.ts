@@ -48,6 +48,18 @@ export type Action =
   | { type: 'LOAD_MORE_START' }
   | { type: 'LOAD_MORE_SUCCESS'; list: ThreadListItem[]; nextCursor: string | null }
   | { type: 'LOAD_MORE_ERROR' }
+  | { type: 'BUMP_COMMENT_COUNT'; id: string; delta: number }
+
+/** Apply a comment-count delta to a matching list item, clamped at zero. */
+function bumpCount(list: ThreadListItem[], id: string, delta: number): ThreadListItem[] {
+  let changed = false
+  const next = list.map((t) => {
+    if (t.id !== id) return t
+    changed = true
+    return { ...t, commentCount: Math.max(0, t.commentCount + delta) }
+  })
+  return changed ? next : list
+}
 
 export function reducer(state: PanelState, action: Action): PanelState {
   switch (action.type) {
@@ -85,6 +97,14 @@ export function reducer(state: PanelState, action: Action): PanelState {
       }
     case 'LOAD_MORE_ERROR':
       return { ...state, loadingMore: false }
+    case 'BUMP_COMMENT_COUNT':
+      // Keep the collapsed list rows' "N Replies" in sync with an optimistic reply posted from the
+      // open detail, so going back to the list shows the new count without a refetch.
+      return {
+        ...state,
+        list: bumpCount(state.list, action.id, action.delta),
+        needsReview: bumpCount(state.needsReview, action.id, action.delta),
+      }
     default:
       return state
   }

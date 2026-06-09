@@ -114,3 +114,23 @@ describe('controller.runAction', () => {
     expect(listener).not.toHaveBeenCalled()
   })
 })
+
+describe('controller.bumpCommentCount', () => {
+  it('fans out to the store, the runtime cache, and the panel listener', () => {
+    const { actions, controller } = make()
+    const rt = { setStatus: vi.fn(), bumpCommentCount: vi.fn() }
+    const listener = vi.fn()
+    controller.registerRuntime(rt)
+    controller.registerCommentCountListener(listener)
+    controller.bumpCommentCount('t1', 1)
+    expect(actions).toContainEqual({ type: 'BUMP_COMMENT_COUNT', id: 't1', delta: 1 })
+    expect(rt.bumpCommentCount).toHaveBeenCalledWith('t1', 1)
+    expect(listener).toHaveBeenCalledWith('t1', 1)
+  })
+
+  it('still updates the store when no runtime or listener is registered', () => {
+    const { actions, controller } = make()
+    controller.bumpCommentCount('t1', -1)
+    expect(actions).toContainEqual({ type: 'BUMP_COMMENT_COUNT', id: 't1', delta: -1 })
+  })
+})

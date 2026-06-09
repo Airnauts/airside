@@ -6,6 +6,7 @@
     { "path": "packages/server" },
     { "path": "packages/adapter-memory" },
     { "path": "packages/adapter-mongo" },
+    { "path": "packages/adapter-postgres" },
     { "path": "packages/storage-vercel-blob" },
     { "path": "packages/storage-fs" },
     { "path": "packages/test-support" },
