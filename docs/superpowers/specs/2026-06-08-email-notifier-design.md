@@ -1,11 +1,12 @@
 # Email notifier — design
 
-- **Status:** Approved (brainstorm complete)
+- **Status:** Approved (brainstorm complete) · **Revised 2026-06-09:** recipients changed from a
+  static list to **thread participants** (see §4); added http(s) `pageUrl` restriction (§2.4).
 - **Date:** 2026-06-08
 - **Inputs:** [`docs/architecture.md`](../../architecture.md) §2/§4 · [`docs/adr.md`](../../adr.md)
   (ADR-0029 notification seam) · [`2026-06-03-slack-notifications-design.md`](./2026-06-03-slack-notifications-design.md)
 - **Scope:** A second concrete `Notifier` — **`@airnauts/comments-notifier-email`** —
-  that emails new-comment notifications to a static recipient list via a **pluggable
+  that emails reply notifications to the **people already active in the thread** via a **pluggable
   transport** (SMTP and Resend ship in the box; the port stays open for others). As a
   prerequisite, move ownership of the **thread deep-link** out of individual notifiers
   and into the **server**, so the link is built once and every channel shares it.
@@ -14,12 +15,13 @@
 
 ## 1. Goal
 
-When a reviewer posts a comment, email a fixed list of recipients containing **who**
-wrote it, **what** they wrote, and a **link to the thread**. Two triggers, reusing the
-existing seam (ADR-0029):
+When a reviewer replies on a thread, email the people already active in that thread a message
+containing **who** wrote it, **what** they wrote, and a **link to the thread**. Two triggers,
+reusing the existing seam (ADR-0029):
 
-- a new thread's first comment (`createThread` → `thread.created`), and
-- a reply on an existing thread (`addComment` → `comment.added`).
+- a new thread's first comment (`createThread` → `thread.created`) — carries no other participants,
+  so it sends nothing (see §4), and
+- a reply on an existing thread (`addComment` → `comment.added`) — emails the prior participants.
 
 A notification failure must **never** break the comment write — this is already
 guaranteed by `dispatchNotifications` (`Promise.allSettled`, failures logged by
@@ -80,17 +82,29 @@ The link is byte-identical for every channel, so no notifier should be construct
      pageUrl: string
      pageTitle?: string
      threadUrl: string // NEW: ready-made deep-link, built by the server
+     participants: string[] // NEW: other active commenters, minus this event's author
      text: string
      author: { email: string; name?: string }
      createdAt: string // ISO
    }
    ```
 
-   `pageUrl` and `threadId` remain so channels can still address the raw page.
+   `pageUrl` and `threadId` remain so channels can still address the raw page. `participants`
+   is the distinct set of comment-author emails already on the thread **minus** `author.email`
+   — derived here from the thread the use-case already loaded (the email channel uses it, §4;
+   Slack ignores it). It is empty for `thread.created`.
 
 3. **`notifier-slack`** stops building the link. Delete its private
    `DEFAULT_THREAD_PARAM`, drop `threadParam` from `SlackNotifierOptions` and
    `FormatOptions`, and read `event.threadUrl`. Update its tests accordingly.
+
+### 2.4 `pageUrl` restricted to http(s)
+
+`threadUrl` is built from `pageUrl`, and notifiers render it into an email `href` / Slack
+markdown. A bare `z.url()` accepts `javascript:` and `data:`, so core now validates `pageUrl`
+with a shared `HttpUrl = z.url({ protocol: /^https?$/ })` on both `CreateThreadBody` and the
+`Thread` schema, closing the active-scheme vector at the source (ADR-0033). Browser hosts are
+unaffected — `window.location.href` is always http(s).
 
 ### 2.3 Cross-runtime agreement
 
@@ -140,8 +154,6 @@ type their own transports.
 export type EmailNotifierOptions = {
   /** Where to send: smtpTransport(...) | resendTransport(...) | your own. */
   transport: EmailTransport
-  /** Static recipient list. */
-  to: string[]
   /** Verified sender address. */
   from: string
   /** Optional Reply-To header. */
@@ -153,24 +165,30 @@ export type EmailNotifierOptions = {
 export function emailNotifier(opts: EmailNotifierOptions): Notifier
 ```
 
-The returned notifier has `name: 'email'`. There is **no** `threadParam` option — it
-reads `event.threadUrl` (§2).
+The returned notifier has `name: 'email'`. There is **no** recipient list and **no** `threadParam`
+option — it sends to `event.participants` and reads `event.threadUrl` (§2), both server-built.
 
 Behavior:
 
-- **Recipients / privacy.** With a single recipient, address it in `to`. With more than
-  one, put the list in `bcc` and set `to: [opts.from]` so recipients don't see each
-  other's addresses.
-- **Subject.** `thread.created` → `"{subjectPrefix}New comment on {pageTitle ?? pageUrl}"`;
-  `comment.added` → `"{subjectPrefix}New reply on {pageTitle ?? pageUrl}"`.
-- **Body.** HTML **and** plain-text multipart. The HTML part shows author
-  (name + email), page title, the comment text, and a "View thread" button linking to
+- **Recipients.** The notifier sends to `event.participants` — the thread's other active commenters
+  (the server already excluded the event's author). **Empty → no send**, which is the
+  `thread.created` case (the author is the only participant), so a brand-new thread emails nobody
+  until it has a reply. There is deliberately no static "always notify" list — a host wanting that
+  supplies its own `Notifier`.
+- **Privacy.** A single recipient goes in `to`. More than one goes in `bcc` with `to: [opts.from]`,
+  so participants don't see each other's addresses.
+- **Subject.** `comment.added` → `"{subjectPrefix}New reply on {pageTitle ?? pageUrl}"` (the
+  `thread.created` → `"New comment on …"` form is still rendered but, per the recipient rule, never
+  sent). CR/LF are folded out of the subject to block header injection from a crafted `pageTitle`.
+- **Body.** HTML **and** plain-text multipart. The HTML part is a minimal document (`<!doctype …>`)
+  showing author (name + email), page title, the comment text, and a "View thread" link to
   `event.threadUrl`. The text part is the same content without markup. An empty comment
   (attachment-only root) renders the `"(image comment)"` fallback, matching Slack.
 - **Security.** `event.text` and `event.author.name` are user-controlled and are
-  **HTML-escaped** in the HTML part. The subject is built from host-provided
-  `pageTitle`; both built-in transports sanitize header newlines (nodemailer and the
-  Resend JSON API), so this is verified in tests rather than hand-rolled.
+  **HTML-escaped** in the HTML part. The subject is built from host-provided `pageTitle`, so the
+  formatter **folds CR/LF to spaces** itself (covered by a unit test) rather than relying on the
+  transport — header injection is blocked before the message reaches nodemailer or the Resend JSON
+  API. `pageUrl`/`threadUrl` can no longer carry an active scheme (§2.4).
 
 ---
 
@@ -193,9 +211,12 @@ export type SmtpTransportOptions = {
   secure?: boolean
   auth: { user: string; pass: string }
   pool?: boolean
+  timeout?: number // connection/greeting/socket cap (ms), default 10_000
 }
 export function smtpTransport(opts: SmtpTransportOptions): EmailTransport
 // name: 'smtp'; wraps nodemailer.createTransport(...).sendMail(...)
+// caps connection/greeting/socket timeouts (default 10s) so a hung SMTP server
+// can't stall the awaited in-request dispatch (ADR-0029)
 
 // /resend
 export type ResendTransportOptions = { apiKey: string }
@@ -218,17 +239,19 @@ on the `nodemailer` import; `nodemailer` is declared as an **optional peer depen
 Backend/adapter packages are built test-first. The port-based design keeps the bulk of
 the logic network-free.
 
-- **`emailNotifier` core** (the real logic: recipient/`bcc` rule, subject building,
-  deep-link wiring, HTML escaping, image-only fallback) → tested against a **fake
-  `EmailTransport`** that records the `EmailMessage` it receives. No network.
+- **`emailNotifier` core** (the real logic: `participants`-driven recipients, empty → no-send,
+  `bcc` rule, subject prefix, deep-link wiring) → tested against a **fake `EmailTransport`** that
+  records the `EmailMessage` it receives. No network.
+- **`formatEmail`** → subject/HTML/text rendering, HTML escaping, image-only fallback, and the
+  CR/LF subject fold.
 - **`resendTransport`** → mock global `fetch` (same pattern as the existing Slack test):
   assert the request URL/headers/body, timeout, and non-2xx → throw with no key leak.
 - **`smtpTransport`** → mock `nodemailer.createTransport` / `sendMail`; assert the
-  message mapping.
-- **Refactor coverage** → update `build-event` tests to assert `threadUrl`, and update
-  the Slack notifier tests to read `event.threadUrl` (its own `threadParam` test is
-  removed with the option). Add a `core` test for `threadLink` / `DEFAULT_THREAD_PARAM`
-  at its new home.
+  message mapping, transporter reuse, and the connection-timeout caps (default + override).
+- **Refactor coverage** → update `build-event` tests to assert `threadUrl` **and `participants`**
+  (distinct, minus the author), and update the Slack notifier tests to read `event.threadUrl` (its
+  own `threadParam` test is removed with the option). Add a `core` test for `threadLink` /
+  `DEFAULT_THREAD_PARAM` at its new home, and one asserting `pageUrl` rejects non-http(s) schemes.
 
 ---
 
@@ -236,20 +259,21 @@ the logic network-free.
 
 - **ADR-0031** — server owns the thread deep-link (`threadUrl` on `NotificationEvent`;
   `threadParam` moves to `core` + server config; notifiers stop building links).
-- **ADR-0032** — email notifier + transport port. Consequences note that under
-  ADR-0029 (dispatch awaited in-request to survive serverless freeze) the SMTP
-  connection handshake adds more comment-POST latency than the HTTP-based Slack/Resend
-  channels.
+- **ADR-0032** — email notifier + transport port; **recipients are thread participants** (no
+  static list), so `thread.created` emails nobody. Consequences note that under ADR-0029 (dispatch
+  awaited in-request) the SMTP handshake adds latency, hence the connection-timeout cap.
+- **ADR-0033** — `pageUrl` restricted to http(s) (§2.4).
 - **Changesets** (fixed group → all bump together; pre-1.0 policy):
-  - `@airnauts/comments-core` — **minor** (new `threadLink` / `DEFAULT_THREAD_PARAM`
-    exports).
-  - `@airnauts/comments-server` — **minor** (new `threadParam` option; `threadUrl` on
-    the event).
+  - `@airnauts/comments-core` — **minor** (new `threadLink` / `DEFAULT_THREAD_PARAM` exports;
+    http(s)-only `pageUrl`).
+  - `@airnauts/comments-server` — **minor** (new `threadParam` option; `threadUrl` + `participants`
+    on the event).
   - `@airnauts/comments-notifier-slack` — **minor** (breaking: `threadParam` option
     removed; now reads `event.threadUrl`).
   - `@airnauts/comments-notifier-email` — **minor** (new package).
-- **README** for the new package: both transports, the runtime guidance from §5, and a
-  worked `createCommentsServer({ notifiers: [emailNotifier({ transport: resendTransport({ apiKey }), to, from })] })`
+- **README** for the new package: both transports, the runtime guidance from §5, the participant
+  recipient model, and a worked
+  `createCommentsServer({ notifiers: [emailNotifier({ transport: resendTransport({ apiKey }), from })] })`
   example.
 
 ---
@@ -259,8 +283,10 @@ the logic network-free.
 YAGNI for the first cut — the seam/port already accommodates these later with no core
 change:
 
-- Dynamic / participant / mention-based recipients (static list only).
-- Mention or resolve/status-change events (only the two existing triggers).
+- A configurable "always notify" list alongside participants (e.g. a team inbox on every new
+  thread) — a host needing it supplies its own `Notifier`.
+- Mention-based recipients, and mention or resolve/status-change events (only the two existing
+  triggers; `thread.created` is built but, per the recipient rule, never sent).
 - Host-overridable email templates (`renderEmail(event)`).
 - Built-in SendGrid / SES / Postmark / Mailgun transports (the `EmailTransport` port
   covers them; SMTP also reaches most of them).
