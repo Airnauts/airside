@@ -61,4 +61,11 @@ describe('Pin', () => {
     rerender(<Pin item={baseItem} pin={{ x: 0, y: 0 }} />)
     expect(screen.getByTestId('comments-pin')).not.toHaveAttribute('data-focused')
   })
+
+  it('marks the pin as active (open or panel-selected) via data-active', () => {
+    const { rerender } = render(<Pin item={item()} pin={{ x: 0, y: 0 }} active />)
+    expect(screen.getByTestId('comments-pin')).toHaveAttribute('data-active', 'true')
+    rerender(<Pin item={item()} pin={{ x: 0, y: 0 }} />)
+    expect(screen.getByTestId('comments-pin')).not.toHaveAttribute('data-active')
+  })
 })

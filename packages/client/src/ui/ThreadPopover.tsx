@@ -19,6 +19,8 @@ export type ThreadPopoverProps = {
   identity: Identity | null
   onNeedIdentity: (resume: (who: Identity) => void) => void
   focused?: boolean
+  /** This thread is the one open in the sidebar panel detail view. */
+  selected?: boolean
 }
 
 export function ThreadPopover({
@@ -28,6 +30,7 @@ export function ThreadPopover({
   identity,
   onNeedIdentity,
   focused,
+  selected,
 }: ThreadPopoverProps) {
   const id = item.id
   const controller = useController()
@@ -36,6 +39,9 @@ export function ThreadPopover({
   const container = usePortalContainer()
   const pinRef = useRef<HTMLButtonElement>(null)
   const open = openId === id
+  // The pin is "active" (reversed colours + raised) whether the user opened its popover or
+  // selected its thread in the sidebar — the latter never opens the popover.
+  const active = open || selected === true
 
   return (
     <Popover.Root
@@ -43,7 +49,14 @@ export function ThreadPopover({
       onOpenChange={(o) => (o ? controller.openThread(id) : controller.close())}
     >
       <Popover.Trigger asChild>
-        <Pin ref={pinRef} item={item} pin={pin} focused={focused} onOpen={() => {}} />
+        <Pin
+          ref={pinRef}
+          item={item}
+          pin={pin}
+          focused={focused}
+          active={active}
+          onOpen={() => {}}
+        />
       </Popover.Trigger>
       <Popover.Portal container={container ?? undefined}>
         <Popover.Content

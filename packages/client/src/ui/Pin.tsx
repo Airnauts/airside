@@ -10,11 +10,21 @@ export type PinProps = {
   pin: XY
   onOpen?: () => void
   focused?: boolean
+  /**
+   * The pin's thread is the active one — its popover is open, or it's the thread selected in the
+   * sidebar panel. Active pins reverse to a white body with blue initials/outline and rise above
+   * neighbouring pins (z-index). Driven by a prop (not a CSS `data-state`) so panel selection —
+   * which never opens the popover — highlights the pin too.
+   */
+  active?: boolean
 } & ComponentPropsWithoutRef<'button'>
 
-/** The teardrop pin: solid-blue avatar, white ring, dark count pill. Resolved → grey + check. */
+/**
+ * The teardrop pin: initials sit directly on the solid-blue body (no nested ring), with a white
+ * outline + dark count pill. Resolved → grey + check. Active → white body, blue initials/outline.
+ */
 export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
-  { item, pin, onOpen, onClick, className, style, focused, ...rest },
+  { item, pin, onOpen, onClick, className, style, focused, active, ...rest },
   ref,
 ) {
   const resolved = item.status === 'resolved'
@@ -32,15 +42,18 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       data-comments-pin-id={item.id}
       data-testid="comments-pin"
       data-focused={focused ? 'true' : undefined}
+      data-active={active ? 'true' : undefined}
       aria-label={label}
       // compose: Radix's toggle (onClick) AND the optional onOpen both fire
       onClick={(e) => {
         onClick?.(e)
         onOpen?.()
       }}
-      // tip of the teardrop points at the anchor (-mt-[42px]); transform is computed → inline
+      // tip of the teardrop points at the anchor (-mt-[34px]); transform is computed → inline
       className={cn(
-        'cmnt:absolute cmnt:w-[42px] cmnt:h-[42px] cmnt:-ml-[21px] cmnt:-mt-[42px] cmnt:p-0 cmnt:border-none cmnt:bg-transparent cmnt:cursor-pointer cmnt:pointer-events-auto',
+        'cmnt:absolute cmnt:w-[34px] cmnt:h-[34px] cmnt:-ml-[17px] cmnt:-mt-[34px] cmnt:p-0 cmnt:border-none cmnt:bg-transparent cmnt:cursor-pointer cmnt:pointer-events-auto',
+        // lift the active pin above its neighbours (still below the popover/panel surface)
+        active && 'cmnt:z-10',
         className,
       )}
       // round to whole pixels so the teardrop tip renders crisp (no sub-pixel blur)
@@ -56,8 +69,14 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       <span
         aria-hidden={true}
         className={cn(
-          'cmnt:absolute cmnt:inset-0 cmnt:border-2 cmnt:border-white cmnt:shadow-lg',
-          resolved ? 'cmnt:bg-gray-400' : 'cmnt:bg-blue-600',
+          'cmnt:absolute cmnt:inset-0 cmnt:border-2 cmnt:shadow-lg',
+          // resolved keeps a muted grey body; gray-500 (not 400) so the white ✓ stays legible now
+          // that the inner white ring is gone. Active (open/selected) → reversed white + blue ring.
+          resolved
+            ? 'cmnt:bg-gray-500 cmnt:border-white'
+            : active
+              ? 'cmnt:bg-white cmnt:border-blue-600'
+              : 'cmnt:bg-blue-600 cmnt:border-white',
         )}
         // one-off teardrop shape (no utility) → inline
         style={{ borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)' }}
@@ -65,10 +84,12 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       <span
         aria-hidden={true}
         className={cn(
-          'cmnt:absolute cmnt:top-1.5 cmnt:left-1.5 cmnt:w-[30px] cmnt:h-[30px] cmnt:rounded-full cmnt:border-2 cmnt:border-white cmnt:flex cmnt:items-center cmnt:justify-center cmnt:font-semibold',
+          'cmnt:absolute cmnt:inset-0 cmnt:flex cmnt:items-center cmnt:justify-center cmnt:font-semibold',
           resolved
-            ? 'cmnt:bg-white cmnt:text-green-600 cmnt:text-base'
-            : 'cmnt:bg-blue-600 cmnt:text-white cmnt:text-xs',
+            ? 'cmnt:text-white cmnt:text-base'
+            : active
+              ? 'cmnt:text-blue-600 cmnt:text-[13px]'
+              : 'cmnt:text-white cmnt:text-[13px]',
         )}
       >
         {resolved ? '✓' : initials(item.createdBy)}
@@ -76,7 +97,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       {!resolved && item.commentCount > 0 && (
         <span
           aria-hidden={true}
-          className="cmnt:absolute cmnt:-top-1.5 cmnt:-right-[7px] cmnt:min-w-[22px] cmnt:h-[22px] cmnt:rounded-[11px] cmnt:bg-gray-900 cmnt:text-white cmnt:text-[11px] cmnt:font-bold cmnt:flex cmnt:items-center cmnt:justify-center cmnt:px-[5px] cmnt:border-2 cmnt:border-white cmnt:leading-[0]"
+          className="cmnt:absolute cmnt:-top-1 cmnt:-right-[6px] cmnt:min-w-[20px] cmnt:h-[20px] cmnt:rounded-[10px] cmnt:bg-gray-900 cmnt:text-white cmnt:text-[10px] cmnt:font-bold cmnt:flex cmnt:items-center cmnt:justify-center cmnt:px-[5px] cmnt:border-2 cmnt:border-white cmnt:leading-[0]"
         >
           {item.commentCount}
         </span>
