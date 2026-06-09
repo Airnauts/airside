@@ -260,6 +260,25 @@ describe('pipeline — thread actions (extensions)', () => {
     expect(res.status).toBe(404)
     expect(run).not.toHaveBeenCalled()
   })
+
+  it('409 when the action is registered but visibleWhen returns false', async () => {
+    const run = vi.fn()
+    const server = build({
+      extensions: [{ ...makeThreadActionExtension(run), visibleWhen: () => false }],
+    })
+    const id = await seedThread(server)
+
+    const res = await server.handle(
+      new Request(`http://x/threads/${id}/actions/jira.createIssue`, {
+        method: 'POST',
+        headers: allowedHeaders,
+      }),
+    )
+
+    expect(res.status).toBe(409)
+    expect(run).not.toHaveBeenCalled()
+    expect((await res.json()).error.code).toBe('CONFLICT')
+  })
 })
 
 describe('pipeline — legacy notifiers alias', () => {
