@@ -31,7 +31,7 @@ export async function addComment(
   const saved = await deps.repo.addComment(scope, params.id as ThreadId, comment)
   await dispatchNotifications(
     deps.notifiers,
-    buildNotificationEvent('comment.added', scope, existing, saved),
+    buildNotificationEvent('comment.added', scope, existing, saved, ctx.threadParam),
   )
   return saved
 }

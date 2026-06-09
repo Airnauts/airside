@@ -3,7 +3,7 @@ import { ThreadId } from '../ids'
 import { Anchor } from './anchor'
 import { CaptureContext, Provenance } from './capture'
 import { Author, Comment } from './comment'
-import { IsoTimestamp } from './common'
+import { HttpUrl, IsoTimestamp } from './common'
 
 export const ThreadStatus = z.enum(['open', 'resolved'])
 export type ThreadStatus = z.infer<typeof ThreadStatus>
@@ -15,7 +15,7 @@ const ThreadBase = z.object({
   id: ThreadId,
   scope: z.literal('page'),
   pageKey: z.string().nullable(),
-  pageUrl: z.url(),
+  pageUrl: HttpUrl,
   pageTitle: z.string().optional(),
   anchor: Anchor,
   status: ThreadStatus,

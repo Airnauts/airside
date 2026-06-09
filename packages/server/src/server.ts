@@ -27,6 +27,8 @@ export type CreateCommentsServerOptions = {
   storage: StorageAdapter
   /** Outbound notification channels (e.g. Slack). Failures never break a write. */
   notifiers?: Notifier[]
+  /** Query param the widget reads to focus a thread; used to build notification deep-links. Defaults to "comments-thread". */
+  threadParam?: string
   /** false to disable; defaults to { writesPerMin: 60, readsPerMin: 600 }. */
   rateLimit?: RateLimitConfig | false
   /** Override the rate limiter implementation entirely. */
@@ -84,7 +86,13 @@ export function assertUseCasesCoverOperations(
 export function createCommentsServer(opts: CreateCommentsServerOptions): CommentsServer {
   const ids = opts.ids ?? defaultIds()
   const now = opts.now ?? (() => new Date())
-  const ctxBase: Ctx = makeCtx({ projectId: opts.projectId, env: opts.env, now, ids })
+  const ctxBase: Ctx = makeCtx({
+    projectId: opts.projectId,
+    env: opts.env,
+    threadParam: opts.threadParam,
+    now,
+    ids,
+  })
   const rateLimiter: RateLimiter | null =
     opts.rateLimit === false
       ? null

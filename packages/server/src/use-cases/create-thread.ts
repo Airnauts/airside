@@ -47,7 +47,7 @@ export async function createThread(
   })
   await dispatchNotifications(
     deps.notifiers,
-    buildNotificationEvent('thread.created', scope, thread, firstComment),
+    buildNotificationEvent('thread.created', scope, thread, firstComment, ctx.threadParam),
   )
   return thread
 }

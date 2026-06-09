@@ -1,0 +1,12 @@
+import { defineConfig } from 'tsup'
+
+export default defineConfig({
+  entry: { index: 'src/index.ts', smtp: 'src/smtp.ts', resend: 'src/resend.ts' },
+  format: ['esm'],
+  dts: false,
+  sourcemap: true,
+  outDir: 'dist',
+  // tsup's clean does NOT delete dist/.tsbuildinfo, so declaration re-emit is
+  // forced by `tsc --build --force` in package.json, not by this clean (ADR-0023).
+  clean: true,
+})

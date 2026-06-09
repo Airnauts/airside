@@ -1,4 +1,10 @@
-import type { AttachmentId, AuthorId, CommentId, ThreadId } from '@airnauts/comments-core'
+import {
+  type AttachmentId,
+  type AuthorId,
+  type CommentId,
+  DEFAULT_THREAD_PARAM,
+  type ThreadId,
+} from '@airnauts/comments-core'
 import { nanoid } from 'nanoid'
 
 export type IdFactory = {
@@ -20,6 +26,7 @@ export function defaultIds(): IdFactory {
 export type Ctx = {
   projectId: string
   env?: string
+  threadParam: string
   now: () => Date
   ids: IdFactory
 }
@@ -27,6 +34,7 @@ export type Ctx = {
 export type CtxInit = {
   projectId: string
   env?: string
+  threadParam?: string
   now?: () => Date
   ids?: IdFactory
 }
@@ -35,6 +43,7 @@ export function makeCtx(init: CtxInit): Ctx {
   return {
     projectId: init.projectId,
     env: init.env,
+    threadParam: init.threadParam ?? DEFAULT_THREAD_PARAM,
     now: init.now ?? (() => new Date()),
     ids: init.ids ?? defaultIds(),
   }
