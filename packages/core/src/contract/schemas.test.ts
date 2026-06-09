@@ -33,6 +33,20 @@ describe('request schemas', () => {
         .attachmentIds,
     ).toEqual(['at_1'])
   })
+  it('CreateThreadBody rejects non-http(s) pageUrl schemes', () => {
+    const body = {
+      anchor,
+      comment: { text: 'hi' },
+      author: { email: 'a@b.com' },
+      captureContext: { viewportW: 1, viewportH: 1, devicePixelRatio: 1, userAgent: 'x' },
+    }
+    expect(CreateThreadBody.parse({ ...body, pageUrl: 'http://x.com/a' }).pageUrl).toBe(
+      'http://x.com/a',
+    )
+    // a deep-link is built from pageUrl server-side, so an active scheme must never get in
+    expect(() => CreateThreadBody.parse({ ...body, pageUrl: 'javascript:alert(1)' })).toThrow()
+    expect(() => CreateThreadBody.parse({ ...body, pageUrl: 'data:text/html,x' })).toThrow()
+  })
   it('ListThreadsQuery accepts an empty query and a status filter', () => {
     expect(ListThreadsQuery.parse({})).toEqual({})
     expect(ListThreadsQuery.parse({ status: 'resolved', sort: 'updatedAt' }).status).toBe(

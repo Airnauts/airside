@@ -1098,3 +1098,73 @@ shared `toListItem`; mongo widens the list projection with `$slice: 1`.
 **Consequences.** One list request renders previews; empty `text` denotes an
 attachment-only root; pre-1.0 `minor` bump across core/adapters/server/next; `Thread`
 is unchanged so `getThread`/`createThread` paths are untouched.
+
+## ADR-0031 — Server owns the thread deep-link
+
+**Date:** 2026-06-08. **Status:** accepted.
+
+**Context.** The thread deep-link (`pageUrl?comments-thread=<id>`) is a contract between the
+widget (reads the param to focus a thread) and notifiers (write it). The Slack notifier
+re-declared its own `DEFAULT_THREAD_PARAM` and `threadParam` option, duplicating the client's
+constant with nothing enforcing they match; each new channel would copy it again.
+
+**Decision.** Move `DEFAULT_THREAD_PARAM` and `threadLink()` into `@airnauts/comments-core` as the
+single source of truth. `createCommentsServer` gains an optional `threadParam` (default from core),
+carried on `Ctx`; `buildNotificationEvent` builds the full link once and adds `threadUrl` to
+`NotificationEvent`. Notifiers read `event.threadUrl` and never construct links. The widget and
+server defaults both come from the core constant, so the zero-config case agrees automatically.
+
+**Consequences.** Removing `threadParam` from `SlackNotifierOptions` is breaking (pre-1.0 → minor).
+`NotificationEvent` carries one more field. A host that renames the param sets it in two places
+(widget + server), never per-notifier. Supersedes the per-notifier link handling introduced in
+ADR-0029.
+
+## ADR-0032 — Email notifier with a pluggable transport port
+
+**Date:** 2026-06-08. **Status:** accepted.
+
+**Context.** Email is the second notification channel (after Slack, ADR-0029). Unlike a Slack
+webhook (one channel baked into the URL), email is per-recipient, and hosts run on different
+providers and runtimes (Node servers vs. serverless/edge). A static recipient list was considered
+but rejected: the value of email is keeping a thread's participants in the loop as it grows, and a
+hand-maintained list neither targets the right people nor scales per thread.
+
+**Decision.** Ship `@airnauts/comments-notifier-email`: `emailNotifier({ transport, from, … })`
+implements the `Notifier` port and delegates delivery to an injected `EmailTransport` port. Two
+built-in transports as subpath exports — `/smtp` (nodemailer, optional peer dep) and `/resend`
+(fetch) — keep the package root dependency-free; any provider can be added by implementing the
+port. **Recipients are the thread's participants**: the server derives `event.participants` (the
+thread's distinct comment authors, minus the event's own author) in `buildNotificationEvent`, and
+the notifier sends to that list (single → `to`; multiple → `bcc` for privacy; empty → no send).
+Bodies are HTML + plain-text multipart with HTML-escaped user content, a minimal HTML document
+shell, and CR/LF folded out of the subject to block header injection.
+
+**Consequences.** A `thread.created` event has only its author as a participant, so after the
+self-exclusion **a brand-new thread emails nobody** — notifications begin once a thread has a
+reply. The "alert a fixed team about every new thread" use case is intentionally not served here;
+a host wanting that supplies its own `Notifier` (or Slack). Deriving participants is free — the
+use-case already loaded the thread. `nodemailer` is CJS/Node-only — the SMTP transport will not run
+on edge; Resend will. Under ADR-0029 (dispatch awaited in-request to survive serverless freeze) the
+SMTP handshake adds more comment-POST latency than the HTTP channels, so the SMTP transport caps
+connection/greeting/socket at a 10 s default. Mention events and host-overridable templates remain
+deferred; the ports accommodate them later with no core change.
+
+## ADR-0033 — Restrict `pageUrl` to http(s) schemes
+
+**Date:** 2026-06-09. **Status:** accepted.
+
+**Context.** `pageUrl` was validated with a bare `z.url()`, which accepts any scheme parseable by
+`URL` — including `javascript:` and `data:`. The server builds the thread deep-link (`threadUrl`,
+ADR-0031) from `pageUrl`, and notifiers render it into an email `href` and Slack markdown. An
+active scheme stored as `pageUrl` would therefore flow into a clickable link, and the email's
+attribute-escaping prevents markup breakout but not a `javascript:`/`data:` URL itself.
+
+**Decision.** Introduce a shared `HttpUrl = z.url({ protocol: /^https?$/ })` in core and use it for
+`pageUrl` on both the `CreateThreadBody` request (the ingestion boundary) and the `Thread` schema.
+Non-http(s) schemes are rejected at validation. The schema stays inline (no named component) so the
+wire contract still emits a plain URL string.
+
+**Consequences.** Browser hosts are unaffected — `window.location.href` is always http(s). A host
+embedding the widget on a non-http(s) origin (e.g. a `file://` page) can no longer create threads;
+this is an accepted trade-off for closing the active-scheme vector at the source rather than
+per-notifier. Pre-1.0 `minor` bump on core. Attachment URLs are unchanged (server-generated).

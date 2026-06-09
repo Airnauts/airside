@@ -9,6 +9,8 @@ const event: NotificationEvent = {
   threadId: 't_1' as ThreadId,
   pageUrl: 'https://example.com/about',
   pageTitle: 'About',
+  threadUrl: 'https://example.com/about?comments-thread=t_1',
+  participants: [],
   text: 'Looks off here',
   author: { email: 'alice@example.com', name: 'Alice' },
   createdAt: '2026-06-03T10:00:00.000Z',
@@ -83,10 +85,5 @@ describe('formatSlackMessage', () => {
     const blocks = JSON.stringify(formatSlackMessage(event).blocks)
     expect(blocks).toContain('https://example.com/about?comments-thread=t_1')
     expect(blocks).not.toContain('|https://example.com/about>') // never a bare page link
-  })
-
-  it('honours a custom thread param', () => {
-    const blocks = JSON.stringify(formatSlackMessage(event, { threadParam: 'c-thread' }))
-    expect(blocks).toContain('https://example.com/about?c-thread=t_1')
   })
 })

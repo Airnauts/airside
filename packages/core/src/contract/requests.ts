@@ -3,7 +3,7 @@ import { AttachmentId, ThreadId } from '../ids'
 import { Anchor, Signals } from '../schemas/anchor'
 import { CaptureContext, Provenance } from '../schemas/capture'
 import { Author } from '../schemas/comment'
-import { Cursor } from '../schemas/common'
+import { Cursor, HttpUrl } from '../schemas/common'
 import { AnchorState, ThreadStatus } from '../schemas/thread'
 
 const Selectors = z.tuple([z.string(), z.string()])
@@ -17,7 +17,7 @@ const CONTENT_REQUIRED = { message: 'a comment needs text or an attachment' }
 export const CreateThreadBody = z
   .object({
     pageKey: z.string().optional(),
-    pageUrl: z.url(),
+    pageUrl: HttpUrl,
     pageTitle: z.string().optional(),
     anchor: Anchor,
     comment: z
