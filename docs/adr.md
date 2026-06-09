@@ -1168,3 +1168,29 @@ wire contract still emits a plain URL string.
 embedding the widget on a non-http(s) origin (e.g. a `file://` page) can no longer create threads;
 this is an accepted trade-off for closing the active-scheme vector at the source rather than
 per-notifier. Pre-1.0 `minor` bump on core. Attachment URLs are unchanged (server-generated).
+
+## ADR-0034 — Server extension capability model (notifications + thread actions)
+
+**Date:** 2026-06-09. **Status:** accepted.
+
+**Context.** Notifications (Slack/email) were the only server plugin type, accepted via `notifiers?`.
+We now need manual, user-triggered integrations (Jira issue creation) that run on command and persist
+returned state on the thread. Both are plugins, but they have different lifecycles: notifications
+subscribe to events and must be failure-isolated; thread actions run explicit user commands, may fail
+visibly, and persist external links.
+
+**Decision.** Introduce a single `extensions` construction option carrying a discriminated union
+`ServerExtension = NotificationExtension | ThreadActionExtension`. Extensions are server-side and may
+contain functions (`onEvent`, `run`, `visibleWhen`); the client never receives executable extension
+code — only typed `ThreadActionDescriptor`s evaluated server-side. Thread read responses embed a
+computed, non-persisted `actions` array; threads persist `externalLinks`. A generic
+`POST /threads/:id/actions/:actionId` endpoint runs actions. `notifiers?` remains a deprecated alias
+that wraps `Notifier[]` into notification extensions.
+
+**Consequences.** One loader/registration path for all server plugins; future integrations (Linear,
+GitHub Issues) reuse the thread-action shape with no server change. Notification failures stay
+isolated (`Promise.allSettled`); thread-action failures surface to the reviewer because the action
+was explicitly requested. `actions` is response-only — it must never be written to storage.
+`notifier-slack` / `notifier-email` public factory APIs change (pre-1.0 breaking) to return
+notification extensions. Concurrent duplicate creation is not fully prevented in v1 (practical
+mitigation only); documented as a known limitation.
