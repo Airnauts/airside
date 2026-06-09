@@ -1,7 +1,13 @@
 import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { KEY_HEADER_NAME, operations } from '@airnauts/comments-core'
 import { makeAuthor, makeCreateThreadBody } from '@airnauts/comments-test-support'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import {
+  IntegrationError,
+  type ServerExtension,
+  type ThreadActionContext,
+  type ThreadActionResult,
+} from '../extensions/types'
 import type { UseCaseMap } from '../router'
 import { assertUseCasesCoverOperations, createCommentsServer } from '../server'
 import type { StorageAdapter } from '../storage/types'
@@ -167,6 +173,111 @@ describe('pipeline — router', () => {
     const fetched = await getRes.json()
     expect(fetched.id).toBe(created.id)
     expect(getRes.headers.get('access-control-allow-origin')).toBe('https://app.example.com')
+  })
+})
+
+describe('pipeline — thread actions (extensions)', () => {
+  const externalLink = {
+    provider: 'jira',
+    externalId: '10001',
+    key: 'PROJ-1',
+    label: 'PROJ-1',
+    url: 'https://jira.example.com/browse/PROJ-1',
+    createdAt: '2026-06-09T00:00:00.000Z',
+  }
+
+  function makeThreadActionExtension(
+    run: (ctx: ThreadActionContext) => Promise<ThreadActionResult>,
+  ): ServerExtension {
+    return {
+      kind: 'thread-action',
+      id: 'jira.createIssue',
+      provider: 'jira',
+      label: 'Create Jira issue',
+      slot: 'thread-toolbar',
+      run,
+    }
+  }
+
+  async function seedThread(server: ReturnType<typeof build>): Promise<string> {
+    const res = await server.handle(
+      new Request('http://x/threads', {
+        method: 'POST',
+        headers: allowedHeaders,
+        body: JSON.stringify(makeCreateThreadBody()),
+      }),
+    )
+    expect(res.status).toBe(201)
+    return (await res.json()).id
+  }
+
+  it('routes a thread action: runs the extension and persists its external link', async () => {
+    const run = vi.fn().mockResolvedValue({ externalLink })
+    const server = build({ extensions: [makeThreadActionExtension(run)] })
+    const id = await seedThread(server)
+
+    const res = await server.handle(
+      new Request(`http://x/threads/${id}/actions/jira.createIssue`, {
+        method: 'POST',
+        headers: allowedHeaders,
+      }),
+    )
+
+    expect(res.status).toBe(200)
+    expect(run).toHaveBeenCalledTimes(1)
+    const body = await res.json()
+    expect(body.externalLinks).toContainEqual(externalLink)
+  })
+
+  it('502 when the action throws an IntegrationError (upstream failure)', async () => {
+    const run = vi.fn().mockRejectedValue(new IntegrationError('jira down', 'jira'))
+    const server = build({ extensions: [makeThreadActionExtension(run)] })
+    const id = await seedThread(server)
+
+    const res = await server.handle(
+      new Request(`http://x/threads/${id}/actions/jira.createIssue`, {
+        method: 'POST',
+        headers: allowedHeaders,
+      }),
+    )
+
+    expect(res.status).toBe(502)
+    expect((await res.json()).error.code).toBe('INTEGRATION_ERROR')
+  })
+
+  it('404 for an unknown actionId', async () => {
+    const run = vi.fn().mockResolvedValue({ externalLink })
+    const server = build({ extensions: [makeThreadActionExtension(run)] })
+    const id = await seedThread(server)
+
+    const res = await server.handle(
+      new Request(`http://x/threads/${id}/actions/jira.unknown`, {
+        method: 'POST',
+        headers: allowedHeaders,
+      }),
+    )
+
+    expect(res.status).toBe(404)
+    expect(run).not.toHaveBeenCalled()
+  })
+})
+
+describe('pipeline — legacy notifiers alias', () => {
+  it('wraps a Notifier.notify into a notification extension and fires it on create', async () => {
+    const notify = vi.fn().mockResolvedValue(undefined)
+    const server = build({ notifiers: [{ name: 'spy', notify }] })
+
+    const res = await server.handle(
+      new Request('http://x/threads', {
+        method: 'POST',
+        headers: allowedHeaders,
+        body: JSON.stringify(makeCreateThreadBody()),
+      }),
+    )
+
+    expect(res.status).toBe(201)
+    expect(notify).toHaveBeenCalledTimes(1)
+    expect(notify.mock.calls[0][0].type).toBe('thread.created')
   })
 })
 

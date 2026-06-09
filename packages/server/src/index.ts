@@ -14,6 +14,15 @@ export {
   UploadTooLargeError,
   ValidationError,
 } from './errors'
+export { IntegrationError } from './extensions/types'
+export type {
+  ActionVisibilityContext,
+  NotificationExtension,
+  ServerExtension,
+  ThreadActionContext,
+  ThreadActionExtension,
+  ThreadActionResult,
+} from './extensions/types'
 export type { NotificationEvent, NotificationEventType, Notifier } from './notify/types'
 export type { CheckResult, RateLimitConfig, RateLimiter } from './rate-limit'
 export { InMemoryRateLimiter } from './rate-limit'

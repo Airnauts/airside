@@ -4,6 +4,7 @@ import type {
   Thread,
   ThreadActionDescriptor,
 } from '@airnauts/comments-core'
+import { DomainError } from '../errors'
 import type { NotificationEvent } from '../notify/types'
 import type { Scope } from '../repository/types'
 
@@ -56,14 +57,17 @@ export function isThreadAction(e: ServerExtension): e is ThreadActionExtension {
   return e.kind === 'thread-action'
 }
 
-/** Thrown by an action's `run` for an upstream integration failure (auth/network/4xx-5xx). */
-export class IntegrationError extends Error {
+/**
+ * Thrown by an action's `run` for an upstream integration failure (auth/network/4xx-5xx).
+ * Extends `DomainError` so `toResponse` maps it to its declared HTTP status (502) via
+ * the shared `ERROR_STATUS` table — see core's `INTEGRATION_ERROR`.
+ */
+export class IntegrationError extends DomainError {
   readonly code = 'INTEGRATION_ERROR' as const
   constructor(
     message: string,
     readonly provider: string,
   ) {
     super(message)
-    this.name = 'IntegrationError'
   }
 }

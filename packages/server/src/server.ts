@@ -3,6 +3,8 @@ import { buildCorsHeaders, isPreflight, preflightResponse } from './cors'
 import type { Ctx, IdFactory } from './ctx'
 import { defaultIds, makeCtx } from './ctx'
 import { RateLimitedError, toResponse } from './errors'
+import { buildExtensionRegistry } from './extensions/registry'
+import type { NotificationExtension, ServerExtension } from './extensions/types'
 import type { Notifier } from './notify/types'
 import { InMemoryRateLimiter, type RateLimitConfig, type RateLimiter } from './rate-limit'
 import type { Repository } from './repository/types'
@@ -15,6 +17,7 @@ import { createThread } from './use-cases/create-thread'
 import { getThread } from './use-cases/get-thread'
 import { listThreads } from './use-cases/list-threads'
 import { refreshAnchor } from './use-cases/refresh-anchor'
+import { runThreadAction } from './use-cases/run-thread-action'
 import { setThreadStatus } from './use-cases/set-thread-status'
 import { uploadAttachment } from './use-cases/upload-attachment'
 
@@ -25,7 +28,9 @@ export type CreateCommentsServerOptions = {
   allowedOrigins: string[]
   repository: Repository
   storage: StorageAdapter
-  /** Outbound notification channels (e.g. Slack). Failures never break a write. */
+  /** Server plugins: notifications + thread actions. Forward-looking API. */
+  extensions?: ServerExtension[]
+  /** @deprecated Use `extensions`. Wrapped into notification extensions. */
   notifiers?: Notifier[]
   /** Query param the widget reads to focus a thread; used to build notification deep-links. Defaults to "comments-thread". */
   threadParam?: string
@@ -54,6 +59,11 @@ function defaultExtractIp(req: Request): string {
     if (first) return first
   }
   return 'unknown'
+}
+
+/** Wrap a legacy `Notifier` (`.notify`) as a `NotificationExtension` (`.onEvent`). */
+function adaptNotifier(n: Notifier): NotificationExtension {
+  return { kind: 'notification', name: n.name, onEvent: (e) => n.notify(e) }
 }
 
 function addCorsHeaders(
@@ -100,15 +110,24 @@ export function createCommentsServer(opts: CreateCommentsServerOptions): Comment
         new InMemoryRateLimiter(opts.rateLimit ?? { writesPerMin: 60, readsPerMin: 600 }))
   const extractIp = opts.extractIp ?? defaultExtractIp
 
+  const registry = buildExtensionRegistry([
+    ...(opts.extensions ?? []),
+    ...(opts.notifiers ?? []).map(adaptNotifier),
+  ])
+  const notifications = [...registry.notifications]
+
   const useCases: UseCaseMap = {
     createThread: (input) =>
-      createThread(input as never, { repo: opts.repository, notifiers: opts.notifiers }),
-    listThreads: (input) => listThreads(input as never, { repo: opts.repository }),
-    getThread: (input) => getThread(input as never, { repo: opts.repository }),
+      createThread(input as never, { repo: opts.repository, notifications, registry }),
+    listThreads: (input) => listThreads(input as never, { repo: opts.repository, registry }),
+    getThread: (input) => getThread(input as never, { repo: opts.repository, registry }),
     addComment: (input) =>
-      addComment(input as never, { repo: opts.repository, notifiers: opts.notifiers }),
-    setThreadStatus: (input) => setThreadStatus(input as never, { repo: opts.repository }),
-    refreshAnchor: (input) => refreshAnchor(input as never, { repo: opts.repository }),
+      addComment(input as never, { repo: opts.repository, notifications }),
+    setThreadStatus: (input) =>
+      setThreadStatus(input as never, { repo: opts.repository, registry }),
+    refreshAnchor: (input) => refreshAnchor(input as never, { repo: opts.repository, registry }),
+    runThreadAction: (input) =>
+      runThreadAction(input as never, { repo: opts.repository, registry }),
     uploadAttachment: (input) =>
       uploadAttachment(input as never, {
         storage: opts.storage,
