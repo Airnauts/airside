@@ -2,6 +2,7 @@ import type {
   Attachment,
   AttachmentId,
   Comment,
+  ExternalLink,
   Thread,
   ThreadId,
   ThreadListItem,
@@ -214,6 +215,31 @@ export function createMongoRepository({ db }: { db: Db }): Repository {
         .find({ _id: { $in: ids as unknown as string[] }, ...scopeFilter(scope) })
         .toArray()
       return docs.map((d) => toAttachment(d as StoredAttachment))
+    },
+
+    async upsertExternalLink(
+      scope: Scope,
+      threadId: ThreadId,
+      link: ExternalLink,
+      now: string,
+    ): Promise<Thread> {
+      const filter = { _id: threadId, ...scopeFilter(scope) }
+      // Two-step: Mongo can't $pull and $push the same array in one update.
+      // Acceptable for v1 (one link per provider); not atomic across the two ops.
+      const pulled = await col.updateOne(filter, {
+        $pull: { externalLinks: { provider: link.provider } },
+      } as UpdateFilter<StoredThread>)
+      if (pulled.matchedCount === 0) throw new Error('thread not found')
+      const doc = await col.findOneAndUpdate(
+        filter,
+        {
+          $push: { externalLinks: link },
+          $set: { updatedAt: now, lastActivityAt: now },
+        } as UpdateFilter<StoredThread>,
+        { returnDocument: 'after' },
+      )
+      if (!doc) throw new Error('thread not found')
+      return toThread(doc)
     },
   }
 }
