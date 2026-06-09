@@ -24,10 +24,7 @@ export type ThreadActionContext = { thread: Thread; scope: Scope }
  * will NOT have `comments` — do not read it in visibleWhen.
  */
 export type ActionVisibilityContext = {
-  thread: Pick<
-    Thread,
-    'id' | 'status' | 'anchorState' | 'externalLinks' | 'pageUrl' | 'pageTitle'
-  >
+  thread: Pick<Thread, 'id' | 'status' | 'anchorState' | 'externalLinks' | 'pageUrl' | 'pageTitle'>
   scope: Scope
 }
 

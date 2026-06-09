@@ -1,5 +1,5 @@
-import type { Scope } from '../repository/types'
 import type { ExtensionRegistry } from '../extensions/registry'
+import type { Scope } from '../repository/types'
 
 export function toThreadView<T extends { externalLinks?: unknown[] }>(
   thread: T,

@@ -18,8 +18,16 @@ const event: NotificationEvent = {
 
 describe('dispatchNotifications', () => {
   it('calls onEvent on every extension', async () => {
-    const a: NotificationExtension = { kind: 'notification', name: 'a', onEvent: vi.fn(async () => {}) }
-    const b: NotificationExtension = { kind: 'notification', name: 'b', onEvent: vi.fn(async () => {}) }
+    const a: NotificationExtension = {
+      kind: 'notification',
+      name: 'a',
+      onEvent: vi.fn(async () => {}),
+    }
+    const b: NotificationExtension = {
+      kind: 'notification',
+      name: 'b',
+      onEvent: vi.fn(async () => {}),
+    }
     await dispatchNotifications([a, b], event)
     expect(a.onEvent).toHaveBeenCalledWith(event)
     expect(b.onEvent).toHaveBeenCalledWith(event)

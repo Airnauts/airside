@@ -1,11 +1,11 @@
 import type { ThreadActionDescriptor } from '@airnauts/comments-core'
 import {
   type ActionVisibilityContext,
+  isNotification,
+  isThreadAction,
   type NotificationExtension,
   type ServerExtension,
   type ThreadActionExtension,
-  isNotification,
-  isThreadAction,
 } from './types'
 
 export type ExtensionRegistry = {

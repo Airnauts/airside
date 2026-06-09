@@ -121,8 +121,7 @@ export function createCommentsServer(opts: CreateCommentsServerOptions): Comment
       createThread(input as never, { repo: opts.repository, notifications, registry }),
     listThreads: (input) => listThreads(input as never, { repo: opts.repository, registry }),
     getThread: (input) => getThread(input as never, { repo: opts.repository, registry }),
-    addComment: (input) =>
-      addComment(input as never, { repo: opts.repository, notifications }),
+    addComment: (input) => addComment(input as never, { repo: opts.repository, notifications }),
     setThreadStatus: (input) =>
       setThreadStatus(input as never, { repo: opts.repository, registry }),
     refreshAnchor: (input) => refreshAnchor(input as never, { repo: opts.repository, registry }),

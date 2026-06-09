@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Thread, ThreadListItem, ThreadView, ThreadListItemView } from './thread'
+import { Thread, ThreadListItem, ThreadListItemView, ThreadView } from './thread'
 
 const base = {
   id: 't1',
@@ -91,27 +91,47 @@ describe('externalLinks + view DTOs', () => {
       comments: [],
       captureContext: VALID_CAPTURE,
       externalLinks: [
-        { provider: 'jira', externalId: '10042', key: 'WEB-123', label: 'Jira WEB-123', url: 'https://company.atlassian.net/browse/WEB-123', createdAt: '2026-06-09T10:00:00.000Z' },
+        {
+          provider: 'jira',
+          externalId: '10042',
+          key: 'WEB-123',
+          label: 'Jira WEB-123',
+          url: 'https://company.atlassian.net/browse/WEB-123',
+          createdAt: '2026-06-09T10:00:00.000Z',
+        },
       ],
     }
     expect(() => Thread.parse(t)).not.toThrow()
   })
 
   it('Thread is valid without externalLinks (optional)', () => {
-    expect(() => Thread.parse({ ...baseFields, comments: [], captureContext: VALID_CAPTURE })).not.toThrow()
+    expect(() =>
+      Thread.parse({ ...baseFields, comments: [], captureContext: VALID_CAPTURE }),
+    ).not.toThrow()
   })
 
   it('ThreadView extends Thread with an actions array', () => {
     const view = {
-      ...baseFields, comments: [], captureContext: VALID_CAPTURE,
-      actions: [{ id: 'jira.createIssue', provider: 'jira', label: 'Create Jira issue', slot: 'thread-toolbar' }],
+      ...baseFields,
+      comments: [],
+      captureContext: VALID_CAPTURE,
+      actions: [
+        {
+          id: 'jira.createIssue',
+          provider: 'jira',
+          label: 'Create Jira issue',
+          slot: 'thread-toolbar',
+        },
+      ],
     }
     expect(() => ThreadView.parse(view)).not.toThrow()
   })
 
   it('Thread (storage shape) does NOT carry actions', () => {
     const parsed = Thread.parse({
-      ...baseFields, comments: [], captureContext: VALID_CAPTURE,
+      ...baseFields,
+      comments: [],
+      captureContext: VALID_CAPTURE,
       actions: [{ id: 'x', provider: 'p', label: 'L', slot: 'thread-toolbar' }],
     }) as Record<string, unknown>
     expect(parsed.actions).toBeUndefined()

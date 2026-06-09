@@ -33,7 +33,9 @@ describe('buildOpenApiDocument', () => {
   it('registers component schemas and the key-header security scheme', () => {
     const doc = buildOpenApiDocument()
     const schemas = doc.components?.schemas ?? {}
-    expect(Object.keys(schemas)).toEqual(expect.arrayContaining(['ThreadView', 'Anchor', 'Signals']))
+    expect(Object.keys(schemas)).toEqual(
+      expect.arrayContaining(['ThreadView', 'Anchor', 'Signals']),
+    )
     const scheme = doc.components?.securitySchemes?.commentsKey
     expect(scheme).toMatchObject({ type: 'apiKey', in: 'header', name: KEY_HEADER_NAME })
   })

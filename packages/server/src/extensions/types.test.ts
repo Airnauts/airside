@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ServerExtension, ThreadActionResult } from './types'
-import { isThreadAction, isNotification } from './types'
+import { isNotification, isThreadAction } from './types'
 
 describe('extension type guards', () => {
   const action: ServerExtension = {
