@@ -1,7 +1,7 @@
 import type { ThreadId } from '@airnauts/comments-core'
 import type { NotificationEvent } from '@airnauts/comments-server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { formatSlackMessage, slackNotifier } from './index'
+import { formatSlackMessage, slackNotifications } from './index'
 
 const event: NotificationEvent = {
   type: 'thread.created',
@@ -18,12 +18,22 @@ const event: NotificationEvent = {
 
 afterEach(() => vi.unstubAllGlobals())
 
-describe('slackNotifier', () => {
+describe('slackNotifications', () => {
+  it('returns a single notification extension named "slack"', () => {
+    const extensions = slackNotifications({ webhookUrl: 'https://hooks.slack.com/x' })
+    expect(extensions).toHaveLength(1)
+    expect(extensions[0]!.kind).toBe('notification')
+    expect(extensions[0]!.name).toBe('slack')
+    expect(typeof extensions[0]!.onEvent).toBe('function')
+  })
+
   it('POSTs a Block Kit message to the webhook URL', async () => {
     const fetchMock = vi.fn(async () => new Response(null, { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    await slackNotifier({ webhookUrl: 'https://hooks.slack.com/services/T/B/x' }).notify(event)
+    await slackNotifications({ webhookUrl: 'https://hooks.slack.com/services/T/B/x' })[0]!.onEvent(
+      event,
+    )
 
     expect(fetchMock).toHaveBeenCalledOnce()
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
@@ -39,15 +49,11 @@ describe('slackNotifier', () => {
     const fetchMock = vi.fn(async () => new Response(null, { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    await slackNotifier({ webhookUrl: 'https://hooks.slack.com/x' }).notify(event)
+    await slackNotifications({ webhookUrl: 'https://hooks.slack.com/x' })[0]!.onEvent(event)
 
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     const blocks = JSON.stringify(JSON.parse(init.body as string).blocks)
     expect(blocks).toContain('https://example.com/about?comments-thread=t_1')
-  })
-
-  it('exposes a stable name', () => {
-    expect(slackNotifier({ webhookUrl: 'https://hooks.slack.com/x' }).name).toBe('slack')
   })
 
   it('throws on a non-2xx response without leaking the webhook URL', async () => {
@@ -55,8 +61,8 @@ describe('slackNotifier', () => {
       'fetch',
       vi.fn(async () => new Response('no', { status: 500 })),
     )
-    const err = await slackNotifier({ webhookUrl: 'https://hooks.slack.com/secret-xyz' })
-      .notify(event)
+    const err = await slackNotifications({ webhookUrl: 'https://hooks.slack.com/secret-xyz' })[0]!
+      .onEvent(event)
       .catch((e) => e as Error)
     expect(err).toBeInstanceOf(Error)
     expect(err.message).toMatch(/500/)

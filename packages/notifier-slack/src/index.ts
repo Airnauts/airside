@@ -1,4 +1,4 @@
-import type { NotificationEvent, Notifier } from '@airnauts/comments-server'
+import type { NotificationEvent, NotificationExtension } from '@airnauts/comments-server'
 
 export type SlackNotifierOptions = {
   /** Slack Incoming Webhook URL. The target channel is baked into this URL. */
@@ -8,22 +8,25 @@ export type SlackNotifierOptions = {
 /** Abort the webhook request after this many ms so a hung endpoint can't stall a write. */
 const TIMEOUT_MS = 3000
 
-export function slackNotifier(opts: SlackNotifierOptions): Notifier {
-  return {
-    name: 'slack',
-    async notify(event: NotificationEvent): Promise<void> {
-      const res = await fetch(opts.webhookUrl, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(formatSlackMessage(event)),
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      })
-      if (!res.ok) {
-        // Never include the webhook URL — it is a credential that ends up in logs.
-        throw new Error(`slack webhook responded ${res.status}`)
-      }
+export function slackNotifications(opts: SlackNotifierOptions): NotificationExtension[] {
+  return [
+    {
+      kind: 'notification',
+      name: 'slack',
+      async onEvent(event: NotificationEvent): Promise<void> {
+        const res = await fetch(opts.webhookUrl, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(formatSlackMessage(event)),
+          signal: AbortSignal.timeout(TIMEOUT_MS),
+        })
+        if (!res.ok) {
+          // Never include the webhook URL — it is a credential that ends up in logs.
+          throw new Error(`slack webhook responded ${res.status}`)
+        }
+      },
     },
-  }
+  ]
 }
 
 export type SlackMessage = {
