@@ -4,6 +4,8 @@ import { Anchor } from './anchor'
 import { CaptureContext, Provenance } from './capture'
 import { Author, Comment } from './comment'
 import { HttpUrl, IsoTimestamp } from './common'
+import { ExternalLink } from './external-link'
+import { ThreadActionDescriptor } from './thread-action'
 
 export const ThreadStatus = z.enum(['open', 'resolved'])
 export type ThreadStatus = z.infer<typeof ThreadStatus>
@@ -28,6 +30,7 @@ const ThreadBase = z.object({
   updatedAt: IsoTimestamp,
   lastActivityAt: IsoTimestamp,
   schemaVersion: z.number().int().positive(),
+  externalLinks: z.array(ExternalLink).optional(),
 })
 
 export const ThreadListItem = ThreadBase.extend({
@@ -41,3 +44,15 @@ export const Thread = ThreadBase.extend({
   provenance: Provenance.optional(),
 }).meta({ id: 'Thread' })
 export type Thread = z.infer<typeof Thread>
+
+/** Response-only: full thread plus server-evaluated, non-persisted actions. */
+export const ThreadView = Thread.extend({
+  actions: z.array(ThreadActionDescriptor),
+}).meta({ id: 'ThreadView' })
+export type ThreadView = z.infer<typeof ThreadView>
+
+/** Response-only: list item plus server-evaluated actions. */
+export const ThreadListItemView = ThreadListItem.extend({
+  actions: z.array(ThreadActionDescriptor),
+}).meta({ id: 'ThreadListItemView' })
+export type ThreadListItemView = z.infer<typeof ThreadListItemView>

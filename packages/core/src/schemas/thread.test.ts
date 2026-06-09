@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Thread, ThreadListItem } from './thread'
+import { Thread, ThreadListItem, ThreadView, ThreadListItemView } from './thread'
 
 const base = {
   id: 't1',
@@ -57,5 +57,73 @@ describe('thread schemas', () => {
         .rootComment?.text,
     ).toBe('')
     expect(ThreadListItem.parse({ ...base, rootComment: null }).rootComment).toBeNull()
+  })
+})
+
+describe('externalLinks + view DTOs', () => {
+  const baseFields = {
+    id: 't1',
+    scope: 'page' as const,
+    pageKey: 'https://x.test/a',
+    pageUrl: 'https://x.test/a',
+    anchor: {
+      schemaVersion: 1,
+      selectors: ['body>div', 'body>div.flex'] as [string, string],
+      signals: { tag: 'div', classes: [], siblingIndex: 0, ancestorTrail: [] },
+      offset: { fx: 0.1, fy: 0.2 },
+    },
+    status: 'open' as const,
+    anchorState: 'anchored' as const,
+    commentCount: 1,
+    unresolvedCount: 1,
+    createdBy: { email: 'a@b.com' },
+    createdAt: '2026-06-09T10:00:00.000Z',
+    updatedAt: '2026-06-09T10:00:00.000Z',
+    lastActivityAt: '2026-06-09T10:00:00.000Z',
+    schemaVersion: 1,
+  }
+
+  const VALID_CAPTURE = { viewportW: 1, viewportH: 1, devicePixelRatio: 1, userAgent: 'x' }
+
+  it('Thread accepts optional externalLinks', () => {
+    const t = {
+      ...baseFields,
+      comments: [],
+      captureContext: VALID_CAPTURE,
+      externalLinks: [
+        { provider: 'jira', externalId: '10042', key: 'WEB-123', label: 'Jira WEB-123', url: 'https://company.atlassian.net/browse/WEB-123', createdAt: '2026-06-09T10:00:00.000Z' },
+      ],
+    }
+    expect(() => Thread.parse(t)).not.toThrow()
+  })
+
+  it('Thread is valid without externalLinks (optional)', () => {
+    expect(() => Thread.parse({ ...baseFields, comments: [], captureContext: VALID_CAPTURE })).not.toThrow()
+  })
+
+  it('ThreadView extends Thread with an actions array', () => {
+    const view = {
+      ...baseFields, comments: [], captureContext: VALID_CAPTURE,
+      actions: [{ id: 'jira.createIssue', provider: 'jira', label: 'Create Jira issue', slot: 'thread-toolbar' }],
+    }
+    expect(() => ThreadView.parse(view)).not.toThrow()
+  })
+
+  it('Thread (storage shape) does NOT carry actions', () => {
+    const parsed = Thread.parse({
+      ...baseFields, comments: [], captureContext: VALID_CAPTURE,
+      actions: [{ id: 'x', provider: 'p', label: 'L', slot: 'thread-toolbar' }],
+    }) as Record<string, unknown>
+    expect(parsed.actions).toBeUndefined()
+  })
+
+  it('ThreadListItemView extends ThreadListItem with actions and externalLinks', () => {
+    const view = {
+      ...baseFields,
+      rootComment: { text: 'hi', createdAt: '2026-06-09T10:00:00.000Z' },
+      externalLinks: [],
+      actions: [],
+    }
+    expect(() => ThreadListItemView.parse(view)).not.toThrow()
   })
 })
