@@ -10,6 +10,7 @@ const event: NotificationEvent = {
   pageUrl: 'https://example.com/about',
   pageTitle: 'About',
   threadUrl: 'https://example.com/about?comments-thread=t_1',
+  participants: [],
   text: 'Looks off here',
   author: { email: 'alice@example.com', name: 'Alice' },
   createdAt: '2026-06-03T10:00:00.000Z',

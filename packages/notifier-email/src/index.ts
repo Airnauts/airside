@@ -22,11 +22,6 @@ export interface EmailTransport {
 export type EmailNotifierOptions = {
   /** Where to send: smtpTransport(...) | resendTransport(...) | your own. */
   transport: EmailTransport
-  /**
-   * Static recipient list. Must be non-empty; length 0 is a misconfiguration
-   * and the resulting behaviour is transport-defined.
-   */
-  to: string[]
   /** Verified sender address. */
   from: string
   /** Optional Reply-To header. */
@@ -39,12 +34,18 @@ export function emailNotifier(opts: EmailNotifierOptions): Notifier {
   return {
     name: 'email',
     async notify(event: NotificationEvent): Promise<void> {
+      // Recipients are the thread's existing participants (the server already
+      // excluded this comment's author). A brand-new thread has none, so there
+      // is nothing to send.
+      const recipients = event.participants
+      if (recipients.length === 0) return
+
       const { subject, html, text } = formatEmail(event, { subjectPrefix: opts.subjectPrefix })
-      // >1 recipient → bcc so reviewers don't see each other's addresses.
+      // >1 recipient → bcc so participants don't see each other's addresses.
       const message: EmailMessage =
-        opts.to.length > 1
-          ? { from: opts.from, to: [opts.from], bcc: opts.to, subject, html, text }
-          : { from: opts.from, to: opts.to, subject, html, text }
+        recipients.length > 1
+          ? { from: opts.from, to: [opts.from], bcc: recipients, subject, html, text }
+          : { from: opts.from, to: recipients, subject, html, text }
       if (opts.replyTo !== undefined) message.replyTo = opts.replyTo
       await opts.transport.send(message)
     },

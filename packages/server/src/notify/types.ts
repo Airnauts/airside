@@ -11,6 +11,12 @@ export type NotificationEvent = {
   pageUrl: string
   pageTitle?: string
   threadUrl: string
+  /**
+   * Emails of the people already active in the thread, **excluding** this event's
+   * author — i.e. who a per-recipient channel (email) should notify. Distinct,
+   * order-preserved. Empty for a brand-new thread (only the author is present).
+   */
+  participants: string[]
   text: string
   author: { email: string; name?: string }
   createdAt: string // ISO
