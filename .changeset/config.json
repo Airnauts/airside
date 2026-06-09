@@ -6,6 +6,7 @@
     [
       "@airnauts/comments-adapter-memory",
       "@airnauts/comments-adapter-mongo",
+      "@airnauts/comments-adapter-postgres",
       "@airnauts/comments-client",
       "@airnauts/comments-core",
       "@airnauts/comments-next",
