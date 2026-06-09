@@ -5,6 +5,7 @@ import type {
   Author,
   CaptureContext,
   Comment,
+  ExternalLink,
   Provenance,
   Thread,
   ThreadId,
@@ -71,6 +72,17 @@ export interface Repository {
     patch: AnchorPatch,
     now: string,
   ): Promise<ThreadListItem>
+  /**
+   * Append an external-system link (Jira, etc.) to the thread, deduped by
+   * `provider` — a second link with the same provider replaces the first — and
+   * bump `updatedAt` to `now`. Scope-gated; rejects for a thread outside `scope`.
+   */
+  upsertExternalLink(
+    scope: Scope,
+    threadId: ThreadId,
+    link: ExternalLink,
+    now: string,
+  ): Promise<Thread>
   /**
    * Persist an uploaded attachment's metadata under `scope`, keyed by its id, so a
    * later add-comment / create-thread can resolve the `attachmentIds` the client

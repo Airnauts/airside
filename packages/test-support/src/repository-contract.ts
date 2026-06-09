@@ -2,6 +2,7 @@ import {
   ANCHOR_SCHEMA_VERSION,
   type Attachment,
   type AttachmentId,
+  type ExternalLink,
   type ThreadId,
 } from '@airnauts/comments-core'
 import type { Repository } from '@airnauts/comments-server'
@@ -15,6 +16,18 @@ function makeAttachment(id: string): Attachment {
     name: `${id}.png`,
     contentType: 'image/png',
     size: 123,
+  }
+}
+
+function makeExternalLink(overrides: Partial<ExternalLink> = {}): ExternalLink {
+  return {
+    provider: 'jira',
+    externalId: 'PROJ-1',
+    key: 'PROJ-1',
+    label: 'PROJ-1',
+    url: 'https://example.atlassian.net/browse/PROJ-1',
+    createdAt: '2026-06-05T00:00:00.000Z',
+    ...overrides,
   }
 }
 
@@ -340,6 +353,90 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
         )
         expect(item.anchorState).toBe('anchored')
         expect(item.selectionLost).toBe(true)
+      })
+    })
+
+    describe('upsertExternalLink', () => {
+      it('appends a link and returns the updated thread', async () => {
+        const input = makeNewThread()
+        await repo.createThread(input)
+        const link = makeExternalLink()
+        const updated = await repo.upsertExternalLink(
+          { projectId: input.projectId },
+          input.id,
+          link,
+          '2026-06-05T00:00:00.000Z',
+        )
+        expect(updated.externalLinks).toEqual([link])
+      })
+
+      it('dedupes by provider — a second jira link replaces the first', async () => {
+        const input = makeNewThread()
+        await repo.createThread(input)
+        await repo.upsertExternalLink(
+          { projectId: input.projectId },
+          input.id,
+          makeExternalLink({ externalId: 'PROJ-1', key: 'PROJ-1', label: 'PROJ-1' }),
+          '2026-06-05T00:00:00.000Z',
+        )
+        const updated = await repo.upsertExternalLink(
+          { projectId: input.projectId },
+          input.id,
+          makeExternalLink({ externalId: 'PROJ-2', key: 'PROJ-2', label: 'PROJ-2' }),
+          '2026-06-06T00:00:00.000Z',
+        )
+        expect(updated.externalLinks).toHaveLength(1)
+        expect(updated.externalLinks?.[0]?.provider).toBe('jira')
+        expect(updated.externalLinks?.[0]?.externalId).toBe('PROJ-2')
+      })
+
+      it('keeps links from different providers', async () => {
+        const input = makeNewThread()
+        await repo.createThread(input)
+        await repo.upsertExternalLink(
+          { projectId: input.projectId },
+          input.id,
+          makeExternalLink({ provider: 'jira' }),
+          '2026-06-05T00:00:00.000Z',
+        )
+        const updated = await repo.upsertExternalLink(
+          { projectId: input.projectId },
+          input.id,
+          makeExternalLink({
+            provider: 'linear',
+            externalId: 'LIN-1',
+            key: 'LIN-1',
+            label: 'LIN-1',
+            url: 'https://linear.app/team/issue/LIN-1',
+          }),
+          '2026-06-06T00:00:00.000Z',
+        )
+        expect(updated.externalLinks?.map((l) => l.provider).sort()).toEqual(['jira', 'linear'])
+      })
+
+      it('bumps updatedAt to the passed now', async () => {
+        const input = makeNewThread({ updatedAt: '2026-01-01T00:00:00.000Z' })
+        await repo.createThread(input)
+        const updated = await repo.upsertExternalLink(
+          { projectId: input.projectId },
+          input.id,
+          makeExternalLink(),
+          '2026-06-07T00:00:00.000Z',
+        )
+        expect(updated.updatedAt).toBe('2026-06-07T00:00:00.000Z')
+      })
+
+      it('rejects when scope does not match', async () => {
+        const input = makeNewThread({ projectId: 'proj_a' })
+        await repo.createThread(input)
+        await expect(
+          repo.upsertExternalLink(
+            { projectId: 'proj_b' },
+            input.id,
+            makeExternalLink(),
+            '2026-06-05T00:00:00.000Z',
+          ),
+        ).rejects.toThrow()
       })
     })
 
