@@ -50,8 +50,11 @@ endpoint with no client change.
   mongo driver).
 - **`@airnauts/comments-storage-vercel-blob`**, **`@airnauts/comments-storage-fs`** — storage
   concretes.
-- **`@airnauts/comments-notifier-slack`** — Slack Incoming Webhook notifier (first concrete
-  of the `Notifier` seam; posts new-comment notifications).
+- **`@airnauts/comments-notifier-slack`**, **`@airnauts/comments-notifier-email`** —
+  notification extensions (Slack Incoming Webhook; pluggable email transport) that post
+  new-comment notifications.
+- **`@airnauts/comments-integration-jira`** — thread-action extension: a "Create Jira issue"
+  action that turns a thread into a Jira Cloud issue.
 - Seams with no v1 concrete: auth, other DBs, other frameworks, S3.
 
 **"Enable/disable via subpackage imports":** integrators install/import only the
@@ -125,15 +128,21 @@ createCommentsServer({
   secretKey,
   allowedOrigins,
   pageKey?,        // URL→key rule, shared with the client
-  notifiers?,      // outbound channels (e.g. @airnauts/comments-notifier-slack); failure-isolated
+  extensions?,     // server add-ons: notifications + thread actions (see below)
+  notifiers?,      // DEPRECATED alias for notification-only extensions
 })
 ```
 
 `Repository` and `StorageAdapter` are the only DB/IO seams.
 
-`Notifier` is a third, optional output seam: `createThread` / `addComment` fan a
-`NotificationEvent` out to every configured notifier after the write, with failures
-isolated so they can never break the write.
+`extensions` is a third, optional seam covering two kinds of server add-on. **Notification**
+extensions (e.g. `slackNotifications`, `emailNotifications`) receive a `NotificationEvent`
+that `createThread` / `addComment` fan out after each write, with failures isolated so they
+can never break the write. **Thread-action** extensions (e.g. `jiraIssues`) contribute
+reviewer-triggered actions evaluated per thread and run via
+`POST /threads/:id/actions/:actionId`; an action may persist an `externalLink` back on the
+thread (e.g. the created Jira issue). The older `notifiers?` option is a deprecated alias for
+the notification half. See ADR-0034.
 
 **Next.js glue is near-zero** — Next passes a native Web `Request`:
 

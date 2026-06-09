@@ -117,6 +117,28 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
 See [`examples/nextjs-host/app/api/comments/[...path]/route.ts`](../examples/nextjs-host/app/api/comments/%5B...path%5D/route.ts)
 for this env-switched build: in-memory locally, Mongo + Blob in production.
 
+## Extensions: notifications and thread actions
+
+Server-side add-ons — outbound notifications and reviewer-triggered thread actions — are
+all wired through one option: `extensions`. Each factory (`slackNotifications`,
+`emailNotifications`, `jiraIssues`, …) returns an **array** of extensions, so spread them
+into a single list:
+
+```ts
+createCommentsServer({
+  repository,
+  storage,
+  extensions: [
+    ...slackNotifications({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! }),
+    ...jiraIssues({ siteUrl, email, apiToken, projectKey }),
+  ],
+})
+```
+
+> `extensions` is the forward-looking API. The older `notifiers: [...]` option still works
+> as a **deprecated** alias for notification-only setups, but new code should use
+> `extensions` (it covers both notifications and thread actions).
+
 ## Slack notifications
 
 Send a Slack message whenever a reviewer creates a thread or replies — with the author,
@@ -126,15 +148,16 @@ the comment text, and a link to the page.
 2. **Add New Webhook to Workspace**, choose the channel, and copy the
    `https://hooks.slack.com/services/…` URL. The channel is baked into the URL — there is
    no separate channel name or bot token.
-3. Set it as `COMMENTS_SLACK_WEBHOOK_URL` and wire the notifier:
+3. Set it as `COMMENTS_SLACK_WEBHOOK_URL` and wire the extension (note the spread — the
+   factory returns an array):
 
 ```ts
-import { slackNotifier } from '@airnauts/comments-notifier-slack'
+import { slackNotifications } from '@airnauts/comments-notifier-slack'
 
 createCommentsServer({
   repository,
   storage,
-  notifiers: [slackNotifier({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! })],
+  extensions: [...slackNotifications({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! })],
 })
 ```
 
@@ -142,3 +165,47 @@ A notification failure never breaks the comment write, and the webhook request i
 by a 3-second timeout. The link points at the page; a recipient sees the comments only if
 they already hold the activation key (it is remembered after the first `?comments-key=…`
 activation).
+
+## Jira issues
+
+Let reviewers turn a comment thread into a Jira Cloud issue with one click. The package
+registers a **"Create Jira issue"** thread action; running it opens an issue whose summary
+and description are built from the thread (page, status, every comment, attachments and
+deployment provenance) and persists a Jira link back on the thread.
+
+1. In Jira, create an **Atlassian API token** at
+   <https://id.atlassian.com/manage-profile/security/api-tokens>. Pair it with the email of
+   the account it belongs to.
+2. The token and email stay **server-side** — they are never sent to the browser. Keep them
+   in env vars alongside your other secrets.
+3. Wire the extension (again, spread the returned array):
+
+```ts
+import { jiraIssues } from '@airnauts/comments-integration-jira'
+
+createCommentsServer({
+  repository,
+  storage,
+  extensions: [
+    ...jiraIssues({
+      siteUrl: process.env.JIRA_SITE_URL!,     // e.g. https://your-org.atlassian.net
+      email: process.env.JIRA_EMAIL!,
+      apiToken: process.env.JIRA_API_TOKEN!,
+      projectKey: process.env.JIRA_PROJECT_KEY!, // e.g. ENG
+      issueType: 'Task',                         // optional, defaults to Task
+      labels: ['from-comments'],                 // optional
+    }),
+  ],
+})
+```
+
+Required config (`siteUrl`, `email`, `apiToken`, `projectKey`) is validated at construction,
+so misconfiguration fails fast at startup. There is **one issue per thread**: the action
+button is shown only while the thread has no Jira link yet, and once an issue is created the
+button is replaced by a **"Jira &lt;KEY&gt;"** link (e.g. `Jira ENG-1234`) that opens the
+issue.
+
+> **Known v1 limitation.** Deduplication is per-thread but not transactional: if two
+> reviewers click "Create Jira issue" on the same thread at the same time, both requests can
+> pass the "no link yet" check and create two issues. In practice the button disappears as
+> soon as the first request lands, so this only happens on a near-simultaneous double-create.
