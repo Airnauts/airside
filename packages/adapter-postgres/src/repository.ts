@@ -2,6 +2,7 @@ import type {
   Attachment,
   AttachmentId,
   Comment,
+  ExternalLink,
   Thread,
   ThreadId,
   ThreadListItem,
@@ -177,6 +178,38 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
       const row = rows[0]
       if (!row) throw new Error('thread not found')
       return row.doc
+    },
+
+    async upsertExternalLink(
+      scope: Scope,
+      threadId: ThreadId,
+      link: ExternalLink,
+      now: string,
+    ): Promise<Thread> {
+      // externalLinks lives inside the wire doc, and the upsert-by-provider dedupe
+      // is easiest to express in JS — so read-modify-write: SELECT the doc, recompute
+      // the array, then write the whole doc back. Two statements => not atomic, which
+      // matches the mongo adapter's documented behaviour for this v1 op.
+      const { rows } = (await sql.query(
+        `SELECT doc FROM comments_threads WHERE id = $1 AND project_id = $2 AND env = $3`,
+        [threadId, scope.projectId, scopeEnv(scope)],
+      )) as { rows: Array<{ doc: Thread }> }
+      const current = rows[0]?.doc
+      if (!current) throw new Error('thread not found')
+      const existing = current.externalLinks ?? []
+      const next: Thread = {
+        ...current,
+        externalLinks: [...existing.filter((l) => l.provider !== link.provider), link],
+        updatedAt: now,
+        lastActivityAt: now,
+      }
+      await sql.query(
+        `UPDATE comments_threads
+         SET doc = $4::jsonb, updated_at = $5
+         WHERE id = $1 AND project_id = $2 AND env = $3`,
+        [threadId, scope.projectId, scopeEnv(scope), JSON.stringify(next), now],
+      )
+      return next
     },
 
     async updateAnchor(
