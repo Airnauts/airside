@@ -1,11 +1,12 @@
 // packages/client/src/ui/Composer.tsx
 import type { Attachment } from '@airnauts/comments-core'
-import { type ChangeEvent, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useIdentity } from '../identity/IdentityProvider'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
-import { PendingAttachment, type PendingStatus } from './Attachment'
+import { PendingAttachment } from './Attachment'
 import { Button } from './Button'
+import { useAttachmentUpload } from './useAttachmentUpload'
 
 export type ComposerSubmit = { text: string; attachmentIds: string[]; who: Identity }
 
@@ -28,8 +29,6 @@ export type ComposerProps = {
   onAttachmentChange?: (attachment: Attachment | null) => void
 }
 
-type Pending = { name: string; status: PendingStatus; id?: string; file: File; previewUrl: string }
-
 export function Composer({
   mode,
   onSubmit,
@@ -49,14 +48,10 @@ export function Composer({
     if (textControlled) onValueChange?.(next)
     else setInternalText(next)
   }
-  const attControlled = onAttachmentChange !== undefined
-  const [pending, setPending] = useState<Pending | null>(null)
+  const att = useAttachmentUpload({ upload, attachment, onAttachmentChange })
   const [sending, setSending] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  // Mirrors the current preview object URL so the unmount cleanup can revoke it
-  // without re-subscribing on every pending change.
-  const previewUrlRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (!autoFocus) return
@@ -67,67 +62,15 @@ export function Composer({
     return () => cancelAnimationFrame(raf)
   }, [autoFocus])
 
-  // Revoke any outstanding object URL when the composer unmounts.
-  useEffect(
-    () => () => {
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
-    },
-    [],
-  )
-
-  const attachmentReady = !pending || pending.status === 'ready'
-  const readyAttachment = attControlled ? (attachment ?? null) : null
-  // A ready attachment is enough on its own — image-only comments are allowed.
-  const hasContent =
-    text.trim().length > 0 || pending?.status === 'ready' || readyAttachment !== null
-  const canSend = hasContent && attachmentReady && !sending
-
-  // Drop the pending attachment and revoke its preview URL (remove, send, or replace).
-  function clearPending() {
-    setPending((p) => {
-      if (p?.previewUrl) URL.revokeObjectURL(p.previewUrl)
-      return null
-    })
-    previewUrlRef.current = null
-  }
-
-  function startUpload(file: File) {
-    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current) // replacing a prior pick
-    const previewUrl = URL.createObjectURL(file)
-    previewUrlRef.current = previewUrl
-    setPending({ name: file.name, status: 'uploading', file, previewUrl })
-    upload(file)
-      .then((att) => {
-        if (attControlled) {
-          onAttachmentChange?.(att)
-          clearPending() // server URL now drives the thumbnail in both surfaces
-        } else {
-          setPending((p) => (p && p.file === file ? { ...p, status: 'ready', id: att.id } : p))
-        }
-      })
-      .catch(() => setPending((p) => (p && p.file === file ? { ...p, status: 'error' } : p)))
-  }
-
-  function onPick(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    e.target.value = '' // allow re-selecting the same file
-    if (file) startUpload(file)
-  }
+  const hasContent = text.trim().length > 0 || att.hasAttachment
+  const canSend = hasContent && att.ready && !sending
 
   function doSend(who: Identity) {
-    const attachmentIds = attControlled
-      ? readyAttachment
-        ? [readyAttachment.id]
-        : []
-      : pending?.id
-        ? [pending.id]
-        : []
     setSending(true)
-    onSubmit({ text: text.trim(), attachmentIds, who })
+    onSubmit({ text: text.trim(), attachmentIds: att.attachmentIds, who })
       .then(() => {
         setText('')
-        if (attControlled) onAttachmentChange?.(null)
-        else clearPending()
+        att.reset()
       })
       .catch(() => {
         /* caller surfaces the error (toast); keep the draft so the user can retry */
@@ -145,21 +88,21 @@ export function Composer({
 
   return (
     <div className="cmnt:border-t cmnt:first:border-t-0 cmnt:border-[#f1f3f5] cmnt:px-3 cmnt:py-[9px]">
-      {pending && (
+      {att.pending && (
         <PendingAttachment
-          name={pending.name}
-          status={pending.status}
-          previewUrl={pending.previewUrl}
-          onRemove={clearPending}
-          onRetry={() => startUpload(pending.file)}
+          name={att.pending.name}
+          status={att.pending.status}
+          previewUrl={att.pending.previewUrl}
+          onRemove={att.clearPending}
+          onRetry={() => att.pending && att.startUpload(att.pending.file)}
         />
       )}
-      {!pending && readyAttachment && (
+      {!att.pending && att.readyAttachment && (
         <PendingAttachment
-          name={readyAttachment.name}
+          name={att.readyAttachment.name}
           status="ready"
-          previewUrl={readyAttachment.url}
-          onRemove={() => onAttachmentChange?.(null)}
+          previewUrl={att.readyAttachment.url}
+          onRemove={att.removeReady}
           onRetry={() => {}}
         />
       )}
@@ -178,7 +121,7 @@ export function Composer({
           data-testid="composer-file"
           type="file"
           accept="image/*"
-          onChange={onPick}
+          onChange={att.onPick}
           className="cmnt:hidden"
         />
         <input

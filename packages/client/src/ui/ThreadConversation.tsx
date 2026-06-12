@@ -1,28 +1,16 @@
 // packages/client/src/ui/ThreadConversation.tsx
 
-import type {
-  Attachment,
-  AttachmentId,
-  Comment,
-  Thread,
-  ThreadListItem,
-} from '@airnauts/comments-core'
+import type { Attachment, Thread, ThreadListItem } from '@airnauts/comments-core'
 import type { ApiClient } from '../api/client'
 import { cn } from '../lib/cn'
-import {
-  useController,
-  useDispatch,
-  useThreadActions,
-  useThreadDetail,
-} from '../threads/useThreads'
+import { useSubmitReply } from '../threads/useSubmitReply'
+import { useController, useThreadActions, useThreadDetail } from '../threads/useThreads'
 import { Button } from './Button'
 import { CommentList } from './CommentList'
-import { Composer, type ComposerSubmit } from './Composer'
+import { Composer } from './Composer'
 import { ThreadActions } from './ThreadActions'
 import { ThreadMetadata } from './ThreadMetadata'
 import { useToast } from './toast'
-
-let nextTempId = 0
 
 export type ThreadConversationProps = {
   item: ThreadListItem | Thread
@@ -46,7 +34,6 @@ export function ThreadConversation({
 }: ThreadConversationProps) {
   const id = item.id
   const controller = useController()
-  const dispatch = useDispatch()
   // Read detail by this thread's id — NOT openId — so the sidebar keeps showing its thread even when
   // the pin popover nulls openId on an outside interaction. (Equivalent for the popover: item.id ===
   // openId while it's open.)
@@ -58,52 +45,7 @@ export function ThreadConversation({
   // rebuilt by a reposition emit, so the header is correct regardless of where `item` came from
   // (the panel list, or an id-loaded detached thread). Falls back to the list item while loading.
   const commentCount = detail ? detail.comments.length : item.commentCount
-
-  async function submitReply({ text, attachmentIds, who }: ComposerSubmit) {
-    const tempId = `temp-${nextTempId++}`
-    const optimistic = {
-      id: tempId,
-      author: { email: who.email, name: who.name },
-      text,
-      attachments: [],
-      createdAt: new Date().toISOString(),
-    } as unknown as Comment
-    dispatch({ type: 'ADD_OPTIMISTIC_COMMENT', id, comment: optimistic })
-    // Bump the list-item count so the pin badge and panel rows react immediately (the header below
-    // reads the live detail). Rolled back with -1 if the save fails.
-    controller.bumpCommentCount(id, 1)
-    const wasResolved = resolved
-    // Reply reopens optimistically: patch the store AND the runtime cache together (a plain
-    // SET_STATUS would be clobbered by the next re-emit) — but only the UI, no network yet. The
-    // reopen is persisted below, AFTER the reply saves, so the two requests can't race.
-    if (wasResolved) controller.patchStatus(id, 'open')
-    let saved: Comment
-    try {
-      saved = await client.addComment(id, {
-        text,
-        attachmentIds: attachmentIds as AttachmentId[],
-        author: { email: who.email, name: who.name },
-      })
-    } catch {
-      dispatch({ type: 'REMOVE_OPTIMISTIC_COMMENT', id, tempId })
-      controller.bumpCommentCount(id, -1)
-      if (wasResolved) controller.patchStatus(id, 'resolved')
-      toast('Failed to post reply')
-      return
-    }
-    dispatch({ type: 'REPLACE_OPTIMISTIC_COMMENT', id, tempId, comment: saved })
-    if (wasResolved) {
-      // The reply is in; now persist the reopen. On failure, revert the optimistic flip and tell
-      // the user the thread is still resolved server-side (rather than silently leaving the pin
-      // showing 'open' while the server stays 'resolved').
-      try {
-        await client.setThreadStatus(id, { status: 'open' })
-      } catch {
-        controller.patchStatus(id, 'resolved')
-        toast('Reply posted, but reopening the thread failed')
-      }
-    }
-  }
+  const submitReply = useSubmitReply(id, client, resolved)
 
   async function toggleStatus() {
     const next = resolved ? 'open' : 'resolved'
