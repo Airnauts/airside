@@ -1,6 +1,5 @@
 // packages/client/src/positioning/layer.tsx
 import type { ApiClient } from '../api/client'
-import type { Identity } from '../identity/storage'
 import { usePanelState } from '../panel/PanelProvider'
 import type { PlacedThread } from '../threads/state'
 import { useFocus } from '../threads/useThreads'
@@ -11,11 +10,9 @@ export type { PlacedThread } from '../threads/state'
 export type PinLayerProps = {
   placements: PlacedThread[]
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
-  identity: Identity | null
-  onNeedIdentity: (resume: (who: Identity) => void) => void
 }
 
-export function PinLayer({ placements, client, identity, onNeedIdentity }: PinLayerProps) {
+export function PinLayer({ placements, client }: PinLayerProps) {
   const { focusedId } = useFocus()
   // The thread open in the sidebar panel detail view: its on-page pin is highlighted as active
   // even though selecting it in the panel never opens the pin's popover.
@@ -42,8 +39,6 @@ export function PinLayer({ placements, client, identity, onNeedIdentity }: PinLa
           focused={p.item.id === focusedId}
           selected={p.item.id === detailThreadId}
           client={client}
-          identity={identity}
-          onNeedIdentity={onNeedIdentity}
         />
       ))}
     </div>

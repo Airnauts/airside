@@ -6,7 +6,6 @@ import { useEffect } from 'react'
 import type { ApiClient } from '../api/client'
 import { usePortalContainer } from '../app/providers'
 import { useDraft } from '../drafts/DraftsProvider'
-import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
 import { useController, useShowResolved, useThreadDetail } from '../threads/useThreads'
 import { Button } from '../ui/Button'
@@ -25,22 +24,16 @@ const FILTERS: { value: PanelFilter; label: string }[] = [
 export type PanelDrawerProps = {
   resolvePageKey: (url: string) => string
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
-  identity: Identity | null
-  onNeedIdentity: (resume: (who: Identity) => void) => void
 }
 
 function DetailView({
   threadId,
   listItem,
   client,
-  identity,
-  onNeedIdentity,
 }: {
   threadId: string
   listItem: ThreadListItem | null
   client: PanelDrawerProps['client']
-  identity: Identity | null
-  onNeedIdentity: PanelDrawerProps['onNeedIdentity']
 }) {
   const { detail } = useThreadDetail(threadId)
   const draft = useDraft(threadId)
@@ -54,8 +47,6 @@ function DetailView({
         <ThreadConversation
           item={item}
           client={client}
-          identity={identity}
-          onNeedIdentity={onNeedIdentity}
           variant="sidebar"
           draftText={draft.draft.text}
           onDraftTextChange={draft.setText}
@@ -67,12 +58,7 @@ function DetailView({
   )
 }
 
-export function PanelDrawer({
-  resolvePageKey,
-  client,
-  identity,
-  onNeedIdentity,
-}: PanelDrawerProps) {
+export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
@@ -145,13 +131,7 @@ export function PanelDrawer({
                   </Button>
                 </Dialog.Close>
               </div>
-              <DetailView
-                threadId={state.detailThreadId}
-                listItem={detailItem}
-                client={client}
-                identity={identity}
-                onNeedIdentity={onNeedIdentity}
-              />
+              <DetailView threadId={state.detailThreadId} listItem={detailItem} client={client} />
             </>
           ) : (
             <>

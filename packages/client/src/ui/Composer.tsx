@@ -1,6 +1,7 @@
 // packages/client/src/ui/Composer.tsx
 import type { Attachment } from '@airnauts/comments-core'
 import { type ChangeEvent, useEffect, useRef, useState } from 'react'
+import { useIdentity } from '../identity/IdentityProvider'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
 import { PendingAttachment, type PendingStatus } from './Attachment'
@@ -10,8 +11,6 @@ export type ComposerSubmit = { text: string; attachmentIds: string[]; who: Ident
 
 export type ComposerProps = {
   mode: 'newThread' | 'reply'
-  identity: Identity | null
-  onNeedIdentity: (resume: (who: Identity) => void) => void
   onSubmit: (payload: ComposerSubmit) => Promise<void>
   upload: (file: File) => Promise<Attachment>
   /** When set, renders a Cancel button left of Send (used by the new-comment draft). */
@@ -33,8 +32,6 @@ type Pending = { name: string; status: PendingStatus; id?: string; file: File; p
 
 export function Composer({
   mode,
-  identity,
-  onNeedIdentity,
   onSubmit,
   upload,
   onCancel,
@@ -44,6 +41,7 @@ export function Composer({
   attachment,
   onAttachmentChange,
 }: ComposerProps) {
+  const { identity, requestIdentity } = useIdentity()
   const [internalText, setInternalText] = useState('')
   const textControlled = value !== undefined
   const text = textControlled ? value : internalText
@@ -140,7 +138,7 @@ export function Composer({
   function onSendClick() {
     if (!canSend) return
     if (identity) doSend(identity)
-    else onNeedIdentity((who) => doSend(who))
+    else requestIdentity((who) => doSend(who))
   }
 
   const placeholder = mode === 'newThread' ? 'Add a comment…' : 'Reply…'

@@ -1,12 +1,20 @@
 // packages/client/src/ui/ThreadConversation.test.tsx
 import type { Thread, ThreadListItem } from '@airnauts/comments-core'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { useEffect } from 'react'
+import { type ReactElement, useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { DraftsProvider, useDraft } from '../drafts/DraftsProvider'
+import { IdentityProvider } from '../identity/IdentityProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { useDispatch, useThreadsState } from '../threads/useThreads'
 import { ThreadConversation } from './ThreadConversation'
+
+const renderWithIdentity = (ui: ReactElement) =>
+  render(
+    <IdentityProvider identity={{ email: 'a@b.c' }} requestIdentity={() => {}}>
+      {ui}
+    </IdentityProvider>,
+  )
 
 const item = (over: Partial<ThreadListItem> = {}) =>
   ({
@@ -33,8 +41,6 @@ function Wired({ variant }: { variant: 'popover' | 'sidebar' }) {
     <ThreadConversation
       item={item()}
       client={mockClient}
-      identity={{ email: 'a@b.c' }}
-      onNeedIdentity={() => {}}
       variant={variant}
       draftText={d.draft.text}
       onDraftTextChange={d.setText}
@@ -70,18 +76,12 @@ describe('ThreadConversation detail source', () => {
         },
       ],
     } as unknown as Thread
-    render(
+    renderWithIdentity(
       <ThreadsProvider client={mockClient}>
         <DraftsProvider>
           {/* openId stays null — only the per-id detail cache is seeded. */}
           <Seeder thread={thread} />
-          <ThreadConversation
-            item={item()}
-            client={mockClient}
-            identity={{ email: 'a@b.c' }}
-            onNeedIdentity={() => {}}
-            variant="sidebar"
-          />
+          <ThreadConversation item={item()} client={mockClient} variant="sidebar" />
         </DraftsProvider>
       </ThreadsProvider>,
     )
@@ -101,15 +101,13 @@ describe('ThreadConversation header count', () => {
         { id: 'c2', author: { email: 'a@b.c' }, text: 'reply', attachments: [], createdAt: 'y' },
       ],
     } as unknown as Thread
-    render(
+    renderWithIdentity(
       <ThreadsProvider client={mockClient}>
         <DraftsProvider>
           <Seeder thread={thread} />
           <ThreadConversation
             item={item({ commentCount: 1 })}
             client={mockClient}
-            identity={{ email: 'a@b.c' }}
-            onNeedIdentity={() => {}}
             variant="sidebar"
           />
         </DraftsProvider>
@@ -155,18 +153,12 @@ describe('ThreadConversation reply count', () => {
       return null
     }
 
-    render(
+    renderWithIdentity(
       <ThreadsProvider client={client}>
         <DraftsProvider>
           <Seed />
           <Probe />
-          <ThreadConversation
-            item={item({ commentCount: 1 })}
-            client={client}
-            identity={{ email: 'a@b.c' }}
-            onNeedIdentity={() => {}}
-            variant="sidebar"
-          />
+          <ThreadConversation item={item({ commentCount: 1 })} client={client} variant="sidebar" />
         </DraftsProvider>
       </ThreadsProvider>,
     )
@@ -181,7 +173,7 @@ describe('ThreadConversation reply count', () => {
 
 describe('ThreadConversation reply focus', () => {
   it('focuses the reply input on mount in the sidebar (Reply/select/cross-page entry)', async () => {
-    render(
+    renderWithIdentity(
       <ThreadsProvider client={mockClient}>
         <DraftsProvider>
           <Wired variant="sidebar" />
@@ -196,7 +188,7 @@ describe('ThreadConversation reply focus', () => {
   })
 
   it('focuses the reply input on mount in the popover too (clicking a pin)', async () => {
-    render(
+    renderWithIdentity(
       <ThreadsProvider client={mockClient}>
         <DraftsProvider>
           <Wired variant="popover" />
@@ -211,7 +203,7 @@ describe('ThreadConversation reply focus', () => {
 
 describe('ThreadConversation shared draft', () => {
   it('mirrors composer text between popover and sidebar for the same thread', () => {
-    render(
+    renderWithIdentity(
       <ThreadsProvider client={mockClient}>
         <DraftsProvider>
           <Wired variant="popover" />

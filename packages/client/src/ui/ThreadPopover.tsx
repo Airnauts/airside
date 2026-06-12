@@ -6,7 +6,6 @@ import { useRef } from 'react'
 import type { ApiClient } from '../api/client'
 import { usePortalContainer } from '../app/providers'
 import { useDraft } from '../drafts/DraftsProvider'
-import type { Identity } from '../identity/storage'
 import type { XY } from '../positioning/coords'
 import { useController, useOpenThread } from '../threads/useThreads'
 import { Pin } from './Pin'
@@ -16,22 +15,12 @@ export type ThreadPopoverProps = {
   item: ThreadListItem
   pin: XY
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
-  identity: Identity | null
-  onNeedIdentity: (resume: (who: Identity) => void) => void
   focused?: boolean
   /** This thread is the one open in the sidebar panel detail view. */
   selected?: boolean
 }
 
-export function ThreadPopover({
-  item,
-  pin,
-  client,
-  identity,
-  onNeedIdentity,
-  focused,
-  selected,
-}: ThreadPopoverProps) {
+export function ThreadPopover({ item, pin, client, focused, selected }: ThreadPopoverProps) {
   const id = item.id
   const controller = useController()
   const { openId } = useOpenThread()
@@ -81,8 +70,6 @@ export function ThreadPopover({
           <ThreadConversation
             item={item}
             client={client}
-            identity={identity}
-            onNeedIdentity={onNeedIdentity}
             variant="popover"
             draftText={draft.draft.text}
             onDraftTextChange={draft.setText}

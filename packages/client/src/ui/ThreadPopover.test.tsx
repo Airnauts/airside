@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
 import { DraftsProvider } from '../drafts/DraftsProvider'
+import { IdentityProvider } from '../identity/IdentityProvider'
 import type { PlacedThread } from '../threads/state'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { useController, useDispatch, useVisiblePlacements } from '../threads/useThreads'
@@ -24,18 +25,17 @@ const item = (over: Partial<ThreadListItem> = {}) =>
 function Harness({ client }: { client: never }) {
   const controller = useController()
   return (
-    <DraftsProvider>
-      <button type="button" onClick={() => controller.openThread('a')}>
-        open-a
-      </button>
-      <ThreadPopover
-        item={item()}
-        pin={{ x: 10, y: 10 }}
-        client={client}
-        identity={{ email: 'a@b.c', name: 'Ann' }}
-        onNeedIdentity={(r) => r({ email: 'a@b.c', name: 'Ann' })}
-      />
-    </DraftsProvider>
+    <IdentityProvider
+      identity={{ email: 'a@b.c', name: 'Ann' }}
+      requestIdentity={(r) => r({ email: 'a@b.c', name: 'Ann' })}
+    >
+      <DraftsProvider>
+        <button type="button" onClick={() => controller.openThread('a')}>
+          open-a
+        </button>
+        <ThreadPopover item={item()} pin={{ x: 10, y: 10 }} client={client} />
+      </DraftsProvider>
+    </IdentityProvider>
   )
 }
 
@@ -317,27 +317,25 @@ describe('ThreadPopover', () => {
       highlight: [],
     }
     return (
-      <DraftsProvider>
-        <button
-          type="button"
-          onClick={() => dispatch({ type: 'INGEST_PLACEMENTS', placements: [placed] })}
-        >
-          ingest
-        </button>
-        <button type="button" onClick={() => controller.openThread('a')}>
-          open-a
-        </button>
-        {placements.map((p) => (
-          <ThreadPopover
-            key={p.item.id}
-            item={p.item}
-            pin={p.pin}
-            client={c}
-            identity={{ email: 'a@b.c', name: 'Ann' }}
-            onNeedIdentity={(r) => r({ email: 'a@b.c', name: 'Ann' })}
-          />
-        ))}
-      </DraftsProvider>
+      <IdentityProvider
+        identity={{ email: 'a@b.c', name: 'Ann' }}
+        requestIdentity={(r) => r({ email: 'a@b.c', name: 'Ann' })}
+      >
+        <DraftsProvider>
+          <button
+            type="button"
+            onClick={() => dispatch({ type: 'INGEST_PLACEMENTS', placements: [placed] })}
+          >
+            ingest
+          </button>
+          <button type="button" onClick={() => controller.openThread('a')}>
+            open-a
+          </button>
+          {placements.map((p) => (
+            <ThreadPopover key={p.item.id} item={p.item} pin={p.pin} client={c} />
+          ))}
+        </DraftsProvider>
+      </IdentityProvider>
     )
   }
 

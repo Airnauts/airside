@@ -8,7 +8,6 @@ import type {
   ThreadListItem,
 } from '@airnauts/comments-core'
 import type { ApiClient } from '../api/client'
-import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
 import {
   useController,
@@ -28,8 +27,6 @@ let nextTempId = 0
 export type ThreadConversationProps = {
   item: ThreadListItem | Thread
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
-  identity: Identity | null
-  onNeedIdentity: (resume: (who: Identity) => void) => void
   variant: 'popover' | 'sidebar'
   /** Controlled draft text (shared-draft sync). */
   draftText?: string
@@ -41,8 +38,6 @@ export type ThreadConversationProps = {
 export function ThreadConversation({
   item,
   client,
-  identity,
-  onNeedIdentity,
   variant,
   draftText,
   onDraftTextChange,
@@ -189,8 +184,6 @@ export function ThreadConversation({
           // autoFocus defaults to true — both the sidebar detail (mounts fresh on every entry:
           // Reply click, row select, cross-page handoff) and the pin popover focus the reply
           // input on open so the user can type immediately.
-          identity={identity}
-          onNeedIdentity={onNeedIdentity}
           onSubmit={submitReply}
           upload={client.upload}
           value={draftText}

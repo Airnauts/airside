@@ -5,6 +5,7 @@ import { act } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
 import { DraftsProvider } from '../drafts/DraftsProvider'
+import { IdentityProvider } from '../identity/IdentityProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { useController, useDispatch } from '../threads/useThreads'
 import { FOCUS_STORAGE_KEY } from './navigate'
@@ -116,24 +117,22 @@ function setup(opts: {
     upload: vi.fn(),
   }
   const resolvePageKey = opts.resolvePageKey ?? (() => 'x.test/other')
+  const identity = { email: 'a@b.c', name: 'Ann' }
   render(
     <WidgetProvider>
-      <ThreadsProvider client={client as never}>
-        <PanelProvider client={client as never}>
-          <DraftsProvider>
-            <Opener />
-            <CloseProbe />
-            <GhostOpener />
-            {opts.withProbes && <StatusProbe />}
-            <PanelDrawer
-              resolvePageKey={resolvePageKey}
-              client={client as never}
-              identity={{ email: 'a@b.c', name: 'Ann' }}
-              onNeedIdentity={() => {}}
-            />
-          </DraftsProvider>
-        </PanelProvider>
-      </ThreadsProvider>
+      <IdentityProvider identity={identity} requestIdentity={(resume) => resume(identity)}>
+        <ThreadsProvider client={client as never}>
+          <PanelProvider client={client as never}>
+            <DraftsProvider>
+              <Opener />
+              <CloseProbe />
+              <GhostOpener />
+              {opts.withProbes && <StatusProbe />}
+              <PanelDrawer resolvePageKey={resolvePageKey} client={client as never} />
+            </DraftsProvider>
+          </PanelProvider>
+        </ThreadsProvider>
+      </IdentityProvider>
     </WidgetProvider>,
   )
   return { client }

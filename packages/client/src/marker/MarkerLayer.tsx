@@ -7,7 +7,7 @@ import type { ApiClient } from '../api/client'
 import { ApiError } from '../api/errors'
 import { usePortalContainer } from '../app/providers'
 import { buildCaptureContext } from '../config'
-import type { Identity } from '../identity/storage'
+import { useIdentity } from '../identity/IdentityProvider'
 import { takeFocusHandoff } from '../panel/navigate'
 import { usePanelController, usePanelState } from '../panel/PanelProvider'
 import { pinXY } from '../positioning/coords'
@@ -30,8 +30,6 @@ export type MarkerLayerProps = {
   client: ApiClient
   pageKey: string
   pageUrl: string
-  identity: Identity | null
-  onNeedIdentity: (resume: (identity: Identity) => void) => void
   provenance?: Provenance
   resolvePageKey?: (url: string) => string
 }
@@ -41,11 +39,10 @@ export function MarkerLayer({
   pageKey,
   // pageUrl prop retained on MarkerLayerProps for the public API; createThread now
   // reads window.location.href directly so the URL is live after an SPA route change.
-  identity,
-  onNeedIdentity,
   provenance,
   resolvePageKey,
 }: MarkerLayerProps) {
+  const { identity } = useIdentity()
   const dispatch = useDispatch()
   const controller = useController()
   const state = useThreadsState()
@@ -215,13 +212,8 @@ export function MarkerLayer({
 
   return (
     <>
-      <PinLayer
-        placements={placements}
-        client={client}
-        identity={identity}
-        onNeedIdentity={onNeedIdentity}
-      />
-      <DetachedThread client={client} identity={identity} onNeedIdentity={onNeedIdentity} />
+      <PinLayer placements={placements} client={client} />
+      <DetachedThread client={client} />
       {state.draft && (
         <div data-comments-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
           {/* Radix Popover anchored at the draft pin so Radix handles flip/shift +
@@ -261,8 +253,6 @@ export function MarkerLayer({
                 )}
                 <Composer
                   mode="newThread"
-                  identity={identity}
-                  onNeedIdentity={onNeedIdentity}
                   upload={client.upload}
                   autoFocus
                   onCancel={() => dispatch({ type: 'CLEAR_DRAFT' })}
