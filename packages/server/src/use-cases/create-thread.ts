@@ -10,7 +10,7 @@ import { buildNotificationEvent } from '../notify/build-event'
 import { dispatchNotifications } from '../notify/dispatch'
 import type { Repository } from '../repository/types'
 import { resolveAttachments } from './resolve-attachments'
-import { toThreadView } from './view'
+import { withThreadActions } from './view'
 
 export type CreateThreadDeps = {
   repo: Repository
@@ -59,5 +59,5 @@ export async function createThread(
     deps.notifications,
     buildNotificationEvent('thread.created', scope, thread, firstComment, ctx.threadParam),
   )
-  return toThreadView(thread, deps.registry, scope)
+  return withThreadActions(thread, deps.registry, scope)
 }

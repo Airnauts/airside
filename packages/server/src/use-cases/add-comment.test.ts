@@ -1,19 +1,13 @@
 import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
-import type { Attachment, AttachmentId, CommentId, ThreadId } from '@airnauts/comments-core'
-import { makeAuthor, makeNewThread } from '@airnauts/comments-test-support'
+import type { AttachmentId, CommentId, ThreadId } from '@airnauts/comments-core'
+import { makeAttachment, makeAuthor, makeNewThread } from '@airnauts/comments-test-support'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { NotFoundError, ValidationError } from '../errors'
 import type { NotificationExtension } from '../extensions/types'
 import { addComment } from './add-comment'
 
-const attachment: Attachment = {
-  id: 'at_1' as AttachmentId,
-  url: 'https://blob.test/at_1',
-  name: 'shot.png',
-  contentType: 'image/png',
-  size: 42,
-}
+const attachment = makeAttachment()
 
 describe('addComment use-case', () => {
   it('appends a comment and bumps updatedAt', async () => {

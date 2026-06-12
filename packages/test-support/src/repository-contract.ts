@@ -1,23 +1,12 @@
 import {
   ANCHOR_SCHEMA_VERSION,
-  type Attachment,
   type AttachmentId,
   type ExternalLink,
   type ThreadId,
 } from '@airnauts/comments-core'
 import type { Repository } from '@airnauts/comments-server'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { makeComment, makeNewThread } from './fixtures'
-
-function makeAttachment(id: string): Attachment {
-  return {
-    id: id as AttachmentId,
-    url: `https://blob.test/${id}`,
-    name: `${id}.png`,
-    contentType: 'image/png',
-    size: 123,
-  }
-}
+import { makeAttachment, makeComment, makeNewThread } from './fixtures'
 
 function makeExternalLink(overrides: Partial<ExternalLink> = {}): ExternalLink {
   return {
@@ -512,14 +501,17 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
 
     describe('attachments', () => {
       it('persists an attachment and resolves it by id', async () => {
-        const att = makeAttachment('at_1')
+        const att = makeAttachment({ id: 'at_1' as AttachmentId })
         await repo.putAttachment({ projectId: 'proj_test' }, att)
         const found = await repo.getAttachments({ projectId: 'proj_test' }, [att.id])
         expect(found).toEqual([att])
       })
 
       it('resolves only the ids that exist (missing ids are omitted)', async () => {
-        await repo.putAttachment({ projectId: 'proj_test' }, makeAttachment('at_1'))
+        await repo.putAttachment(
+          { projectId: 'proj_test' },
+          makeAttachment({ id: 'at_1' as AttachmentId }),
+        )
         const found = await repo.getAttachments({ projectId: 'proj_test' }, [
           'at_1' as AttachmentId,
           'at_nope' as AttachmentId,
@@ -532,7 +524,10 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
       })
 
       it('isolates attachments by project scope', async () => {
-        await repo.putAttachment({ projectId: 'proj_a' }, makeAttachment('at_1'))
+        await repo.putAttachment(
+          { projectId: 'proj_a' },
+          makeAttachment({ id: 'at_1' as AttachmentId }),
+        )
         const fromOther = await repo.getAttachments({ projectId: 'proj_b' }, [
           'at_1' as AttachmentId,
         ])
@@ -540,7 +535,10 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
       })
 
       it('isolates attachments by env scope', async () => {
-        await repo.putAttachment({ projectId: 'proj_a', env: 'prod' }, makeAttachment('at_1'))
+        await repo.putAttachment(
+          { projectId: 'proj_a', env: 'prod' },
+          makeAttachment({ id: 'at_1' as AttachmentId }),
+        )
         const fromOther = await repo.getAttachments({ projectId: 'proj_a', env: 'staging' }, [
           'at_1' as AttachmentId,
         ])

@@ -1,11 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  Thread,
-  ThreadListItem,
-  ThreadListItemView,
-  ThreadView,
-  unresolvedCountOf,
-} from './thread'
+import { Thread, ThreadListItem, ThreadListItemView, ThreadView, unresolvedCountOf } from './thread'
 
 const base = {
   id: 't1',

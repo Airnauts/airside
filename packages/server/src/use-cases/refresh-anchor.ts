@@ -8,7 +8,7 @@ import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
 import type { ExtensionRegistry } from '../extensions/registry'
 import type { Repository } from '../repository/types'
-import { toThreadListItemView } from './view'
+import { withThreadActions } from './view'
 
 export type RefreshAnchorDeps = { repo: Repository; registry: ExtensionRegistry }
 
@@ -31,5 +31,5 @@ export async function refreshAnchor(
     },
     ctx.now().toISOString(),
   )
-  return toThreadListItemView(updated, deps.registry, scope)
+  return withThreadActions(updated, deps.registry, scope)
 }
