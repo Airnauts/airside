@@ -30,6 +30,16 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
   const toggleResolve = (t: { id: string; status: string }) =>
     void threads.setStatus(t.id, t.status === 'resolved' ? 'open' : 'resolved')
 
+  const renderRow = (t: (typeof mainList)[number]) => (
+    <PanelRow
+      key={t.id}
+      item={t}
+      onSelect={() => onSelect(t)}
+      onReply={() => onSelect(t)}
+      onResolve={() => toggleResolve(t)}
+    />
+  )
+
   return (
     <>
       <div className="cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200">
@@ -101,15 +111,7 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
             <div className="cmnt:px-3 cmnt:py-1.5 cmnt:text-[11px] cmnt:font-semibold cmnt:text-amber-700 cmnt:bg-amber-50">
               ⚠ Needs review ({state.needsReview.length})
             </div>
-            {state.needsReview.map((t) => (
-              <PanelRow
-                key={t.id}
-                item={t}
-                onSelect={() => onSelect(t)}
-                onReply={() => onSelect(t)}
-                onResolve={() => toggleResolve(t)}
-              />
-            ))}
+            {state.needsReview.map(renderRow)}
             <div className="cmnt:h-px cmnt:bg-gray-200" />
           </div>
         )}
@@ -131,15 +133,7 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
             <StatusNotice data-testid="comments-panel-empty">No comments yet</StatusNotice>
           )}
 
-        {mainList.map((t) => (
-          <PanelRow
-            key={t.id}
-            item={t}
-            onSelect={() => onSelect(t)}
-            onReply={() => onSelect(t)}
-            onResolve={() => toggleResolve(t)}
-          />
-        ))}
+        {mainList.map(renderRow)}
 
         {state.nextCursor && (
           <Button

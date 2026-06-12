@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { type ApiClient, createApiClient } from '../api/client'
 import { type InitOptions, resolvePageKey } from '../config'
 import { DraftsProvider } from '../drafts/DraftsProvider'
@@ -31,10 +31,12 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
   const pageUrl = window.location.href
   const pageKey = resolvePageKey(options, pageUrl)
 
-  function requestIdentity(resume: (identity: Identity) => void) {
+  // Stable so the identity context value only changes when `identity` does —
+  // a fresh function here would re-render every useIdentity consumer per app render.
+  const requestIdentity = useCallback((resume: (identity: Identity) => void) => {
     resumeRef.current = resume
     setModalOpen(true)
-  }
+  }, [])
 
   function onSubmitIdentity(who: Identity) {
     saveIdentity(who)

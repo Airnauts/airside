@@ -8,6 +8,7 @@ import { useIdentity } from '../identity/IdentityProvider'
 import { useDispatch, useThreadsState } from '../threads/useThreads'
 import { initials } from '../ui/avatar'
 import { Composer, type ComposerSubmit } from '../ui/Composer'
+import { TEARDROP_STYLE } from '../ui/Pin'
 
 export type DraftPopoverProps = {
   client: Pick<ApiClient, 'upload'>
@@ -36,7 +37,7 @@ export function DraftPopover({ client, onCreate }: DraftPopoverProps) {
           >
             <span
               className="cmnt:absolute cmnt:inset-0 cmnt:border-2 cmnt:border-white cmnt:shadow-lg cmnt:bg-blue-600"
-              style={{ borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)' }}
+              style={TEARDROP_STYLE}
             />
             <span className="cmnt:absolute cmnt:top-1.5 cmnt:left-1.5 cmnt:w-[30px] cmnt:h-[30px] cmnt:rounded-full cmnt:border-2 cmnt:border-white cmnt:bg-blue-600 cmnt:text-white cmnt:text-xs cmnt:flex cmnt:items-center cmnt:justify-center cmnt:font-semibold">
               {identity ? initials(identity) : ''}
