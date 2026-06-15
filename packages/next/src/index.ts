@@ -1,27 +1,56 @@
 import type { CommentsServer, CreateCommentsServerOptions } from '@airnauts/comments-server'
 import { createCommentsServer } from '@airnauts/comments-server'
-import { createNextHandler } from '@airnauts/comments-server/next'
+import { createNextHandler } from './app-router'
+import { createNextPagesHandler, type NodePagesHandler } from './pages-router'
 
-type NextRouteHandlers = ReturnType<typeof createNextHandler>
+export { createNextHandler } from './app-router'
+export { createNextPagesHandler } from './pages-router'
+export type { NodePagesHandler, NodePagesRequest } from './pages-router'
+
+type AppRouteHandlers = ReturnType<typeof createNextHandler>
 
 /**
- * Build the commenting server and its Next App Router catch-all handlers in one
- * call. Mount as `app/api/comments/[...path]/route.ts`:
+ * Build the commenting server and its Next **App Router** catch-all handlers in
+ * one call. Mount as `app/api/comments/[...path]/route.ts`:
  *
- *   export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute(config)
+ *   export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute(config)
  *
- * Also returns `server` (absent when `disabled`) for hosts that need server-side
- * reads, extra routes, or server access in tests.
+ * Also returns `server` (absent when `disabled`) for server-side reads, extra
+ * routes, or server access in tests.
  */
-export function createCommentsRoute(
+export function createCommentsAppRoute(
   config: CreateCommentsServerOptions & { disabled?: boolean },
-): NextRouteHandlers & { server?: CommentsServer } {
+): AppRouteHandlers & { server?: CommentsServer } {
   if (config.disabled) {
-    // `NextHandler` is not exported from the server package; an inline async
-    // arrow returning a Response structurally satisfies the handler signature.
     const notFound = async () => new Response('Not Found', { status: 404 })
     return { GET: notFound, POST: notFound, PATCH: notFound, OPTIONS: notFound }
   }
   const server = createCommentsServer(config)
   return { ...createNextHandler(server), server }
+}
+
+/**
+ * Build the commenting server and a single Next **Pages Router** API-route
+ * handler. Mount as `pages/api/comments/[...path].ts`:
+ *
+ *   export const config = { api: { bodyParser: false } } // required — Next reads it statically
+ *   export default createCommentsPagesRoute(config)
+ *
+ * The returned function carries `.server` (absent when `disabled`) for the same
+ * uses as the App Router variant.
+ */
+export function createCommentsPagesRoute(
+  config: CreateCommentsServerOptions & { disabled?: boolean },
+): NodePagesHandler & { server?: CommentsServer } {
+  if (config.disabled) {
+    const notFound: NodePagesHandler = async (_req, res) => {
+      res.statusCode = 404
+      res.end()
+    }
+    return notFound
+  }
+  const server = createCommentsServer(config)
+  const handler = createNextPagesHandler(server) as NodePagesHandler & { server?: CommentsServer }
+  handler.server = server
+  return handler
 }
