@@ -18,6 +18,7 @@ This is a **brand rename**, not a product change. The product still manages
 | Decision | Choice |
 |---|---|
 | npm scope | Keep `@airnauts`; swap prefix → `@airnauts/airside-*` |
+| Extension pkgs | Unify `notifier-slack`/`notifier-email`/`integration-jira` → `airside-extension-{slack,email,jira}` (tracks the in-flight `*Extension` unification) |
 | Rename depth | **Full rebrand** — package names + repo + public widget surface + internal `cmnt:` prefix |
 | Old npm packages | **Deprecate with pointer** (`npm deprecate`), no shim/republish |
 | Repo slug | **Rename in place** `Airnauts/commenting-tool` → `Airnauts/airside` (GitHub auto-redirects) |
@@ -53,6 +54,29 @@ This is a **brand rename**, not a product change. The product still manages
 | HTTP header | `x-comments-key` | `x-airside-key` |
 | env vars | `COMMENTS_SECRET`, `NEXT_PUBLIC_COMMENTS_KEY`, `VITE_COMMENTS_KEY` | `AIRSIDE_SECRET`, `NEXT_PUBLIC_AIRSIDE_KEY`, `VITE_AIRSIDE_KEY` |
 | test-ids | `comments-pin`, `comments-panel-open`, `comments-place` | `airside-pin`, `airside-panel-open`, `airside-place` |
+
+Most packages are a clean prefix swap (`comments-X` → `airside-X`). The three
+**extension** packages also change *category* (concurrent with the in-flight
+`*Extension` unification) and are the only non-mechanical renames:
+
+| Current (published) | → Airside | Factory export |
+|---|---|---|
+| `@airnauts/comments-notifier-slack` | `@airnauts/airside-extension-slack` | `slackNotifications` → `slackExtension` |
+| `@airnauts/comments-notifier-email` | `@airnauts/airside-extension-email` | `emailNotifications` → `emailExtension` |
+| `@airnauts/comments-integration-jira` | `@airnauts/airside-extension-jira` | `jiraIssues` → `jiraExtension` |
+
+They stay **three separate packages** (distinct optional deps: webhook / SMTP / Jira
+client), just recategorized — not merged. The factory renames ship with the
+unification work, not the rebrand; the rebrand only moves their packages. The
+`ServerExtension` / `NotificationExtension` types are **domain** and unchanged.
+
+### Package inventory review (no further renames)
+
+`adapter-{memory,mongo,postgres}` (comment **repository**) and
+`storage-{fs,vercel-blob}` (**blob/attachment** storage) are distinct seams — the
+two-category split is intentional, kept. `client` (the embeddable widget) is kept as
+`airside-client` to limit churn (`airside-widget` considered, rejected). `core`,
+`server`, `next`, `test-support`, and the examples are straight prefix swaps.
 
 ### Public JS API symbols (rename all)
 
@@ -112,8 +136,13 @@ order matters:
 4. One `fixed`-group changeset (breaking → **minor** per pre-1.0 policy);
    `pnpm version-packages`.
 5. Merge to `main` → **CI publishes** `@airnauts/airside-*`.
-6. **After** airside is live on npm: `npm deprecate '@airnauts/comments-*@*'
-   "Renamed to @airnauts/airside-*"` for each old package.
+6. **After** airside is live on npm: `npm deprecate` each old package pointing at its
+   replacement. Nine are a clean prefix swap (`comments-X` → `airside-X`); the three
+   extension packages map explicitly: `comments-notifier-slack` →
+   `airside-extension-slack`, `comments-notifier-email` → `airside-extension-email`,
+   `comments-integration-jira` → `airside-extension-jira`. (Assumes the final
+   `comments` release kept the current `notifier-*`/`integration-*` names; if it
+   already renamed them, deprecate whatever it published.)
 
 ## Version strategy
 
