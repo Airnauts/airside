@@ -1,16 +1,14 @@
 # @airnauts/comments-integration-jira
 
-Jira Cloud thread-action extension for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool)
-server. Adds a **"Create Jira issue"** button to each comment thread; clicking it opens a Jira
-Cloud issue pre-filled with the thread content and stores the issue link back on the thread.
+Jira Cloud thread-action extension for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server. Adds a **"Create Jira issue"** button to each comment thread; clicking it creates a Jira Cloud issue pre-filled with the thread content and stores the issue link back on the thread.
 
-## Install
+## Installation
 
 ```bash
 pnpm add @airnauts/comments-integration-jira
 ```
 
-## Usage
+## Quick start
 
 ```ts
 import { createCommentsServer } from '@airnauts/comments-server'
@@ -19,6 +17,9 @@ import { jiraIssues } from '@airnauts/comments-integration-jira'
 createCommentsServer({
   repository,
   storage,
+  secretKey: process.env.COMMENTS_SECRET!,
+  projectId: 'my-app',
+  allowedOrigins: ['https://my-app.example.com'],
   extensions: jiraIssues({
     siteUrl: 'https://your-org.atlassian.net',
     email: process.env.JIRA_EMAIL!,
@@ -28,22 +29,58 @@ createCommentsServer({
 })
 ```
 
-The action is shown in the thread toolbar and hides itself once the thread already carries a Jira
-link — so repeated presses create only one issue. An `issueType` can be provided to override the
-project default (defaults to `'Task'`). Pass an optional `labels` array to tag every created issue.
+The action appears in the thread toolbar. Once a Jira issue has been created for a thread, the button hides itself — so repeated presses create only one issue. The Jira issue URL is stored as an `externalLink` on the thread and shown in the UI.
 
-Required config is validated at construction time — a missing `siteUrl`, `email`, `apiToken`, or
-`projectKey` throws immediately so misconfiguration fails fast.
+## API reference
 
-## `JiraConfig`
+### `jiraIssues(opts)`
 
-| Field | Type | Description |
-|---|---|---|
-| `siteUrl` | `string` | Jira Cloud base URL, e.g. `https://acme.atlassian.net` |
-| `email` | `string` | Atlassian account email (used for Basic Auth) |
-| `apiToken` | `string` | API token from id.atlassian.com |
-| `projectKey` | `string` | Project key, e.g. `PROJ` |
-| `issueType` | `string?` | Issue type name (default `'Task'`) |
+```ts
+jiraIssues({
+  siteUrl: string      // Jira Cloud base URL, e.g. "https://acme.atlassian.net" (required)
+  email: string        // Atlassian account email used for Basic Auth (required)
+  apiToken: string     // API token from id.atlassian.com (required)
+  projectKey: string   // Project key, e.g. "PROJ" (required)
+  issueType?: string   // Issue type name (default "Task")
+  labels?: string[]    // Labels applied to every created issue
+}): ServerExtension[]
+```
+
+All four required fields (`siteUrl`, `email`, `apiToken`, `projectKey`) are validated at construction time — a missing value throws immediately so misconfiguration fails fast.
+
+### `JiraConfig`
+
+```ts
+type JiraConfig = {
+  siteUrl: string
+  email: string
+  apiToken: string
+  projectKey: string
+  issueType?: string
+}
+```
+
+### `JiraIssuesOptions`
+
+`JiraConfig` plus an optional `labels?: string[]` array.
+
+## Configuration / env vars
+
+| Env var | Description |
+|---|---|
+| `JIRA_EMAIL` | Atlassian account email |
+| `JIRA_API_TOKEN` | API token from [id.atlassian.com](https://id.atlassian.com/manage-profile/security/api-tokens) |
+
+## Requirements
+
+- Node.js ≥ 18 (or any fetch-capable runtime)
+- Jira Cloud (Atlassian REST API v3)
+
+## Related packages
+
+- **`@airnauts/comments-server`** — defines `ServerExtension` and `ThreadActionExtension`
+- **`@airnauts/comments-notifier-slack`** — Slack notification extension
+- **`@airnauts/comments-notifier-email`** — email notification extension
 
 ## License
 

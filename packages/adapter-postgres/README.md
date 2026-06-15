@@ -1,20 +1,18 @@
 # @airnauts/comments-adapter-postgres
 
-PostgreSQL repository adapter for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server.
+PostgreSQL repository adapter for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server. Stores threads in a hybrid relational + `jsonb` schema; driver-agnostic via a host-supplied `query()` executor.
 
-## Install
+## Installation
 
 ```bash
-pnpm add @airnauts/comments-adapter-postgres pg
+pnpm add @airnauts/comments-adapter-postgres
+# Add the pg driver only if you use postgresRepository() or a pg.Pool executor:
+pnpm add pg
 ```
 
-`pg` is an optional peer — needed only for the lazy `postgresRepository`
-convenience. If you supply your own executor (Neon, Supabase, an existing pool),
-you don't need it.
+`pg` is an optional peer dependency — not needed if you supply your own executor (e.g. Neon's `Pool`, Supabase's client).
 
-## Usage
-
-### Let the adapter own the connection
+## Quick start
 
 ```ts
 import { postgresRepository } from '@airnauts/comments-adapter-postgres'
@@ -24,14 +22,24 @@ const repository = postgresRepository({
 })
 ```
 
-It connects lazily on first use, memoizes the pool across hot reloads/warm
-invocations via `cacheKey`, and runs `ensureSchema` for you.
+Pass `repository` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsRoute` from `@airnauts/comments-next`). The adapter connects lazily on first use and runs `ensureSchema` automatically.
 
-### Bring your own executor (serverless / Neon / Supabase)
+## API reference
 
-`createPostgresRepository` accepts anything with a node-postgres-style
-`query(text, params)` method — `pg.Pool`, Neon's `Pool`, etc. This keeps the
-adapter free of any driver dependency.
+### `postgresRepository(opts)`
+
+Owns the connection lifecycle. Connects lazily on first use and memoizes the pool under `cacheKey` for hot-reload / warm serverless reuse.
+
+```ts
+postgresRepository({
+  connectionString: string  // PostgreSQL connection string (required)
+  cacheKey?: string         // memoization key, default "postgres"
+}): Repository
+```
+
+### `createPostgresRepository(opts)`
+
+Lower-level factory for callers that manage their own connection. Accepts anything with a `query(text, params)` method — `pg.Pool`, Neon's `Pool`, Supabase's client, etc.
 
 ```ts
 import { Pool } from '@neondatabase/serverless'
@@ -42,15 +50,38 @@ await ensureSchema(pool)
 const repository = createPostgresRepository({ sql: pool })
 ```
 
-> Note: Neon's pure-HTTP tagged-template client does not satisfy the
-> `query(text, params)` shape — use Neon's `Pool`.
+> **Note:** Neon's pure-HTTP tagged-template client does not satisfy the `query(text, params)` shape — use Neon's `Pool` instead.
 
-## Schema
+### `ensureSchema(sql)`
 
-`ensureSchema(sql)` creates two tables (`comments_threads`,
-`comments_attachments`) and one index with `CREATE … IF NOT EXISTS`, so it's safe
-to call on every startup. Production teams that prefer managed migrations can run
-the equivalent DDL through their own tool instead.
+Creates the `comments_threads` and `comments_attachments` tables and their indexes with `CREATE … IF NOT EXISTS` — safe to call on every startup. Use this when managing your own executor; `postgresRepository` calls it automatically.
+
+Production teams that prefer managed migrations can run the equivalent DDL through their own tooling instead.
+
+### `SqlExecutor` type
+
+```ts
+import type { SqlExecutor } from '@airnauts/comments-adapter-postgres'
+// { query(text: string, params?: unknown[]): Promise<{ rows: unknown[] }> }
+```
+
+Implement this interface to plug in any Postgres-compatible driver.
+
+## Peer dependencies & requirements
+
+| Peer | Required | Notes |
+|---|---|---|
+| `pg` | Optional (^8.11.0) | Only needed for `postgresRepository()` or a `pg.Pool` executor |
+
+- Node.js ≥ 18
+- PostgreSQL ≥ 14
+
+## Related packages
+
+- **`@airnauts/comments-server`** — defines the `Repository` interface
+- **`@airnauts/comments-adapter-mongo`** — MongoDB alternative
+- **`@airnauts/comments-adapter-memory`** — in-memory adapter for dev/tests
+- **`@airnauts/comments-next`** — Next.js integration that accepts this adapter
 
 ## License
 
