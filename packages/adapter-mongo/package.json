@@ -49,6 +49,7 @@
     "mongodb": "^6.12.0"
   },
   "devDependencies": {
+    "@airnauts/comments-next": "workspace:*",
     "@airnauts/comments-test-support": "workspace:*",
     "mongodb-memory-server": "^10.1.2"
   }

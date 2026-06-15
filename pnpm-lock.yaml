@@ -147,6 +147,9 @@ importers:
         specifier: ^6.12.0
         version: 6.21.0
     devDependencies:
+      '@airnauts/comments-next':
+        specifier: workspace:*
+        version: link:../next
       '@airnauts/comments-test-support':
         specifier: workspace:*
         version: link:../test-support
