@@ -18,7 +18,7 @@ This is a **brand rename**, not a product change. The product still manages
 | Decision | Choice |
 |---|---|
 | npm scope | Keep `@airnauts`; swap prefix → `@airnauts/airside-*` |
-| Extension pkgs | Unify `notifier-slack`/`notifier-email`/`integration-jira` → `airside-extension-{slack,email,jira}` (tracks the in-flight `*Extension` unification) |
+| Extension pkgs | Unify `notifier-slack`/`notifier-email`/`integration-jira` → `airside-extension-{slack,email,jira}` (the `*Extension` factory unification shipped in `comments@0.7.0`) |
 | Rename depth | **Full rebrand** — package names + repo + public widget surface + internal `cmnt:` prefix |
 | Old npm packages | **Deprecate with pointer** (`npm deprecate`), no shim/republish |
 | Repo slug | **Rename in place** `Airnauts/commenting-tool` → `Airnauts/airside` (GitHub auto-redirects) |
@@ -56,8 +56,8 @@ This is a **brand rename**, not a product change. The product still manages
 | test-ids | `comments-pin`, `comments-panel-open`, `comments-place` | `airside-pin`, `airside-panel-open`, `airside-place` |
 
 Most packages are a clean prefix swap (`comments-X` → `airside-X`). The three
-**extension** packages also change *category* (concurrent with the in-flight
-`*Extension` unification) and are the only non-mechanical renames:
+**extension** packages also change *category* (the `*Extension` factory unification
+already shipped in `comments@0.7.0`) and are the only non-mechanical renames:
 
 | Current (published) | → Airside | Factory export |
 |---|---|---|
@@ -127,9 +127,12 @@ to retire a one-time cost.
 The deprecation pointer requires the airside packages to already exist on npm, so
 order matters:
 
-1. **(User, in flight)** Finish the final `@airnauts/comments-*` release. **Confirm
-   it has fully published to npm** before cutting the rename branch — otherwise the
-   two changesets can collide.
+1. **(Done — release cut)** The final `@airnauts/comments-*` release is **`0.7.0`**,
+   versioned and pushed on `main` (`b12f41b`, includes the unified `*Extension`
+   factories). **Gate before cutting the rename branch: confirm npm actually serves
+   `0.7.0`** — the CI publish job runs after the push, and it must finish first or the
+   two publish runs collide. (At time of writing npm still served `0.6.0`, i.e. the
+   `0.7.0` publish was still in flight.)
 2. Rename the GitHub repo `Airnauts/commenting-tool` → `Airnauts/airside`
    (auto-redirects old URLs, clones, issues, PRs, stars).
 3. On the rename branch, atomically flip: package names, `workspace:^` deps, repo
@@ -143,19 +146,18 @@ order matters:
    replacement. Nine are a clean prefix swap (`comments-X` → `airside-X`); the three
    extension packages map explicitly: `comments-notifier-slack` →
    `airside-extension-slack`, `comments-notifier-email` → `airside-extension-email`,
-   `comments-integration-jira` → `airside-extension-jira`. (Assumes the final
-   `comments` release kept the current `notifier-*`/`integration-*` names; if it
-   already renamed them, deprecate whatever it published.)
+   `comments-integration-jira` → `airside-extension-jira`. (Confirmed: `comments@0.7.0`
+   kept the `notifier-*`/`integration-*` package names — only the factory *symbols*
+   unified — so these three published names are exactly what gets deprecated.)
 
 ## Version strategy
 
 Continue the line. Package **directories do not change** (`packages/core`, etc.),
 so each `CHANGELOG.md` stays in place with full history; resetting to 0.1.0 would
 contradict a changelog already showing 0.5.x. Airside debuts **one minor above** the
-final `comments` release. The in-flight unify-factory-names changeset bumps the
-fixed group to **`0.7.0`** (the final `comments` release), so airside debuts at
-**`0.8.0`** (e.g. final `comments@0.7.0` → `airside@0.8.0`), same code,
-same maturity.
+final `comments` release, which is **`0.7.0`** — released on `main` (`b12f41b`), the
+fixed group bumped by the unify-factory-names changeset. Airside therefore debuts at
+**`0.8.0`** (`comments@0.7.0` → `airside@0.8.0`), same code, same maturity.
 
 ## Records & docs
 
