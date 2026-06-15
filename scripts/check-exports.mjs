@@ -13,7 +13,7 @@ const entries = [
   ['@airnauts/comments-client/react', 'packageName'],
   ['@airnauts/comments-server', 'VERSION'],
   ['@airnauts/comments-server/dev', 'createDevServer'],
-  ['@airnauts/comments-server/next', 'createNextHandler'],
+  ['@airnauts/comments-server/node', 'nodeRequestToWeb'],
   ['@airnauts/comments-adapter-mongo', 'createMongoRepository'],
   ['@airnauts/comments-storage-vercel-blob', 'packageName'],
   ['@airnauts/comments-storage-fs', 'packageName'],

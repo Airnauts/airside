@@ -1,15 +1,14 @@
 {
   "name": "@airnauts/comments-server",
   "version": "0.5.1",
-  "description": "Server runtime for the Airnauts embeddable commenting tool: HTTP router, use-cases, CORS/security, and framework adapters (dev server, Next.js).",
+  "description": "Server runtime for the Airnauts embeddable commenting tool: HTTP router, use-cases, CORS/security, and framework adapters (dev server, generic Node bridge).",
   "keywords": [
     "comments",
     "commenting",
     "annotations",
     "feedback",
     "airnauts",
-    "server",
-    "nextjs"
+    "server"
   ],
   "license": "MIT",
   "author": "Airnauts",
@@ -32,9 +31,9 @@
       "types": "./dist/dev.d.ts",
       "import": "./dist/dev.js"
     },
-    "./next": {
-      "types": "./dist/next.d.ts",
-      "import": "./dist/next.js"
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "import": "./dist/node.js"
     }
   },
   "files": [
