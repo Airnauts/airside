@@ -66,8 +66,8 @@ topmost layer first (menu), then the popover, via Radix's dismissable-layer stac
 
 ## Dependency
 
-Add `@radix-ui/react-dropdown-menu` (`^1.x`, version-aligned with the existing
-`@radix-ui/react-popover` / `react-dialog`) to `packages/client/package.json`.
+Add `@radix-ui/react-dropdown-menu` to `packages/client/package.json` (resolves to
+`^2.x` — its own major line, newer than the `^1.x` `react-popover` / `react-dialog`).
 
 ## Testing (TDD)
 
