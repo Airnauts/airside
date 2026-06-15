@@ -209,7 +209,7 @@ Write the failing tests/fixtures first, then implement.
   - `@airnauts/comments-next`: **BREAKING** `createCommentsRoute` renamed to
     `createCommentsAppRoute`; added `createCommentsPagesRoute` (Pages Router);
     Next handlers now live here.
-  - The fixed version group bumps all nine publishable packages together.
+  - The rest of the fixed version group bumps with them.
 - **Release** — automatic on push to `main` (no tags), per `RELEASING.md`.
 
 ## Non-goals / YAGNI

@@ -1167,6 +1167,7 @@ In `packages/next/README.md`:
 - Update the description to say "Next.js App **and Pages** Router integration".
 - Replace the `createCommentsRoute` example(s) with `createCommentsAppRoute`, and add a short Pages Router example using `createCommentsPagesRoute` + the `bodyParser: false` caveat.
 - Rename the `### createCommentsRoute(config)` API heading to `### createCommentsAppRoute(config)` and add a `### createCommentsPagesRoute(config)` heading.
+- Also update `packages/next/package.json`'s `description` from "Next.js App Router integration for the Airnauts commenting tool server." to "Next.js App and Pages Router integration for the Airnauts commenting tool server."
 
 - [ ] **Step 5: packages/server/README.md**
 
@@ -1177,7 +1178,7 @@ In `packages/server/README.md`:
 - [ ] **Step 6: Commit**
 
 ```bash
-git add README.md docs/integration.md packages/next/README.md packages/server/README.md
+git add README.md docs/integration.md packages/next/README.md packages/next/package.json packages/server/README.md
 git commit -m "docs: document createCommentsAppRoute/PagesRoute and the /node bridge
 
 Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
