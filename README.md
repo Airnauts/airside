@@ -9,67 +9,6 @@ A self-contained, open-source commenting overlay you host yourself. Drop the wid
 
 ---
 
-## Documentation
-
-| Doc | Contents |
-|---|---|
-| [`docs/architecture.md`](docs/architecture.md) | Integrated v1 system architecture — start here |
-| [`docs/prd.md`](docs/prd.md) | Product requirements |
-| [`docs/adr.md`](docs/adr.md) | Architecture decision log (ADR-0001…) |
-| [`docs/milestones.md`](docs/milestones.md) | Delivery milestones |
-| [`docs/integration.md`](docs/integration.md) | Minutes-long integration quickstart |
-
----
-
-## Packages
-
-This is a pnpm monorepo. All packages under `packages/*` are published to npm under the `@airnauts` scope.
-
-### Core
-
-| Package | Directory | Description |
-|---|---|---|
-| [`@airnauts/comments-core`](packages/core) | `packages/core` | Isomorphic: Zod schemas, HTTP contract types, `pageKey` normalization, anchor scoring/threshold policy, OpenAPI generator |
-| [`@airnauts/comments-client`](packages/client) | `packages/client` | Widget engine (`init()`), light-DOM anchoring runtime, React wrapper (`CommentsLayer`) |
-| [`@airnauts/comments-server`](packages/server) | `packages/server` | Web-standard HTTP handler, use cases, CORS/security, adapter interfaces, Next.js glue, dev server |
-| [`@airnauts/comments-next`](packages/next) | `packages/next` | One-call Next.js App Router integration (`createCommentsRoute`) |
-
-### Persistence adapters
-
-| Package | Directory | Description |
-|---|---|---|
-| [`@airnauts/comments-adapter-mongo`](packages/adapter-mongo) | `packages/adapter-mongo` | MongoDB Atlas / self-hosted repository adapter |
-| [`@airnauts/comments-adapter-postgres`](packages/adapter-postgres) | `packages/adapter-postgres` | PostgreSQL repository adapter (hybrid columns + `jsonb`; driver-agnostic) |
-| [`@airnauts/comments-adapter-memory`](packages/adapter-memory) | `packages/adapter-memory` | In-memory repository for local development and tests |
-
-### Storage adapters
-
-| Package | Directory | Description |
-|---|---|---|
-| [`@airnauts/comments-storage-vercel-blob`](packages/storage-vercel-blob) | `packages/storage-vercel-blob` | Vercel Blob image-attachment storage |
-| [`@airnauts/comments-storage-fs`](packages/storage-fs) | `packages/storage-fs` | Filesystem image-attachment storage |
-
-### Notification extensions
-
-| Package | Directory | Description |
-|---|---|---|
-| [`@airnauts/comments-notifier-slack`](packages/notifier-slack) | `packages/notifier-slack` | Slack Incoming Webhook notification extension |
-| [`@airnauts/comments-notifier-email`](packages/notifier-email) | `packages/notifier-email` | Email notification extension (SMTP via nodemailer or Resend HTTP API) |
-
-### Thread-action extensions
-
-| Package | Directory | Description |
-|---|---|---|
-| [`@airnauts/comments-integration-jira`](packages/integration-jira) | `packages/integration-jira` | "Create Jira issue" thread-action extension for Jira Cloud |
-
-### Dev-only (not published)
-
-| Package | Directory | Description |
-|---|---|---|
-| `@airnauts/comments-test-support` | `packages/test-support` | Shared test fixtures and contract suite (private) |
-
----
-
 ## Quick start (Next.js App Router)
 
 ### 1. Install
@@ -131,7 +70,26 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
 })
 ```
 
-See [`docs/integration.md`](docs/integration.md) for the full walkthrough.
+---
+
+## Packages
+
+This is a pnpm monorepo. All packages under `packages/*` are published to npm under the `@airnauts` scope.
+
+| Package | Description |
+|---|---|
+| [`@airnauts/comments-core`](packages/core) | Isomorphic: Zod schemas, HTTP contract types, `pageKey` normalization, anchor scoring/threshold policy, OpenAPI generator |
+| [`@airnauts/comments-client`](packages/client) | Widget engine (`init()`), light-DOM anchoring runtime, React wrapper (`CommentsLayer`) |
+| [`@airnauts/comments-server`](packages/server) | Web-standard HTTP handler, use cases, CORS/security, adapter interfaces, Next.js glue, dev server |
+| [`@airnauts/comments-next`](packages/next) | One-call Next.js App Router integration (`createCommentsRoute`) |
+| [`@airnauts/comments-adapter-mongo`](packages/adapter-mongo) | MongoDB Atlas / self-hosted repository adapter |
+| [`@airnauts/comments-adapter-postgres`](packages/adapter-postgres) | PostgreSQL repository adapter (hybrid columns + `jsonb`; driver-agnostic) |
+| [`@airnauts/comments-adapter-memory`](packages/adapter-memory) | In-memory repository for local development and tests |
+| [`@airnauts/comments-storage-vercel-blob`](packages/storage-vercel-blob) | Vercel Blob image-attachment storage |
+| [`@airnauts/comments-storage-fs`](packages/storage-fs) | Filesystem image-attachment storage |
+| [`@airnauts/comments-notifier-slack`](packages/notifier-slack) | Slack Incoming Webhook notification extension |
+| [`@airnauts/comments-notifier-email`](packages/notifier-email) | Email notification extension (SMTP via nodemailer or Resend HTTP API) |
+| [`@airnauts/comments-integration-jira`](packages/integration-jira) | "Create Jira issue" thread-action extension for Jira Cloud |
 
 ---
 
@@ -174,6 +132,10 @@ MIT
 
 ---
 
-## About
+## About Airnauts
 
-Built and maintained by [Airnauts](https://www.airnauts.com/).
+This tool is built and maintained by [Airnauts](https://www.airnauts.com/) — a digital product studio that designs and engineers web and mobile products end to end, from early concept and UX through to production software.
+
+We built this commenting tool to solve a recurring problem in our own client work: gathering precise, in-context feedback on live web pages without bolting on a heavyweight third-party SaaS. We open-sourced it so other teams can host the same review workflow on their own infrastructure, keep their data in their own database, and adapt the widget to their own product.
+
+If you'd like help integrating it, or you're looking for a partner to design and build your next product, get in touch at [airnauts.com](https://www.airnauts.com/).
