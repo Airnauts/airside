@@ -15,10 +15,10 @@ pnpm add @airnauts/comments-client @airnauts/comments-next @airnauts/comments-ad
 Create `app/api/comments/[...path]/route.ts`:
 
 ```ts
-import { createCommentsRoute } from '@airnauts/comments-next'
+import { createCommentsAppRoute } from '@airnauts/comments-next'
 import { memoryRepository } from '@airnauts/comments-adapter-memory'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
+export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
@@ -28,7 +28,7 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
 })
 ```
 
-`createCommentsRoute` builds the server and its four Next App Router handlers in one
+`createCommentsAppRoute` builds the server and its four Next App Router handlers in one
 call (it also returns `server` for server-side reads or tests). The handler strips
 the mount prefix, so the server core does not need to know where it is mounted.
 
@@ -94,13 +94,13 @@ infrastructure is config — no bespoke glue:
 ```ts
 // app/api/comments/[...path]/route.ts
 import { join } from 'node:path'
-import { createCommentsRoute } from '@airnauts/comments-next'
+import { createCommentsAppRoute } from '@airnauts/comments-next'
 import { memoryRepository } from '@airnauts/comments-adapter-memory'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { fileSystemStorage } from '@airnauts/comments-storage-fs'
 import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
+export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: process.env.COMMENTS_SECRET ?? 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],

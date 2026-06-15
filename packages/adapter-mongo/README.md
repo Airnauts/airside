@@ -16,7 +16,7 @@ import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 const repository = mongoRepository({ uri: process.env.MONGODB_URI! })
 ```
 
-Pass `repository` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsRoute` from `@airnauts/comments-next`). The adapter connects lazily on first use.
+Pass `repository` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsAppRoute` / `createCommentsPagesRoute` from `@airnauts/comments-next`). The adapter connects lazily on first use.
 
 ## API reference
 

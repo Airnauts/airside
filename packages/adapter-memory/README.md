@@ -16,7 +16,7 @@ import { memoryRepository } from '@airnauts/comments-adapter-memory'
 const repository = memoryRepository()
 ```
 
-Pass `repository` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsRoute` from `@airnauts/comments-next`).
+Pass `repository` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsAppRoute` / `createCommentsPagesRoute` from `@airnauts/comments-next`).
 
 ## API reference
 

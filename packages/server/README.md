@@ -27,7 +27,7 @@ const server = createCommentsServer({
 // Mount it in any framework — Next.js, Hono, bare Node http, etc.
 ```
 
-For Next.js App Router, prefer `@airnauts/comments-next` which wraps the above into a single `createCommentsRoute(config)` call.
+For Next.js (App Router or Pages Router), prefer `@airnauts/comments-next` which wraps the above into single one-call integrations: `createCommentsAppRoute(config)` for the App Router and `createCommentsPagesRoute(config)` for the Pages Router.
 
 ## API reference
 
@@ -111,15 +111,19 @@ Wraps a `() => Promise<Repository>` factory so it connects lazily on first use a
 
 ## Subpath exports
 
-### `@airnauts/comments-server/next`
+### `@airnauts/comments-server/node`
 
-Next.js App Router catch-all glue. Usually consumed via `@airnauts/comments-next`.
+Generic Node↔Web bridge for mounting the server on any Node host (Express, bare `node:http`, etc.). Usually consumed via `@airnauts/comments-next` for Next.js hosts.
 
 ```ts
-import { createNextHandler } from '@airnauts/comments-server/next'
+import { nodeRequestToWeb, webToNode } from '@airnauts/comments-server/node'
 
-// app/api/comments/[...path]/route.ts
-export const { GET, POST, PATCH, OPTIONS } = createNextHandler(server)
+// In an Express/http handler — bridge the Node req/res to the Web standard:
+app.use('/api/comments', async (req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host}`)
+  const webRes = await server.handle(await nodeRequestToWeb(req, url))
+  await webToNode(webRes, res)
+})
 ```
 
 ### `@airnauts/comments-server/dev`
@@ -140,7 +144,7 @@ const { port } = await dev.listen()
 
 ## Related packages
 
-- **`@airnauts/comments-next`** — one-call Next.js App Router integration (`createCommentsRoute`)
+- **`@airnauts/comments-next`** — one-call Next.js App and Pages Router integration (`createCommentsAppRoute` / `createCommentsPagesRoute`)
 - **`@airnauts/comments-adapter-mongo`** — MongoDB repository
 - **`@airnauts/comments-adapter-postgres`** — PostgreSQL repository
 - **`@airnauts/comments-adapter-memory`** — in-memory repository for dev/tests

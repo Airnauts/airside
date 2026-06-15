@@ -24,11 +24,11 @@ pnpm add @airnauts/comments-next @airnauts/comments-client \
 Create `app/api/comments/[...path]/route.ts`:
 
 ```ts
-import { createCommentsRoute } from '@airnauts/comments-next'
+import { createCommentsAppRoute } from '@airnauts/comments-next'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
+export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: process.env.COMMENTS_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
@@ -60,7 +60,7 @@ Swap in the in-memory adapter:
 import { memoryRepository } from '@airnauts/comments-adapter-memory'
 import { fileSystemStorage } from '@airnauts/comments-storage-fs'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
+export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
@@ -79,8 +79,8 @@ independently — pick **one server mount** and **one widget mount**:
 
 - **Server** — App Router (above), Pages Router (below), or, on any other host, the
   Web-standard `server.handle(request)` directly: a Fetch-native framework like Hono
-  passes its `Request` straight in, and a classic Node host (Express, `http`) bridges
-  `req`/`res` exactly as the Pages Router example does. Node-compatible runtimes only
+  passes its `Request` straight in; a classic Node host (Express, `http`) bridges
+  `req`/`res` via `@airnauts/comments-server/node`. Node-compatible runtimes only
   (the server uses `node:crypto`, `Buffer`, and Node database drivers).
 - **Widget** — `CommentsLayer` for React (below), or `comments.init()` for vanilla
   JS (below).
@@ -90,20 +90,18 @@ the widget's origin in its `allowedOrigins`.
 
 ### Server — Next.js Pages Router
 
-`@airnauts/comments-next` is App Router only. On the Pages Router, mount a catch-all API
-route and bridge Node's `req`/`res` to the Web-standard handler from
-`@airnauts/comments-server`:
+On the Pages Router, mount a catch-all API route with `createCommentsPagesRoute`:
 
 ```ts
 // pages/api/comments/[...path].ts
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { createCommentsServer } from '@airnauts/comments-server'
+import { createCommentsPagesRoute } from '@airnauts/comments-next'
 import { memoryRepository } from '@airnauts/comments-adapter-memory'
 
-// The comments API reads JSON and multipart bodies itself — turn off Next's body parser.
+// REQUIRED: Next reads this statically, so the helper can't set it. The comments
+// API parses JSON/multipart itself, so the raw body must reach it unparsed.
 export const config = { api: { bodyParser: false } }
 
-const server = createCommentsServer({
+export default createCommentsPagesRoute({
   secretKey: process.env.COMMENTS_SECRET ?? 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
@@ -111,49 +109,14 @@ const server = createCommentsServer({
   storage: { async put(blob) { return { url: `mem://${blob.name}`, key: blob.name, size: 0 } } },
   rateLimit: false,
 })
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Rebuild the operation-relative URL the server expects (mount prefix stripped).
-  const segments = Array.isArray(req.query.path) ? req.query.path : []
-  const search = req.url?.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''
-  const url = new URL(`/${segments.join('/')}${search}`, `http://${req.headers.host ?? 'localhost'}`)
-
-  const headers = new Headers()
-  for (const [key, value] of Object.entries(req.headers)) {
-    if (Array.isArray(value)) headers.set(key, value.join(', '))
-    else if (typeof value === 'string') headers.set(key, value)
-  }
-
-  const body =
-    req.method === 'GET' || req.method === 'HEAD'
-      ? undefined
-      : await new Promise<Buffer>((resolve, reject) => {
-          const chunks: Buffer[] = []
-          req.on('data', (chunk) => chunks.push(chunk))
-          req.on('end', () => resolve(Buffer.concat(chunks)))
-          req.on('error', reject)
-        })
-
-  const response = await server.handle(
-    new Request(url, { method: req.method, headers, body: body?.byteLength ? body : undefined }),
-  )
-
-  res.status(response.status)
-  response.headers.forEach((value, key) => res.setHeader(key, value))
-  if (response.body) res.send(Buffer.from(await response.arrayBuffer()))
-  else res.end()
-}
 ```
 
-A single default export handles every method — `server.handle` answers the CORS preflight
-(`OPTIONS`) internally. Keep this on the **Node runtime** (the default): the server uses
-`node:crypto` for the constant-time key check, `Buffer`, and Node-only database drivers, so
-it cannot run on the Edge runtime — even though Pages Router Edge handlers would otherwise
-take a Web `Request` directly and skip the bridge.
-
-For production, swap `memoryRepository()` and the storage stub for
-`mongoRepository({ uri })` + `vercelBlobStorage({ token })` (or `fileSystemStorage`),
-exactly as in the App Router Quick start.
+A single default export handles every method — `server.handle` answers the CORS
+preflight (`OPTIONS`) internally. Keep this on the **Node runtime** (the default):
+the server uses `node:crypto`, `Buffer`, and Node-only database drivers, so it
+cannot run on the Edge runtime. For production, swap `memoryRepository()` and the
+storage stub for `mongoRepository({ uri })` + `vercelBlobStorage({ token })` (or
+`fileSystemStorage`), exactly as in the App Router Quick start.
 
 ### Widget — React (any framework)
 
@@ -213,7 +176,7 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 | [`@airnauts/comments-core`](packages/core) | Isomorphic: Zod schemas, HTTP contract types, `pageKey` normalization, anchor scoring/threshold policy, OpenAPI generator |
 | [`@airnauts/comments-client`](packages/client) | Widget engine (`init()`), light-DOM anchoring runtime, React wrapper (`CommentsLayer`) |
 | [`@airnauts/comments-server`](packages/server) | Web-standard HTTP handler, use cases, CORS/security, adapter interfaces, Next.js glue, dev server |
-| [`@airnauts/comments-next`](packages/next) | One-call Next.js App Router integration (`createCommentsRoute`) |
+| [`@airnauts/comments-next`](packages/next) | One-call Next.js App and Pages Router integration (`createCommentsAppRoute` / `createCommentsPagesRoute`) |
 | [`@airnauts/comments-adapter-mongo`](packages/adapter-mongo) | MongoDB Atlas / self-hosted repository adapter |
 | [`@airnauts/comments-adapter-postgres`](packages/adapter-postgres) | PostgreSQL repository adapter (hybrid columns + `jsonb`; driver-agnostic) |
 | [`@airnauts/comments-adapter-memory`](packages/adapter-memory) | In-memory repository for local development and tests |

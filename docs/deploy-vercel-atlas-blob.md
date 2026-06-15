@@ -64,15 +64,18 @@ export async function getServer() {
 
 ```ts
 // app/api/comments/[...path]/route.ts
-import { createNextHandler } from '@airnauts/comments-server/next'
-import { getServer } from '@/lib/comments'
+import { createCommentsAppRoute } from '@airnauts/comments-next'
+import { mongoRepository } from '@airnauts/comments-adapter-mongo'
+import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-const server = await getServer() // top-level await (ESM route module)
-export const { GET, POST, PATCH, OPTIONS } = createNextHandler(server)
+export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
+  secretKey: process.env.COMMENTS_SECRET!,
+  projectId: 'my-app',
+  allowedOrigins: [process.env.ALLOWED_ORIGIN!],
+  repository: mongoRepository({ uri: process.env.MONGODB_URI! }),
+  storage: vercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! }),
+})
 ```
-
-If you'd rather avoid top-level await, resolve `getServer()` inside each handler
-and forward the request to its `.handle`.
 
 ## 5. Verify the round-trip
 
