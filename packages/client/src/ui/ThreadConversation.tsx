@@ -142,7 +142,6 @@ export function ThreadConversation({
             : `Open · ${commentCount} ${commentCount === 1 ? 'comment' : 'comments'}`}
         </span>
         <div className="cmnt:flex cmnt:items-center cmnt:gap-1.5 cmnt:text-gray-500">
-          <ThreadActions id={id} actions={actions} controller={controller} />
           <Button
             variant="outline"
             size="sm"
@@ -151,6 +150,7 @@ export function ThreadConversation({
           >
             {resolved ? '↺ Reopen' : '✓ Resolve'}
           </Button>
+          <ThreadActions id={id} actions={actions} controller={controller} />
           {variant === 'popover' && (
             <Button
               variant="ghost"
