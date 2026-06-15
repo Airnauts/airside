@@ -12,6 +12,10 @@ dist/
 # Ephemeral git worktrees (.claude/worktrees/<name>)
 .claude/worktrees/
 
+# Local/per-machine agent state (never shared)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
 # Build tooling
 .turbo/
 *.tsbuildinfo
