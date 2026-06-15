@@ -14,6 +14,7 @@ and the manual integration proof for M9.
      --filter @airnauts/comments-client \
      --filter @airnauts/comments-adapter-memory \
      --filter @airnauts/comments-adapter-mongo \
+     --filter @airnauts/comments-integration-jira \
      --filter @airnauts/comments-notifier-slack \
      --filter @airnauts/comments-storage-fs \
      --filter @airnauts/comments-storage-vercel-blob build
@@ -48,3 +49,6 @@ Run against `pnpm --filter @airnauts/comments-nextjs-host dev`:
 7. **Cross-page panel:** create threads on all three routes → open the panel → see
    them ordered by recent activity across pages → click one → it navigates to that
    page and focuses the pin; orphans appear in the needs-review section.
+8. **Jira (optional):** set `JIRA_API_TOKEN`, `JIRA_SITE_URL`, `JIRA_EMAIL`, and
+   `JIRA_PROJECT_KEY` → a **Create Jira issue** button appears in the thread toolbar;
+   clicking it creates a linked issue and hides the button.
