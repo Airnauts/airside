@@ -133,6 +133,10 @@ None of these are committed releases — they're the directions we're considerin
 - More storage adapters — Amazon S3, Cloudflare R2.
 - More host-framework glue beyond Next.js — Remix, SvelteKit, Astro, and a generic `Request`-based handler for Hono / Express.
 
+**Managed cloud**
+
+- Hosted cloud version — a subscription-based, fully-managed offering for teams that want the review workflow without standing up their own server: we run the comment server, database, and attachment storage; you drop in the widget. Self-hosting the open-source packages stays free and first-class.
+
 > Want one of these sooner, or have a use case we haven't listed? Open an issue or reach out to [Airnauts](https://www.airnauts.com/).
 
 ---
