@@ -102,6 +102,41 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 
 ---
 
+## Roadmap
+
+None of these are committed releases — they're the directions we're considering. The full rationale for the parking-lot items lives in [`docs/ideas.md`](docs/ideas.md); known rough edges in already-shipped behavior are tracked in [`docs/issues.md`](docs/issues.md).
+
+**Widget & UX**
+
+- Detail-view prev/next navigation — step through the filtered thread list from the detail header without returning to the list _(parking lot)_.
+- Per-comment overflow menu — edit / delete / copy a comment _(needs new `PATCH`/`DELETE` comment endpoints)_.
+- Emoji reactions on comments _(new `Comment` field + add/remove-reaction endpoints across both adapters)_.
+- Smooth, document-anchored pin positioning — drop the per-scroll-frame layout work for jank-free pins _(parking lot; a positioning-basis change that would get its own ADR)_.
+- Rich-text / Markdown comment bodies.
+- `@mentions` and thread assignment.
+- Accessibility & keyboard-navigation pass; widget UI localization (i18n).
+
+**Real-time & collaboration**
+
+- Live updates — push new comments and threads to open widgets (SSE or WebSocket) instead of refetch-on-focus.
+- Authenticated reviewer identity — map commenters to real user accounts / SSO instead of a typed-in name.
+
+**Integrations & extensions**
+
+- Jira comment sync — mirror later thread replies into a linked Jira issue _(parking lot; needs `externalLinks` on the notification event)_.
+- More thread-action integrations — Linear, GitHub Issues.
+- More notifiers — Discord, Microsoft Teams, generic outbound webhook.
+
+**Adapters & hosts**
+
+- More persistence adapters — SQLite, MySQL.
+- More storage adapters — Amazon S3, Cloudflare R2.
+- More host-framework glue beyond Next.js — Remix, SvelteKit, Astro, and a generic `Request`-based handler for Hono / Express.
+
+> Want one of these sooner, or have a use case we haven't listed? Open an issue or reach out to [Airnauts](https://www.airnauts.com/).
+
+---
+
 ## Developing in this monorepo
 
 **Prerequisites:** Node.js ≥ 18, [pnpm](https://pnpm.io/) ≥ 9.
