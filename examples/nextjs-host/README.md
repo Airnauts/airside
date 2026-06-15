@@ -1,8 +1,8 @@
-# Next.js host app (M9 integration example)
+# Next.js host app
 
-A real Next.js App Router app that integrates the `@airnauts/comments-*` packages through
-their public seams. It is the worked example behind [`docs/integration.md`](../../docs/integration.md)
-and the manual integration proof for M9.
+A complete Next.js App Router integration of the `@airnauts/comments-*` packages through
+their public seams. It doubles as the Playwright e2e test host and the worked example
+behind [`docs/integration.md`](../../docs/integration.md).
 
 ## Run locally
 

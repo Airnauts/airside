@@ -232,6 +232,13 @@ None of these are committed releases — they're the directions we're considerin
 
 - Hosted cloud version — a subscription-based, fully-managed offering for teams that want the review workflow without standing up their own server: we run the comment server, database, and attachment storage; you drop in the widget. Self-hosting the open-source packages stays free and first-class.
 
+**Bug fixes & known rough edges**
+
+- Selection highlight rects drift after window resize — need to recompute Range rects on reflow _(open bug; see `docs/issues.md`)_.
+- Opening a thread does not surface its anchored text selection visually _(missing behavior)_.
+- A pin on a plain structural element can silently migrate to the wrong surviving sibling after the original is removed _(correctness bug; TDD fix deferred)_.
+- Signal-less elements (no `id`, class, or `data-*` attribute) cannot clear the re-anchor score threshold under structural mutations and always orphan _(known v1 scoring limitation)_.
+
 > Want one of these sooner, or have a use case we haven't listed? Open an issue or reach out to [Airnauts](https://www.airnauts.com/).
 
 ---
