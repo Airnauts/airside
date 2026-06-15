@@ -91,7 +91,7 @@ The types below are what custom adapters must implement:
 import type { Repository, StorageAdapter } from '@airnauts/comments-server'
 ```
 
-**`Repository`** — persistence; implement `createThread`, `listThreads`, `getThread`, `addComment`, `setThreadStatus`, `refreshAnchor`, `createAttachment`, `getAttachment`.
+**`Repository`** — persistence; implement `createThread`, `getThread`, `listThreads`, `addComment`, `setStatus`, `updateAnchor`, `upsertExternalLink`, `putAttachment`, `getAttachments`.
 
 **`StorageAdapter`** — file storage; implement `put(blob: PutBlob): Promise<PutResult>`.
 
