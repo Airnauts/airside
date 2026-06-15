@@ -5,7 +5,7 @@ Minimal local development sandbox for the `@airnauts/comments-client` widget. Ru
 ## What this shows
 
 - How to mount the widget with the vanilla `comments.init()` API
-- How to run the server locally with `createDevServer` from `@airnauts/comments-server/dev`
+- How to run the server locally with `@airnauts/comments-server/dev` (`createDevServer`)
 - How to wire `memoryRepository` for zero-config local testing
 
 ## Run
