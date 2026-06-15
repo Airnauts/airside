@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/comments-notifier-slack",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Slack Incoming Webhook notifier for the Airnauts commenting tool server.",
   "keywords": [
     "comments",

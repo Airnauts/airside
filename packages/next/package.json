@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/comments-next",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Next.js App and Pages Router integration for the Airnauts commenting tool server.",
   "keywords": [
     "comments",

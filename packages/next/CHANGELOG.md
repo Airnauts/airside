@@ -1,5 +1,11 @@
 # @airnauts/comments-next
 
+## 0.7.0
+
+### Patch Changes
+
+- @airnauts/comments-server@0.7.0
+
 ## 0.6.0
 
 ### Minor Changes
