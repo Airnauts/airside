@@ -142,9 +142,9 @@ createCommentsServer({
 `Repository` and `StorageAdapter` are the only DB/IO seams.
 
 `extensions` is a third, optional seam covering two kinds of server add-on. **Notification**
-extensions (e.g. `slackNotifications`, `emailNotifications`) receive a `NotificationEvent`
+extensions (e.g. `slackExtension`, `emailExtension`) receive a `NotificationEvent`
 that `createThread` / `addComment` fan out after each write, with failures isolated so they
-can never break the write. **Thread-action** extensions (e.g. `jiraIssues`) contribute
+can never break the write. **Thread-action** extensions (e.g. `jiraExtension`) contribute
 reviewer-triggered actions evaluated per thread and run via
 `POST /threads/:id/actions/:actionId`; an action may persist an `externalLink` back on the
 thread (e.g. the created Jira issue). The older `notifiers?` option is a deprecated alias for

@@ -20,7 +20,7 @@ Recipients are derived per event from the thread itself. On a reply (`comment.ad
 
 ```ts
 import { createCommentsServer } from '@airnauts/comments-server'
-import { emailNotifications } from '@airnauts/comments-notifier-email'
+import { emailExtension } from '@airnauts/comments-notifier-email'
 import { resendTransport } from '@airnauts/comments-notifier-email/resend'
 
 createCommentsServer({
@@ -29,7 +29,7 @@ createCommentsServer({
   secretKey: process.env.COMMENTS_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
-  extensions: emailNotifications({
+  extensions: emailExtension({
     transport: resendTransport({ apiKey: process.env.RESEND_API_KEY! }),
     from: 'Comments <noreply@acme.com>',
   }),
@@ -39,10 +39,10 @@ createCommentsServer({
 ### SMTP (Node server)
 
 ```ts
-import { emailNotifications } from '@airnauts/comments-notifier-email'
+import { emailExtension } from '@airnauts/comments-notifier-email'
 import { smtpTransport } from '@airnauts/comments-notifier-email/smtp'
 
-extensions: emailNotifications({
+extensions: emailExtension({
   transport: smtpTransport({
     host: 'smtp.example.com',
     port: 587,
@@ -56,10 +56,10 @@ extensions: emailNotifications({
 
 ## API reference
 
-### `emailNotifications(opts)` (main entry)
+### `emailExtension(opts)` (main entry)
 
 ```ts
-emailNotifications({
+emailExtension({
   transport: EmailTransport   // Delivery backend (required)
   from: string                // Verified sender address (required)
   replyTo?: string            // Reply-To header
@@ -119,7 +119,7 @@ Renders a `NotificationEvent` into an email. Exported for testing or custom disp
 
 | Export | From | Description |
 |---|---|---|
-| `EmailNotifierOptions` | `.` | Options for `emailNotifications` |
+| `EmailExtensionOptions` | `.` | Options for `emailExtension` |
 | `EmailTransport` | `.` | Pluggable delivery backend interface |
 | `EmailMessage` | `.` | `{ to, bcc?, from, replyTo?, subject, html, text }` |
 | `EmailFormat` | `.` | `{ subject: string; html: string; text: string }` |

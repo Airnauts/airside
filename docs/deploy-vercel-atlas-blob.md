@@ -66,14 +66,14 @@ export async function getServer() {
 // app/api/comments/[...path]/route.ts
 import { createCommentsAppRoute } from '@airnauts/comments-next'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
-import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: process.env.COMMENTS_SECRET!,
   projectId: 'my-app',
   allowedOrigins: [process.env.ALLOWED_ORIGIN!],
   repository: mongoRepository({ uri: process.env.MONGODB_URI! }),
-  storage: vercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! }),
+  storage: createVercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! }),
 })
 ```
 

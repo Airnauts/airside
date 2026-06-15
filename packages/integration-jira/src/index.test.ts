@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest'
-import { type JiraIssuesOptions, jiraIssues } from './index'
+import { type JiraExtensionOptions, jiraExtension } from './index'
 
-const cfg: JiraIssuesOptions = {
+const cfg: JiraExtensionOptions = {
   siteUrl: 'https://co.atlassian.net',
   email: 'u@co',
   apiToken: 'tok',
@@ -21,14 +21,14 @@ const thread = {
 } as never
 
 /** Narrow to the thread-action extension so `visibleWhen`/`run` are callable. */
-function firstAction(opts: JiraIssuesOptions) {
-  const [ext] = jiraIssues(opts)
+function firstAction(opts: JiraExtensionOptions) {
+  const [ext] = jiraExtension(opts)
   if (ext?.kind !== 'thread-action') throw new Error('expected a thread-action extension')
   return ext
 }
 
 it('returns one thread-action extension with the create-issue id', () => {
-  const [ext] = jiraIssues(cfg)
+  const [ext] = jiraExtension(cfg)
   expect(ext).toMatchObject({
     kind: 'thread-action',
     id: 'jira.createIssue',
@@ -70,5 +70,5 @@ it('run creates an issue and returns an externalLink', async () => {
 })
 
 it('throws at construction when required config is missing', () => {
-  expect(() => jiraIssues({ ...cfg, apiToken: '' })).toThrow(/apiToken/)
+  expect(() => jiraExtension({ ...cfg, apiToken: '' })).toThrow(/apiToken/)
 })

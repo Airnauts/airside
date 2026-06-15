@@ -11,9 +11,9 @@ pnpm add @airnauts/comments-storage-fs
 ## Quick start
 
 ```ts
-import { fileSystemStorage } from '@airnauts/comments-storage-fs'
+import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 
-const storage = fileSystemStorage({
+const storage = createFileSystemStorage({
   rootDir: './uploads',
   baseUrl: '/uploads', // serve files via a static route
 })
@@ -23,10 +23,10 @@ Pass `storage` to `createCommentsServer` from `@airnauts/comments-server` (or to
 
 ## API reference
 
-### `fileSystemStorage(opts)`
+### `createFileSystemStorage(opts)`
 
 ```ts
-fileSystemStorage({
+createFileSystemStorage({
   rootDir: string   // Absolute or relative path to write files into (required)
   baseUrl?: string  // Public URL prefix returned with each upload; defaults to file:// URLs
 }): StorageAdapter

@@ -1,7 +1,7 @@
 import type { ThreadId } from '@airnauts/comments-core'
 import type { NotificationEvent } from '@airnauts/comments-server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { formatSlackMessage, slackNotifications } from './index'
+import { formatSlackMessage, slackExtension } from './index'
 
 const event: NotificationEvent = {
   type: 'thread.created',
@@ -18,9 +18,9 @@ const event: NotificationEvent = {
 
 afterEach(() => vi.unstubAllGlobals())
 
-describe('slackNotifications', () => {
+describe('slackExtension', () => {
   it('returns a single notification extension named "slack"', () => {
-    const extensions = slackNotifications({ webhookUrl: 'https://hooks.slack.com/x' })
+    const extensions = slackExtension({ webhookUrl: 'https://hooks.slack.com/x' })
     expect(extensions).toHaveLength(1)
     expect(extensions[0]!.kind).toBe('notification')
     expect(extensions[0]!.name).toBe('slack')
@@ -31,7 +31,7 @@ describe('slackNotifications', () => {
     const fetchMock = vi.fn(async () => new Response(null, { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    await slackNotifications({ webhookUrl: 'https://hooks.slack.com/services/T/B/x' })[0]!.onEvent(
+    await slackExtension({ webhookUrl: 'https://hooks.slack.com/services/T/B/x' })[0]!.onEvent(
       event,
     )
 
@@ -49,7 +49,7 @@ describe('slackNotifications', () => {
     const fetchMock = vi.fn(async () => new Response(null, { status: 200 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    await slackNotifications({ webhookUrl: 'https://hooks.slack.com/x' })[0]!.onEvent(event)
+    await slackExtension({ webhookUrl: 'https://hooks.slack.com/x' })[0]!.onEvent(event)
 
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     const blocks = JSON.stringify(JSON.parse(init.body as string).blocks)
@@ -61,7 +61,7 @@ describe('slackNotifications', () => {
       'fetch',
       vi.fn(async () => new Response('no', { status: 500 })),
     )
-    const err = await slackNotifications({ webhookUrl: 'https://hooks.slack.com/secret-xyz' })[0]!
+    const err = await slackExtension({ webhookUrl: 'https://hooks.slack.com/secret-xyz' })[0]!
       .onEvent(event)
       .catch((e) => e as Error)
     expect(err).toBeInstanceOf(Error)

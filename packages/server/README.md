@@ -12,15 +12,15 @@ pnpm add @airnauts/comments-server
 
 ```ts
 import { createCommentsServer } from '@airnauts/comments-server'
-import { memoryRepository } from '@airnauts/comments-adapter-memory'
-import { fileSystemStorage } from '@airnauts/comments-storage-fs'
+import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
+import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 
 const server = createCommentsServer({
   secretKey: process.env.COMMENTS_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
-  repository: memoryRepository(),
-  storage: fileSystemStorage({ rootDir: './uploads', baseUrl: '/uploads' }),
+  repository: createMemoryRepository(),
+  storage: createFileSystemStorage({ rootDir: './uploads', baseUrl: '/uploads' }),
 })
 
 // server.handle is a Web-standard (Request) => Promise<Response> handler.
@@ -60,14 +60,14 @@ Extensions come in two kinds, both passed to `extensions: [...]`.
 **Notification extensions** (`NotificationExtension`) receive a `NotificationEvent` after each write (thread created or comment added). Failures are isolated — they never break the write.
 
 ```ts
-import { slackNotifications } from '@airnauts/comments-notifier-slack'
-import { emailNotifications } from '@airnauts/comments-notifier-email'
+import { slackExtension } from '@airnauts/comments-notifier-slack'
+import { emailExtension } from '@airnauts/comments-notifier-email'
 
 createCommentsServer({
   // ...
   extensions: [
-    ...slackNotifications({ webhookUrl: process.env.SLACK_WEBHOOK! }),
-    ...emailNotifications({ transport, from: 'noreply@acme.com' }),
+    ...slackExtension({ webhookUrl: process.env.SLACK_WEBHOOK! }),
+    ...emailExtension({ transport, from: 'noreply@acme.com' }),
   ],
 })
 ```
@@ -75,11 +75,11 @@ createCommentsServer({
 **Thread-action extensions** (`ThreadActionExtension`) add reviewer-triggered actions to the thread toolbar (e.g. "Create Jira issue"). Each action declares an `id`, `label`, `slot`, optional `visibleWhen` predicate, and a `run` handler that may persist an `externalLink` back on the thread.
 
 ```ts
-import { jiraIssues } from '@airnauts/comments-integration-jira'
+import { jiraExtension } from '@airnauts/comments-integration-jira'
 
 createCommentsServer({
   // ...
-  extensions: jiraIssues({ siteUrl: '...', email: '...', apiToken: '...', projectKey: 'PROJ' }),
+  extensions: jiraExtension({ siteUrl: '...', email: '...', apiToken: '...', projectKey: 'PROJ' }),
 })
 ```
 

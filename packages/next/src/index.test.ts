@@ -1,6 +1,6 @@
 import type { ServerResponse } from 'node:http'
 import { Readable } from 'node:stream'
-import { memoryRepository } from '@airnauts/comments-adapter-memory'
+import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { KEY_HEADER_NAME } from '@airnauts/comments-core'
 import type { StorageAdapter } from '@airnauts/comments-server'
 import { makeCreateThreadBody } from '@airnauts/comments-test-support'
@@ -24,7 +24,7 @@ function baseConfig() {
     secretKey: 'sk_test',
     projectId: 'proj_x',
     allowedOrigins: ['https://app.example.com'],
-    repository: memoryRepository(),
+    repository: createMemoryRepository(),
     storage: stubStorage,
     rateLimit: false as const,
   }

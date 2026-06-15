@@ -26,14 +26,14 @@ Create `app/api/comments/[...path]/route.ts`:
 ```ts
 import { createCommentsAppRoute } from '@airnauts/comments-next'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
-import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: process.env.COMMENTS_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   repository: mongoRepository({ uri: process.env.MONGODB_URI! }),
-  storage: vercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! }),
+  storage: createVercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! }),
 })
 ```
 
@@ -57,15 +57,15 @@ The widget is inert until a page is opened with `?comments-key=<your-secret-key>
 Swap in the in-memory adapter:
 
 ```ts
-import { memoryRepository } from '@airnauts/comments-adapter-memory'
-import { fileSystemStorage } from '@airnauts/comments-storage-fs'
+import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
+import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
-  repository: memoryRepository(),
-  storage: fileSystemStorage({ rootDir: './public/uploads', baseUrl: '/uploads' }),
+  repository: createMemoryRepository(),
+  storage: createFileSystemStorage({ rootDir: './public/uploads', baseUrl: '/uploads' }),
   rateLimit: false,
 })
 ```
@@ -95,7 +95,7 @@ On the Pages Router, mount a catch-all API route with `createCommentsPagesRoute`
 ```ts
 // pages/api/comments/[...path].ts
 import { createCommentsPagesRoute } from '@airnauts/comments-next'
-import { memoryRepository } from '@airnauts/comments-adapter-memory'
+import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 
 // REQUIRED: Next reads this statically, so the helper can't set it. The comments
 // API parses JSON/multipart itself, so the raw body must reach it unparsed.
@@ -105,7 +105,7 @@ export default createCommentsPagesRoute({
   secretKey: process.env.COMMENTS_SECRET ?? 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
-  repository: memoryRepository(),
+  repository: createMemoryRepository(),
   storage: { async put(blob) { return { url: `mem://${blob.name}`, key: blob.name, size: 0 } } },
   rateLimit: false,
 })
@@ -114,9 +114,9 @@ export default createCommentsPagesRoute({
 A single default export handles every method — `server.handle` answers the CORS
 preflight (`OPTIONS`) internally. Keep this on the **Node runtime** (the default):
 the server uses `node:crypto`, `Buffer`, and Node-only database drivers, so it
-cannot run on the Edge runtime. For production, swap `memoryRepository()` and the
-storage stub for `mongoRepository({ uri })` + `vercelBlobStorage({ token })` (or
-`fileSystemStorage`), exactly as in the App Router Quick start.
+cannot run on the Edge runtime. For production, swap `createMemoryRepository()` and the
+storage stub for `mongoRepository({ uri })` + `createVercelBlobStorage({ token })` (or
+`createFileSystemStorage`), exactly as in the App Router Quick start.
 
 ### Widget — React (any framework)
 

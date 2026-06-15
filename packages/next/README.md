@@ -17,30 +17,30 @@ Create a catch-all route handler at `app/api/comments/[...path]/route.ts`:
 ```ts
 import { createCommentsAppRoute } from '@airnauts/comments-next'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
-import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: process.env.COMMENTS_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   repository: mongoRepository({ uri: process.env.MONGODB_URI! }),
-  storage: vercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! }),
+  storage: createVercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! }),
 })
 ```
 
 For local development without a real database, swap in the in-memory adapter:
 
 ```ts
-import { memoryRepository } from '@airnauts/comments-adapter-memory'
-import { fileSystemStorage } from '@airnauts/comments-storage-fs'
+import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
+import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 import { join } from 'node:path'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
-  repository: memoryRepository(),
-  storage: fileSystemStorage({ rootDir: join(process.cwd(), 'public', 'uploads'), baseUrl: '/uploads' }),
+  repository: createMemoryRepository(),
+  storage: createFileSystemStorage({ rootDir: join(process.cwd(), 'public', 'uploads'), baseUrl: '/uploads' }),
   rateLimit: false,
 })
 ```
@@ -52,7 +52,7 @@ Create a catch-all API route at `pages/api/comments/[...path].ts`:
 ```ts
 import { createCommentsPagesRoute } from '@airnauts/comments-next'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
-import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
 // REQUIRED: Next reads this statically, so the helper can't set it. The comments
 // API parses JSON/multipart itself, so the raw body must reach it unparsed.
@@ -63,7 +63,7 @@ export default createCommentsPagesRoute({
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   repository: mongoRepository({ uri: process.env.MONGODB_URI! }),
-  storage: vercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! }),
+  storage: createVercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! }),
 })
 ```
 
@@ -96,7 +96,7 @@ Accepts the same options as `createCommentsAppRoute`. Returns a single Node.js A
 |---|---|---|
 | `COMMENTS_SECRET` | `secretKey` | Shared bearer token (required in production) |
 | `MONGODB_URI` | `mongoRepository` | MongoDB Atlas connection string |
-| `BLOB_READ_WRITE_TOKEN` | `vercelBlobStorage` | Vercel Blob token |
+| `BLOB_READ_WRITE_TOKEN` | `createVercelBlobStorage` | Vercel Blob token |
 
 ## Requirements
 

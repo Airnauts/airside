@@ -1267,3 +1267,48 @@ Next surface. Breaking for both packages (pre-1.0 → `minor`): `@airnauts/comme
 is removed (no shim is possible — a re-export would be circular) and `createCommentsRoute`
 is gone. Supersedes the `createNextHandler` placement in ADR-0015 and the
 `createCommentsRoute` naming in ADR-0022.
+
+## ADR-0037 — Unify adapter and extension factory names
+
+- **Date:** 2026-06-15
+- **Status:** accepted
+
+**Context.** The factory functions a host calls to build repositories, storage
+adapters, and server extensions had drifted into two naming styles. Some used a
+`create` prefix (`createMongoRepository`, `createPostgresRepository`,
+`createCommentsServer`, `createNextHandler`); the storage adapters, the in-memory
+repository, and every notification/integration extension used a bare-noun style
+(`fileSystemStorage`, `vercelBlobStorage`, `memoryRepository`, `slackNotifications`,
+`emailNotifications`, `jiraIssues`). The in-memory adapter was a further outlier —
+it exposed a class (`InMemoryRepository`) where the other repository adapters expose
+a `create<Provider>Repository` factory.
+
+**Decision.** Adopt one verb per role.
+
+- **Object-building factories** (build one adapter from its config/parts) take the
+  `create<Provider><Type>` prefix: `createFileSystemStorage`, `createVercelBlobStorage`,
+  and a new `createMemoryRepository`.
+- **Server-extension factories** — which return an array spread into `extensions: [...]`
+  and are commonly composed together — take a `<provider>Extension` suffix:
+  `slackExtension`, `emailExtension`, `jiraExtension`, with matching
+  `SlackExtensionOptions` / `EmailExtensionOptions` / `JiraExtensionOptions` types.
+- The repository **two-tier split is left intact**: `create<Provider>Repository({ connection })`
+  (bring-your-own connection) vs `<provider>Repository({ uri })` (adapter owns and
+  memoizes the connection) for mongo/postgres encodes a real distinction, not an
+  inconsistency, so those names are unchanged. `InMemoryRepository` (the class) stays
+  exported.
+
+**Rejected:** making the identifier *identical* across interchangeable packages
+(`createStorage` / `createRepository` everywhere). The canonical integration example
+wires more than one backend in a single file (env ternary) and notifiers are spread
+together, so identical names would force aliased imports and collisions — optimizing
+the rare single-backend case at the expense of the multi-backend pattern the docs teach.
+
+**Consequences.** Breaking for six publishable packages (`storage-fs`,
+`storage-vercel-blob`, `adapter-memory`, `notifier-slack`, `notifier-email`,
+`integration-jira`); pre-1.0 → `minor`. The old names (`fileSystemStorage`,
+`vercelBlobStorage`, `memoryRepository`, `slackNotifications`, `emailNotifications`,
+`jiraIssues`, and the `*NotifierOptions` / `JiraIssuesOptions` types) ship as
+`@deprecated` aliases for one release to ease migration, then are removed in the
+following minor. The mongo/postgres factory names and all `create*` server/Next names
+are unchanged. Refines the adapter-construction convention of ADR-0021.

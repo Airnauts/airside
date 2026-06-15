@@ -4,8 +4,11 @@ import { makeCreateJiraIssueFromThread } from './create-issue'
 
 export type { JiraConfig } from './client'
 
-/** Options for {@link jiraIssues}: a {@link JiraConfig} plus optional labels. */
-export type JiraIssuesOptions = JiraConfig & { labels?: string[] }
+/** Options for {@link jiraExtension}: a {@link JiraConfig} plus optional labels. */
+export type JiraExtensionOptions = JiraConfig & { labels?: string[] }
+
+/** @deprecated Renamed to {@link JiraExtensionOptions}; kept for one release. */
+export type JiraIssuesOptions = JiraExtensionOptions
 
 function hasExternalLink(
   thread: { externalLinks?: { provider: string }[] },
@@ -20,9 +23,9 @@ function hasExternalLink(
  * `projectKey`) is validated at construction so misconfiguration fails fast.
  * The action hides itself once the thread already carries a Jira link.
  */
-export function jiraIssues(opts: JiraIssuesOptions): ServerExtension[] {
+export function jiraExtension(opts: JiraExtensionOptions): ServerExtension[] {
   for (const k of ['siteUrl', 'email', 'apiToken', 'projectKey'] as const) {
-    if (!opts[k]) throw new Error(`jiraIssues: missing required config '${k}'`)
+    if (!opts[k]) throw new Error(`jiraExtension: missing required config '${k}'`)
   }
   const run = makeCreateJiraIssueFromThread(opts, opts.labels)
   return [
@@ -38,3 +41,6 @@ export function jiraIssues(opts: JiraIssuesOptions): ServerExtension[] {
     },
   ]
 }
+
+/** @deprecated Renamed to {@link jiraExtension}; kept for one release. */
+export const jiraIssues = jiraExtension

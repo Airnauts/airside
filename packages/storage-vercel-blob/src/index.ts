@@ -44,9 +44,12 @@ export class VercelBlobStorage implements StorageAdapter {
   }
 }
 
-/** Construct a Vercel Blob `StorageAdapter` (uniform `xxxStorage(config)` shape). */
-export function vercelBlobStorage(opts: VercelBlobStorageOptions): StorageAdapter {
+/** Construct a Vercel Blob `StorageAdapter` (uniform `create<Provider>Storage(config)` shape). */
+export function createVercelBlobStorage(opts: VercelBlobStorageOptions): StorageAdapter {
   return new VercelBlobStorage(opts)
 }
+
+/** @deprecated Renamed to {@link createVercelBlobStorage}; kept for one release. */
+export const vercelBlobStorage = createVercelBlobStorage
 
 export const packageName = '@airnauts/comments-storage-vercel-blob'

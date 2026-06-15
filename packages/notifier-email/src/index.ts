@@ -19,7 +19,7 @@ export interface EmailTransport {
   send(message: EmailMessage): Promise<void>
 }
 
-export type EmailNotifierOptions = {
+export type EmailExtensionOptions = {
   /** Where to send: smtpTransport(...) | resendTransport(...) | your own. */
   transport: EmailTransport
   /** Verified sender address. */
@@ -30,7 +30,10 @@ export type EmailNotifierOptions = {
   subjectPrefix?: string
 }
 
-export function emailNotifications(opts: EmailNotifierOptions): NotificationExtension[] {
+/** @deprecated Renamed to {@link EmailExtensionOptions}; kept for one release. */
+export type EmailNotifierOptions = EmailExtensionOptions
+
+export function emailExtension(opts: EmailExtensionOptions): NotificationExtension[] {
   return [
     {
       kind: 'notification',
@@ -54,6 +57,9 @@ export function emailNotifications(opts: EmailNotifierOptions): NotificationExte
     },
   ]
 }
+
+/** @deprecated Renamed to {@link emailExtension}; kept for one release. */
+export const emailNotifications = emailExtension
 
 export type { EmailFormat, FormatEmailOptions } from './format'
 export { formatEmail } from './format'

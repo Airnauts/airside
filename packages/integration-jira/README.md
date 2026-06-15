@@ -12,7 +12,7 @@ pnpm add @airnauts/comments-integration-jira
 
 ```ts
 import { createCommentsServer } from '@airnauts/comments-server'
-import { jiraIssues } from '@airnauts/comments-integration-jira'
+import { jiraExtension } from '@airnauts/comments-integration-jira'
 
 createCommentsServer({
   repository,
@@ -20,7 +20,7 @@ createCommentsServer({
   secretKey: process.env.COMMENTS_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
-  extensions: jiraIssues({
+  extensions: jiraExtension({
     siteUrl: 'https://your-org.atlassian.net',
     email: process.env.JIRA_EMAIL!,
     apiToken: process.env.JIRA_API_TOKEN!,
@@ -33,10 +33,10 @@ The action appears in the thread toolbar. Once a Jira issue has been created for
 
 ## API reference
 
-### `jiraIssues(opts)`
+### `jiraExtension(opts)`
 
 ```ts
-jiraIssues({
+jiraExtension({
   siteUrl: string      // Jira Cloud base URL, e.g. "https://acme.atlassian.net" (required)
   email: string        // Atlassian account email used for Basic Auth (required)
   apiToken: string     // API token from id.atlassian.com (required)
@@ -60,7 +60,7 @@ type JiraConfig = {
 }
 ```
 
-### `JiraIssuesOptions`
+### `JiraExtensionOptions`
 
 `JiraConfig` plus an optional `labels?: string[]` array.
 

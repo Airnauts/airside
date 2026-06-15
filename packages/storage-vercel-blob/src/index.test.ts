@@ -1,7 +1,7 @@
 import { storageContract } from '@airnauts/comments-test-support'
 import { del } from '@vercel/blob'
 import { afterAll, describe, expect, it } from 'vitest'
-import { VercelBlobStorage, vercelBlobStorage } from './index'
+import { createVercelBlobStorage, VercelBlobStorage } from './index'
 
 const token = process.env.BLOB_READ_WRITE_TOKEN
 
@@ -40,9 +40,9 @@ if (token) {
   })
 }
 
-describe('vercelBlobStorage', () => {
+describe('createVercelBlobStorage', () => {
   it('returns a StorageAdapter', () => {
-    const store = vercelBlobStorage({ token: 'test-token' })
+    const store = createVercelBlobStorage({ token: 'test-token' })
     expect(typeof store.put).toBe('function')
   })
 })

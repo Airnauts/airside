@@ -135,7 +135,7 @@ It's the first case that needs **one integration to register both extension kind
 once** — a `thread-action` for the manual create (the "current process") plus a
 `notification` for the automatic sync (the "callback"). The extension model already
 supports this with no change: `ServerExtension = NotificationExtension |
-ThreadActionExtension`, and `jiraIssues(config)` already returns `ServerExtension[]`,
+ThreadActionExtension`, and `jiraExtension(config)` already returns `ServerExtension[]`,
 so it can return `[createIssueAction, syncNotification]` with the Jira config shared in
 one closure. The split maps cleanly onto the two failure semantics we already have:
 the manual create surfaces errors to the reviewer (not isolated), while the sync is a

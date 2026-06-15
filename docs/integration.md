@@ -16,13 +16,13 @@ Create `app/api/comments/[...path]/route.ts`:
 
 ```ts
 import { createCommentsAppRoute } from '@airnauts/comments-next'
-import { memoryRepository } from '@airnauts/comments-adapter-memory'
+import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
-  repository: memoryRepository(),
+  repository: createMemoryRepository(),
   storage: { async put(blob) { return { url: `mem://${blob.name}`, key: blob.name, size: 0 } } },
   rateLimit: false,
 })
@@ -85,12 +85,12 @@ pnpm add @airnauts/comments-adapter-mongo @airnauts/comments-storage-vercel-blob
 Every adapter ships a uniform factory, so swapping the two ephemeral pieces for real
 infrastructure is config — no bespoke glue:
 
-- **Persistence:** replace `memoryRepository()` with `mongoRepository({ uri })` from
+- **Persistence:** replace `createMemoryRepository()` with `mongoRepository({ uri })` from
   `@airnauts/comments-adapter-mongo`. It connects lazily on first use and memoizes the
   connection (warm serverless / HMR reuse); the database name comes from the URI.
-- **Storage:** replace the stub with `vercelBlobStorage({ token })` from
+- **Storage:** replace the stub with `createVercelBlobStorage({ token })` from
   `@airnauts/comments-storage-vercel-blob` (pass `BLOB_READ_WRITE_TOKEN` explicitly), or
-  `fileSystemStorage({ rootDir, baseUrl })` from `@airnauts/comments-storage-fs`
+  `createFileSystemStorage({ rootDir, baseUrl })` from `@airnauts/comments-storage-fs`
   (`baseUrl` makes `put` return a browser-served path instead of a `file://` URL).
 - **Origins:** set `allowedOrigins` to your real site origins.
 
@@ -98,10 +98,10 @@ infrastructure is config — no bespoke glue:
 // app/api/comments/[...path]/route.ts
 import { join } from 'node:path'
 import { createCommentsAppRoute } from '@airnauts/comments-next'
-import { memoryRepository } from '@airnauts/comments-adapter-memory'
+import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
-import { fileSystemStorage } from '@airnauts/comments-storage-fs'
-import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
+import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   secretKey: process.env.COMMENTS_SECRET ?? 'dev-key',
@@ -109,10 +109,10 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
   allowedOrigins: ['http://localhost:3000'],
   repository: process.env.MONGODB_URI
     ? mongoRepository({ uri: process.env.MONGODB_URI })
-    : memoryRepository(),
+    : createMemoryRepository(),
   storage: process.env.BLOB_READ_WRITE_TOKEN
-    ? vercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN })
-    : fileSystemStorage({ rootDir: join(process.cwd(), 'public', 'uploads'), baseUrl: '/uploads' }),
+    ? createVercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN })
+    : createFileSystemStorage({ rootDir: join(process.cwd(), 'public', 'uploads'), baseUrl: '/uploads' }),
   rateLimit: false,
 })
 ```
@@ -123,8 +123,8 @@ for this env-switched build: in-memory locally, Mongo + Blob in production.
 ## Extensions: notifications and thread actions
 
 Server-side add-ons — outbound notifications and reviewer-triggered thread actions — are
-all wired through one option: `extensions`. Each factory (`slackNotifications`,
-`emailNotifications`, `jiraIssues`, …) returns an **array** of extensions, so spread them
+all wired through one option: `extensions`. Each factory (`slackExtension`,
+`emailExtension`, `jiraExtension`, …) returns an **array** of extensions, so spread them
 into a single list:
 
 ```ts
@@ -132,8 +132,8 @@ createCommentsServer({
   repository,
   storage,
   extensions: [
-    ...slackNotifications({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! }),
-    ...jiraIssues({ siteUrl, email, apiToken, projectKey }),
+    ...slackExtension({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! }),
+    ...jiraExtension({ siteUrl, email, apiToken, projectKey }),
   ],
 })
 ```
@@ -155,12 +155,12 @@ the comment text, and a link to the page.
    factory returns an array):
 
 ```ts
-import { slackNotifications } from '@airnauts/comments-notifier-slack'
+import { slackExtension } from '@airnauts/comments-notifier-slack'
 
 createCommentsServer({
   repository,
   storage,
-  extensions: [...slackNotifications({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! })],
+  extensions: [...slackExtension({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! })],
 })
 ```
 
@@ -184,13 +184,13 @@ deployment provenance) and persists a Jira link back on the thread.
 3. Wire the extension (again, spread the returned array):
 
 ```ts
-import { jiraIssues } from '@airnauts/comments-integration-jira'
+import { jiraExtension } from '@airnauts/comments-integration-jira'
 
 createCommentsServer({
   repository,
   storage,
   extensions: [
-    ...jiraIssues({
+    ...jiraExtension({
       siteUrl: process.env.JIRA_SITE_URL!,     // e.g. https://your-org.atlassian.net
       email: process.env.JIRA_EMAIL!,
       apiToken: process.env.JIRA_API_TOKEN!,

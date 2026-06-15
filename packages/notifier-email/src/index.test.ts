@@ -1,7 +1,7 @@
 import type { ThreadId } from '@airnauts/comments-core'
 import type { NotificationEvent } from '@airnauts/comments-server'
 import { describe, expect, it } from 'vitest'
-import { type EmailMessage, type EmailTransport, emailNotifications } from './index'
+import { type EmailMessage, type EmailTransport, emailExtension } from './index'
 
 // A reply with one prior participant already active in the thread.
 const event: NotificationEvent = {
@@ -29,9 +29,9 @@ function fakeTransport(): EmailTransport & { sent: EmailMessage[] } {
   }
 }
 
-describe('emailNotifications', () => {
+describe('emailExtension', () => {
   it('returns a single notification extension named "email"', () => {
-    const extensions = emailNotifications({ transport: fakeTransport(), from: 'c@d.com' })
+    const extensions = emailExtension({ transport: fakeTransport(), from: 'c@d.com' })
     expect(extensions).toHaveLength(1)
     expect(extensions[0]!.kind).toBe('notification')
     expect(extensions[0]!.name).toBe('email')
@@ -40,7 +40,7 @@ describe('emailNotifications', () => {
 
   it('sends to the thread participants (server already excluded the author)', async () => {
     const transport = fakeTransport()
-    await emailNotifications({ transport, from: 'noreply@d.com' })[0]!.onEvent({
+    await emailExtension({ transport, from: 'noreply@d.com' })[0]!.onEvent({
       ...event,
       participants: ['solo@b.com'],
     })
@@ -52,7 +52,7 @@ describe('emailNotifications', () => {
 
   it('bcc-fans multiple participants and puts the sender in "to"', async () => {
     const transport = fakeTransport()
-    await emailNotifications({ transport, from: 'noreply@d.com' })[0]!.onEvent({
+    await emailExtension({ transport, from: 'noreply@d.com' })[0]!.onEvent({
       ...event,
       participants: ['x@b.com', 'y@b.com'],
     })
@@ -63,7 +63,7 @@ describe('emailNotifications', () => {
 
   it('sends nothing when the thread has no other participants', async () => {
     const transport = fakeTransport()
-    await emailNotifications({ transport, from: 'c@d.com' })[0]!.onEvent({
+    await emailExtension({ transport, from: 'c@d.com' })[0]!.onEvent({
       ...event,
       participants: [],
     })
@@ -72,7 +72,7 @@ describe('emailNotifications', () => {
 
   it('passes the rendered subject/html/text through', async () => {
     const transport = fakeTransport()
-    await emailNotifications({ transport, from: 'c@d.com', subjectPrefix: '[Acme] ' })[0]!.onEvent(
+    await emailExtension({ transport, from: 'c@d.com', subjectPrefix: '[Acme] ' })[0]!.onEvent(
       event,
     )
     const msg = transport.sent[0]!
@@ -83,7 +83,7 @@ describe('emailNotifications', () => {
 
   it('sets reply-to only when provided', async () => {
     const withReply = fakeTransport()
-    await emailNotifications({
+    await emailExtension({
       transport: withReply,
       from: 'c@d.com',
       replyTo: 'team@d.com',
@@ -91,7 +91,7 @@ describe('emailNotifications', () => {
     expect(withReply.sent[0]!.replyTo).toBe('team@d.com')
 
     const without = fakeTransport()
-    await emailNotifications({ transport: without, from: 'c@d.com' })[0]!.onEvent(event)
+    await emailExtension({ transport: without, from: 'c@d.com' })[0]!.onEvent(event)
     expect(without.sent[0]!.replyTo).toBeUndefined()
   })
 
@@ -103,7 +103,7 @@ describe('emailNotifications', () => {
       },
     }
     await expect(
-      emailNotifications({ transport: boom, from: 'c@d.com' })[0]!.onEvent(event),
+      emailExtension({ transport: boom, from: 'c@d.com' })[0]!.onEvent(event),
     ).rejects.toThrow('smtp 550')
   })
 })

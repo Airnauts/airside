@@ -16,7 +16,7 @@ pnpm add @airnauts/comments-notifier-slack
 
 ```ts
 import { createCommentsServer } from '@airnauts/comments-server'
-import { slackNotifications } from '@airnauts/comments-notifier-slack'
+import { slackExtension } from '@airnauts/comments-notifier-slack'
 
 createCommentsServer({
   repository,
@@ -24,7 +24,7 @@ createCommentsServer({
   secretKey: process.env.COMMENTS_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
-  extensions: slackNotifications({
+  extensions: slackExtension({
     webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL!,
   }),
 })
@@ -32,10 +32,10 @@ createCommentsServer({
 
 ## API reference
 
-### `slackNotifications(opts)`
+### `slackExtension(opts)`
 
 ```ts
-slackNotifications({
+slackExtension({
   webhookUrl: string  // Slack Incoming Webhook URL (required)
 }): NotificationExtension[]
 ```
@@ -57,7 +57,7 @@ Renders a `NotificationEvent` as a Slack Block Kit message with a plain-text fal
 
 | Export | Description |
 |---|---|
-| `SlackNotifierOptions` | `{ webhookUrl: string }` |
+| `SlackExtensionOptions` | `{ webhookUrl: string }` |
 | `SlackMessage` | `{ text: string; blocks: unknown[] }` |
 
 ## Configuration / env vars

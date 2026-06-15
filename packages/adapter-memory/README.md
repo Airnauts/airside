@@ -11,16 +11,16 @@ pnpm add @airnauts/comments-adapter-memory
 ## Quick start
 
 ```ts
-import { memoryRepository } from '@airnauts/comments-adapter-memory'
+import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 
-const repository = memoryRepository()
+const repository = createMemoryRepository()
 ```
 
 Pass `repository` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsAppRoute` / `createCommentsPagesRoute` from `@airnauts/comments-next`).
 
 ## API reference
 
-### `memoryRepository()`
+### `createMemoryRepository()`
 
 Returns a fresh `Repository` backed by in-process Maps. No configuration, no connection.
 

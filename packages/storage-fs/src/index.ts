@@ -45,9 +45,12 @@ export class FileSystemStorage implements StorageAdapter {
   }
 }
 
-/** Construct a filesystem `StorageAdapter` (uniform `xxxStorage(config)` shape). */
-export function fileSystemStorage(opts: FileSystemStorageOptions): StorageAdapter {
+/** Construct a filesystem `StorageAdapter` (uniform `create<Provider>Storage(config)` shape). */
+export function createFileSystemStorage(opts: FileSystemStorageOptions): StorageAdapter {
   return new FileSystemStorage(opts)
 }
+
+/** @deprecated Renamed to {@link createFileSystemStorage}; kept for one release. */
+export const fileSystemStorage = createFileSystemStorage
 
 export const packageName = '@airnauts/comments-storage-fs'

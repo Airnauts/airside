@@ -11,9 +11,9 @@ pnpm add @airnauts/comments-storage-vercel-blob
 ## Quick start
 
 ```ts
-import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-const storage = vercelBlobStorage({
+const storage = createVercelBlobStorage({
   token: process.env.BLOB_READ_WRITE_TOKEN!,
 })
 ```
@@ -22,10 +22,10 @@ Pass `storage` to `createCommentsServer` from `@airnauts/comments-server` (or to
 
 ## API reference
 
-### `vercelBlobStorage(opts)`
+### `createVercelBlobStorage(opts)`
 
 ```ts
-vercelBlobStorage({
+createVercelBlobStorage({
   token: string    // Vercel Blob read-write token (required; never read from process.env automatically)
   prefix?: string  // Optional key prefix, e.g. "staging/" (trailing slash added automatically)
 }): StorageAdapter
@@ -58,7 +58,7 @@ type VercelBlobStorageOptions = {
 |---|---|
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token — copy from the Vercel dashboard Storage tab |
 
-The token is passed explicitly to `vercelBlobStorage({ token })` — the adapter never reads `process.env` automatically.
+The token is passed explicitly to `createVercelBlobStorage({ token })` — the adapter never reads `process.env` automatically.
 
 ## Requirements
 
