@@ -8,6 +8,7 @@
     "dev:server": "node dev-server.mjs"
   },
   "dependencies": {
+    "@airnauts/comments-adapter-memory": "workspace:*",
     "@airnauts/comments-client": "workspace:*",
     "@airnauts/comments-server": "workspace:*"
   },
