@@ -30,8 +30,21 @@ const stubController = (over: Partial<Controller> = {}) =>
 
 const stubClient = () => ({ getThread: vi.fn() }) as never
 
+/** Open the ⋯ overflow menu via the keyboard path (Enter on focused trigger).
+ *  If the menu is already open (trigger is aria-hidden by Radix), close it first. */
+function openMenu() {
+  // When menu is open, Radix marks the rest of the page aria-hidden. Use hidden:true to reach the trigger.
+  const trigger = screen.getByRole('button', { name: /more actions/i, hidden: true })
+  // If the menu is already open, close it with Escape then reopen.
+  if (trigger.getAttribute('data-state') === 'open') {
+    fireEvent.keyDown(trigger, { key: 'Escape' })
+  }
+  trigger.focus()
+  fireEvent.keyDown(trigger, { key: 'Enter' })
+}
+
 describe('ThreadActions', () => {
-  it('renders a button for a thread-toolbar action and ignores other slots', () => {
+  it('renders a ⋯ trigger and shows toolbar actions (only) once opened', () => {
     render(
       <ThreadsProvider client={stubClient()}>
         <ThreadActions
@@ -41,8 +54,12 @@ describe('ThreadActions', () => {
         />
       </ThreadsProvider>,
     )
-    expect(screen.getByRole('button', { name: /create issue/i })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /open in jira/i })).not.toBeInTheDocument()
+    // Closed: no menu items yet.
+    expect(screen.queryByRole('menuitem', { name: /create issue/i })).not.toBeInTheDocument()
+    openMenu()
+    expect(screen.getByRole('menuitem', { name: /create issue/i })).toBeInTheDocument()
+    // thread-metadata actions never appear in the toolbar overflow.
+    expect(screen.queryByRole('menuitem', { name: /open in jira/i })).not.toBeInTheDocument()
   })
 
   it('renders nothing when there are no toolbar actions', () => {
@@ -51,17 +68,19 @@ describe('ThreadActions', () => {
         <ThreadActions id="a" actions={[metadataAction()]} controller={stubController()} />
       </ThreadsProvider>,
     )
+    expect(screen.queryByRole('button', { name: /more actions/i })).not.toBeInTheDocument()
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('clicking calls controller.runAction with the thread id and action id', () => {
+  it('selecting an item calls controller.runAction with the thread id and action id', () => {
     const controller = stubController()
     render(
       <ThreadsProvider client={stubClient()}>
         <ThreadActions id="a" actions={[toolbarAction()]} controller={controller} />
       </ThreadsProvider>,
     )
-    fireEvent.click(screen.getByRole('button', { name: /create issue/i }))
+    openMenu()
+    fireEvent.click(screen.getByRole('menuitem', { name: /create issue/i }))
     expect(controller.runAction).toHaveBeenCalledWith('a', 'jira.createIssue')
   })
 
@@ -76,11 +95,12 @@ describe('ThreadActions', () => {
         </ToastProvider>
       </WidgetProvider>,
     )
-    fireEvent.click(screen.getByRole('button', { name: /create issue/i }))
+    openMenu()
+    fireEvent.click(screen.getByRole('menuitem', { name: /create issue/i }))
     expect(await screen.findByText(/create issue failed/i)).toBeInTheDocument()
   })
 
-  it('disables the button while its action is running', () => {
+  it('disables the menu item while its action is running', () => {
     function Harness() {
       const dispatch = useDispatch()
       return (
@@ -102,9 +122,12 @@ describe('ThreadActions', () => {
         <Harness />
       </ThreadsProvider>,
     )
-    const button = screen.getByRole('button', { name: /create issue/i })
-    expect(button).not.toBeDisabled()
+    openMenu()
+    expect(screen.getByRole('menuitem', { name: /create issue/i })).not.toHaveAttribute(
+      'data-disabled',
+    )
     fireEvent.click(screen.getByText('mark-running'))
-    expect(screen.getByRole('button', { name: /create issue/i })).toBeDisabled()
+    openMenu()
+    expect(screen.getByRole('menuitem', { name: /create issue/i })).toHaveAttribute('data-disabled')
   })
 })
