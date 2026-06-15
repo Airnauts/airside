@@ -50,11 +50,22 @@ describe('nodeRequestToWeb', () => {
     const out = await nodeRequestToWeb(fakeReq({ method: 'GET' }), new URL('http://h/threads'))
     expect(out.body).toBeNull()
   })
+
+  it('joins multi-value headers', async () => {
+    const req = fakeReq({})
+    ;(req.headers as Record<string, string | string[]>).accept = ['text/html', 'application/json']
+    const out = await nodeRequestToWeb(req, new URL('http://h/threads'))
+    expect(out.headers.get('accept')).toBe('text/html, application/json')
+  })
 })
 
 describe('readBody', () => {
   it('returns undefined for HEAD', async () => {
     expect(await readBody(fakeReq({ method: 'HEAD' }))).toBeUndefined()
+  })
+
+  it('reads a DELETE body', async () => {
+    expect(await readBody(fakeReq({ method: 'DELETE', body: 'x' }))).toEqual(Buffer.from('x'))
   })
 })
 
