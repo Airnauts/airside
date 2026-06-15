@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-15
 **Status:** Approved — ready for implementation plan
-**Supersedes:** the package-naming portion of ADR-0020 (to be recorded as ADR-0036)
+**Supersedes:** the package-naming portion of ADR-0020 (to be recorded as ADR-0038)
 
 ## Goal
 
@@ -68,7 +68,10 @@ Most packages are a clean prefix swap (`comments-X` → `airside-X`). The three
 They stay **three separate packages** (distinct optional deps: webhook / SMTP / Jira
 client), just recategorized — not merged. The factory renames ship with the
 unification work, not the rebrand; the rebrand only moves their packages. The
-`ServerExtension` / `NotificationExtension` types are **domain** and unchanged.
+`@deprecated` factory aliases the unify work adds for the `comments` 0.6→0.7
+transition need not carry to airside — the clean-break airside packages ship only
+the unified `*Extension` names. The `ServerExtension` / `NotificationExtension` types
+are **domain** and unchanged.
 
 ### Package inventory review (no further renames)
 
@@ -132,7 +135,7 @@ order matters:
 3. On the rename branch, atomically flip: package names, `workspace:^` deps, repo
    URLs (`repository`/`homepage`/`bugs`), public symbols, `air:` prefix + `--air-*`
    vars, `data-airside-*`, storage keys, query params, header, env vars, test-ids,
-   `.changeset/config.json` lists, CI/`RELEASING.md` refs, docs/README prose, ADR-0036.
+   `.changeset/config.json` lists, CI/`RELEASING.md` refs, docs/README prose, ADR-0038.
 4. One `fixed`-group changeset (breaking → **minor** per pre-1.0 policy);
    `pnpm version-packages`.
 5. Merge to `main` → **CI publishes** `@airnauts/airside-*`.
@@ -149,12 +152,14 @@ order matters:
 Continue the line. Package **directories do not change** (`packages/core`, etc.),
 so each `CHANGELOG.md` stays in place with full history; resetting to 0.1.0 would
 contradict a changelog already showing 0.5.x. Airside debuts **one minor above** the
-final `comments` release (e.g. final `comments@0.6.0` → `airside@0.7.0`), same code,
+final `comments` release. The in-flight unify-factory-names changeset bumps the
+fixed group to **`0.7.0`** (the final `comments` release), so airside debuts at
+**`0.8.0`** (e.g. final `comments@0.7.0` → `airside@0.8.0`), same code,
 same maturity.
 
 ## Records & docs
 
-- **ADR-0036** — "Rebrand `comments` → `airside`." Status accepted; supersedes the
+- **ADR-0038** — "Rebrand `comments` → `airside`." Status accepted; supersedes the
   naming portion of ADR-0020. Context (brand clarity / Airnauts tie-in), decision
   (full rebrand, deprecate-with-pointer, repo rename in place), consequences
   (storage reset, one breaking minor, cross-repo consumer break).
