@@ -175,7 +175,7 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 |---|---|
 | [`@airnauts/comments-core`](packages/core) | Isomorphic: Zod schemas, HTTP contract types, `pageKey` normalization, anchor scoring/threshold policy, OpenAPI generator |
 | [`@airnauts/comments-client`](packages/client) | Widget engine (`init()`), light-DOM anchoring runtime, React wrapper (`CommentsLayer`) |
-| [`@airnauts/comments-server`](packages/server) | Web-standard HTTP handler, use cases, CORS/security, adapter interfaces, Next.js glue, dev server |
+| [`@airnauts/comments-server`](packages/server) | Web-standard HTTP handler, use cases, CORS/security, adapter interfaces, generic Node bridge, dev server |
 | [`@airnauts/comments-next`](packages/next) | One-call Next.js App and Pages Router integration (`createCommentsAppRoute` / `createCommentsPagesRoute`) |
 | [`@airnauts/comments-adapter-mongo`](packages/adapter-mongo) | MongoDB Atlas / self-hosted repository adapter |
 | [`@airnauts/comments-adapter-postgres`](packages/adapter-postgres) | PostgreSQL repository adapter (hybrid columns + `jsonb`; driver-agnostic) |

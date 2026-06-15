@@ -32,6 +32,9 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
 call (it also returns `server` for server-side reads or tests). The handler strips
 the mount prefix, so the server core does not need to know where it is mounted.
 
+For the Pages Router, use `createCommentsPagesRoute` instead — see the root README for
+the full example.
+
 Pass `disabled: true` to keep the route mounted but dormant — every handler returns
 `404` and no server is constructed (e.g. when a required backend env var is absent
 in local dev or a preview deploy). `route.server` is `undefined` in that case.

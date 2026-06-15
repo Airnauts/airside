@@ -1377,9 +1377,9 @@ Expected: every listed entry resolves, including `@airnauts/comments-server/node
 
 Run:
 ```bash
-rg -n "createCommentsRoute|comments-server/next" --glob '!**/dist/**' --glob '!**/CHANGELOG.md' --glob '!docs/adr.md' --glob '!docs/superpowers/**'
+rg -n "createCommentsRoute|comments-server/next" --glob '!**/dist/**' --glob '!**/CHANGELOG.md' --glob '!docs/adr.md' --glob '!docs/milestones.md' --glob '!docs/superpowers/**'
 ```
-Expected: no matches (historical CHANGELOGs, ADR bodies, and prior specs are intentionally excluded).
+Expected: no matches (historical CHANGELOGs, ADR bodies, prior specs, and `docs/milestones.md` are intentionally excluded — milestones.md keeps the historical `@airnauts/comments-server/next` / `createNextHandler` API names that were correct at the time each milestone shipped).
 
 - [ ] **Step 7: Final confirmation**
 

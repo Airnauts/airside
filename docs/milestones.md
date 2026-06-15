@@ -65,7 +65,7 @@ bundle-size budget harness (empty target).
 **Depends on.** —
 
 **Exit criteria.** `pnpm i && pnpm build && pnpm test && pnpm lint` green on empty
-packages; subpath exports resolve (`@airnauts/comments-client/react`, `@airnauts/comments-server/node`).
+packages; subpath exports resolve (`@airnauts/comments-client/react`, `@airnauts/comments-server/next`).
 
 **Refs.** Spec §2.
 
@@ -153,8 +153,8 @@ storage adapters pass their contract suite.
 **Goal.** Production persistence on the v1 target stack, deployable on Vercel.
 
 **In scope.** `@airnauts/comments-adapter-mongo` (MongoDB repository **passing the M3
-contract suite**); indexes from the spec; `@airnauts/comments-next` App Router glue
-(`createCommentsAppRoute`); **static OpenAPI artifact** (runtime `/openapi.json` + Scalar `/docs` deferred — ADR-0015);
+contract suite**); indexes from the spec; `@airnauts/comments-server/next` App Router glue
+(`createNextHandler`); **static OpenAPI artifact** (runtime `/openapi.json` + Scalar `/docs` deferred — ADR-0015);
 integration tests on `mongodb-memory-server`; a deploy recipe for **Vercel +
 MongoDB Atlas + Vercel Blob**.
 
@@ -286,7 +286,7 @@ README. Two small package fixes surfaced by the same-origin mount: the origin po
 **Out of scope.** Playwright e2e, e2e-in-CI, live deployment, real-project adoption
 (all **M10**). No new features, schemas, or endpoints.
 
-**Depends on.** M4 (`@airnauts/comments-next`, `adapter-mongo`, `storage-*`) **and**
+**Depends on.** M4 (`@airnauts/comments-server/next`, `adapter-mongo`, `storage-*`) **and**
 M8 (frontend complete).
 
 **Exit criteria.** `examples/nextjs-host` builds and runs; opening a page with the
