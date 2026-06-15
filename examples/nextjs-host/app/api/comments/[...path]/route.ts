@@ -3,6 +3,8 @@ import { memoryRepository } from '@airnauts/comments-adapter-memory'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { jiraIssues } from '@airnauts/comments-integration-jira'
 import { createCommentsRoute } from '@airnauts/comments-next'
+import { emailNotifications } from '@airnauts/comments-notifier-email'
+import { resendTransport } from '@airnauts/comments-notifier-email/resend'
 import { slackNotifications } from '@airnauts/comments-notifier-slack'
 import { fileSystemStorage } from '@airnauts/comments-storage-fs'
 import { vercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
@@ -25,6 +27,17 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
     ? vercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN })
     : fileSystemStorage({ rootDir: join(process.cwd(), 'public', 'uploads'), baseUrl: '/uploads' }),
   extensions: [
+    // Email notifications via Resend when RESEND_API_KEY is set, else none.
+    // Recipients are derived server-side (the thread's other participants), so
+    // an email only goes out on a reply — never on a brand-new thread. With the
+    // sandbox sender onboarding@resend.dev, Resend only delivers to your own
+    // Resend signup address, so comment first as that address to receive one.
+    ...(process.env.RESEND_API_KEY
+      ? emailNotifications({
+          transport: resendTransport({ apiKey: process.env.RESEND_API_KEY }),
+          from: process.env.RESEND_FROM ?? 'onboarding@resend.dev',
+        })
+      : []),
     // Slack notifications when COMMENTS_SLACK_WEBHOOK_URL is set, else none.
     ...(process.env.COMMENTS_SLACK_WEBHOOK_URL
       ? slackNotifications({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL })

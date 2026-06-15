@@ -15,6 +15,7 @@
     "@airnauts/comments-client": "workspace:*",
     "@airnauts/comments-integration-jira": "workspace:*",
     "@airnauts/comments-next": "workspace:*",
+    "@airnauts/comments-notifier-email": "workspace:*",
     "@airnauts/comments-notifier-slack": "workspace:*",
     "@airnauts/comments-server": "workspace:*",
     "@airnauts/comments-storage-fs": "workspace:*",
