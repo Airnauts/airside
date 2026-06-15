@@ -48,9 +48,9 @@ These are consumed by `@airnauts/comments-client` to implement re-matching. Inte
 
 | Export | Description |
 |---|---|
-| `scoreCandidate(candidate, stored, weights?)` | Score a single DOM candidate against the stored anchor signals; returns `{ score: number }` |
-| `decide(scores, thresholds?)` | Decide anchored / orphaned / ambiguous from an array of scores |
-| `locateQuote(container, ctx)` | Find a text-range quote within a DOM node |
+| `scoreCandidate(stored, candidate)` | Score a candidate `Signals` object against the stored anchor signals; returns `ScoreResult { total, components, excluded }` |
+| `decide(scored, opts?)` | Pick the best match from an array of `{ ref, score }` entries; returns `Decision<T>` — `{ kind: 'anchored', winner, score }` or `{ kind: 'orphaned', reason }` |
+| `locateQuote(haystack, ctx)` | Find character offsets for a `QuoteContext` within a text string; returns `QuoteOffsets { start, end }` or `null` |
 | `DEFAULT_WEIGHTS` | Default scoring weights (stable attr +0.40, text +0.25, class +0.15, role +0.10, sibling +0.05, ancestor +0.05) |
 | `DEFAULT_THRESHOLDS` | `{ accept: 0.60, margin: 0.10 }` |
 
