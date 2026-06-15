@@ -44,8 +44,11 @@ endpoint with no client change.
   / overlay), and the API client. Subpath **`@airnauts/comments-client/react`** exports the
   thin `<CommentsLayer/>` wrapper (tree-shaken away if unused).
 - **`@airnauts/comments-server`** — the Web-standard `Request → Response` core + business
-  logic; depends only on adapter interfaces. Subpath **`@airnauts/comments-server/next`**
-  is the App Router glue.
+  logic; depends only on adapter interfaces. Subpath **`@airnauts/comments-server/node`**
+  is a generic Node↔Web bridge (`nodeRequestToWeb` / `webToNode`) for mounting on any
+  Node server.
+- **`@airnauts/comments-next`** — all Next.js glue: App Router (`createCommentsAppRoute`)
+  and Pages Router (`createCommentsPagesRoute`) one-call integrations.
 - **`@airnauts/comments-adapter-mongo`** — MongoDB repository (only package that pulls the
   mongo driver).
 - **`@airnauts/comments-adapter-postgres`** — PostgreSQL repository (hybrid columns +
@@ -147,14 +150,17 @@ reviewer-triggered actions evaluated per thread and run via
 thread (e.g. the created Jira issue). The older `notifiers?` option is a deprecated alias for
 the notification half. See ADR-0034.
 
-**Next.js glue is near-zero** — Next passes a native Web `Request`:
+**Next.js glue is near-zero** — `@airnauts/comments-next` builds the server and its
+handlers in one call:
 
 ```ts
-// app/api/comments/[...path]/route.ts
-export const { GET, POST, PATCH } = createNextHandler(server)
+// App Router — app/api/comments/[...path]/route.ts
+export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute(config)
+// Pages Router — pages/api/comments/[...path].ts
+export default createCommentsPagesRoute(config)
 ```
 
-Express/Node adapters can wrap the same core later.
+Other Node hosts wrap the same core via `@airnauts/comments-server/node`.
 
 **Security model (v1).** The secret key is a **bearer capability token, not user
 auth**: one shared secret per mount, sent as the `x-comments-key` **header**

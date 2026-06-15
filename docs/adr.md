@@ -507,7 +507,7 @@ widget's Tailwind CSS reaches the page, and the resulting dual-React boundary.
 ## ADR-0015 — M4 deployment glue: Next.js path mapping & v1 OpenAPI delivery
 
 - **Date:** 2026-05-29
-- **Status:** accepted
+- **Status:** accepted; `createNextHandler` placement superseded by ADR-0036
 
 **Context.** M4 mounts the M3 server core on the v1 target stack. Two boundary
 choices are architecturally significant because integrators and future adapters
@@ -783,7 +783,7 @@ A benign dev-only workspace cycle remains: `server`/`client` tests devDepend on
 
 ## ADR-0022 — Next.js integration package (`@airnauts/comments-next`)
 
-- **Status:** accepted
+- **Status:** accepted; `createCommentsRoute` renamed to `createCommentsAppRoute` by ADR-0036
 - **Date:** 2026-06-02
 
 **Context.** Mounting the commenting server on Next App Router required hosts to
@@ -1238,3 +1238,32 @@ Add `@airnauts/comments-adapter-postgres` as a second `Repository` concrete:
   serverless portability.
 - MySQL and Redis remain unbuilt seams; a shared SQL core is deliberately NOT
   abstracted until a second SQL adapter exists (rule of three).
+
+## ADR-0036 — Relocate Next.js adapters into `comments-next`; `comments-server` exposes a generic Node bridge
+
+- **Date:** 2026-06-15
+- **Status:** accepted
+
+**Context.** `@airnauts/comments-server/next` placed the Next App Router handler
+(ADR-0015) inside the framework-agnostic server runtime, and `@airnauts/comments-next`
+wrapped it as `createCommentsRoute` (ADR-0022). Adding Pages Router support (issue
+#26) would deepen Next coupling in the server package. The Node↔Web bridge that the
+handlers need also lives (privately) in `comments-server`'s `dev.ts`, and
+`comments-server` cannot depend on `comments-next` (the dependency edge runs the
+other way), so the bridge must stay in `comments-server`.
+
+**Decision.** Move all Next.js coupling into `@airnauts/comments-next`:
+`createNextHandler` (App Router), a new `createNextPagesHandler` (Pages Router), the
+pure `operationUrl` mount-stripper, and two public wrappers `createCommentsAppRoute`
+/ `createCommentsPagesRoute`. `createCommentsRoute` is **renamed** to
+`createCommentsAppRoute` with no back-compat alias (pre-1.0). `@airnauts/comments-server`
+drops its `./next` subpath and adds a public `./node` subpath exporting the generic
+`nodeRequestToWeb` / `webToNode` bridge, consumed by `dev.ts` and mountable on any
+Node server (groundwork for #24). Pages Router hosts must still export
+`config = { api: { bodyParser: false } }`; the handler guards loudly if it is absent.
+
+**Consequences.** `comments-server` becomes Next-agnostic; `comments-next` owns the
+Next surface. Breaking for both packages (pre-1.0 → `minor`): `@airnauts/comments-server/next`
+is removed (no shim is possible — a re-export would be circular) and `createCommentsRoute`
+is gone. Supersedes the `createNextHandler` placement in ADR-0015 and the
+`createCommentsRoute` naming in ADR-0022.
