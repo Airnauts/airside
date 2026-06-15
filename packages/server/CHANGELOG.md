@@ -1,5 +1,38 @@
 # @airnauts/comments-server
 
+## 0.6.0
+
+### Minor Changes
+
+- cbf6378: Add first-class Next.js Pages Router support and unify the Next integration. `@airnauts/comments-next` now exports `createCommentsAppRoute` (App Router) and `createCommentsPagesRoute` (Pages Router); the old `createCommentsRoute` is renamed to `createCommentsAppRoute`. All Next.js glue moves into `@airnauts/comments-next`: `@airnauts/comments-server` drops the `@airnauts/comments-server/next` subpath and adds `@airnauts/comments-server/node`, a generic Node↔Web bridge (`nodeRequestToWeb` / `webToNode`) for mounting on any Node server.
+
+  BREAKING: `createCommentsRoute` → `createCommentsAppRoute`; `@airnauts/comments-server/next` (`createNextHandler`) moves to `@airnauts/comments-next`.
+
+- bf41997: New `extensions` option on `createCommentsServer` wires both notification channels and thread
+  actions through one list (each factory returns an array, so spread them:
+  `extensions: [...slackNotifications({ … })]`). Adds `POST /threads/:id/actions/:actionId` to run a
+  registered thread action, which can persist an external link back on the thread. The old
+  `notifiers` option still works but is now **deprecated** — prefer `extensions`.
+- 3f4bcb1: Notification events now carry a ready-made `threadUrl` deep-link, built by the server from a new
+  optional `threadParam` option on `createCommentsServer` (defaults to `comments-thread`). Notifiers
+  no longer build the link themselves. Events also carry `participants` — the thread's other active
+  commenters (excluding the event's author) — so per-recipient channels like email don't re-walk the
+  thread.
+
+### Patch Changes
+
+- e9cc0e9: Docs: README updated to match the current public API.
+- 0292473: Docs: correct `Repository` interface method names in README (`setStatus`, `updateAnchor`, `putAttachment`, `getAttachments`, `upsertExternalLink`).
+- 79fe6ba: `@airnauts/comments-server` now exports the storage helpers `sanitizeName` and
+  `readAllBytes` for use when building a custom `StorageAdapter`; the filesystem and
+  Vercel Blob adapters consume them instead of private copies. No behavior change.
+- Updated dependencies [3f4bcb1]
+- Updated dependencies [bf41997]
+- Updated dependencies [79fe6ba]
+- Updated dependencies [54bbab0]
+- Updated dependencies [e9cc0e9]
+  - @airnauts/comments-core@0.6.0
+
 ## 0.5.1
 
 ### Patch Changes

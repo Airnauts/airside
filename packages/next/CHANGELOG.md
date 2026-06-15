@@ -1,5 +1,24 @@
 # @airnauts/comments-next
 
+## 0.6.0
+
+### Minor Changes
+
+- cbf6378: Add first-class Next.js Pages Router support and unify the Next integration. `@airnauts/comments-next` now exports `createCommentsAppRoute` (App Router) and `createCommentsPagesRoute` (Pages Router); the old `createCommentsRoute` is renamed to `createCommentsAppRoute`. All Next.js glue moves into `@airnauts/comments-next`: `@airnauts/comments-server` drops the `@airnauts/comments-server/next` subpath and adds `@airnauts/comments-server/node`, a generic Node↔Web bridge (`nodeRequestToWeb` / `webToNode`) for mounting on any Node server.
+
+  BREAKING: `createCommentsRoute` → `createCommentsAppRoute`; `@airnauts/comments-server/next` (`createNextHandler`) moves to `@airnauts/comments-next`.
+
+### Patch Changes
+
+- e9cc0e9: Docs: README updated to match the current public API.
+- Updated dependencies [cbf6378]
+- Updated dependencies [e9cc0e9]
+- Updated dependencies [bf41997]
+- Updated dependencies [0292473]
+- Updated dependencies [79fe6ba]
+- Updated dependencies [3f4bcb1]
+  - @airnauts/comments-server@0.6.0
+
 ## 0.5.1
 
 ### Patch Changes

@@ -1,9 +1,0 @@
----
-"@airnauts/comments-server": minor
----
-
-Notification events now carry a ready-made `threadUrl` deep-link, built by the server from a new
-optional `threadParam` option on `createCommentsServer` (defaults to `comments-thread`). Notifiers
-no longer build the link themselves. Events also carry `participants` — the thread's other active
-commenters (excluding the event's author) — so per-recipient channels like email don't re-walk the
-thread.

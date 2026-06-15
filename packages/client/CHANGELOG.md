@@ -1,5 +1,29 @@
 # @airnauts/comments-client
 
+## 0.6.0
+
+### Minor Changes
+
+- bf41997: The thread view surfaces server-provided actions (e.g. "Create Jira issue") in a compact "⋯" overflow
+  menu beside Resolve, and shows a thread's external links (e.g. "Jira ENG-1234") as metadata. Both are
+  driven generically by the server response, so new actions and link providers appear without a widget
+  update.
+
+### Patch Changes
+
+- 79fe6ba: Internal restructure of the widget: identity now flows through a React context
+  instead of per-component props, and the composer/panel/marker surfaces are split
+  into smaller units. Also fixes unnecessary re-renders of comment surfaces whenever
+  the identity modal toggled. Widget behavior and the public `init` API are unchanged.
+- 2d55644: Refine the comment pin: more compact teardrop with the author initials sitting directly on the body (no nested inner ring). The active pin — whether its popover is open or its thread is selected in the sidebar — now reverses to a white body with blue initials/outline and rises above neighbouring pins.
+- e9cc0e9: Docs: README updated to match the current public API.
+- Updated dependencies [3f4bcb1]
+- Updated dependencies [bf41997]
+- Updated dependencies [79fe6ba]
+- Updated dependencies [54bbab0]
+- Updated dependencies [e9cc0e9]
+  - @airnauts/comments-core@0.6.0
+
 ## 0.5.1
 
 ### Patch Changes

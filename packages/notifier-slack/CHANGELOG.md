@@ -1,5 +1,32 @@
 # @airnauts/comments-notifier-slack
 
+## 0.6.0
+
+### Minor Changes
+
+- bf41997: `slackNotifier(...)` has been renamed to `slackNotifications(...)` and now returns a notification
+  extension. Wire it through the server's `extensions` option:
+  `createCommentsServer({ extensions: [...slackNotifications({ webhookUrl })] })`.
+- 3f4bcb1: The Slack notifier now uses the deep-link built by the server. The `threadParam` option has been
+  removed from `slackNotifications(...)`; set `threadParam` on `createCommentsServer` instead if you
+  have customized the widget's thread param.
+
+### Patch Changes
+
+- e9cc0e9: Docs: README updated to match the current public API.
+- Updated dependencies [3f4bcb1]
+- Updated dependencies [bf41997]
+- Updated dependencies [79fe6ba]
+- Updated dependencies [54bbab0]
+- Updated dependencies [cbf6378]
+- Updated dependencies [e9cc0e9]
+- Updated dependencies [bf41997]
+- Updated dependencies [0292473]
+- Updated dependencies [79fe6ba]
+- Updated dependencies [3f4bcb1]
+  - @airnauts/comments-core@0.6.0
+  - @airnauts/comments-server@0.6.0
+
 ## 0.5.1
 
 ### Patch Changes

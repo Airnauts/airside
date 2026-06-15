@@ -1,5 +1,26 @@
 # @airnauts/comments-storage-fs
 
+## 0.6.0
+
+### Patch Changes
+
+- e9cc0e9: Docs: README updated to match the current public API.
+- 79fe6ba: `@airnauts/comments-server` now exports the storage helpers `sanitizeName` and
+  `readAllBytes` for use when building a custom `StorageAdapter`; the filesystem and
+  Vercel Blob adapters consume them instead of private copies. No behavior change.
+- Updated dependencies [3f4bcb1]
+- Updated dependencies [bf41997]
+- Updated dependencies [79fe6ba]
+- Updated dependencies [54bbab0]
+- Updated dependencies [cbf6378]
+- Updated dependencies [e9cc0e9]
+- Updated dependencies [bf41997]
+- Updated dependencies [0292473]
+- Updated dependencies [79fe6ba]
+- Updated dependencies [3f4bcb1]
+  - @airnauts/comments-core@0.6.0
+  - @airnauts/comments-server@0.6.0
+
 ## 0.5.1
 
 ### Patch Changes

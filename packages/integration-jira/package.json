@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/comments-integration-jira",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Create Jira issues from comment threads (server extension).",
   "keywords": [
     "comments",
