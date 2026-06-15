@@ -268,9 +268,14 @@ MIT
 
 ## About Airnauts
 
-<a href="https://www.airnauts.com/">
-  <img src="assets/airnauts-logo.svg" alt="Airnauts" height="28">
-</a>
+<p align="center">
+  <a href="https://www.airnauts.com/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/airnauts-logo-dark.svg">
+      <img src="assets/airnauts-logo-light.svg" alt="Airnauts" height="48">
+    </picture>
+  </a>
+</p>
 
 This tool is built and maintained by [Airnauts](https://www.airnauts.com/) — a digital product studio that designs and engineers web and mobile products end to end, from early concept and UX through to production software.
 
