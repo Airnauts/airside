@@ -1,7 +1,7 @@
 import { KEY_HEADER_NAME } from '@airnauts/comments-core'
+import { createNextHandler } from '@airnauts/comments-next'
 import type { StorageAdapter } from '@airnauts/comments-server'
 import { createCommentsServer } from '@airnauts/comments-server'
-import { createNextHandler } from '@airnauts/comments-next'
 import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { type Db, MongoClient } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'

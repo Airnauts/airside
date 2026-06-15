@@ -13,6 +13,8 @@ describe('operationUrl', () => {
     expect(operationUrl([], '', 'http://h').href).toBe('http://h/')
   })
   it('preserves the search string', () => {
-    expect(operationUrl(['threads'], '?status=open', 'http://h').href).toBe('http://h/threads?status=open')
+    expect(operationUrl(['threads'], '?status=open', 'http://h').href).toBe(
+      'http://h/threads?status=open',
+    )
   })
 })

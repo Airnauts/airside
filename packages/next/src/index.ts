@@ -4,8 +4,8 @@ import { createNextHandler } from './app-router'
 import { createNextPagesHandler, type NodePagesHandler } from './pages-router'
 
 export { createNextHandler } from './app-router'
-export { createNextPagesHandler } from './pages-router'
 export type { NodePagesHandler, NodePagesRequest } from './pages-router'
+export { createNextPagesHandler } from './pages-router'
 
 type AppRouteHandlers = ReturnType<typeof createNextHandler>
 

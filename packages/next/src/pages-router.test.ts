@@ -38,7 +38,9 @@ function fakeReq(opts: {
   headers?: Record<string, string>
   body?: string
 }): NodePagesRequest {
-  const r = Readable.from(opts.body != null ? [Buffer.from(opts.body)] : []) as unknown as NodePagesRequest
+  const r = Readable.from(
+    opts.body != null ? [Buffer.from(opts.body)] : [],
+  ) as unknown as NodePagesRequest
   r.method = opts.method ?? 'GET'
   r.url = opts.url
   r.headers = { host: 'host', ...(opts.headers ?? {}) }
@@ -83,7 +85,12 @@ describe('createNextPagesHandler', () => {
 
     const getRes = fakeRes()
     await handler(
-      fakeReq({ method: 'GET', url: `/api/comments/threads/${id}`, query: { path: ['threads', id] }, headers }),
+      fakeReq({
+        method: 'GET',
+        url: `/api/comments/threads/${id}`,
+        query: { path: ['threads', id] },
+        headers,
+      }),
       getRes as unknown as ServerResponse,
     )
     expect(getRes.statusCode).toBe(200)
@@ -92,9 +99,16 @@ describe('createNextPagesHandler', () => {
 
   it('throws if the body was already parsed (bodyParser left on)', async () => {
     const handler = build()
-    const req = fakeReq({ method: 'POST', url: '/api/comments/threads', query: { path: ['threads'] }, headers })
+    const req = fakeReq({
+      method: 'POST',
+      url: '/api/comments/threads',
+      query: { path: ['threads'] },
+      headers,
+    })
     req.body = { parsed: true }
-    await expect(handler(req, fakeRes() as unknown as ServerResponse)).rejects.toThrow(/bodyParser: false/)
+    await expect(handler(req, fakeRes() as unknown as ServerResponse)).rejects.toThrow(
+      /bodyParser: false/,
+    )
   })
 
   it('answers an OPTIONS preflight', async () => {

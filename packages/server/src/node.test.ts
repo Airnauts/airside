@@ -8,7 +8,9 @@ function fakeReq(opts: {
   headers?: Record<string, string>
   body?: string
 }): NodeRequestLike {
-  const r = Readable.from(opts.body != null ? [Buffer.from(opts.body)] : []) as unknown as NodeRequestLike
+  const r = Readable.from(
+    opts.body != null ? [Buffer.from(opts.body)] : [],
+  ) as unknown as NodeRequestLike
   r.method = opts.method ?? 'GET'
   r.headers = opts.headers ?? {}
   return r
@@ -32,7 +34,10 @@ function fakeRes() {
 
 describe('nodeRequestToWeb', () => {
   it('builds a Request at the given url and copies headers', async () => {
-    const out = await nodeRequestToWeb(fakeReq({ headers: { 'x-test': 'y' } }), new URL('http://h/threads?status=open'))
+    const out = await nodeRequestToWeb(
+      fakeReq({ headers: { 'x-test': 'y' } }),
+      new URL('http://h/threads?status=open'),
+    )
     expect(out.url).toBe('http://h/threads?status=open')
     expect(out.headers.get('x-test')).toBe('y')
     expect(out.method).toBe('GET')
@@ -72,7 +77,10 @@ describe('readBody', () => {
 describe('webToNode', () => {
   it('writes status, headers, and body to the node response', async () => {
     const res = fakeRes()
-    await webToNode(new Response('hello', { status: 201, headers: { 'content-type': 'text/plain' } }), res as unknown as ServerResponse)
+    await webToNode(
+      new Response('hello', { status: 201, headers: { 'content-type': 'text/plain' } }),
+      res as unknown as ServerResponse,
+    )
     expect(res.statusCode).toBe(201)
     expect(res.headers['content-type']).toContain('text/plain')
     expect(res.body?.toString()).toBe('hello')

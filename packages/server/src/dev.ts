@@ -9,7 +9,10 @@ export type DevServerHandle = {
 
 type WebHandler = (req: Request) => Promise<Response>
 
-export function createDevServer(handler: WebHandler, opts: { port?: number } = {}): DevServerHandle {
+export function createDevServer(
+  handler: WebHandler,
+  opts: { port?: number } = {},
+): DevServerHandle {
   let server: Server | null = null
   return {
     async listen() {

@@ -37,7 +37,9 @@ function fakeReq(opts: {
   headers?: Record<string, string>
   body?: string
 }): NodePagesRequest {
-  const r = Readable.from(opts.body != null ? [Buffer.from(opts.body)] : []) as unknown as NodePagesRequest
+  const r = Readable.from(
+    opts.body != null ? [Buffer.from(opts.body)] : [],
+  ) as unknown as NodePagesRequest
   r.method = opts.method ?? 'GET'
   r.url = opts.url
   r.headers = { host: 'host', ...(opts.headers ?? {}) }
@@ -87,7 +89,9 @@ describe('createCommentsAppRoute', () => {
     expect(route.server).toBeUndefined()
     const ctx = { params: Promise.resolve({ path: ['threads'] }) }
     for (const m of ['GET', 'POST', 'PATCH', 'OPTIONS'] as const) {
-      expect((await route[m](new Request('https://host/api/comments/threads'), ctx)).status).toBe(404)
+      expect((await route[m](new Request('https://host/api/comments/threads'), ctx)).status).toBe(
+        404,
+      )
     }
   })
 })
@@ -113,7 +117,12 @@ describe('createCommentsPagesRoute', () => {
 
     const getRes = fakeRes()
     await handler(
-      fakeReq({ method: 'GET', url: `/api/comments/threads/${id}`, query: { path: ['threads', id] }, headers }),
+      fakeReq({
+        method: 'GET',
+        url: `/api/comments/threads/${id}`,
+        query: { path: ['threads', id] },
+        headers,
+      }),
       getRes as unknown as ServerResponse,
     )
     expect(getRes.statusCode).toBe(200)
@@ -125,7 +134,12 @@ describe('createCommentsPagesRoute', () => {
     expect(handler.server).toBeUndefined()
     const res = fakeRes()
     await handler(
-      fakeReq({ method: 'GET', url: '/api/comments/threads', query: { path: ['threads'] }, headers }),
+      fakeReq({
+        method: 'GET',
+        url: '/api/comments/threads',
+        query: { path: ['threads'] },
+        headers,
+      }),
       res as unknown as ServerResponse,
     )
     expect(res.statusCode).toBe(404)

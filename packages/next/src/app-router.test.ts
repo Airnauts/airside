@@ -90,7 +90,9 @@ describe('createNextHandler', () => {
   it('preserves the query string when mapping nested paths', async () => {
     const { GET } = build()
     const res = await GET(
-      new Request('https://host/api/comments/threads?status=open&pageKey=example.com/about', { headers }),
+      new Request('https://host/api/comments/threads?status=open&pageKey=example.com/about', {
+        headers,
+      }),
       { params: Promise.resolve({ path: ['threads'] }) },
     )
     expect(res.status).toBe(200)

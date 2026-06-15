@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/widget.css", "!.claude/**"]
+    "includes": ["**", "!**/widget.css", "!.claude"]
   },
   "formatter": {
     "enabled": true,
