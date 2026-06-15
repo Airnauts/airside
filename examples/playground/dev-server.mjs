@@ -1,4 +1,5 @@
-import { createCommentsServer, InMemoryRepository } from '@airnauts/comments-server'
+import { memoryRepository } from '@airnauts/comments-adapter-memory'
+import { createCommentsServer } from '@airnauts/comments-server'
 import { createDevServer } from '@airnauts/comments-server/dev'
 
 const storageStub = {
@@ -11,7 +12,7 @@ const server = createCommentsServer({
   secretKey: 'dev-key',
   projectId: 'playground',
   allowedOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173'],
-  repository: new InMemoryRepository(),
+  repository: memoryRepository(),
   storage: storageStub,
   rateLimit: false,
 })

@@ -4,7 +4,7 @@ import { decodeCursor } from '../cursor'
 import { ValidationError } from '../errors'
 import type { ExtensionRegistry } from '../extensions/registry'
 import type { Repository } from '../repository/types'
-import { toThreadListItemView } from './view'
+import { withThreadActions } from './view'
 
 export type ListThreadsDeps = {
   repo: Repository
@@ -32,7 +32,7 @@ export async function listThreads(
     cursor,
   })
   return {
-    threads: result.threads.map((item) => toThreadListItemView(item, deps.registry, scope)),
+    threads: result.threads.map((item) => withThreadActions(item, deps.registry, scope)),
     nextCursor: result.nextCursor,
   }
 }

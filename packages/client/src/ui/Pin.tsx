@@ -5,6 +5,12 @@ import { cn } from '../lib/cn'
 import type { XY } from '../positioning/coords'
 import { initials } from './avatar'
 
+/** The pin's one-off teardrop shape (no Tailwind utility) — shared with the draft preview pin. */
+export const TEARDROP_STYLE = {
+  borderRadius: '50% 50% 50% 0',
+  transform: 'rotate(-45deg)',
+} as const
+
 export type PinProps = {
   item: ThreadListItem
   pin: XY
@@ -78,8 +84,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
               ? 'cmnt:bg-white cmnt:border-blue-600'
               : 'cmnt:bg-blue-600 cmnt:border-white',
         )}
-        // one-off teardrop shape (no utility) → inline
-        style={{ borderRadius: '50% 50% 50% 0', transform: 'rotate(-45deg)' }}
+        style={TEARDROP_STYLE}
       />
       <span
         aria-hidden={true}

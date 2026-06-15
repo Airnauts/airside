@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
+import { IdentityProvider } from '../identity/IdentityProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { useController } from '../threads/useThreads'
 import { DetachedThread } from './DetachedThread'
@@ -40,8 +41,10 @@ function setup() {
     <WidgetProvider>
       <ToastProvider>
         <ThreadsProvider client={client as never}>
-          <Probe />
-          <DetachedThread client={client as never} identity={null} onNeedIdentity={() => {}} />
+          <IdentityProvider identity={null} requestIdentity={() => {}}>
+            <Probe />
+            <DetachedThread client={client as never} />
+          </IdentityProvider>
         </ThreadsProvider>
       </ToastProvider>
     </WidgetProvider>,

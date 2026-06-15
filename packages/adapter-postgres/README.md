@@ -51,3 +51,7 @@ const repository = createPostgresRepository({ sql: pool })
 `comments_attachments`) and one index with `CREATE … IF NOT EXISTS`, so it's safe
 to call on every startup. Production teams that prefer managed migrations can run
 the equivalent DDL through their own tool instead.
+
+## License
+
+MIT © Airnauts

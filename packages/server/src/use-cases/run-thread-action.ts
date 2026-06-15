@@ -3,7 +3,7 @@ import type { Ctx } from '../ctx'
 import { ConflictError, NotFoundError } from '../errors'
 import type { ExtensionRegistry } from '../extensions/registry'
 import type { Repository } from '../repository/types'
-import { toThreadView } from './view'
+import { withThreadActions } from './view'
 
 export type RunThreadActionDeps = { repo: Repository; registry: ExtensionRegistry }
 
@@ -28,7 +28,7 @@ export async function runThreadAction(
   const result = await action.run({ thread, scope })
 
   if (!result.externalLink) {
-    return toThreadView(thread, deps.registry, scope)
+    return withThreadActions(thread, deps.registry, scope)
   }
 
   // Persist the link. If this throws AFTER the external issue was created, the error
@@ -40,5 +40,5 @@ export async function runThreadAction(
     result.externalLink,
     ctx.now().toISOString(),
   )
-  return toThreadView(updated, deps.registry, scope)
+  return withThreadActions(updated, deps.registry, scope)
 }

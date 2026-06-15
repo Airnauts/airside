@@ -7,7 +7,10 @@ Manual visual proof for M5. **Not** shipped; M9 replaces this with the real
 
 1. Build the workspace packages the playground imports:
    ```bash
-   pnpm --filter @airnauts/comments-core --filter @airnauts/comments-server --filter @airnauts/comments-client build
+   pnpm --filter @airnauts/comments-core \
+     --filter @airnauts/comments-server \
+     --filter @airnauts/comments-adapter-memory \
+     --filter @airnauts/comments-client build
    ```
 2. In one terminal, start the in-memory API:
    ```bash

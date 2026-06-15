@@ -3,7 +3,7 @@ import type { Comment } from '@airnauts/comments-core'
 import { useEffect, useRef } from 'react'
 import { relativeTime } from '../threads/relativeTime'
 import { avatarColor, initials } from './avatar'
-import { Button } from './Button'
+import { StatusNotice } from './StatusNotice'
 
 export type CommentListProps = {
   comments: Comment[]
@@ -35,19 +35,12 @@ export function CommentList({
 
   if (error) {
     return (
-      <div className="cmnt:p-3 cmnt:text-[13px] cmnt:text-gray-500">
-        Couldn't load this thread.{' '}
-        {onRetry && (
-          <Button
-            variant="link"
-            size="inline"
-            onClick={onRetry}
-            className="cmnt:font-normal cmnt:underline"
-          >
-            Retry
-          </Button>
-        )}
-      </div>
+      <StatusNotice
+        onRetry={onRetry}
+        className="cmnt:p-3 cmnt:text-left cmnt:text-[13px] cmnt:text-gray-500"
+      >
+        Couldn't load this thread.
+      </StatusNotice>
     )
   }
   if (loading) {
@@ -73,9 +66,9 @@ export function CommentList({
   }
   if (comments.length === 0) {
     return (
-      <div className="cmnt:px-3 cmnt:py-4 cmnt:text-gray-400 cmnt:text-center cmnt:text-[13px]">
+      <StatusNotice className="cmnt:py-4 cmnt:text-[13px]">
         <span aria-hidden="true">💬</span> No comments yet — start the thread.
-      </div>
+      </StatusNotice>
     )
   }
   return (
