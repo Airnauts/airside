@@ -420,13 +420,16 @@ describe('ThreadPopover', () => {
       </ThreadsProvider>,
     )
     fireEvent.click(screen.getByText('open-a'))
-    // The toolbar action surfaces once the thread loads.
-    const runBtn = await screen.findByRole('button', { name: /create jira issue/i })
+    // The toolbar action surfaces once the thread loads — open the ⋯ overflow menu.
+    const trigger = await screen.findByRole('button', { name: /more actions/i })
+    trigger.focus()
+    fireEvent.keyDown(trigger, { key: 'Enter' })
+    const runBtn = await screen.findByRole('menuitem', { name: /create jira issue/i })
     fireEvent.click(runBtn)
     await waitFor(() => expect(runThreadAction).toHaveBeenCalledWith('a', 'jira.createIssue'))
-    // After the action resolves: the button is gone (actions: []) and the new external link shows.
+    // After the action resolves: the overflow menu trigger is gone (actions: []) and the new external link shows.
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: /create jira issue/i })).not.toBeInTheDocument(),
+      expect(screen.queryByRole('button', { name: /more actions/i })).not.toBeInTheDocument(),
     )
     const link = await screen.findByRole('link', { name: /jira web-123/i })
     expect(link).toHaveAttribute('href', 'https://co.atlassian.net/browse/WEB-123')
