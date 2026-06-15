@@ -14,14 +14,18 @@ server. Posts a message to a Slack channel whenever a reviewer creates a thread 
 
 ```ts
 import { createCommentsServer } from '@airnauts/comments-server'
-import { slackNotifier } from '@airnauts/comments-notifier-slack'
+import { slackNotifications } from '@airnauts/comments-notifier-slack'
 
 createCommentsServer({
   repository,
   storage,
-  notifiers: [slackNotifier({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! })],
+  extensions: slackNotifications({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! }),
 })
 ```
 
 A notification failure never breaks the comment write. The webhook request is
 bounded by a 3-second timeout.
+
+## License
+
+MIT © Airnauts

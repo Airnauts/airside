@@ -8,8 +8,14 @@ and the manual integration proof for M9.
 
 1. Build the workspace packages it imports:
    ```bash
-   pnpm --filter @airnauts/comments-client --filter @airnauts/comments-server \
-     --filter @airnauts/comments-adapter-mongo --filter @airnauts/comments-storage-fs \
+   pnpm --filter @airnauts/comments-core \
+     --filter @airnauts/comments-server \
+     --filter @airnauts/comments-next \
+     --filter @airnauts/comments-client \
+     --filter @airnauts/comments-adapter-memory \
+     --filter @airnauts/comments-adapter-mongo \
+     --filter @airnauts/comments-notifier-slack \
+     --filter @airnauts/comments-storage-fs \
      --filter @airnauts/comments-storage-vercel-blob build
    ```
 2. Start the app (in-memory persistence, zero config):

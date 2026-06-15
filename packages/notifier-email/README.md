@@ -28,41 +28,48 @@ for any other provider (SendGrid, SES, Postmark, …).
 
 ```ts
 import { createCommentsServer } from '@airnauts/comments-server'
-import { emailNotifier } from '@airnauts/comments-notifier-email'
+import { emailNotifications } from '@airnauts/comments-notifier-email'
 import { resendTransport } from '@airnauts/comments-notifier-email/resend'
 
 createCommentsServer({
   repository,
   storage,
-  notifiers: [
-    emailNotifier({
-      transport: resendTransport({ apiKey: process.env.RESEND_API_KEY! }),
-      from: 'Comments <noreply@acme.com>',
-    }),
-  ],
+  extensions: emailNotifications({
+    transport: resendTransport({ apiKey: process.env.RESEND_API_KEY! }),
+    from: 'Comments <noreply@acme.com>',
+  }),
 })
 ```
 
 ## Usage (SMTP)
 
 ```ts
-import { emailNotifier } from '@airnauts/comments-notifier-email'
+import { createCommentsServer } from '@airnauts/comments-server'
+import { emailNotifications } from '@airnauts/comments-notifier-email'
 import { smtpTransport } from '@airnauts/comments-notifier-email/smtp'
 
-emailNotifier({
-  transport: smtpTransport({
-    host: 'smtp.example.com',
-    port: 587,
-    auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASS! },
+createCommentsServer({
+  repository,
+  storage,
+  extensions: emailNotifications({
+    transport: smtpTransport({
+      host: 'smtp.example.com',
+      port: 587,
+      auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASS! },
+    }),
+    from: 'noreply@acme.com',
   }),
-  from: 'noreply@acme.com',
 })
 ```
 
-`emailNotifier` also takes optional `replyTo` and `subjectPrefix`. The SMTP transport accepts an
-optional `timeout` (ms, default `10000`) capping connection/greeting/socket so a hung server can't
-stall the comment write.
+`emailNotifications` also takes optional `replyTo` and `subjectPrefix`. The SMTP transport accepts
+an optional `timeout` (ms, default `10000`) capping connection/greeting/socket so a hung server
+can't stall the comment write.
 
 A notification failure never breaks the comment write. When a thread has more than one other
 participant the addresses go in `bcc` so participants don't see each other's emails. The thread
 deep-link in each email is built by the server (`event.threadUrl`).
+
+## License
+
+MIT © Airnauts
