@@ -62,6 +62,9 @@ importers:
       '@airnauts/comments-client':
         specifier: workspace:*
         version: link:../../packages/client
+      '@airnauts/comments-integration-jira':
+        specifier: workspace:*
+        version: link:../../packages/integration-jira
       '@airnauts/comments-next':
         specifier: workspace:*
         version: link:../../packages/next

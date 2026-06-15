@@ -13,6 +13,7 @@
     "@airnauts/comments-adapter-memory": "workspace:*",
     "@airnauts/comments-adapter-mongo": "workspace:*",
     "@airnauts/comments-client": "workspace:*",
+    "@airnauts/comments-integration-jira": "workspace:*",
     "@airnauts/comments-next": "workspace:*",
     "@airnauts/comments-notifier-slack": "workspace:*",
     "@airnauts/comments-server": "workspace:*",
