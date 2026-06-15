@@ -72,6 +72,138 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsRoute({
 
 ---
 
+## Alternative setups
+
+The Quick start wires both halves on the Next.js App Router. Each half swaps
+independently — pick **one server mount** and **one widget mount**:
+
+- **Server** — App Router (above), Pages Router (below), or, on any other host, the
+  Web-standard `server.handle(request)` directly: a Fetch-native framework like Hono
+  passes its `Request` straight in, and a classic Node host (Express, `http`) bridges
+  `req`/`res` exactly as the Pages Router example does. Node-compatible runtimes only
+  (the server uses `node:crypto`, `Buffer`, and Node database drivers).
+- **Widget** — `CommentsLayer` for React (below), or `comments.init()` for vanilla
+  JS (below).
+
+The widget only needs an `endpoint` pointing at a mounted server; the server only needs
+the widget's origin in its `allowedOrigins`.
+
+### Server — Next.js Pages Router
+
+`@airnauts/comments-next` is App Router only. On the Pages Router, mount a catch-all API
+route and bridge Node's `req`/`res` to the Web-standard handler from
+`@airnauts/comments-server`:
+
+```ts
+// pages/api/comments/[...path].ts
+import type { NextApiRequest, NextApiResponse } from 'next'
+import { createCommentsServer } from '@airnauts/comments-server'
+import { memoryRepository } from '@airnauts/comments-adapter-memory'
+
+// The comments API reads JSON and multipart bodies itself — turn off Next's body parser.
+export const config = { api: { bodyParser: false } }
+
+const server = createCommentsServer({
+  secretKey: process.env.COMMENTS_SECRET ?? 'dev-key',
+  projectId: 'my-app',
+  allowedOrigins: ['http://localhost:3000'],
+  repository: memoryRepository(),
+  storage: { async put(blob) { return { url: `mem://${blob.name}`, key: blob.name, size: 0 } } },
+  rateLimit: false,
+})
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Rebuild the operation-relative URL the server expects (mount prefix stripped).
+  const segments = Array.isArray(req.query.path) ? req.query.path : []
+  const search = req.url?.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''
+  const url = new URL(`/${segments.join('/')}${search}`, `http://${req.headers.host ?? 'localhost'}`)
+
+  const headers = new Headers()
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (Array.isArray(value)) headers.set(key, value.join(', '))
+    else if (typeof value === 'string') headers.set(key, value)
+  }
+
+  const body =
+    req.method === 'GET' || req.method === 'HEAD'
+      ? undefined
+      : await new Promise<Buffer>((resolve, reject) => {
+          const chunks: Buffer[] = []
+          req.on('data', (chunk) => chunks.push(chunk))
+          req.on('end', () => resolve(Buffer.concat(chunks)))
+          req.on('error', reject)
+        })
+
+  const response = await server.handle(
+    new Request(url, { method: req.method, headers, body: body?.byteLength ? body : undefined }),
+  )
+
+  res.status(response.status)
+  response.headers.forEach((value, key) => res.setHeader(key, value))
+  if (response.body) res.send(Buffer.from(await response.arrayBuffer()))
+  else res.end()
+}
+```
+
+A single default export handles every method — `server.handle` answers the CORS preflight
+(`OPTIONS`) internally. Keep this on the **Node runtime** (the default): the server uses
+`node:crypto` for the constant-time key check, `Buffer`, and Node-only database drivers, so
+it cannot run on the Edge runtime — even though Pages Router Edge handlers would otherwise
+take a Web `Request` directly and skip the bridge.
+
+For production, swap `memoryRepository()` and the storage stub for
+`mongoRepository({ uri })` + `vercelBlobStorage({ token })` (or `fileSystemStorage`),
+exactly as in the App Router Quick start.
+
+### Widget — React (any framework)
+
+`CommentsLayer` is a plain React component — it works in any React app (Vite, CRA,
+Remix…), not just Next.js. Render it once near your app root and point `endpoint` at the
+mounted server (use an absolute URL when the API is on another origin, and add that origin
+to the server's `allowedOrigins`):
+
+```tsx
+import { CommentsLayer } from '@airnauts/comments-client/react'
+
+export function App() {
+  return (
+    <>
+      {/* your app */}
+      <CommentsLayer
+        commentsKey={import.meta.env.VITE_COMMENTS_KEY}
+        endpoint="https://api.example.com/api/comments"
+      />
+    </>
+  )
+}
+```
+
+`react` and `react-dom` are optional peers — already present in your React app, so there's
+nothing extra to install.
+
+### Widget — Vanilla JS (no framework)
+
+Without React, call `comments.init()` directly. It returns a handle you can `destroy()` to
+tear the widget down again:
+
+```ts
+import { comments } from '@airnauts/comments-client'
+
+const handle = await comments.init({
+  key: 'your-secret-key',
+  endpoint: '/api/comments', // or an absolute URL to a server on another origin
+})
+
+// later, to remove the widget:
+// handle.destroy()
+```
+
+As with the React wrapper, the widget stays inert until the page is opened with
+`?comments-key=<key>` (after which the key is persisted and the param stripped from the
+URL). Use it from any bundler, or from a `<script type="module">` on a plain HTML page.
+
+---
+
 ## Packages
 
 This is a pnpm monorepo. All packages under `packages/*` are published to npm under the `@airnauts` scope.
@@ -172,6 +304,10 @@ MIT
 ---
 
 ## About Airnauts
+
+<a href="https://www.airnauts.com/">
+  <img src="assets/airnauts-logo.svg" alt="Airnauts" height="28">
+</a>
 
 This tool is built and maintained by [Airnauts](https://www.airnauts.com/) — a digital product studio that designs and engineers web and mobile products end to end, from early concept and UX through to production software.
 
