@@ -2,7 +2,13 @@ import { randomBytes } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join, posix } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { PutBlob, PutResult, StorageAdapter } from '@airnauts/comments-server'
+import {
+  type PutBlob,
+  type PutResult,
+  readAllBytes,
+  type StorageAdapter,
+  sanitizeName,
+} from '@airnauts/comments-server'
 
 export type FileSystemStorageOptions = {
   rootDir: string
@@ -13,42 +19,11 @@ export type FileSystemStorageOptions = {
   baseUrl?: string
 }
 
-function sanitizeName(name: string): string {
-  const cleaned = name.replace(/[^A-Za-z0-9._-]/g, '_').slice(0, 200)
-  return cleaned.length > 0 ? cleaned : 'file'
-}
-
 function uniqueKey(name: string): string {
   const ts = Date.now().toString(36)
   const rand = randomBytes(6).toString('hex')
   const safe = sanitizeName(name)
   return posix.join(ts, `${rand}-${safe}`)
-}
-
-async function readAllBytes(data: Uint8Array | ReadableStream<Uint8Array>): Promise<Uint8Array> {
-  if (data instanceof Uint8Array) return data
-  const reader = data.getReader()
-  const chunks: Uint8Array[] = []
-  let total = 0
-  try {
-    for (;;) {
-      const { value, done } = await reader.read()
-      if (done) break
-      if (value) {
-        chunks.push(value)
-        total += value.byteLength
-      }
-    }
-  } finally {
-    reader.releaseLock()
-  }
-  const out = new Uint8Array(total)
-  let offset = 0
-  for (const c of chunks) {
-    out.set(c, offset)
-    offset += c.byteLength
-  }
-  return out
 }
 
 export class FileSystemStorage implements StorageAdapter {

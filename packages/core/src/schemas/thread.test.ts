@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { Thread, ThreadListItem, ThreadListItemView, ThreadView } from './thread'
+import { Thread, ThreadListItem, ThreadListItemView, ThreadView, unresolvedCountOf } from './thread'
 
 const base = {
   id: 't1',
@@ -145,5 +145,15 @@ describe('externalLinks + view DTOs', () => {
       actions: [],
     }
     expect(() => ThreadListItemView.parse(view)).not.toThrow()
+  })
+})
+
+describe('unresolvedCountOf', () => {
+  it('counts an open thread as 1 unresolved', () => {
+    expect(unresolvedCountOf('open')).toBe(1)
+  })
+
+  it('counts a resolved thread as 0 unresolved', () => {
+    expect(unresolvedCountOf('resolved')).toBe(0)
   })
 })

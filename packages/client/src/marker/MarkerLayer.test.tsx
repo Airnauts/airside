@@ -3,6 +3,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite
 import { installObserverSpies, mockRect } from '../../test/test-helpers/dom'
 import { WidgetProvider } from '../app/providers'
 import { DraftsProvider } from '../drafts/DraftsProvider'
+import { IdentityProvider } from '../identity/IdentityProvider'
 import { FOCUS_STORAGE_KEY, goToThread } from '../panel/navigate'
 import { PanelDrawer } from '../panel/PanelDrawer'
 import { PanelProvider } from '../panel/PanelProvider'
@@ -32,20 +33,22 @@ const props = (c: ReturnType<typeof client>) => ({
   client: c as never,
   pageKey: 'k',
   pageUrl: 'https://x.test/p',
-  identity: { email: 'a@b.c', name: 'A' },
-  onNeedIdentity: (resume: (i: { email: string; name: string }) => void) =>
-    resume({ email: 'a@b.c', name: 'A' }),
 })
 
-const renderMarker = (p: ReturnType<typeof props>) =>
+const renderMarker = (p: ReturnType<typeof props> & { resolvePageKey?: (url: string) => string }) =>
   render(
-    <ThreadsProvider client={p.client as never}>
-      <PanelProvider client={p.client as never}>
-        <DraftsProvider>
-          <MarkerLayer {...p} />
-        </DraftsProvider>
-      </PanelProvider>
-    </ThreadsProvider>,
+    <IdentityProvider
+      identity={{ email: 'a@b.c', name: 'A' }}
+      requestIdentity={(resume) => resume({ email: 'a@b.c', name: 'A' })}
+    >
+      <ThreadsProvider client={p.client as never}>
+        <PanelProvider client={p.client as never}>
+          <DraftsProvider>
+            <MarkerLayer {...p} />
+          </DraftsProvider>
+        </PanelProvider>
+      </ThreadsProvider>
+    </IdentityProvider>,
   )
 
 describe('MarkerLayer place mode', () => {
@@ -301,26 +304,21 @@ function renderLayer(client: unknown) {
   return render(
     <WidgetProvider>
       <ToastProvider>
-        <ThreadsProvider client={client as never}>
-          <PanelProvider client={client as never}>
-            <DraftsProvider>
-              <MarkerLayer
-                client={client as never}
-                pageKey="x.test/here"
-                pageUrl="https://x.test/here"
-                resolvePageKey={() => 'x.test/here'}
-                identity={null}
-                onNeedIdentity={() => {}}
-              />
-              <PanelDrawer
-                resolvePageKey={() => 'x.test/here'}
-                client={client as never}
-                identity={null}
-                onNeedIdentity={() => {}}
-              />
-            </DraftsProvider>
-          </PanelProvider>
-        </ThreadsProvider>
+        <IdentityProvider identity={null} requestIdentity={() => {}}>
+          <ThreadsProvider client={client as never}>
+            <PanelProvider client={client as never}>
+              <DraftsProvider>
+                <MarkerLayer
+                  client={client as never}
+                  pageKey="x.test/here"
+                  pageUrl="https://x.test/here"
+                  resolvePageKey={() => 'x.test/here'}
+                />
+                <PanelDrawer resolvePageKey={() => 'x.test/here'} client={client as never} />
+              </DraftsProvider>
+            </PanelProvider>
+          </ThreadsProvider>
+        </IdentityProvider>
       </ToastProvider>
     </WidgetProvider>,
   )

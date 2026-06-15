@@ -2,6 +2,7 @@ import type { ThreadListItem } from '@airnauts/comments-core'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { DraftsProvider } from '../drafts/DraftsProvider'
+import { IdentityProvider } from '../identity/IdentityProvider'
 import { PanelProvider } from '../panel/PanelProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { PinLayer } from './layer'
@@ -32,14 +33,14 @@ const renderLayer = (placements: Parameters<typeof PinLayer>[0]['placements']) =
   return render(
     <ThreadsProvider client={c}>
       <PanelProvider client={c}>
-        <DraftsProvider>
-          <PinLayer
-            placements={placements}
-            client={c}
-            identity={{ email: 'a@b.c', name: 'A' }}
-            onNeedIdentity={(r) => r({ email: 'a@b.c', name: 'A' })}
-          />
-        </DraftsProvider>
+        <IdentityProvider
+          identity={{ email: 'a@b.c', name: 'A' }}
+          requestIdentity={(r) => r({ email: 'a@b.c', name: 'A' })}
+        >
+          <DraftsProvider>
+            <PinLayer placements={placements} client={c} />
+          </DraftsProvider>
+        </IdentityProvider>
       </PanelProvider>
     </ThreadsProvider>,
   )

@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { type ApiClient, createApiClient } from '../api/client'
 import { type InitOptions, resolvePageKey } from '../config'
 import { DraftsProvider } from '../drafts/DraftsProvider'
 import { WidgetErrorBoundary } from '../error-boundary'
 import { IdentityModal } from '../identity/IdentityModal'
+import { IdentityProvider } from '../identity/IdentityProvider'
 import { type Identity, loadIdentity, saveIdentity } from '../identity/storage'
 import { MarkerLayer } from '../marker/MarkerLayer'
 import { PanelDrawer } from '../panel/PanelDrawer'
@@ -30,10 +31,12 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
   const pageUrl = window.location.href
   const pageKey = resolvePageKey(options, pageUrl)
 
-  function onNeedIdentity(resume: (identity: Identity) => void) {
+  // Stable so the identity context value only changes when `identity` does —
+  // a fresh function here would re-render every useIdentity consumer per app render.
+  const requestIdentity = useCallback((resume: (identity: Identity) => void) => {
     resumeRef.current = resume
     setModalOpen(true)
-  }
+  }, [])
 
   function onSubmitIdentity(who: Identity) {
     saveIdentity(who)
@@ -48,41 +51,39 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
     <WidgetErrorBoundary>
       <WidgetProvider>
         <ToastProvider>
-          <ThreadsProvider client={client}>
-            <PanelProvider client={client}>
-              <DraftsProvider>
-                {identity ? (
-                  <>
-                    <MarkerLayer
-                      client={client}
-                      pageKey={pageKey}
-                      pageUrl={pageUrl}
-                      resolvePageKey={(url) => resolvePageKey(options, url)}
-                      identity={identity}
-                      onNeedIdentity={onNeedIdentity}
-                      provenance={options.provenance}
-                    />
-                    <PanelDrawer
-                      resolvePageKey={(url) => resolvePageKey(options, url)}
-                      client={client}
-                      identity={identity}
-                      onNeedIdentity={onNeedIdentity}
-                    />
-                  </>
-                ) : (
-                  <LoginLauncher onLogIn={() => setModalOpen(true)} />
-                )}
-              </DraftsProvider>
-            </PanelProvider>
-            <IdentityModal
-              open={modalOpen}
-              onOpenChange={(open) => {
-                if (!open) resumeRef.current = null
-                setModalOpen(open)
-              }}
-              onSubmit={onSubmitIdentity}
-            />
-          </ThreadsProvider>
+          <IdentityProvider identity={identity} requestIdentity={requestIdentity}>
+            <ThreadsProvider client={client}>
+              <PanelProvider client={client}>
+                <DraftsProvider>
+                  {identity ? (
+                    <>
+                      <MarkerLayer
+                        client={client}
+                        pageKey={pageKey}
+                        pageUrl={pageUrl}
+                        resolvePageKey={(url) => resolvePageKey(options, url)}
+                        provenance={options.provenance}
+                      />
+                      <PanelDrawer
+                        resolvePageKey={(url) => resolvePageKey(options, url)}
+                        client={client}
+                      />
+                    </>
+                  ) : (
+                    <LoginLauncher onLogIn={() => setModalOpen(true)} />
+                  )}
+                </DraftsProvider>
+              </PanelProvider>
+              <IdentityModal
+                open={modalOpen}
+                onOpenChange={(open) => {
+                  if (!open) resumeRef.current = null
+                  setModalOpen(open)
+                }}
+                onSubmit={onSubmitIdentity}
+              />
+            </ThreadsProvider>
+          </IdentityProvider>
         </ToastProvider>
       </WidgetProvider>
     </WidgetErrorBoundary>

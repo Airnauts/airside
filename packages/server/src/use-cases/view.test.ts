@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { expect, it } from 'vitest'
 import { buildExtensionRegistry } from '../extensions/registry'
-import { toThreadListItemView, toThreadView } from './view'
+import { withThreadActions } from './view'
 
 const scope = { projectId: 'p', env: undefined }
 const registry = buildExtensionRegistry([
@@ -15,7 +15,7 @@ const registry = buildExtensionRegistry([
   },
 ])
 
-it('toThreadView embeds evaluated actions', () => {
+it('withThreadActions embeds evaluated actions on a full thread', () => {
   const thread = {
     id: 't1',
     status: 'open',
@@ -23,12 +23,12 @@ it('toThreadView embeds evaluated actions', () => {
     externalLinks: [],
     comments: [],
   } as never
-  expect(toThreadView(thread, registry, scope).actions.map((a) => a.id)).toEqual([
+  expect(withThreadActions(thread, registry, scope).actions.map((a) => a.id)).toEqual([
     'jira.createIssue',
   ])
 })
 
-it('toThreadListItemView embeds evaluated actions', () => {
+it('withThreadActions embeds evaluated actions on a list item', () => {
   const item = { id: 't1', status: 'open', anchorState: 'anchored', externalLinks: [] } as never
-  expect(toThreadListItemView(item, registry, scope).actions).toHaveLength(1)
+  expect(withThreadActions(item, registry, scope).actions).toHaveLength(1)
 })

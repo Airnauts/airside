@@ -1,12 +1,11 @@
 import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import {
   ANCHOR_SCHEMA_VERSION,
-  type Attachment,
   type AttachmentId,
   type CommentId,
   type ThreadId,
 } from '@airnauts/comments-core'
-import { makeCreateThreadBody } from '@airnauts/comments-test-support'
+import { makeAttachment, makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { ValidationError } from '../errors'
@@ -16,13 +15,7 @@ import { createThread } from './create-thread'
 
 const registry = buildExtensionRegistry([])
 
-const attachment: Attachment = {
-  id: 'at_1' as AttachmentId,
-  url: 'https://blob.test/at_1',
-  name: 'shot.png',
-  contentType: 'image/png',
-  size: 42,
-}
+const attachment = makeAttachment()
 
 describe('createThread use-case', () => {
   it('persists a thread and returns it', async () => {

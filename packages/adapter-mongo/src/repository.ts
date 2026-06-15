@@ -8,6 +8,7 @@ import type {
   ThreadListItem,
   ThreadStatus,
 } from '@airnauts/comments-core'
+import { unresolvedCountOf } from '@airnauts/comments-core'
 import {
   type AnchorPatch,
   decodeCursor,
@@ -47,10 +48,6 @@ function toAttachment(doc: StoredAttachment): Attachment {
 
 function scopeFilter(scope: Scope): { projectId: string; env: string | null } {
   return { projectId: scope.projectId, env: scope.env ?? null }
-}
-
-function unresolvedCountOf(status: ThreadStatus): number {
-  return status === 'open' ? 1 : 0
 }
 
 function toThread(doc: StoredThread): Thread {

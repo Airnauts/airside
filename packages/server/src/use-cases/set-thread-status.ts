@@ -8,7 +8,7 @@ import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
 import type { ExtensionRegistry } from '../extensions/registry'
 import type { Repository } from '../repository/types'
-import { toThreadView } from './view'
+import { withThreadActions } from './view'
 
 export type SetThreadStatusDeps = { repo: Repository; registry: ExtensionRegistry }
 
@@ -26,5 +26,5 @@ export async function setThreadStatus(
     body.status,
     ctx.now().toISOString(),
   )
-  return toThreadView(updated, deps.registry, scope)
+  return withThreadActions(updated, deps.registry, scope)
 }

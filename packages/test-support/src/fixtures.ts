@@ -1,6 +1,8 @@
 import {
   ANCHOR_SCHEMA_VERSION,
   type Anchor,
+  type Attachment,
+  type AttachmentId,
   type Author,
   type CaptureContext,
   type Comment,
@@ -52,6 +54,18 @@ export function makeCreateThreadBody(overrides: Partial<CreateThreadBody> = {}):
     comment: { text: 'first comment' },
     author: makeAuthor(),
     captureContext: makeCaptureContext(),
+    ...overrides,
+  }
+}
+
+export function makeAttachment(overrides: Partial<Attachment> = {}): Attachment {
+  const id = overrides.id ?? (`at_${seq()}` as AttachmentId)
+  return {
+    id,
+    url: `https://blob.test/${id}`,
+    name: `${id}.png`,
+    contentType: 'image/png',
+    size: 123,
     ...overrides,
   }
 }

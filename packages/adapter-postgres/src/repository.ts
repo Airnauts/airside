@@ -8,6 +8,7 @@ import type {
   ThreadListItem,
   ThreadStatus,
 } from '@airnauts/comments-core'
+import { unresolvedCountOf } from '@airnauts/comments-core'
 import {
   type AnchorPatch,
   decodeCursor,
@@ -25,10 +26,6 @@ import { ensureSchema, type SqlExecutor } from './schema'
 /** Absent env is stored/queried as '' (never SQL NULL) so equality stays simple. */
 function scopeEnv(scope: Scope): string {
   return scope.env ?? ''
-}
-
-function unresolvedCountOf(status: ThreadStatus): number {
-  return status === 'open' ? 1 : 0
 }
 
 /** The Thread without the heavy fields the list projection drops. */

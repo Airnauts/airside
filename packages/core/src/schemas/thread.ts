@@ -10,6 +10,11 @@ import { ThreadActionDescriptor } from './thread-action'
 export const ThreadStatus = z.enum(['open', 'resolved'])
 export type ThreadStatus = z.infer<typeof ThreadStatus>
 
+/** Domain policy: how a thread's status contributes to its `unresolvedCount`. */
+export function unresolvedCountOf(status: ThreadStatus): number {
+  return status === 'open' ? 1 : 0
+}
+
 export const AnchorState = z.enum(['anchored', 'orphaned'])
 export type AnchorState = z.infer<typeof AnchorState>
 
