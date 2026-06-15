@@ -1,30 +1,22 @@
 # @airnauts/comments-notifier-email
 
-Email notifier for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool)
-server. When a reviewer replies on a thread, it emails the **people already active in that
-thread** (the other comment authors), via a pluggable transport.
+Email notification extension for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server. Emails the existing thread participants whenever someone replies — so reviewers are notified without a dedicated notification inbox.
+
+## Installation
+
+```bash
+pnpm add @airnauts/comments-notifier-email
+# For SMTP transport only — not needed for the Resend transport:
+pnpm add nodemailer
+```
 
 ## Who gets notified
 
-Recipients are derived per event from the thread itself — there is no recipient list to
-configure. On a reply (`comment.added`) the email goes to every other person who has commented on
-the thread, **excluding** the author of the reply (you are never emailed about your own comment).
-A brand-new thread (`thread.created`) has no other participants yet, so **no email is sent** until
-someone replies.
+Recipients are derived per event from the thread itself. On a reply (`comment.added`) the email goes to every other person who has commented, **excluding the reply author** (you are never emailed about your own comment). A brand-new thread (`thread.created`) has no other participants yet, so no email is sent. With more than one recipient, addresses go in `bcc` so participants do not see each other's emails.
 
-## Transports
+## Quick start
 
-| Import | Transport | Runtime |
-| --- | --- | --- |
-| `@airnauts/comments-notifier-email/resend` | Resend HTTP API (fetch) | serverless / edge safe |
-| `@airnauts/comments-notifier-email/smtp` | SMTP via `nodemailer` | Node server only |
-
-`nodemailer` is an **optional peer dependency** — install it only if you use the SMTP transport
-(`pnpm add nodemailer`). It is CJS and Node-only, so it will not run on an edge runtime; use the
-Resend transport there. You can also implement the exported `EmailTransport` interface yourself
-for any other provider (SendGrid, SES, Postmark, …).
-
-## Usage (Resend)
+### Resend (recommended for serverless / edge)
 
 ```ts
 import { createCommentsServer } from '@airnauts/comments-server'
@@ -34,6 +26,9 @@ import { resendTransport } from '@airnauts/comments-notifier-email/resend'
 createCommentsServer({
   repository,
   storage,
+  secretKey: process.env.COMMENTS_SECRET!,
+  projectId: 'my-app',
+  allowedOrigins: ['https://my-app.example.com'],
   extensions: emailNotifications({
     transport: resendTransport({ apiKey: process.env.RESEND_API_KEY! }),
     from: 'Comments <noreply@acme.com>',
@@ -41,34 +36,110 @@ createCommentsServer({
 })
 ```
 
-## Usage (SMTP)
+### SMTP (Node server)
 
 ```ts
-import { createCommentsServer } from '@airnauts/comments-server'
 import { emailNotifications } from '@airnauts/comments-notifier-email'
 import { smtpTransport } from '@airnauts/comments-notifier-email/smtp'
 
-createCommentsServer({
-  repository,
-  storage,
-  extensions: emailNotifications({
-    transport: smtpTransport({
-      host: 'smtp.example.com',
-      port: 587,
-      auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASS! },
-    }),
-    from: 'noreply@acme.com',
+extensions: emailNotifications({
+  transport: smtpTransport({
+    host: 'smtp.example.com',
+    port: 587,
+    auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASS! },
   }),
+  from: 'noreply@acme.com',
+  replyTo: 'support@acme.com',
+  subjectPrefix: '[Acme] ',
 })
 ```
 
-`emailNotifications` also takes optional `replyTo` and `subjectPrefix`. The SMTP transport accepts
-an optional `timeout` (ms, default `10000`) capping connection/greeting/socket so a hung server
-can't stall the comment write.
+## API reference
 
-A notification failure never breaks the comment write. When a thread has more than one other
-participant the addresses go in `bcc` so participants don't see each other's emails. The thread
-deep-link in each email is built by the server (`event.threadUrl`).
+### `emailNotifications(opts)` (main entry)
+
+```ts
+emailNotifications({
+  transport: EmailTransport   // Delivery backend (required)
+  from: string                // Verified sender address (required)
+  replyTo?: string            // Reply-To header
+  subjectPrefix?: string      // Prepended to every subject, e.g. "[Acme] "
+}): NotificationExtension[]
+```
+
+Notification failures are isolated — a hung or erroring transport never breaks the comment write.
+
+### `resendTransport(opts)` (`@airnauts/comments-notifier-email/resend`)
+
+```ts
+resendTransport({
+  apiKey: string  // Resend API key (required)
+}): EmailTransport
+```
+
+Uses the Resend HTTP API; safe on edge runtimes. The request is bounded by a 5-second timeout.
+
+### `smtpTransport(opts)` (`@airnauts/comments-notifier-email/smtp`)
+
+```ts
+smtpTransport({
+  host: string
+  port: number
+  auth: { user: string; pass: string }
+  secure?: boolean   // TLS on connect; default false (use for port 465)
+  pool?: boolean     // Reuse a connection pool across sends
+  timeout?: number   // Cap (ms) on connection/greeting/socket; default 10000
+}): EmailTransport
+```
+
+Node-only (uses `nodemailer`). Requires `nodemailer` installed separately. Not supported on edge runtimes.
+
+### `EmailTransport` interface
+
+Implement this to use any other email provider (SendGrid, SES, Postmark, …):
+
+```ts
+interface EmailTransport {
+  readonly name: string
+  send(message: EmailMessage): Promise<void>
+}
+```
+
+### `formatEmail(event, opts?)`
+
+```ts
+import { formatEmail } from '@airnauts/comments-notifier-email'
+
+const { subject, html, text } = formatEmail(event, { subjectPrefix: '[Acme] ' })
+```
+
+Renders a `NotificationEvent` into an email. Exported for testing or custom dispatch.
+
+### Types
+
+| Export | From | Description |
+|---|---|---|
+| `EmailNotifierOptions` | `.` | Options for `emailNotifications` |
+| `EmailTransport` | `.` | Pluggable delivery backend interface |
+| `EmailMessage` | `.` | `{ to, bcc?, from, replyTo?, subject, html, text }` |
+| `EmailFormat` | `.` | `{ subject: string; html: string; text: string }` |
+| `FormatEmailOptions` | `.` | `{ subjectPrefix?: string }` |
+| `ResendTransportOptions` | `./resend` | Options for `resendTransport` |
+| `SmtpTransportOptions` | `./smtp` | Options for `smtpTransport` |
+
+## Peer dependencies & requirements
+
+| Peer | Required | Notes |
+|---|---|---|
+| `nodemailer` | Optional (≥6) | Only needed for `@airnauts/comments-notifier-email/smtp` |
+
+- Node.js ≥ 18 for the Resend transport; SMTP transport is Node-only (CJS, not edge-safe)
+
+## Related packages
+
+- **`@airnauts/comments-server`** — defines `NotificationExtension` and `NotificationEvent`
+- **`@airnauts/comments-notifier-slack`** — Slack notification alternative
+- **`@airnauts/comments-integration-jira`** — Jira thread-action extension
 
 ## License
 
