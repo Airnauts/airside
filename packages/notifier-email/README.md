@@ -92,7 +92,7 @@ smtpTransport({
 }): EmailTransport
 ```
 
-Node-only (uses `nodemailer`). Requires `nodemailer` installed separately. Not supported on edge runtimes.
+Node-only (uses `nodemailer`). Requires `nodemailer` to be installed separately. Not supported on edge runtimes.
 
 ### `EmailTransport` interface
 
@@ -133,7 +133,7 @@ Renders a `NotificationEvent` into an email. Exported for testing or custom disp
 |---|---|---|
 | `nodemailer` | Optional (≥6) | Only needed for `@airnauts/comments-notifier-email/smtp` |
 
-- Node.js ≥ 18 for the Resend transport; SMTP transport is Node-only (CJS, not edge-safe)
+- Node.js ≥ 18 for the Resend transport; Node.js ≥ 18 for SMTP (CJS, not edge-safe)
 
 ## Related packages
 
