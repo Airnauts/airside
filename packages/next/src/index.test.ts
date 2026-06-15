@@ -46,13 +46,13 @@ function fakeReq(opts: {
 }
 
 function fakeRes() {
-  const h: Record<string, string> = {}
+  const headers: Record<string, string> = {}
   const out = {
     statusCode: 0,
-    headers: h,
+    headers,
     body: undefined as Buffer | undefined,
     setHeader(k: string, v: string) {
-      h[k] = v
+      headers[k] = v
     },
     end(b?: Buffer) {
       out.body = b

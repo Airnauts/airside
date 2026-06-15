@@ -100,7 +100,7 @@ describe('createNextHandler', () => {
   it('accepts a synchronous params object (Next 14)', async () => {
     const { GET } = build()
     const res = await GET(new Request('https://host/api/comments/threads', { headers }), {
-      params: { path: ['threads'] },
+      params: { path: ['threads'] } as unknown as Promise<{ path?: string[] }>, // Next 14 plain object
     })
     expect(res.status).toBe(200)
   })
