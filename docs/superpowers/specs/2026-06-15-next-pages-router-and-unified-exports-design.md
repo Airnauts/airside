@@ -17,8 +17,9 @@ Three things land together:
 3. **Relocation** — **all** Next.js coupling moves out of `@airnauts/comments-server`
    into `@airnauts/comments-next`. `comments-server` becomes framework-agnostic:
    the Web-standard `server.handle(Request)` plus a new **generic Node bridge**
-   subpath. This reverses ADR-0021 (which placed `createNextHandler` in
-   `comments-server`) and is recorded as ADR-0036.
+   subpath. This reverses the placement decision in ADR-0015 (which put
+   `createNextHandler` in `@airnauts/comments-server/next`) and supersedes the
+   `createCommentsRoute` naming from ADR-0022; recorded as ADR-0036.
 
 This is a **breaking change** to both publishable packages, taken deliberately
 (pre-1.0 → `minor` bump per the project's pre-1.0 policy). No deprecated shims:
@@ -189,12 +190,16 @@ Write the failing tests/fixtures first, then implement.
   exposes a generic Node bridge.** Captures: the relocation, the new public
   `/node` bridge, the removal of `@airnauts/comments-server/next`, the
   App/Pages export-pair naming, and the clean rename of `createCommentsRoute`.
-  Supersedes the placement decision in ADR-0021.
-- **ADR-0021** — add a status note: the Next-handler *placement* is superseded by
-  ADR-0036 (do not rewrite the decision body).
-- **`docs/architecture.md` §framework** — reframe: the framework-agnostic core is
-  `server.handle` + the generic Node bridge in `comments-server`; the Next.js
-  adapters are the headline concrete in `comments-next`.
+  Supersedes the `createNextHandler` *placement* in ADR-0015 and the
+  `createCommentsRoute` naming in ADR-0022.
+- **ADR-0015 / ADR-0022** — add a status note to each: the Next-handler placement
+  (0015) and the `createCommentsRoute` export name (0022) are superseded by
+  ADR-0036 (do not rewrite the decision bodies).
+- **`docs/architecture.md`** — reframe the Next.js glue passages (the "Next.js
+  glue is near-zero" `createNextHandler` example near line 150 and the "App
+  Router glue" mentions): the framework-agnostic core is `server.handle` + the
+  generic Node bridge in `comments-server`; the Next.js adapters now live in
+  `comments-next`.
 
 ## Delivery
 
