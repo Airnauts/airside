@@ -12,11 +12,11 @@
 services:
   mongo:
     image: mongo:7
-    container_name: comments-mongo
+    container_name: airside-mongo
     ports:
       - "27017:27017"
     volumes:
-      - comments-mongo-data:/data/db
+      - airside-mongo-data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -25,4 +25,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  comments-mongo-data:
+  airside-mongo-data:

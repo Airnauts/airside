@@ -1,4 +1,4 @@
-# @airnauts/comments-storage-vercel-blob
+# @airnauts/airside-storage-vercel-blob
 
 ## 0.8.0
 

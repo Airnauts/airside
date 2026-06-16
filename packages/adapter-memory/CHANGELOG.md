@@ -1,4 +1,4 @@
-# @airnauts/comments-adapter-memory
+# @airnauts/airside-adapter-memory
 
 ## 0.8.0
 

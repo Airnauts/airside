@@ -1,4 +1,4 @@
-# @airnauts/comments-next
+# @airnauts/airside-next
 
 ## 0.8.0
 

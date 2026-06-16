@@ -1,4 +1,4 @@
-# @airnauts/comments-notifier-slack
+# @airnauts/airside-extension-slack
 
 ## 0.8.0
 

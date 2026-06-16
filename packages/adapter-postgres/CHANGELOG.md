@@ -1,4 +1,4 @@
-# @airnauts/comments-adapter-postgres
+# @airnauts/airside-adapter-postgres
 
 ## 0.8.0
 

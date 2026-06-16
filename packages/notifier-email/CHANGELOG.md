@@ -1,4 +1,4 @@
-# @airnauts/comments-notifier-email
+# @airnauts/airside-extension-email
 
 ## 0.8.0
 

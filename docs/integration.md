@@ -49,21 +49,21 @@ In a client component rendered from your root layout:
 'use client'
 import { AirsideLayer } from '@airnauts/airside-client/react'
 
-export function CommentsMount() {
+export function AirsideMount() {
   return <AirsideLayer airsideKey="dev-key" endpoint="/api/comments" />
 }
 ```
 
 ```tsx
 // app/layout.tsx
-import { CommentsMount } from './components/comments-mount'
+import { AirsideMount } from './components/airside-mount'
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
         {children}
-        <CommentsMount />
+        <AirsideMount />
       </body>
     </html>
   )

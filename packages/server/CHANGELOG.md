@@ -1,4 +1,4 @@
-# @airnauts/comments-server
+# @airnauts/airside-server
 
 ## 0.8.0
 

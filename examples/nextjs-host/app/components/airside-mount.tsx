@@ -7,7 +7,7 @@ import { AirsideLayer } from '@airnauts/airside-client/react'
  * opened once with `?airside-key=dev-key`; after that the key is persisted to
  * localStorage so it stays active without the param. This can render unconditionally.
  */
-export function CommentsMount() {
+export function AirsideMount() {
   return (
     <AirsideLayer
       airsideKey="dev-key"

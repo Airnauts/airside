@@ -1,4 +1,4 @@
-# @airnauts/comments-adapter-mongo
+# @airnauts/airside-adapter-mongo
 
 ## 0.8.0
 

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { CommentsMount } from './components/comments-mount'
+import { AirsideMount } from './components/airside-mount'
 
 export const metadata = {
   title: 'Comments host app',
@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         {children}
-        <CommentsMount />
+        <AirsideMount />
       </body>
     </html>
   )

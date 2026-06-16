@@ -45,7 +45,7 @@ In your root layout:
 'use client'
 import { AirsideLayer } from '@airnauts/airside-client/react'
 
-export function CommentsMount() {
+export function AirsideMount() {
   return <AirsideLayer airsideKey={process.env.NEXT_PUBLIC_AIRSIDE_KEY!} endpoint="/api/comments" />
 }
 ```

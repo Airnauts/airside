@@ -1,4 +1,4 @@
-# @airnauts/comments-storage-fs
+# @airnauts/airside-storage-fs
 
 ## 0.8.0
 

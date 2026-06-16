@@ -1,4 +1,4 @@
-# @airnauts/comments-core
+# @airnauts/airside-core
 
 ## 0.8.0
 

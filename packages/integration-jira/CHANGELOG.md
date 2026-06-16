@@ -1,4 +1,4 @@
-# @airnauts/comments-integration-jira
+# @airnauts/airside-extension-jira
 
 ## 0.8.0
 

@@ -18,12 +18,12 @@ pnpm add react react-dom
 'use client'
 import { AirsideLayer } from '@airnauts/airside-client/react'
 
-export function CommentsMount() {
+export function AirsideMount() {
   return <AirsideLayer airsideKey="your-secret-key" endpoint="/api/comments" />
 }
 ```
 
-Render `<CommentsMount />` once in your root layout. The widget stays inert until the URL carries `?airside-key=your-secret-key`; after that, the key is persisted to `localStorage` so subsequent visits work without the param.
+Render `<AirsideMount />` once in your root layout. The widget stays inert until the URL carries `?airside-key=your-secret-key`; after that, the key is persisted to `localStorage` so subsequent visits work without the param.
 
 ### Vanilla JS
 

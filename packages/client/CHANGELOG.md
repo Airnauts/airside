@@ -1,4 +1,4 @@
-# @airnauts/comments-client
+# @airnauts/airside-client
 
 ## 0.8.0
 
