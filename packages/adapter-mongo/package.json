@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-adapter-mongo",
-  "version": "0.8.2",
+  "version": "0.9.0",
   "description": "MongoDB repository adapter for the Airnauts commenting tool server.",
   "keywords": [
     "comments",

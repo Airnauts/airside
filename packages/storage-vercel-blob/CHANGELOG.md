@@ -1,5 +1,12 @@
 # @airnauts/airside-storage-vercel-blob
 
+## 0.9.0
+
+### Patch Changes
+
+- @airnauts/airside-core@0.9.0
+- @airnauts/airside-server@0.9.0
+
 ## 0.8.2
 
 ### Patch Changes

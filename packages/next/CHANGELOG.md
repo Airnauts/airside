@@ -1,5 +1,17 @@
 # @airnauts/airside-integration-next
 
+## 0.9.0
+
+### Minor Changes
+
+- d6b196e: Added the `@airnauts/airside-integration-next/client` export, which re-exports `AirsideLayer` so a Next.js app can install a single package for both the API route handlers and the client mount.
+
+### Patch Changes
+
+- Updated dependencies [d6b196e]
+  - @airnauts/airside-integration-react@0.9.0
+  - @airnauts/airside-server@0.9.0
+
 ## 0.8.2
 
 ### Patch Changes

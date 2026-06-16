@@ -1,5 +1,13 @@
 # @airnauts/airside-extension-jira
 
+## 0.9.0
+
+### Patch Changes
+
+- 2b39e6c: Docs: README now lists all four required env vars (`JIRA_SITE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`, `JIRA_PROJECT_KEY`).
+  - @airnauts/airside-core@0.9.0
+  - @airnauts/airside-server@0.9.0
+
 ## 0.8.2
 
 ### Patch Changes
