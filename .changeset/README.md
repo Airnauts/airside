@@ -11,5 +11,5 @@ Workflow:
 3. `pnpm release` — build everything, then `changeset publish` to npm in
    dependency order.
 
-Private packages (`@airnauts/comments-test-support`, the `examples/*` apps) are
+Private packages (`@airnauts/airside-test-support`, the `examples/*` apps) are
 ignored automatically.

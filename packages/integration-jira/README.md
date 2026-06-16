@@ -1,18 +1,18 @@
-# @airnauts/comments-integration-jira
+# @airnauts/airside-extension-jira
 
-Jira Cloud thread-action extension for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server. Adds a **"Create Jira issue"** button to each comment thread; clicking it creates a Jira Cloud issue pre-filled with the thread content and stores the issue link back on the thread.
+Jira Cloud thread-action extension for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server. Adds a **"Create Jira issue"** button to each comment thread; clicking it creates a Jira Cloud issue pre-filled with the thread content and stores the issue link back on the thread.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/comments-integration-jira
+pnpm add @airnauts/airside-extension-jira
 ```
 
 ## Quick start
 
 ```ts
-import { createAirsideServer } from '@airnauts/comments-server'
-import { jiraExtension } from '@airnauts/comments-integration-jira'
+import { createAirsideServer } from '@airnauts/airside-server'
+import { jiraExtension } from '@airnauts/airside-extension-jira'
 
 createAirsideServer({
   repository,
@@ -78,9 +78,9 @@ type JiraConfig = {
 
 ## Related packages
 
-- **`@airnauts/comments-server`** — defines `ServerExtension` and `ThreadActionExtension`
-- **`@airnauts/comments-notifier-slack`** — Slack notification extension
-- **`@airnauts/comments-notifier-email`** — email notification extension
+- **`@airnauts/airside-server`** — defines `ServerExtension` and `ThreadActionExtension`
+- **`@airnauts/airside-extension-slack`** — Slack notification extension
+- **`@airnauts/airside-extension-email`** — email notification extension
 
 ## License
 

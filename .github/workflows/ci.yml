@@ -68,13 +68,13 @@ jobs:
         run: pnpm build
 
       - name: Install Playwright Chromium
-        run: pnpm --filter @airnauts/comments-nextjs-host exec playwright install --with-deps chromium
+        run: pnpm --filter @airnauts/airside-nextjs-host exec playwright install --with-deps chromium
 
       # Hermetic: no MONGODB_URI / BLOB_READ_WRITE_TOKEN in the env, so the host app falls
       # back to the in-memory repository + local public/uploads. A fresh runner means a cold
       # `next start` with no stale servers; Playwright's webServer manages start/stop.
       - name: Run e2e
-        run: pnpm --filter @airnauts/comments-nextjs-host test:e2e
+        run: pnpm --filter @airnauts/airside-nextjs-host test:e2e
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
@@ -119,7 +119,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # Publishes the 8 public @airnauts/comments-* packages whose version isn't yet on npm.
+      # Publishes the 8 public @airnauts/airside-* packages whose version isn't yet on npm.
       - name: Publish to npm
         run: pnpm exec changeset publish
         env:

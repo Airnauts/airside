@@ -1,21 +1,21 @@
-# @airnauts/comments-core
+# @airnauts/airside-core
 
-Framework-agnostic core for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool): Zod schemas, page-key normalization, the anchor scoring/threshold policy, and the HTTP contract types shared by the client and server.
+Framework-agnostic core for the [Airnauts commenting tool](https://github.com/Airnauts/airside): Zod schemas, page-key normalization, the anchor scoring/threshold policy, and the HTTP contract types shared by the client and server.
 
-Most consumers get this transitively via `@airnauts/comments-client` or `@airnauts/comments-server`. Install it directly only when you need the shared types in code that sits outside those packages.
+Most consumers get this transitively via `@airnauts/airside-client` or `@airnauts/airside-server`. Install it directly only when you need the shared types in code that sits outside those packages.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/comments-core
+pnpm add @airnauts/airside-core
 # or
-npm install @airnauts/comments-core
+npm install @airnauts/airside-core
 ```
 
 ## Quick start
 
 ```ts
-import { normalizePageKey, threadLink, DEFAULT_THREAD_PARAM } from '@airnauts/comments-core'
+import { normalizePageKey, threadLink, DEFAULT_THREAD_PARAM } from '@airnauts/airside-core'
 
 // Canonical page identity key (origin + pathname, trailing slash stripped)
 const key = normalizePageKey('https://example.com/page/?q=1')
@@ -44,7 +44,7 @@ const url = threadLink('https://example.com/page', 'thread-abc123')
 
 ### Anchor scoring (pure policy)
 
-These are consumed by `@airnauts/comments-client` to implement re-matching. Integrators building custom anchoring can use them directly.
+These are consumed by `@airnauts/airside-client` to implement re-matching. Integrators building custom anchoring can use them directly.
 
 | Export | Description |
 |---|---|
@@ -56,7 +56,7 @@ These are consumed by `@airnauts/comments-client` to implement re-matching. Inte
 
 ### HTTP contract
 
-These types describe the wire API served by `@airnauts/comments-server` and consumed by the client. They are defined as Zod schemas and exported both as schemas and as TypeScript types.
+These types describe the wire API served by `@airnauts/airside-server` and consumed by the client. They are defined as Zod schemas and exported both as schemas and as TypeScript types.
 
 **Request bodies / queries:**
 
@@ -109,16 +109,16 @@ These types describe the wire API served by `@airnauts/comments-server` and cons
 
 ## Related packages
 
-This is the shared contract layer for the `@airnauts/comments-*` suite:
+This is the shared contract layer for the `@airnauts/airside-*` suite:
 
-- **`@airnauts/comments-client`** — widget engine and React wrapper
-- **`@airnauts/comments-server`** — HTTP server, use cases, and adapter interfaces
-- **`@airnauts/comments-adapter-mongo`** — MongoDB persistence
-- **`@airnauts/comments-adapter-postgres`** — PostgreSQL persistence
-- **`@airnauts/comments-storage-vercel-blob`** — Vercel Blob file storage
-- **`@airnauts/comments-storage-fs`** — filesystem file storage
+- **`@airnauts/airside-client`** — widget engine and React wrapper
+- **`@airnauts/airside-server`** — HTTP server, use cases, and adapter interfaces
+- **`@airnauts/airside-adapter-mongo`** — MongoDB persistence
+- **`@airnauts/airside-adapter-postgres`** — PostgreSQL persistence
+- **`@airnauts/airside-storage-vercel-blob`** — Vercel Blob file storage
+- **`@airnauts/airside-storage-fs`** — filesystem file storage
 
-See [docs/architecture.md](https://github.com/Airnauts/commenting-tool/blob/main/docs/architecture.md) for the full system design.
+See [docs/architecture.md](https://github.com/Airnauts/airside/blob/main/docs/architecture.md) for the full system design.
 
 ## License
 

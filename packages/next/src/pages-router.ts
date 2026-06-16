@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { AirsideServer } from '@airnauts/comments-server'
-import { nodeRequestToWeb, webToNode } from '@airnauts/comments-server/node'
+import type { AirsideServer } from '@airnauts/airside-server'
+import { nodeRequestToWeb, webToNode } from '@airnauts/airside-server/node'
 import { operationUrl } from './operation-url'
 
 /**
@@ -27,7 +27,7 @@ export function createNextPagesHandler(server: AirsideServer): NodePagesHandler 
   return async (req, res) => {
     if (req.body !== undefined) {
       throw new Error(
-        "@airnauts/comments-next: Next's body parser consumed the request body. Add " +
+        "@airnauts/airside-next: Next's body parser consumed the request body. Add " +
           '`export const config = { api: { bodyParser: false } }` to the route module.',
       )
     }

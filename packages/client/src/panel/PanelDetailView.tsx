@@ -1,6 +1,6 @@
 // packages/client/src/panel/PanelDetailView.tsx
 
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import * as Dialog from '@radix-ui/react-dialog'
 import type { ApiClient } from '../api/client'
 import { useDraft } from '../drafts/DraftsProvider'

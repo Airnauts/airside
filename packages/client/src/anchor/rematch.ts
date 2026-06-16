@@ -1,11 +1,11 @@
-import type { Anchor, Signals } from '@airnauts/comments-core'
+import type { Anchor, Signals } from '@airnauts/airside-core'
 import {
   DEFAULT_THRESHOLDS,
   decide,
   locateQuote,
   type ScoreComponents,
   scoreCandidate,
-} from '@airnauts/comments-core'
+} from '@airnauts/airside-core'
 import { extractSignals } from './extract'
 import { buildSelectors, resolveUnique } from './selectors'
 

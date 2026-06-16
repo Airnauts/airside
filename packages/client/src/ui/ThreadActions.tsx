@@ -1,5 +1,5 @@
 // packages/client/src/ui/ThreadActions.tsx
-import type { ThreadActionDescriptor } from '@airnauts/comments-core'
+import type { ThreadActionDescriptor } from '@airnauts/airside-core'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { usePortalContainer } from '../app/providers'
 import type { Controller } from '../threads/controller'

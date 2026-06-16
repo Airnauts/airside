@@ -1,4 +1,4 @@
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { DraftsProvider } from '../drafts/DraftsProvider'

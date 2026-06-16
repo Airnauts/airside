@@ -1,4 +1,4 @@
-import { type Author, type ThreadId, threadLink } from '@airnauts/comments-core'
+import { type Author, type ThreadId, threadLink } from '@airnauts/airside-core'
 import type { NotificationEvent, NotificationEventType } from './types'
 
 /**

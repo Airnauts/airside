@@ -65,7 +65,7 @@ bundle-size budget harness (empty target).
 **Depends on.** —
 
 **Exit criteria.** `pnpm i && pnpm build && pnpm test && pnpm lint` green on empty
-packages; subpath exports resolve (`@airnauts/comments-client/react`, `@airnauts/comments-server/next`).
+packages; subpath exports resolve (`@airnauts/airside-client/react`, `@airnauts/airside-server/next`).
 
 **Refs.** Spec §2.
 
@@ -76,7 +76,7 @@ packages; subpath exports resolve (`@airnauts/comments-client/react`, `@airnauts
 **Goal.** The isomorphic foundation both tracks import — freeze the HTTP contract +
 anchor schema here so the backend and frontend tracks can then proceed in parallel.
 
-**In scope.** `@airnauts/comments-core`: branded ID types; domain entity **zod schemas**;
+**In scope.** `@airnauts/airside-core`: branded ID types; domain entity **zod schemas**;
 the **anchor fingerprint schema + `schemaVersion`** (`selectors`/`signals`/`offset`/
 optional `selection`); the **full HTTP contract** as a declarative operation table +
 request/response schemas + error model (the boundary both tracks code against —
@@ -105,7 +105,7 @@ Spec §5–§7; ADR-0004, ADR-0007, ADR-0008, ADR-0009.
 **Goal.** Nail and regression-guard the riskiest pure logic — fingerprint scoring —
 against a calibrated corpus, before the M6 runtime consumes it.
 
-**In scope.** `@airnauts/comments-core` (over the M2a-frozen `signals` shape): the **pure
+**In scope.** `@airnauts/airside-core` (over the M2a-frozen `signals` shape): the **pure
 scoring weights + threshold policy** (`score()`/`decide()`, accept/margin); the
 **DOM→`signals` extraction** (exact shape decided in M2b's own brainstorm — the
 goal is that M2a's jsdom fixtures and M6's real DOM exercise identical code); the
@@ -129,7 +129,7 @@ thresholds; the extraction + scoring functions are pure and headless-testable.
 
 **Goal.** A working HTTP API for the whole contract, persistence-agnostic.
 
-**In scope.** `@airnauts/comments-server` Web-standard `Request → Response` core; router;
+**In scope.** `@airnauts/airside-server` Web-standard `Request → Response` core; router;
 **security** (capability-key header check · origin allowlist · CORS); zod
 validation; all **use cases** (create thread, list by pageKey / all-pages, get,
 reply, resolve/reopen, report-orphan/refresh-anchor, upload); `StorageAdapter`
@@ -152,8 +152,8 @@ storage adapters pass their contract suite.
 
 **Goal.** Production persistence on the v1 target stack, deployable on Vercel.
 
-**In scope.** `@airnauts/comments-adapter-mongo` (MongoDB repository **passing the M3
-contract suite**); indexes from the spec; `@airnauts/comments-server/next` App Router glue
+**In scope.** `@airnauts/airside-adapter-mongo` (MongoDB repository **passing the M3
+contract suite**); indexes from the spec; `@airnauts/airside-server/next` App Router glue
 (`createNextHandler`); **static OpenAPI artifact** (runtime `/openapi.json` + Scalar `/docs` deferred — ADR-0015);
 integration tests on `mongodb-memory-server`; a deploy recipe for **Vercel +
 MongoDB Atlas + Vercel Blob**.
@@ -286,7 +286,7 @@ README. Two small package fixes surfaced by the same-origin mount: the origin po
 **Out of scope.** Playwright e2e, e2e-in-CI, live deployment, real-project adoption
 (all **M10**). No new features, schemas, or endpoints.
 
-**Depends on.** M4 (`@airnauts/comments-server/next`, `adapter-mongo`, `storage-*`) **and**
+**Depends on.** M4 (`@airnauts/airside-server/next`, `adapter-mongo`, `storage-*`) **and**
 M8 (frontend complete).
 
 **Exit criteria.** `examples/nextjs-host` builds and runs; opening a page with the
@@ -303,7 +303,7 @@ Spec §9; PRD §7.
 ## M10 — Verification & release CI  ·  Integration  ·  M  ·  delivered
 
 **Goal.** Automate the integration proof M9 left as a manual smoke checklist, and ship
-the release path for the prepared `@airnauts/comments-*` packages.
+the release path for the prepared `@airnauts/airside-*` packages.
 
 **Scope delivered (slimmed from the original M10).** **Playwright e2e** of the full
 loop — activation/identity, comment → reply → attach → resolve → reopen, **reload +
@@ -339,7 +339,7 @@ ADR-0026; Spec §9; PRD §7.
 **Goal.** Meet PRD §7's adoption bar in production: a live deployment and real use.
 
 **In scope.** A **Vercel + MongoDB Atlas + Vercel Blob** dogfood deployment of
-`examples/nextjs-host` (or a thin equivalent); the published `@airnauts/comments-*`
+`examples/nextjs-host` (or a thin equivalent); the published `@airnauts/airside-*`
 packages consumed **from npm** (not workspace); **integration into at least one real
 project** in place of Vercel Comments; capture time-to-integrate and re-anchor
 reliability across repeated redeploys.

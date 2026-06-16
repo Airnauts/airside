@@ -1,5 +1,5 @@
 // packages/client/src/ui/CommentList.tsx
-import type { Comment } from '@airnauts/comments-core'
+import type { Comment } from '@airnauts/airside-core'
 import { useEffect, useRef } from 'react'
 import { relativeTime } from '../threads/relativeTime'
 import { avatarColor, initials } from './avatar'

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { type AirsideHandle, airside, type InitOptions } from './index'
 
-export const packageName = '@airnauts/comments-client/react'
+export const packageName = '@airnauts/airside-client/react'
 
 export type AirsideLayerProps = Omit<InitOptions, 'key'> & {
   /** The secret key (React reserves the `key` prop name, so it is `airsideKey` here). */

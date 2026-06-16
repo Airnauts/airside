@@ -1,5 +1,5 @@
 // packages/client/src/panel/PanelRow.tsx
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import { useEffect, useRef, useState } from 'react'
 import { threadLink } from '../config'
 import { relativeTime } from '../threads/relativeTime'

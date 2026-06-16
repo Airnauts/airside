@@ -1,5 +1,5 @@
 // packages/client/src/panel/PanelDrawer.test.tsx
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import { render, screen, waitFor } from '@testing-library/react'
 import { act } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'

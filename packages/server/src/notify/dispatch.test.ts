@@ -1,4 +1,4 @@
-import type { ThreadId } from '@airnauts/comments-core'
+import type { ThreadId } from '@airnauts/airside-core'
 import { describe, expect, it, vi } from 'vitest'
 import type { NotificationExtension } from '../extensions/types'
 import { dispatchNotifications } from './dispatch'

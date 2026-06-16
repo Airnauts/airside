@@ -4,7 +4,7 @@ import {
   readAllBytes,
   type StorageAdapter,
   sanitizeName,
-} from '@airnauts/comments-server'
+} from '@airnauts/airside-server'
 import { put } from '@vercel/blob'
 
 export type VercelBlobStorageOptions = {
@@ -52,4 +52,4 @@ export function createVercelBlobStorage(opts: VercelBlobStorageOptions): Storage
 /** @deprecated Renamed to {@link createVercelBlobStorage}; kept for one release. */
 export const vercelBlobStorage = createVercelBlobStorage
 
-export const packageName = '@airnauts/comments-storage-vercel-blob'
+export const packageName = '@airnauts/airside-storage-vercel-blob'

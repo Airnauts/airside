@@ -3,7 +3,7 @@ import type {
   ExternalLink,
   Thread,
   ThreadActionDescriptor,
-} from '@airnauts/comments-core'
+} from '@airnauts/airside-core'
 import { DomainError } from '../errors'
 import type { NotificationEvent } from '../notify/types'
 import type { Scope } from '../repository/types'

@@ -1,4 +1,4 @@
-import type { Repository } from '@airnauts/comments-server'
+import type { Repository } from '@airnauts/airside-server'
 import { InMemoryRepository } from './in-memory'
 
 export { InMemoryRepository }

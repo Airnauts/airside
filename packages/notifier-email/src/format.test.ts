@@ -1,5 +1,5 @@
-import type { ThreadId } from '@airnauts/comments-core'
-import type { NotificationEvent } from '@airnauts/comments-server'
+import type { ThreadId } from '@airnauts/airside-core'
+import type { NotificationEvent } from '@airnauts/airside-server'
 import { describe, expect, it } from 'vitest'
 import { escapeHtml, formatEmail } from './format'
 

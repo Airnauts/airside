@@ -1,4 +1,4 @@
-import type { ThreadId } from '@airnauts/comments-core'
+import type { ThreadId } from '@airnauts/airside-core'
 
 export type NotificationEventType = 'thread.created' | 'comment.added'
 

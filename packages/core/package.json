@@ -1,5 +1,5 @@
 {
-  "name": "@airnauts/comments-core",
+  "name": "@airnauts/airside-core",
   "version": "0.7.0",
   "description": "Framework-agnostic core for the Airnauts embeddable commenting tool: zod schemas, page-key normalization, the scoring/threshold policy, and the OpenAPI contract.",
   "keywords": [
@@ -13,14 +13,14 @@
   ],
   "license": "MIT",
   "author": "Airnauts",
-  "homepage": "https://github.com/Airnauts/commenting-tool#readme",
+  "homepage": "https://github.com/Airnauts/airside#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Airnauts/commenting-tool.git",
+    "url": "git+https://github.com/Airnauts/airside.git",
     "directory": "packages/core"
   },
   "bugs": {
-    "url": "https://github.com/Airnauts/commenting-tool/issues"
+    "url": "https://github.com/Airnauts/airside/issues"
   },
   "type": "module",
   "exports": {

@@ -1,5 +1,5 @@
 // packages/client/src/threads/useSubmitReply.ts
-import type { AttachmentId, Comment } from '@airnauts/comments-core'
+import type { AttachmentId, Comment } from '@airnauts/airside-core'
 import type { ApiClient } from '../api/client'
 import type { ComposerSubmit } from '../ui/Composer'
 import { useToast } from '../ui/toast'

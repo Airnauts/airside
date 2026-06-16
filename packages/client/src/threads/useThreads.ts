@@ -1,6 +1,6 @@
 // packages/client/src/threads/useThreads.ts
 
-import type { ExternalLink, Thread, ThreadActionDescriptor } from '@airnauts/comments-core'
+import type { ExternalLink, Thread, ThreadActionDescriptor } from '@airnauts/airside-core'
 import { useContext } from 'react'
 import { type PlacedThread, visiblePlacements } from './state'
 import { ThreadsContext } from './ThreadsProvider'

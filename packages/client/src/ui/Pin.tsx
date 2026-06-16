@@ -1,5 +1,5 @@
 // packages/client/src/ui/Pin.tsx
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import { type ComponentPropsWithoutRef, forwardRef } from 'react'
 import { cn } from '../lib/cn'
 import type { XY } from '../positioning/coords'

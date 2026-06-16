@@ -1,4 +1,4 @@
-import type { NotificationEvent, NotificationExtension } from '@airnauts/comments-server'
+import type { NotificationEvent, NotificationExtension } from '@airnauts/airside-server'
 
 export type SlackExtensionOptions = {
   /** Slack Incoming Webhook URL. The target channel is baked into this URL. */

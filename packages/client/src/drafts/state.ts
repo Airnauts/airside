@@ -1,4 +1,4 @@
-import type { Attachment } from '@airnauts/comments-core'
+import type { Attachment } from '@airnauts/airside-core'
 
 export type Draft = { text: string; attachment: Attachment | null }
 

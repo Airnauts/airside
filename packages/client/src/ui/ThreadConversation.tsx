@@ -1,6 +1,6 @@
 // packages/client/src/ui/ThreadConversation.tsx
 
-import type { Attachment, Thread, ThreadListItem } from '@airnauts/comments-core'
+import type { Attachment, Thread, ThreadListItem } from '@airnauts/airside-core'
 import type { ApiClient } from '../api/client'
 import { cn } from '../lib/cn'
 import { useSubmitReply } from '../threads/useSubmitReply'

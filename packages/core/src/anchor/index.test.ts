@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import * as anchor from './index'
 
-describe('@airnauts/comments-core/anchor barrel', () => {
+describe('@airnauts/airside-core/anchor barrel', () => {
   it('exports the scoring + decision + quote-finder + defaults', () => {
     expect(typeof anchor.scoreCandidate).toBe('function')
     expect(typeof anchor.decide).toBe('function')

@@ -4,18 +4,18 @@
   "commit": false,
   "fixed": [
     [
-      "@airnauts/comments-adapter-memory",
-      "@airnauts/comments-adapter-mongo",
-      "@airnauts/comments-adapter-postgres",
-      "@airnauts/comments-client",
-      "@airnauts/comments-core",
-      "@airnauts/comments-integration-jira",
-      "@airnauts/comments-next",
-      "@airnauts/comments-notifier-email",
-      "@airnauts/comments-notifier-slack",
-      "@airnauts/comments-server",
-      "@airnauts/comments-storage-fs",
-      "@airnauts/comments-storage-vercel-blob"
+      "@airnauts/airside-adapter-memory",
+      "@airnauts/airside-adapter-mongo",
+      "@airnauts/airside-adapter-postgres",
+      "@airnauts/airside-client",
+      "@airnauts/airside-core",
+      "@airnauts/airside-extension-jira",
+      "@airnauts/airside-next",
+      "@airnauts/airside-extension-email",
+      "@airnauts/airside-extension-slack",
+      "@airnauts/airside-server",
+      "@airnauts/airside-storage-fs",
+      "@airnauts/airside-storage-vercel-blob"
     ]
   ],
   "linked": [],
@@ -23,8 +23,8 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@airnauts/comments-test-support",
-    "@airnauts/comments-nextjs-host",
-    "@airnauts/comments-playground"
+    "@airnauts/airside-test-support",
+    "@airnauts/airside-nextjs-host",
+    "@airnauts/airside-playground"
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "name": "@airnauts/comments-next",
+  "name": "@airnauts/airside-next",
   "version": "0.7.0",
   "description": "Next.js App and Pages Router integration for the Airnauts commenting tool server.",
   "keywords": [
@@ -13,14 +13,14 @@
   ],
   "license": "MIT",
   "author": "Airnauts",
-  "homepage": "https://github.com/Airnauts/commenting-tool#readme",
+  "homepage": "https://github.com/Airnauts/airside#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Airnauts/commenting-tool.git",
+    "url": "git+https://github.com/Airnauts/airside.git",
     "directory": "packages/next"
   },
   "bugs": {
-    "url": "https://github.com/Airnauts/commenting-tool/issues"
+    "url": "https://github.com/Airnauts/airside/issues"
   },
   "type": "module",
   "exports": {
@@ -44,11 +44,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@airnauts/comments-server": "workspace:^"
+    "@airnauts/airside-server": "workspace:^"
   },
   "devDependencies": {
-    "@airnauts/comments-adapter-memory": "workspace:*",
-    "@airnauts/comments-core": "workspace:*",
-    "@airnauts/comments-test-support": "workspace:*"
+    "@airnauts/airside-adapter-memory": "workspace:*",
+    "@airnauts/airside-core": "workspace:*",
+    "@airnauts/airside-test-support": "workspace:*"
   }
 }

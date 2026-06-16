@@ -1,4 +1,4 @@
-import type { Thread } from '@airnauts/comments-core'
+import type { Thread } from '@airnauts/airside-core'
 
 /**
  * Atlassian Document Format (ADF) builders for Jira Cloud REST v3.

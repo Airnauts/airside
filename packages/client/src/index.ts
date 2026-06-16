@@ -3,7 +3,7 @@ import { DEFAULT_KEY_PARAM, DEFAULT_THREAD_PARAM, type InitOptions } from './con
 import { isActivated, isUrlActivation } from './gate'
 import { FOCUS_STORAGE_KEY } from './panel/navigate'
 
-export const packageName = '@airnauts/comments-client'
+export const packageName = '@airnauts/airside-client'
 
 export * from './anchor'
 export type { InitOptions } from './config'

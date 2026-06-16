@@ -1,4 +1,4 @@
-import { type Operation, operations } from '@airnauts/comments-core'
+import { type Operation, operations } from '@airnauts/airside-core'
 import { buildCorsHeaders, isPreflight, preflightResponse } from './cors'
 import type { Ctx, IdFactory } from './ctx'
 import { defaultIds, makeCtx } from './ctx'

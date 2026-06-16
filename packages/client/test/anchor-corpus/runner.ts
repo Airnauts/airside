@@ -1,5 +1,5 @@
-import type { Decision } from '@airnauts/comments-core'
-import { decide, locateQuote, scoreCandidate } from '@airnauts/comments-core'
+import type { Decision } from '@airnauts/airside-core'
+import { decide, locateQuote, scoreCandidate } from '@airnauts/airside-core'
 import { extractSignals } from '../../src/anchor/extract'
 import { findCandidates } from '../../src/anchor/rematch'
 

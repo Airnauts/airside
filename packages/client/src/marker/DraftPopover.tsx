@@ -1,6 +1,6 @@
 // packages/client/src/marker/DraftPopover.tsx
 
-import type { Anchor } from '@airnauts/comments-core'
+import type { Anchor } from '@airnauts/airside-core'
 import * as Popover from '@radix-ui/react-popover'
 import type { ApiClient } from '../api/client'
 import { usePortalContainer } from '../app/providers'

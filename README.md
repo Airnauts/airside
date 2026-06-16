@@ -14,8 +14,8 @@ A self-contained, open-source commenting overlay you host yourself. Drop the wid
 ### 1. Install
 
 ```bash
-pnpm add @airnauts/comments-next @airnauts/comments-client \
-  @airnauts/comments-adapter-mongo @airnauts/comments-storage-vercel-blob
+pnpm add @airnauts/airside-next @airnauts/airside-client \
+  @airnauts/airside-adapter-mongo @airnauts/airside-storage-vercel-blob
 # React is required in your Next.js app already; no extra peer to install.
 ```
 
@@ -24,9 +24,9 @@ pnpm add @airnauts/comments-next @airnauts/comments-client \
 Create `app/api/comments/[...path]/route.ts`:
 
 ```ts
-import { createAirsideAppRoute } from '@airnauts/comments-next'
-import { mongoRepository } from '@airnauts/comments-adapter-mongo'
-import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createAirsideAppRoute } from '@airnauts/airside-next'
+import { mongoRepository } from '@airnauts/airside-adapter-mongo'
+import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
 export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: process.env.AIRSIDE_SECRET!,
@@ -43,7 +43,7 @@ In your root layout:
 
 ```tsx
 'use client'
-import { AirsideLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/airside-client/react'
 
 export function CommentsMount() {
   return <AirsideLayer airsideKey={process.env.NEXT_PUBLIC_AIRSIDE_KEY!} endpoint="/api/comments" />
@@ -57,8 +57,8 @@ The widget is inert until a page is opened with `?airside-key=<your-secret-key>`
 Swap in the in-memory adapter:
 
 ```ts
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
+import { createFileSystemStorage } from '@airnauts/airside-storage-fs'
 
 export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: 'dev-key',
@@ -80,7 +80,7 @@ independently — pick **one server mount** and **one widget mount**:
 - **Server** — App Router (above), Pages Router (below), or, on any other host, the
   Web-standard `server.handle(request)` directly: a Fetch-native framework like Hono
   passes its `Request` straight in; a classic Node host (Express, `http`) bridges
-  `req`/`res` via `@airnauts/comments-server/node`. Node-compatible runtimes only
+  `req`/`res` via `@airnauts/airside-server/node`. Node-compatible runtimes only
   (the server uses `node:crypto`, `Buffer`, and Node database drivers).
 - **Widget** — `AirsideLayer` for React (below), or `airside.init()` for vanilla
   JS (below).
@@ -94,8 +94,8 @@ On the Pages Router, mount a catch-all API route with `createAirsidePagesRoute`:
 
 ```ts
 // pages/api/comments/[...path].ts
-import { createAirsidePagesRoute } from '@airnauts/comments-next'
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
+import { createAirsidePagesRoute } from '@airnauts/airside-next'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 
 // REQUIRED: Next reads this statically, so the helper can't set it. The comments
 // API parses JSON/multipart itself, so the raw body must reach it unparsed.
@@ -126,7 +126,7 @@ mounted server (use an absolute URL when the API is on another origin, and add t
 to the server's `allowedOrigins`):
 
 ```tsx
-import { AirsideLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/airside-client/react'
 
 export function App() {
   return (
@@ -150,7 +150,7 @@ Without React, call `airside.init()` directly. It returns a handle you can `dest
 tear the widget down again:
 
 ```ts
-import { airside } from '@airnauts/comments-client'
+import { airside } from '@airnauts/airside-client'
 
 const handle = await airside.init({
   key: 'your-secret-key',
@@ -173,18 +173,18 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 
 | Package | Description |
 |---|---|
-| [`@airnauts/comments-core`](packages/core) | Isomorphic: Zod schemas, HTTP contract types, `pageKey` normalization, anchor scoring/threshold policy, OpenAPI generator |
-| [`@airnauts/comments-client`](packages/client) | Widget engine (`init()`), light-DOM anchoring runtime, React wrapper (`AirsideLayer`) |
-| [`@airnauts/comments-server`](packages/server) | Web-standard HTTP handler, use cases, CORS/security, adapter interfaces, generic Node bridge, dev server |
-| [`@airnauts/comments-next`](packages/next) | One-call Next.js App and Pages Router integration (`createAirsideAppRoute` / `createAirsidePagesRoute`) |
-| [`@airnauts/comments-adapter-mongo`](packages/adapter-mongo) | MongoDB Atlas / self-hosted repository adapter |
-| [`@airnauts/comments-adapter-postgres`](packages/adapter-postgres) | PostgreSQL repository adapter (hybrid columns + `jsonb`; driver-agnostic) |
-| [`@airnauts/comments-adapter-memory`](packages/adapter-memory) | In-memory repository for local development and tests |
-| [`@airnauts/comments-storage-vercel-blob`](packages/storage-vercel-blob) | Vercel Blob image-attachment storage |
-| [`@airnauts/comments-storage-fs`](packages/storage-fs) | Filesystem image-attachment storage |
-| [`@airnauts/comments-notifier-slack`](packages/notifier-slack) | Slack Incoming Webhook notification extension |
-| [`@airnauts/comments-notifier-email`](packages/notifier-email) | Email notification extension (SMTP via nodemailer or Resend HTTP API) |
-| [`@airnauts/comments-integration-jira`](packages/integration-jira) | "Create Jira issue" thread-action extension for Jira Cloud |
+| [`@airnauts/airside-core`](packages/core) | Isomorphic: Zod schemas, HTTP contract types, `pageKey` normalization, anchor scoring/threshold policy, OpenAPI generator |
+| [`@airnauts/airside-client`](packages/client) | Widget engine (`init()`), light-DOM anchoring runtime, React wrapper (`AirsideLayer`) |
+| [`@airnauts/airside-server`](packages/server) | Web-standard HTTP handler, use cases, CORS/security, adapter interfaces, generic Node bridge, dev server |
+| [`@airnauts/airside-next`](packages/next) | One-call Next.js App and Pages Router integration (`createAirsideAppRoute` / `createAirsidePagesRoute`) |
+| [`@airnauts/airside-adapter-mongo`](packages/adapter-mongo) | MongoDB Atlas / self-hosted repository adapter |
+| [`@airnauts/airside-adapter-postgres`](packages/adapter-postgres) | PostgreSQL repository adapter (hybrid columns + `jsonb`; driver-agnostic) |
+| [`@airnauts/airside-adapter-memory`](packages/adapter-memory) | In-memory repository for local development and tests |
+| [`@airnauts/airside-storage-vercel-blob`](packages/storage-vercel-blob) | Vercel Blob image-attachment storage |
+| [`@airnauts/airside-storage-fs`](packages/storage-fs) | Filesystem image-attachment storage |
+| [`@airnauts/airside-extension-slack`](packages/notifier-slack) | Slack Incoming Webhook notification extension |
+| [`@airnauts/airside-extension-email`](packages/notifier-email) | Email notification extension (SMTP via nodemailer or Resend HTTP API) |
+| [`@airnauts/airside-extension-jira`](packages/integration-jira) | "Create Jira issue" thread-action extension for Jira Cloud |
 
 ---
 

@@ -3,8 +3,8 @@ import {
   type AttachmentId,
   type ExternalLink,
   type ThreadId,
-} from '@airnauts/comments-core'
-import type { Repository } from '@airnauts/comments-server'
+} from '@airnauts/airside-core'
+import type { Repository } from '@airnauts/airside-server'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { makeAttachment, makeComment, makeNewThread } from './fixtures'
 

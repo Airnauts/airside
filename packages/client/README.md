@@ -1,11 +1,11 @@
-# @airnauts/comments-client
+# @airnauts/airside-client
 
-Embeddable commenting widget and React wrapper for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool). Mounts a light-DOM, self-contained commenting overlay onto any web page — no iframe, no Shadow DOM.
+Embeddable commenting widget and React wrapper for the [Airnauts commenting tool](https://github.com/Airnauts/airside). Mounts a light-DOM, self-contained commenting overlay onto any web page — no iframe, no Shadow DOM.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/comments-client
+pnpm add @airnauts/airside-client
 # React host apps also need the optional peer:
 pnpm add react react-dom
 ```
@@ -16,7 +16,7 @@ pnpm add react react-dom
 
 ```tsx
 'use client'
-import { AirsideLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/airside-client/react'
 
 export function CommentsMount() {
   return <AirsideLayer airsideKey="your-secret-key" endpoint="/api/comments" />
@@ -28,7 +28,7 @@ Render `<CommentsMount />` once in your root layout. The widget stays inert unti
 ### Vanilla JS
 
 ```ts
-import { airside } from '@airnauts/comments-client'
+import { airside } from '@airnauts/airside-client'
 
 const handle = await airside.init({
   key: 'your-secret-key',
@@ -44,7 +44,7 @@ handle.destroy()
 ### `init(options)` / `airside.init(options)`
 
 ```ts
-import { init, airside } from '@airnauts/comments-client'
+import { init, airside } from '@airnauts/airside-client'
 
 const handle: AirsideHandle = await airside.init(options)
 ```
@@ -75,7 +75,7 @@ Call `destroy()` to unmount the widget and clean up all listeners.
 ### `consumeThreadParam(param)`
 
 ```ts
-import { consumeThreadParam, DEFAULT_THREAD_PARAM } from '@airnauts/comments-client'
+import { consumeThreadParam, DEFAULT_THREAD_PARAM } from '@airnauts/airside-client'
 
 consumeThreadParam(DEFAULT_THREAD_PARAM)
 ```
@@ -94,7 +94,7 @@ Reads a `?airside-thread=<id>` deep-link param from the current URL, stores the 
 Low-level DOM capture functions used by the widget's anchoring engine; available if you need to build custom anchoring logic.
 
 ```ts
-import { captureElement, extractSignals, buildSelectors } from '@airnauts/comments-client'
+import { captureElement, extractSignals, buildSelectors } from '@airnauts/airside-client'
 ```
 
 | Export | Description |
@@ -104,10 +104,10 @@ import { captureElement, extractSignals, buildSelectors } from '@airnauts/commen
 | `buildSelectors(el)` | Build the dual `[structuralPath, classPath]` selector tuple |
 | `resolveUnique(selector, root?)` | Resolve a structural selector to a single element, or null if ambiguous |
 
-## Subpath: `@airnauts/comments-client/react`
+## Subpath: `@airnauts/airside-client/react`
 
 ```tsx
-import { AirsideLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/airside-client/react'
 ```
 
 Thin React wrapper that calls `airside.init()` in a `useEffect` and tears down on unmount.
@@ -131,20 +131,20 @@ The effect re-runs only when `airsideKey`, `endpoint`, or `keyParam` change — 
 
 | Peer | Required | Notes |
 |---|---|---|
-| `react` | Optional (^19.0.0) | Only needed for `@airnauts/comments-client/react` |
-| `react-dom` | Optional (^19.0.0) | Only needed for `@airnauts/comments-client/react` |
+| `react` | Optional (^19.0.0) | Only needed for `@airnauts/airside-client/react` |
+| `react-dom` | Optional (^19.0.0) | Only needed for `@airnauts/airside-client/react` |
 
-The main entry (`@airnauts/comments-client`) bundles its own React and does **not** require the host app to have React installed.
+The main entry (`@airnauts/airside-client`) bundles its own React and does **not** require the host app to have React installed.
 
 - Node.js ≥ 18 for server-side rendering stubs (the widget itself only runs in the browser)
 
 ## Related packages
 
-- **`@airnauts/comments-server`** — the HTTP API the widget talks to
-- **`@airnauts/comments-next`** — one-call Next.js App Router server integration
-- **`@airnauts/comments-core`** — shared types (consumed transitively)
+- **`@airnauts/airside-server`** — the HTTP API the widget talks to
+- **`@airnauts/airside-next`** — one-call Next.js App Router server integration
+- **`@airnauts/airside-core`** — shared types (consumed transitively)
 
-See the [integration guide](https://github.com/Airnauts/commenting-tool/blob/main/docs/integration.md) for a full walkthrough, with `examples/nextjs-host` as the worked example.
+See the [integration guide](https://github.com/Airnauts/airside/blob/main/docs/integration.md) for a full walkthrough, with `examples/nextjs-host` as the worked example.
 
 ## License
 

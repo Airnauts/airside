@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { consumeThreadParam, packageName } from './index'
 import { FOCUS_STORAGE_KEY } from './panel/navigate'
 
-describe('@airnauts/comments-client', () => {
+describe('@airnauts/airside-client', () => {
   it('exposes its package name (M1 shell smoke test)', () => {
-    expect(packageName).toBe('@airnauts/comments-client')
+    expect(packageName).toBe('@airnauts/airside-client')
   })
 
   it('runs in a DOM environment', () => {

@@ -7,7 +7,7 @@ lifted from it.
 ## 1. Install
 
 ```bash
-pnpm add @airnauts/comments-client @airnauts/comments-next @airnauts/comments-adapter-memory
+pnpm add @airnauts/airside-client @airnauts/airside-next @airnauts/airside-adapter-memory
 ```
 
 ## 2. Add the API route
@@ -15,8 +15,8 @@ pnpm add @airnauts/comments-client @airnauts/comments-next @airnauts/comments-ad
 Create `app/api/comments/[...path]/route.ts`:
 
 ```ts
-import { createAirsideAppRoute } from '@airnauts/comments-next'
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
+import { createAirsideAppRoute } from '@airnauts/airside-next'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 
 export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: 'dev-key',
@@ -47,7 +47,7 @@ In a client component rendered from your root layout:
 
 ```tsx
 'use client'
-import { AirsideLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/airside-client/react'
 
 export function CommentsMount() {
   return <AirsideLayer airsideKey="dev-key" endpoint="/api/comments" />
@@ -56,7 +56,7 @@ export function CommentsMount() {
 
 ```tsx
 // app/layout.tsx
-import { CommentsMount } from './components/comments-mount'
+import { CommentsMount } from './components/airside-mount'
 
 export default function RootLayout({ children }) {
   return (
@@ -78,30 +78,30 @@ Open any page with `?airside-key=dev-key`. The widget stays completely inert
 ## 5. Go to production
 
 ```bash
-pnpm add @airnauts/comments-adapter-mongo @airnauts/comments-storage-vercel-blob
-# (or @airnauts/comments-storage-fs for filesystem storage)
+pnpm add @airnauts/airside-adapter-mongo @airnauts/airside-storage-vercel-blob
+# (or @airnauts/airside-storage-fs for filesystem storage)
 ```
 
 Every adapter ships a uniform factory, so swapping the two ephemeral pieces for real
 infrastructure is config — no bespoke glue:
 
 - **Persistence:** replace `createMemoryRepository()` with `mongoRepository({ uri })` from
-  `@airnauts/comments-adapter-mongo`. It connects lazily on first use and memoizes the
+  `@airnauts/airside-adapter-mongo`. It connects lazily on first use and memoizes the
   connection (warm serverless / HMR reuse); the database name comes from the URI.
 - **Storage:** replace the stub with `createVercelBlobStorage({ token })` from
-  `@airnauts/comments-storage-vercel-blob` (pass `BLOB_READ_WRITE_TOKEN` explicitly), or
-  `createFileSystemStorage({ rootDir, baseUrl })` from `@airnauts/comments-storage-fs`
+  `@airnauts/airside-storage-vercel-blob` (pass `BLOB_READ_WRITE_TOKEN` explicitly), or
+  `createFileSystemStorage({ rootDir, baseUrl })` from `@airnauts/airside-storage-fs`
   (`baseUrl` makes `put` return a browser-served path instead of a `file://` URL).
 - **Origins:** set `allowedOrigins` to your real site origins.
 
 ```ts
 // app/api/comments/[...path]/route.ts
 import { join } from 'node:path'
-import { createAirsideAppRoute } from '@airnauts/comments-next'
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { mongoRepository } from '@airnauts/comments-adapter-mongo'
-import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
-import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createAirsideAppRoute } from '@airnauts/airside-next'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
+import { mongoRepository } from '@airnauts/airside-adapter-mongo'
+import { createFileSystemStorage } from '@airnauts/airside-storage-fs'
+import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
 export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: process.env.AIRSIDE_SECRET ?? 'dev-key',
@@ -155,7 +155,7 @@ the comment text, and a link to the page.
    factory returns an array):
 
 ```ts
-import { slackExtension } from '@airnauts/comments-notifier-slack'
+import { slackExtension } from '@airnauts/airside-extension-slack'
 
 createAirsideServer({
   repository,
@@ -184,7 +184,7 @@ deployment provenance) and persists a Jira link back on the thread.
 3. Wire the extension (again, spread the returned array):
 
 ```ts
-import { jiraExtension } from '@airnauts/comments-integration-jira'
+import { jiraExtension } from '@airnauts/airside-extension-jira'
 
 createAirsideServer({
   repository,

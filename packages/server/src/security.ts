@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto'
-import { KEY_HEADER_NAME } from '@airnauts/comments-core'
+import { KEY_HEADER_NAME } from '@airnauts/airside-core'
 import { AuthInvalidKeyError, OriginNotAllowedError } from './errors'
 
 /**

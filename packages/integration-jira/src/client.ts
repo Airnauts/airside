@@ -1,4 +1,4 @@
-import { IntegrationError } from '@airnauts/comments-server'
+import { IntegrationError } from '@airnauts/airside-server'
 import type { AdfDoc } from './adf'
 
 /** Connection + project settings for a Jira Cloud site. */

@@ -1,4 +1,4 @@
-import type { NotificationEvent, NotificationExtension } from '@airnauts/comments-server'
+import type { NotificationEvent, NotificationExtension } from '@airnauts/airside-server'
 import { formatEmail } from './format'
 
 /** A single outbound email, transport-agnostic. */

@@ -1,4 +1,4 @@
-import { repositoryContract } from '@airnauts/comments-test-support'
+import { repositoryContract } from '@airnauts/airside-test-support'
 import { PGlite } from '@electric-sql/pglite'
 import { afterAll, beforeAll } from 'vitest'
 import { createPostgresRepository, ensureSchema } from './index'

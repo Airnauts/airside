@@ -7,8 +7,8 @@ import type {
   ThreadId,
   ThreadListItem,
   ThreadStatus,
-} from '@airnauts/comments-core'
-import { unresolvedCountOf } from '@airnauts/comments-core'
+} from '@airnauts/airside-core'
+import { unresolvedCountOf } from '@airnauts/airside-core'
 import {
   type AnchorPatch,
   decodeCursor,
@@ -20,7 +20,7 @@ import {
   type NewThread,
   type Repository,
   type Scope,
-} from '@airnauts/comments-server'
+} from '@airnauts/airside-server'
 import { ensureSchema, type SqlExecutor } from './schema'
 
 /** Absent env is stored/queried as '' (never SQL NULL) so equality stays simple. */

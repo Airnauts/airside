@@ -1,4 +1,4 @@
-import type { Attachment, AttachmentId } from '@airnauts/comments-core'
+import type { Attachment, AttachmentId } from '@airnauts/airside-core'
 import { ValidationError } from '../errors'
 import type { Repository, Scope } from '../repository/types'
 

@@ -1,5 +1,5 @@
 // packages/client/src/ui/Pin.test.tsx
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { Pin } from './Pin'

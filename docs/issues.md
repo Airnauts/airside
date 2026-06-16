@@ -33,7 +33,7 @@ installed, and at runtime the missing-module error is caught and ignored.
 
 webpack can't see the `try/catch`, so when it statically traces the module graph
 it reports the unresolved `require('aws4')` as a warning. The trace reaches
-`mongodb` because `@airnauts/comments-adapter-mongo` does a top-level **value**
+`mongodb` because `@airnauts/airside-adapter-mongo` does a top-level **value**
 import — `import { ..., MongoClient } from 'mongodb'` in
 `packages/adapter-mongo/src/repository.ts`. That single value import pulls
 `mongodb/lib/index.js` → `client-side-encryption` → `deps.js`. (The other mongodb

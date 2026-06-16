@@ -1,5 +1,5 @@
 // packages/client/src/panel/state.ts
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 
 export type PanelFilter = 'open' | 'resolved' | 'all'
 

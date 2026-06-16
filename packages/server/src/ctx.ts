@@ -4,7 +4,7 @@ import {
   type CommentId,
   DEFAULT_THREAD_PARAM,
   type ThreadId,
-} from '@airnauts/comments-core'
+} from '@airnauts/airside-core'
 import { nanoid } from 'nanoid'
 
 export type IdFactory = {

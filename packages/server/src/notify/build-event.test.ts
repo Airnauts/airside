@@ -1,4 +1,4 @@
-import type { AuthorId, ThreadId } from '@airnauts/comments-core'
+import type { AuthorId, ThreadId } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
 import { buildNotificationEvent } from './build-event'
 

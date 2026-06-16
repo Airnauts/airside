@@ -1,6 +1,6 @@
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { createAirsideServer } from '@airnauts/comments-server'
-import { createDevServer } from '@airnauts/comments-server/dev'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
+import { createAirsideServer } from '@airnauts/airside-server'
+import { createDevServer } from '@airnauts/airside-server/dev'
 
 const storageStub = {
   async put(blob) {

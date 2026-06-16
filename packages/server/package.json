@@ -1,5 +1,5 @@
 {
-  "name": "@airnauts/comments-server",
+  "name": "@airnauts/airside-server",
   "version": "0.7.0",
   "description": "Server runtime for the Airnauts embeddable commenting tool: HTTP router, use-cases, CORS/security, and framework adapters (dev server, generic Node bridge).",
   "keywords": [
@@ -12,14 +12,14 @@
   ],
   "license": "MIT",
   "author": "Airnauts",
-  "homepage": "https://github.com/Airnauts/commenting-tool#readme",
+  "homepage": "https://github.com/Airnauts/airside#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Airnauts/commenting-tool.git",
+    "url": "git+https://github.com/Airnauts/airside.git",
     "directory": "packages/server"
   },
   "bugs": {
-    "url": "https://github.com/Airnauts/commenting-tool/issues"
+    "url": "https://github.com/Airnauts/airside/issues"
   },
   "type": "module",
   "exports": {
@@ -51,11 +51,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@airnauts/comments-core": "workspace:^",
+    "@airnauts/airside-core": "workspace:^",
     "nanoid": "^5.1.11"
   },
   "devDependencies": {
-    "@airnauts/comments-adapter-memory": "workspace:*",
-    "@airnauts/comments-test-support": "workspace:*"
+    "@airnauts/airside-adapter-memory": "workspace:*",
+    "@airnauts/airside-test-support": "workspace:*"
   }
 }

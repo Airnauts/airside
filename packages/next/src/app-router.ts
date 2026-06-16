@@ -1,4 +1,4 @@
-import type { AirsideServer } from '@airnauts/comments-server'
+import type { AirsideServer } from '@airnauts/airside-server'
 import { operationUrl } from './operation-url'
 
 /**

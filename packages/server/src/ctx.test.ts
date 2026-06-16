@@ -1,4 +1,4 @@
-import type { ThreadId } from '@airnauts/comments-core'
+import type { ThreadId } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
 import { defaultIds, makeCtx } from './ctx'
 

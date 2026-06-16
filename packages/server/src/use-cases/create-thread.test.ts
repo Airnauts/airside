@@ -1,11 +1,11 @@
-import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
+import { InMemoryRepository } from '@airnauts/airside-adapter-memory'
 import {
   ANCHOR_SCHEMA_VERSION,
   type AttachmentId,
   type CommentId,
   type ThreadId,
-} from '@airnauts/comments-core'
-import { makeAttachment, makeCreateThreadBody } from '@airnauts/comments-test-support'
+} from '@airnauts/airside-core'
+import { makeAttachment, makeCreateThreadBody } from '@airnauts/airside-test-support'
 import { describe, expect, it, vi } from 'vitest'
 import { defaultIds, makeCtx } from '../ctx'
 import { ValidationError } from '../errors'

@@ -1,11 +1,11 @@
-# @airnauts/comments-adapter-postgres
+# @airnauts/airside-adapter-postgres
 
-PostgreSQL repository adapter for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server. Stores threads in a hybrid relational + `jsonb` schema; driver-agnostic via a host-supplied `query()` executor.
+PostgreSQL repository adapter for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server. Stores threads in a hybrid relational + `jsonb` schema; driver-agnostic via a host-supplied `query()` executor.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/comments-adapter-postgres
+pnpm add @airnauts/airside-adapter-postgres
 # Add the pg driver only if you use postgresRepository() or a pg.Pool executor:
 pnpm add pg
 ```
@@ -15,14 +15,14 @@ pnpm add pg
 ## Quick start
 
 ```ts
-import { postgresRepository } from '@airnauts/comments-adapter-postgres'
+import { postgresRepository } from '@airnauts/airside-adapter-postgres'
 
 const repository = postgresRepository({
   connectionString: process.env.DATABASE_URL!,
 })
 ```
 
-Pass `repository` to `createAirsideServer` from `@airnauts/comments-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/comments-next`). The adapter connects lazily on first use and runs `ensureSchema` automatically.
+Pass `repository` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-next`). The adapter connects lazily on first use and runs `ensureSchema` automatically.
 
 ## API reference
 
@@ -43,7 +43,7 @@ Lower-level factory for callers that manage their own connection. Accepts anythi
 
 ```ts
 import { Pool } from '@neondatabase/serverless'
-import { createPostgresRepository, ensureSchema } from '@airnauts/comments-adapter-postgres'
+import { createPostgresRepository, ensureSchema } from '@airnauts/airside-adapter-postgres'
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL! })
 await ensureSchema(pool)
@@ -61,7 +61,7 @@ Production teams that prefer managed migrations can run the equivalent DDL throu
 ### `SqlExecutor` type
 
 ```ts
-import type { SqlExecutor } from '@airnauts/comments-adapter-postgres'
+import type { SqlExecutor } from '@airnauts/airside-adapter-postgres'
 // { query(text: string, params?: unknown[]): Promise<{ rows: unknown[] }> }
 ```
 
@@ -78,10 +78,10 @@ Implement this interface to plug in any Postgres-compatible driver.
 
 ## Related packages
 
-- **`@airnauts/comments-server`** — defines the `Repository` interface
-- **`@airnauts/comments-adapter-mongo`** — MongoDB alternative
-- **`@airnauts/comments-adapter-memory`** — in-memory adapter for dev/tests
-- **`@airnauts/comments-next`** — Next.js integration that accepts this adapter
+- **`@airnauts/airside-server`** — defines the `Repository` interface
+- **`@airnauts/airside-adapter-mongo`** — MongoDB alternative
+- **`@airnauts/airside-adapter-memory`** — in-memory adapter for dev/tests
+- **`@airnauts/airside-next`** — Next.js integration that accepts this adapter
 
 ## License
 

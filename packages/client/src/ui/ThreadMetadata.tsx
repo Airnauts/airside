@@ -1,5 +1,5 @@
 // packages/client/src/ui/ThreadMetadata.tsx
-import type { ExternalLink } from '@airnauts/comments-core'
+import type { ExternalLink } from '@airnauts/airside-core'
 
 /**
  * Generic, descriptor-driven metadata strip. Renders one external link per {@link ExternalLink}

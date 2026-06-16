@@ -1,4 +1,4 @@
-import { repositoryContract } from '@airnauts/comments-test-support'
+import { repositoryContract } from '@airnauts/airside-test-support'
 import { type Db, MongoClient } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import { afterAll, beforeAll, expect, it } from 'vitest'

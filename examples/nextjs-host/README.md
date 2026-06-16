@@ -1,6 +1,6 @@
 # Next.js host app
 
-A complete Next.js App Router integration of the `@airnauts/comments-*` packages through
+A complete Next.js App Router integration of the `@airnauts/airside-*` packages through
 their public seams. It doubles as the Playwright e2e test host and the worked example
 behind [`docs/integration.md`](../../docs/integration.md).
 
@@ -8,20 +8,20 @@ behind [`docs/integration.md`](../../docs/integration.md).
 
 1. Build the workspace packages it imports:
    ```bash
-   pnpm --filter @airnauts/comments-core \
-     --filter @airnauts/comments-server \
-     --filter @airnauts/comments-next \
-     --filter @airnauts/comments-client \
-     --filter @airnauts/comments-adapter-memory \
-     --filter @airnauts/comments-adapter-mongo \
-     --filter @airnauts/comments-integration-jira \
-     --filter @airnauts/comments-notifier-slack \
-     --filter @airnauts/comments-storage-fs \
-     --filter @airnauts/comments-storage-vercel-blob build
+   pnpm --filter @airnauts/airside-core \
+     --filter @airnauts/airside-server \
+     --filter @airnauts/airside-next \
+     --filter @airnauts/airside-client \
+     --filter @airnauts/airside-adapter-memory \
+     --filter @airnauts/airside-adapter-mongo \
+     --filter @airnauts/airside-extension-jira \
+     --filter @airnauts/airside-extension-slack \
+     --filter @airnauts/airside-storage-fs \
+     --filter @airnauts/airside-storage-vercel-blob build
    ```
 2. Start the app (in-memory persistence, zero config):
    ```bash
-   pnpm --filter @airnauts/comments-nextjs-host dev
+   pnpm --filter @airnauts/airside-nextjs-host dev
    ```
 3. Open <http://localhost:3000/?airside-key=dev-key>. Without the `airside-key`
    param the page is untouched and the widget is inert.
@@ -33,7 +33,7 @@ mode are written to a gitignored `public/uploads/` and served by Next.
 
 ## Manual smoke checklist
 
-Run against `pnpm --filter @airnauts/comments-nextjs-host dev`:
+Run against `pnpm --filter @airnauts/airside-nextjs-host dev`:
 
 1. Open `/` **without** the key → page untouched, widget inert.
 2. Open `/?airside-key=dev-key` → comment affordance appears; the first action

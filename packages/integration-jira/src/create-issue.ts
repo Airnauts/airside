@@ -1,4 +1,4 @@
-import type { ThreadActionContext, ThreadActionResult } from '@airnauts/comments-server'
+import type { ThreadActionContext, ThreadActionResult } from '@airnauts/airside-server'
 import { buildAdfDescription, buildSummary } from './adf'
 import { createJiraClient, type JiraConfig } from './client'
 

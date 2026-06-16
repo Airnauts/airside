@@ -5,7 +5,7 @@ import type {
   ThreadListItem,
   ThreadStatus,
   ThreadView,
-} from '@airnauts/comments-core'
+} from '@airnauts/airside-core'
 import type { Box, XY } from '../positioning/coords'
 
 /** A matched thread plus its on-screen geometry — what the runtime emits to the store. */

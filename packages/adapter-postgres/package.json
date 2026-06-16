@@ -1,5 +1,5 @@
 {
-  "name": "@airnauts/comments-adapter-postgres",
+  "name": "@airnauts/airside-adapter-postgres",
   "version": "0.7.0",
   "description": "PostgreSQL repository adapter for the Airnauts commenting tool server.",
   "keywords": [
@@ -14,14 +14,14 @@
   ],
   "license": "MIT",
   "author": "Airnauts",
-  "homepage": "https://github.com/Airnauts/commenting-tool#readme",
+  "homepage": "https://github.com/Airnauts/airside#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Airnauts/commenting-tool.git",
+    "url": "git+https://github.com/Airnauts/airside.git",
     "directory": "packages/adapter-postgres"
   },
   "bugs": {
-    "url": "https://github.com/Airnauts/commenting-tool/issues"
+    "url": "https://github.com/Airnauts/airside/issues"
   },
   "type": "module",
   "exports": {
@@ -45,8 +45,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@airnauts/comments-core": "workspace:^",
-    "@airnauts/comments-server": "workspace:^"
+    "@airnauts/airside-core": "workspace:^",
+    "@airnauts/airside-server": "workspace:^"
   },
   "peerDependencies": {
     "pg": "^8.11.0"
@@ -57,7 +57,7 @@
     }
   },
   "devDependencies": {
-    "@airnauts/comments-test-support": "workspace:*",
+    "@airnauts/airside-test-support": "workspace:*",
     "@electric-sql/pglite": "^0.5.1",
     "@types/pg": "^8.11.0",
     "pg": "^8.11.0"

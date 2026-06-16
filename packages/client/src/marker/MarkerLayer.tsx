@@ -1,4 +1,4 @@
-import type { Anchor, AttachmentId, Provenance } from '@airnauts/comments-core'
+import type { Anchor, AttachmentId, Provenance } from '@airnauts/airside-core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createRuntime } from '../anchor/runtime'
 import type { ApiClient } from '../api/client'

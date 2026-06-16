@@ -2,7 +2,7 @@ import {
   ANCHOR_SCHEMA_VERSION,
   type CreateThreadBody,
   type ThreadView,
-} from '@airnauts/comments-core'
+} from '@airnauts/airside-core'
 import type { Ctx } from '../ctx'
 import type { ExtensionRegistry } from '../extensions/registry'
 import type { NotificationExtension } from '../extensions/types'

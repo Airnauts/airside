@@ -1,11 +1,11 @@
-# @airnauts/comments-notifier-slack
+# @airnauts/airside-extension-slack
 
-Slack Incoming Webhook notification extension for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server. Posts a Block Kit message to a Slack channel whenever a reviewer creates a thread or adds a reply.
+Slack Incoming Webhook notification extension for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server. Posts a Block Kit message to a Slack channel whenever a reviewer creates a thread or adds a reply.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/comments-notifier-slack
+pnpm add @airnauts/airside-extension-slack
 ```
 
 ## Quick start
@@ -15,8 +15,8 @@ pnpm add @airnauts/comments-notifier-slack
 2. Pass the result to `createAirsideServer`:
 
 ```ts
-import { createAirsideServer } from '@airnauts/comments-server'
-import { slackExtension } from '@airnauts/comments-notifier-slack'
+import { createAirsideServer } from '@airnauts/airside-server'
+import { slackExtension } from '@airnauts/airside-extension-slack'
 
 createAirsideServer({
   repository,
@@ -45,7 +45,7 @@ Returns a `NotificationExtension[]` ready to pass to `extensions`. Notification 
 ### `formatSlackMessage(event)`
 
 ```ts
-import { formatSlackMessage } from '@airnauts/comments-notifier-slack'
+import { formatSlackMessage } from '@airnauts/airside-extension-slack'
 
 const message: SlackMessage = formatSlackMessage(event)
 // { text: string; blocks: unknown[] }
@@ -72,9 +72,9 @@ Renders a `NotificationEvent` as a Slack Block Kit message with a plain-text fal
 
 ## Related packages
 
-- **`@airnauts/comments-server`** — defines `NotificationExtension` and `NotificationEvent`
-- **`@airnauts/comments-notifier-email`** — email notification alternative
-- **`@airnauts/comments-integration-jira`** — Jira thread-action extension
+- **`@airnauts/airside-server`** — defines `NotificationExtension` and `NotificationEvent`
+- **`@airnauts/airside-extension-email`** — email notification alternative
+- **`@airnauts/airside-extension-jira`** — Jira thread-action extension
 
 ## License
 

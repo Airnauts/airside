@@ -1,4 +1,4 @@
-import type { ServerExtension } from '@airnauts/comments-server'
+import type { ServerExtension } from '@airnauts/airside-server'
 import type { JiraConfig } from './client'
 import { makeCreateJiraIssueFromThread } from './create-issue'
 

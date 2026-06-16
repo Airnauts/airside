@@ -1,4 +1,4 @@
-import { Attachment } from '@airnauts/comments-core'
+import { Attachment } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
 import { makeAttachment, makeNewThread } from './fixtures'
 

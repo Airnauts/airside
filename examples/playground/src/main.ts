@@ -1,4 +1,4 @@
-import { airside } from '@airnauts/comments-client'
+import { airside } from '@airnauts/airside-client'
 
 void airside.init({
   key: 'dev-key',

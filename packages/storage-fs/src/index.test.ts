@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { storageContract } from '@airnauts/comments-test-support'
+import { storageContract } from '@airnauts/airside-test-support'
 import { describe, expect, it } from 'vitest'
 import { createFileSystemStorage, FileSystemStorage } from './index'
 

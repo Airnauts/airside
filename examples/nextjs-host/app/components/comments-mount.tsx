@@ -1,6 +1,6 @@
 'use client'
 
-import { AirsideLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/airside-client/react'
 
 /**
  * Mounts the comments widget. `init()`'s gate keeps it inert until the page is

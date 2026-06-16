@@ -1,5 +1,5 @@
 // packages/client/src/panel/controller.test.ts
-import type { ThreadListItem, ThreadListResponse } from '@airnauts/comments-core'
+import type { ThreadListItem, ThreadListResponse } from '@airnauts/airside-core'
 import { describe, expect, it, vi } from 'vitest'
 import { createPanelController } from './controller'
 import { initialState, type PanelState, reducer } from './state'

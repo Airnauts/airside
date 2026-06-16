@@ -1,5 +1,5 @@
 // packages/client/src/ui/avatar.ts
-import type { Author } from '@airnauts/comments-core'
+import type { Author } from '@airnauts/airside-core'
 
 export function initials(author: Author): string {
   const name = author.name?.trim()

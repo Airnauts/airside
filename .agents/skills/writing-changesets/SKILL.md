@@ -22,7 +22,7 @@ Write a changeset only when a **publishable** package's shipped behavior changed
 
 These eight are publishable:
 
-| `@airnauts/comments-` | dir |
+| `@airnauts/airside-` | dir |
 |---|---|
 | core, server, client, next | `packages/{core,server,client,next}` |
 | adapter-memory, adapter-mongo | `packages/adapter-{memory,mongo}` |
@@ -62,8 +62,8 @@ and writes their "Updated dependencies" lines at version time. Listing them doub
    `.changeset/<short-kebab-slug>.md`:
    ```md
    ---
-   "@airnauts/comments-core": patch
-   "@airnauts/comments-server": minor
+   "@airnauts/airside-core": patch
+   "@airnauts/airside-server": minor
    ---
 
    Add an optional `pinned` flag to the Comment schema; the server now rejects

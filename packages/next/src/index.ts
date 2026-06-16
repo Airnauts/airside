@@ -1,5 +1,5 @@
-import type { AirsideServer, CreateAirsideServerOptions } from '@airnauts/comments-server'
-import { createAirsideServer } from '@airnauts/comments-server'
+import type { AirsideServer, CreateAirsideServerOptions } from '@airnauts/airside-server'
+import { createAirsideServer } from '@airnauts/airside-server'
 import { createNextHandler } from './app-router'
 import { createNextPagesHandler, type NodePagesHandler } from './pages-router'
 

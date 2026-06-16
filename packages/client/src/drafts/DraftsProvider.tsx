@@ -1,4 +1,4 @@
-import type { Attachment } from '@airnauts/comments-core'
+import type { Attachment } from '@airnauts/airside-core'
 import { createContext, type ReactNode, useContext, useMemo, useReducer } from 'react'
 import { type Draft, type DraftsState, draftsReducer, EMPTY_DRAFT } from './state'
 
