@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { type AirsideHandle, airside, type InitOptions } from '@airnauts/airside-client'
+import { useEffect } from 'react'
 
 export const packageName = '@airnauts/airside-integration-react'
 
