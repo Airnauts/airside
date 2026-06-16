@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-server",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Server runtime for the Airnauts embeddable commenting tool: HTTP router, use-cases, CORS/security, and framework adapters (dev server, generic Node bridge).",
   "keywords": [
     "comments",

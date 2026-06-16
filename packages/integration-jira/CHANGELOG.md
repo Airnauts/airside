@@ -1,5 +1,12 @@
 # @airnauts/airside-extension-jira
 
+## 0.8.2
+
+### Patch Changes
+
+- @airnauts/airside-core@0.8.2
+- @airnauts/airside-server@0.8.2
+
 ## 0.8.1
 
 ### Patch Changes

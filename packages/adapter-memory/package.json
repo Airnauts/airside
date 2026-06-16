@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-adapter-memory",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "In-memory repository adapter for the Airnauts commenting tool server.",
   "keywords": [
     "comments",

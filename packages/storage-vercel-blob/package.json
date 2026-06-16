@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-storage-vercel-blob",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Vercel Blob attachment-storage adapter for the Airnauts commenting tool server.",
   "keywords": [
     "comments",
