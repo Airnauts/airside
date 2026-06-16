@@ -1349,3 +1349,32 @@ The example also pointed `MONGODB_URI` at a database literally named `comments`.
 We unify **"up"** (prefix both) rather than **"down"** (drop the Postgres prefix to bare `threads`): the Postgres prefix is load-bearing in a shared schema, and prefixing Mongo too — though mildly redundant given its dedicated database — yields identical identifiers across adapters and stays safe if a consumer ever points Mongo at a shared database.
 
 **Consequences.** This is a breaking storage-schema change: `ensureSchema` / index creation make fresh `airside_*` tables/collections, so any pre-existing data under the old names is orphaned (a deliberate reset, consistent with ADR-0038's pre-1.0 stance). Safe to take now — the Postgres adapter is new with no production deployments, and the one Mongo consumer (lear-frontend) has not deployed its integration, so no live data is affected. Existing deployments, if any, must rename their tables/collections or re-create them. The `Comment` domain type, `comments[]` data fields, and "Add comment"/"Reply" UI copy remain unchanged — only the physical storage identifiers moved.
+
+## ADR-0040 — Extract the React mount into `@airnauts/airside-integration-react`
+
+- **Date:** 2026-06-16
+- **Status:** accepted
+
+**Context.** The host-facing `<AirsideLayer/>` React wrapper shipped as the
+`@airnauts/airside-client/react` subpath of the otherwise framework-agnostic widget
+engine. On the server side we already separate the framework-agnostic core
+(`airside-server`) from its host-framework integration (`airside-integration-next`).
+React is to the client what Next is to the server — one host-framework integration over
+a framework-agnostic core — but the package boundaries did not express that, and every
+non-Next React host still pulled the wrapper from inside `airside-client`.
+
+**Decision.** Promote the wrapper to a dedicated `@airnauts/airside-integration-react`
+package (depends on `airside-client`, `react` as a required peer, ships a `'use client'`
+banner). Remove the `@airnauts/airside-client/react` subpath outright — a clean break,
+no shim (a re-export shim would create a `client/react` → `integration-react` → `client`
+package cycle). `airside-integration-next` depends on `integration-react` and re-exports
+`AirsideLayer` via a new `./client` subpath, so Next users still get the route handlers
+and the mount from one package.
+
+**Consequences.** `airside-client` sheds its `react`/`react-dom` peer deps and becomes a
+zero-peer-dep vanilla package (it bundles its own React for the widget UI). Removing a
+published subpath is breaking; pre-1.0 that is a minor bump (fixed group → 0.9.0), and
+the only external consumer (`lear-frontend`) is under our control. Non-Next React hosts
+now depend only on `@airnauts/airside-integration-react`. This refines the widget-delivery
+shape recorded in ADR-0002 (the thin `<AirsideLayer/>` wrapper moves out of the client
+subpath); ADR-0002 otherwise stands.

@@ -11,6 +11,7 @@
       "@airnauts/airside-core",
       "@airnauts/airside-extension-jira",
       "@airnauts/airside-integration-next",
+      "@airnauts/airside-integration-react",
       "@airnauts/airside-extension-email",
       "@airnauts/airside-extension-slack",
       "@airnauts/airside-server",
