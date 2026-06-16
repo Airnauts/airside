@@ -1,5 +1,15 @@
 # @airnauts/comments-core
 
+## 0.8.0
+
+### Minor Changes
+
+- Rebrand: the package family is now published as `@airnauts/airside-*` (Airside). This is a breaking change — update your imports and: the React prop `airsideKey` (was `commentsKey`), URL params `?airside-key` / `?airside-thread`, the `x-airside-key` request header, `AIRSIDE_*` env vars, and (if you target the widget DOM) the `air:` CSS class prefix and `data-airside-*` attributes. The Slack/email/Jira integrations are now `@airnauts/airside-extension-{slack,email,jira}`. The former `@airnauts/comments-*` packages are deprecated with a pointer to their replacements.
+
+### Patch Changes
+
+- 402b2c4: Docs: corrected `scoreCandidate`, `decide`, and `locateQuote` signatures in the README — parameter order, return types, and descriptions now match the source.
+
 ## 0.7.0
 
 ## 0.6.0

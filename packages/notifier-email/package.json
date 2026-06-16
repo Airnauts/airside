@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-extension-email",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Email notifier (SMTP + Resend) for the Airnauts commenting tool server.",
   "keywords": [
     "comments",
