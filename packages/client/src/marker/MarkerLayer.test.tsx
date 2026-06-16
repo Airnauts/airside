@@ -62,7 +62,7 @@ describe('MarkerLayer place mode', () => {
     const target = document.querySelector('#t') as Element
     fireEvent.click(target, { clientX: 40, clientY: 8 })
     // A draft popover opens; no thread is created yet.
-    expect(await screen.findByTestId('comments-draft')).toBeInTheDocument()
+    expect(await screen.findByTestId('airside-draft')).toBeInTheDocument()
     expect(c.createThread).not.toHaveBeenCalled()
     // Type a comment and send.
     fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
@@ -124,7 +124,7 @@ describe('MarkerLayer place mode', () => {
     renderMarker(props(c))
     fireEvent.click(screen.getByTestId('airside-place'))
     fireEvent.click(document.querySelector('#t') as Element, { clientX: 40, clientY: 8 })
-    expect(await screen.findByTestId('comments-draft')).toBeInTheDocument()
+    expect(await screen.findByTestId('airside-draft')).toBeInTheDocument()
     fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
       target: { value: 'My first note' },
     })
@@ -143,7 +143,7 @@ describe('MarkerLayer place mode', () => {
     fireEvent.click(screen.getByTestId('airside-place'))
     fireEvent.keyDown(document, { key: 'Escape' })
     fireEvent.click(document.querySelector('#t') as Element, { clientX: 1, clientY: 1 })
-    expect(screen.queryByTestId('comments-draft')).toBeNull()
+    expect(screen.queryByTestId('airside-draft')).toBeNull()
     expect(c.createThread).not.toHaveBeenCalled()
   })
 
@@ -178,7 +178,7 @@ describe('MarkerLayer place mode', () => {
     renderMarker(props(c))
     fireEvent.click(screen.getByTestId('airside-place'))
     fireEvent.click(document.querySelector('#p') as Element, { clientX: 5, clientY: 5 })
-    expect(await screen.findByTestId('comments-draft')).toBeInTheDocument()
+    expect(await screen.findByTestId('airside-draft')).toBeInTheDocument()
     fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
       target: { value: 'See this' },
     })
@@ -335,7 +335,7 @@ describe('MarkerLayer panel integration', () => {
     }
     renderLayer(client)
     screen.getByTestId('airside-panel-open').click()
-    await waitFor(() => expect(screen.getByTestId('comments-panel')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByTestId('airside-panel')).toBeInTheDocument())
   })
 
   it('consumes a boot focus handoff after the first refresh', async () => {

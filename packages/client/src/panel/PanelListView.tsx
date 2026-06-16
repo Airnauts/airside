@@ -107,7 +107,7 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
 
       <div className="air:flex-1 air:overflow-y-auto">
         {state.needsReview.length > 0 && (
-          <div data-testid="comments-needs-review">
+          <div data-testid="airside-needs-review">
             <div className="air:px-3 air:py-1.5 air:text-[11px] air:font-semibold air:text-amber-700 air:bg-amber-50">
               ⚠ Needs review ({state.needsReview.length})
             </div>
@@ -117,7 +117,7 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
         )}
 
         {state.loading && (
-          <StatusNotice data-testid="comments-panel-loading">Loading…</StatusNotice>
+          <StatusNotice data-testid="airside-panel-loading">Loading…</StatusNotice>
         )}
 
         {state.error && !state.loading && (
@@ -130,7 +130,7 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
           !state.error &&
           mainList.length === 0 &&
           state.needsReview.length === 0 && (
-            <StatusNotice data-testid="comments-panel-empty">No comments yet</StatusNotice>
+            <StatusNotice data-testid="airside-panel-empty">No comments yet</StatusNotice>
           )}
 
         {mainList.map(renderRow)}
@@ -139,7 +139,7 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
           <Button
             variant="link"
             size="inline"
-            data-testid="comments-panel-loadmore"
+            data-testid="airside-panel-loadmore"
             onClick={() => void panel.loadMore()}
             disabled={state.loadingMore}
             className="air:w-full air:py-2.5 air:text-xs air:border-t air:border-gray-200 air:hover:no-underline"

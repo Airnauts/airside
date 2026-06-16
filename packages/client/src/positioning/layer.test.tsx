@@ -69,6 +69,6 @@ describe('PinLayer', () => {
         highlight: [{ x: 1, y: 2, width: 5, height: 6 }],
       },
     ])
-    expect(screen.getAllByTestId('comments-highlight')).toHaveLength(1)
+    expect(screen.getAllByTestId('airside-highlight')).toHaveLength(1)
   })
 })

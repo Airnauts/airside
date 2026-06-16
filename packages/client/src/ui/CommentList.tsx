@@ -46,7 +46,7 @@ export function CommentList({
   if (loading) {
     return (
       <div
-        data-testid="comments-skeleton"
+        data-testid="airside-skeleton"
         role="status"
         aria-busy="true"
         aria-label="Loading comments"

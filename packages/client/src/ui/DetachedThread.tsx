@@ -18,7 +18,7 @@ export function DetachedThread({ client }: DetachedThreadProps) {
   if (!detail) return null // detail still loading; the lost-anchor toast already informed the user
   return (
     <div
-      data-testid="comments-detached"
+      data-testid="airside-detached"
       className="air:fixed air:top-4 air:left-1/2 air:-translate-x-1/2 air:z-[var(--air-z-surface)] air:pointer-events-auto"
     >
       <div className="air:mb-1 air:w-80 air:max-w-[calc(100vw-16px)] air:flex air:items-center air:gap-1 air:px-2 air:py-1 air:rounded-[4px] air:bg-amber-100 air:text-amber-700 air:text-[11px] air:font-medium">

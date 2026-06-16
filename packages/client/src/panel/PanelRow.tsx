@@ -35,7 +35,7 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
     <div data-thread-id={item.id} className="air:border-b air:border-[#f1f3f5]">
       <button
         type="button"
-        data-testid="comments-panel-row"
+        data-testid="airside-panel-row"
         onClick={onSelect}
         aria-label={`Open thread on ${context}`}
         className="air:w-full air:flex air:items-start air:gap-2 air:px-3 air:pt-2.5 air:pb-1 air:text-left air:bg-transparent air:border-0 air:cursor-pointer air:hover:bg-gray-50"

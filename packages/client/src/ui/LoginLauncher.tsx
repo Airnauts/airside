@@ -27,7 +27,7 @@ export function LoginLauncher({ onLogIn }: LoginLauncherProps) {
         variant="primary"
         size="md"
         aria-label="Log in"
-        data-testid="comments-login"
+        data-testid="airside-login"
         onClick={onLogIn}
         className="air:gap-1.5 air:shadow-[0_6px_20px_rgba(0,0,0,0.18)]"
       >

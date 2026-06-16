@@ -29,7 +29,7 @@ describe('PanelRow', () => {
     expect(screen.getByText('Ann')).toBeInTheDocument()
     expect(screen.getByText('Pricing')).toBeInTheDocument()
     expect(screen.getByText('2 Replies')).toBeInTheDocument()
-    fireEvent.click(screen.getByTestId('comments-panel-row'))
+    fireEvent.click(screen.getByTestId('airside-panel-row'))
     expect(onSelect).toHaveBeenCalled()
   })
 
@@ -85,7 +85,7 @@ describe('PanelRow', () => {
 
   it('exposes a descriptive aria-label', () => {
     render(<PanelRow item={item()} onSelect={() => {}} onReply={() => {}} onResolve={() => {}} />)
-    expect(screen.getByTestId('comments-panel-row')).toHaveAccessibleName(/open thread on Pricing/i)
+    expect(screen.getByTestId('airside-panel-row')).toHaveAccessibleName(/open thread on Pricing/i)
   })
 
   it('calls onResolve when the resolve button is clicked', () => {

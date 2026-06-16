@@ -17,7 +17,7 @@ const comment = (over: Partial<Comment> = {}): Comment =>
 describe('CommentList', () => {
   it('renders a skeleton while loading', () => {
     render(<CommentList comments={[]} loading error={false} />)
-    expect(screen.getByTestId('comments-skeleton')).toBeInTheDocument()
+    expect(screen.getByTestId('airside-skeleton')).toBeInTheDocument()
   })
   it('renders the empty state when there are no comments and not loading', () => {
     render(<CommentList comments={[]} loading={false} error={false} />)

@@ -55,13 +55,13 @@ function setup() {
 describe('DetachedThread', () => {
   it('renders nothing when no thread is open', () => {
     setup()
-    expect(screen.queryByTestId('comments-detached')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('airside-detached')).not.toBeInTheDocument()
   })
 
   it('renders the card for an open thread that has no pin placement, with the anchor-lost banner', async () => {
     setup()
     screen.getByText('open').click()
-    await waitFor(() => expect(screen.getByTestId('comments-detached')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByTestId('airside-detached')).toBeInTheDocument())
     expect(screen.getByText('Button moved')).toBeInTheDocument()
     expect(screen.getByText(/anchor was lost/i)).toBeInTheDocument()
   })
@@ -69,8 +69,8 @@ describe('DetachedThread', () => {
   it('closes via the card close button', async () => {
     setup()
     screen.getByText('open').click()
-    await waitFor(() => screen.getByTestId('comments-detached'))
+    await waitFor(() => screen.getByTestId('airside-detached'))
     screen.getByRole('button', { name: /close/i }).click()
-    await waitFor(() => expect(screen.queryByTestId('comments-detached')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByTestId('airside-detached')).not.toBeInTheDocument())
   })
 })

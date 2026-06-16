@@ -30,7 +30,7 @@ export function DraftPopover({ client, onCreate }: DraftPopoverProps) {
       <Popover.Root open onOpenChange={(o) => !o && dispatch({ type: 'CLEAR_DRAFT' })}>
         <Popover.Anchor asChild>
           <div
-            data-testid="comments-draft-pin"
+            data-testid="airside-draft-pin"
             aria-hidden="true"
             className="air:absolute air:w-[42px] air:h-[42px] air:-ml-[21px] air:-mt-[42px] air:pointer-events-none"
             style={{ transform: `translate(${draft.pin.x}px, ${draft.pin.y}px)` }}
@@ -51,7 +51,7 @@ export function DraftPopover({ client, onCreate }: DraftPopoverProps) {
             sideOffset={8}
             collisionPadding={8}
             onOpenAutoFocus={(e) => e.preventDefault()}
-            data-testid="comments-draft"
+            data-testid="airside-draft"
             className="air:z-[var(--air-z-surface)] air:w-80 air:max-w-[calc(100vw-16px)] air:bg-white air:border air:border-gray-200 air:rounded-xl air:pointer-events-auto air:overflow-hidden air:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
           >
             {draft.anchor.selection?.quote && (

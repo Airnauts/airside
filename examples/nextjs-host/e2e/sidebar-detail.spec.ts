@@ -14,30 +14,30 @@ test.describe('sidebar master–detail', () => {
     await placeElementPin(page, 'Starter', body)
 
     await page.getByTestId('airside-panel-open').click()
-    await expect(page.getByTestId('comments-panel')).toBeVisible()
+    await expect(page.getByTestId('airside-panel')).toBeVisible()
 
     // Click this test's row (root text appears in the card).
-    const row = page.getByTestId('comments-panel-row').filter({ hasText: body })
+    const row = page.getByTestId('airside-panel-row').filter({ hasText: body })
     await expect(row).toHaveCount(1)
     await row.first().click()
 
     // The in-sidebar detail opens (Back button) while the panel stays open and the pin focuses.
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
-    await expect(page.getByTestId('comments-panel')).toBeVisible()
+    await expect(page.getByTestId('airside-panel')).toBeVisible()
     await expect(page.getByTestId('airside-pin-pulse')).toBeVisible()
     // The thread's comment must actually render in the detail on the FIRST open (regression guard:
     // the detail used to read comments via openId, which the pin popover nulled → empty on first open).
-    await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
+    await expect(page.getByTestId('airside-panel').getByText(body)).toBeVisible()
     // The reply input is focused on detail entry so the user can type immediately. This is the
     // real-browser check: the Composer mounts inside a Radix Dialog (which has its own focus
     // management) — jsdom can't observe that interaction.
-    await expect(page.getByTestId('comments-panel').getByPlaceholder(/reply/i)).toBeFocused()
+    await expect(page.getByTestId('airside-panel').getByPlaceholder(/reply/i)).toBeFocused()
     // No navigation occurred.
     await expect(page).toHaveURL(/\/pricing/)
 
     // Back returns to the list.
     await page.getByRole('button', { name: /back/i }).click()
-    await expect(page.getByTestId('comments-panel-row').filter({ hasText: body })).toBeVisible()
+    await expect(page.getByTestId('airside-panel-row').filter({ hasText: body })).toBeVisible()
   })
 
   test('an open pin popover survives opening and interacting with the sidebar', async ({
@@ -54,7 +54,7 @@ test.describe('sidebar master–detail', () => {
 
     // Opening the sidebar must NOT dismiss the open pin popover.
     await page.getByTestId('airside-panel-open').click()
-    await expect(page.getByTestId('comments-panel')).toBeVisible()
+    await expect(page.getByTestId('airside-panel')).toBeVisible()
     await expect(page.getByTestId('airside-pin-popover')).toBeVisible()
 
     // Interacting with the sidebar (a filter chip) must NOT dismiss it either.
@@ -94,8 +94,8 @@ test.describe('sidebar master–detail', () => {
     await activate(page, '/pricing', ns)
     await login(page)
     await page.getByTestId('airside-panel-open').click()
-    await expect(page.getByTestId('comments-panel')).toBeVisible()
-    const row = page.getByTestId('comments-panel-row').filter({ hasText: body })
+    await expect(page.getByTestId('airside-panel')).toBeVisible()
+    const row = page.getByTestId('airside-panel-row').filter({ hasText: body })
     await expect(row).toHaveCount(1)
     await row.first().click()
 
@@ -104,10 +104,10 @@ test.describe('sidebar master–detail', () => {
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
     await expect(page.getByTestId('airside-pin-pulse')).toBeVisible()
     // The restored detail must render the thread's comment (cross-page fallback reads detail by id).
-    await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
+    await expect(page.getByTestId('airside-panel').getByText(body)).toBeVisible()
     // Cross-page focus: the reply input is focused after the fresh-page Dialog open + restore.
     // This is the path most at risk (Radix open-autofocus competing with the Composer mount).
-    await expect(page.getByTestId('comments-panel').getByPlaceholder(/reply/i)).toBeFocused()
+    await expect(page.getByTestId('airside-panel').getByPlaceholder(/reply/i)).toBeFocused()
   })
 
   test('?airside-thread deep-link opens the detail and strips the param', async ({ page }) => {
@@ -132,7 +132,7 @@ test.describe('sidebar master–detail', () => {
 
     // The detail opens automatically and the deep-link param is stripped from the URL.
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
-    await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
+    await expect(page.getByTestId('airside-panel').getByText(body)).toBeVisible()
     await expect(page).not.toHaveURL(/airside-thread/)
   })
 })

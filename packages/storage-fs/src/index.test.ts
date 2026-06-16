@@ -10,7 +10,7 @@ import { createFileSystemStorage, FileSystemStorage } from './index'
 storageContract(
   'fs',
   async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'comments-storage-fs-'))
+    const dir = mkdtempSync(join(tmpdir(), 'airside-storage-fs-'))
     return new FileSystemStorage({ rootDir: dir })
   },
   async (url) => new Uint8Array(await readFile(fileURLToPath(url))),
@@ -22,21 +22,21 @@ function blob(name = 'a.bin') {
 
 describe('createFileSystemStorage baseUrl', () => {
   it('returns a baseUrl-relative url when baseUrl is set', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'comments-storage-fs-'))
+    const dir = mkdtempSync(join(tmpdir(), 'airside-storage-fs-'))
     const store = createFileSystemStorage({ rootDir: dir, baseUrl: '/uploads' })
     const res = await store.put(blob())
     expect(res.url).toBe(`/uploads/${res.key}`)
   })
 
   it('strips a trailing slash on baseUrl', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'comments-storage-fs-'))
+    const dir = mkdtempSync(join(tmpdir(), 'airside-storage-fs-'))
     const store = createFileSystemStorage({ rootDir: dir, baseUrl: '/uploads/' })
     const res = await store.put(blob())
     expect(res.url).toBe(`/uploads/${res.key}`)
   })
 
   it('falls back to a file:// url when baseUrl is absent', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'comments-storage-fs-'))
+    const dir = mkdtempSync(join(tmpdir(), 'airside-storage-fs-'))
     const store = createFileSystemStorage({ rootDir: dir })
     const res = await store.put(blob())
     expect(res.url.startsWith('file://')).toBe(true)

@@ -23,7 +23,7 @@ export function PinLayer({ placements, client }: PinLayerProps) {
         p.highlight.map((h) => (
           <div
             key={`${p.item.id}-hl-${h.x}-${h.y}-${h.width}-${h.height}`}
-            data-testid="comments-highlight"
+            data-testid="airside-highlight"
             data-airside-highlight
             className="air:absolute air:bg-blue-600/20 air:pointer-events-none"
             // transform + dims are computed → inline

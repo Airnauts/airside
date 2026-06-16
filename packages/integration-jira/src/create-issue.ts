@@ -20,7 +20,7 @@ export function makeCreateJiraIssueFromThread(cfg: JiraConfig, labels?: string[]
     // Recovery aid for the create-succeeds/persist-fails edge case: if the
     // server fails to persist the externalLink, the key/url survives in logs.
     console.log(
-      `[comments-jira] created issue ${issue.key} (${issue.url}) for thread ${ctx.thread.id}`,
+      `[airside-jira] created issue ${issue.key} (${issue.url}) for thread ${ctx.thread.id}`,
     )
     return {
       externalLink: {

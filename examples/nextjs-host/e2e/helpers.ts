@@ -21,14 +21,14 @@ export async function activate(page: Page, path = '/', ns = '') {
   // localStorage (a later navigation within a logged-in test), the full launcher. `login()`
   // drives the actual sign-in; it is idempotent, so calling it after every activate is safe.
   await expect(
-    page.getByTestId('comments-login').or(page.getByTestId('airside-place')),
+    page.getByTestId('airside-login').or(page.getByTestId('airside-place')),
   ).toBeVisible()
 }
 
 /** Log in with a self-asserted email so the full commenting UI unlocks. Idempotent: a no-op
  *  if the Log In button isn't showing (already logged in). */
 export async function login(page: Page, email = 'reviewer@example.com') {
-  const trigger = page.getByTestId('comments-login')
+  const trigger = page.getByTestId('airside-login')
   if (!(await trigger.isVisible().catch(() => false))) return
   await trigger.click()
   const dialog = page.getByRole('dialog')
@@ -42,7 +42,7 @@ export async function login(page: Page, email = 'reviewer@example.com') {
 export async function placeElementPin(page: Page, targetText: string, body: string) {
   await page.getByTestId('airside-place').click()
   await page.getByText(targetText, { exact: false }).first().click()
-  const draft = page.getByTestId('comments-draft')
+  const draft = page.getByTestId('airside-draft')
   await expect(draft).toBeVisible()
   await draft.getByRole('textbox').fill(body)
   await draft.getByRole('button', { name: 'Send' }).click()
@@ -89,7 +89,7 @@ export async function placeTextSelection(page: Page, targetText: string, body: s
     return true
   }, targetText)
   if (!ok) throw new Error(`could not select text "${targetText}"`)
-  const draft = page.getByTestId('comments-draft')
+  const draft = page.getByTestId('airside-draft')
   await expect(draft).toBeVisible()
   await draft.getByRole('textbox').fill(body)
   await draft.getByRole('button', { name: 'Send' }).click()

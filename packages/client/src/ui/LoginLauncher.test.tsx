@@ -6,7 +6,7 @@ describe('LoginLauncher', () => {
   it('renders a Log In button and calls onLogIn when clicked', () => {
     const onLogIn = vi.fn()
     render(<LoginLauncher onLogIn={onLogIn} />)
-    const btn = screen.getByTestId('comments-login')
+    const btn = screen.getByTestId('airside-login')
     expect(btn).toHaveAccessibleName('Log in')
     fireEvent.click(btn)
     expect(onLogIn).toHaveBeenCalledOnce()

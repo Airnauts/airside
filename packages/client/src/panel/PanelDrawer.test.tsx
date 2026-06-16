@@ -143,9 +143,9 @@ describe('PanelDrawer', () => {
 
   it('renders rows once opened and hides the drawer until then', async () => {
     setup({ threads: [item({ id: 'a' }), item({ id: 'b' })] })
-    expect(screen.queryByTestId('comments-panel')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('airside-panel')).not.toBeInTheDocument()
     screen.getByText('open').click()
-    await waitFor(() => expect(screen.getAllByTestId('comments-panel-row')).toHaveLength(2))
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(2))
   })
 
   it('shows a Needs-review section for open orphans and excludes them from the main list', async () => {
@@ -154,9 +154,9 @@ describe('PanelDrawer', () => {
       review: [item({ id: 'orph', anchorState: 'orphaned' })],
     })
     screen.getByText('open').click()
-    await waitFor(() => expect(screen.getByTestId('comments-needs-review')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByTestId('airside-needs-review')).toBeInTheDocument())
     // 'orph' appears once (in review), 'a' once (in main) → 2 rows total, not 3
-    await waitFor(() => expect(screen.getAllByTestId('comments-panel-row')).toHaveLength(2))
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(2))
   })
 
   it('cross-page row click stashes the focus id (then navigates)', async () => {
@@ -165,8 +165,8 @@ describe('PanelDrawer', () => {
       resolvePageKey: () => 'x.test/other',
     })
     screen.getByText('open').click()
-    await waitFor(() => screen.getByTestId('comments-panel-row'))
-    act(() => screen.getByTestId('comments-panel-row').click())
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    act(() => screen.getByTestId('airside-panel-row').click())
     expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBe(
       JSON.stringify({ id: 'a', openDetail: true }),
     )
@@ -178,10 +178,10 @@ describe('PanelDrawer', () => {
       resolvePageKey: () => 'x.test/here',
     })
     screen.getByText('open').click()
-    await waitFor(() => screen.getByTestId('comments-panel-row'))
-    act(() => screen.getByTestId('comments-panel-row').click())
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    act(() => screen.getByTestId('airside-panel-row').click())
     await waitFor(() => expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument())
-    expect(screen.queryByTestId('comments-panel')).toBeInTheDocument()
+    expect(screen.queryByTestId('airside-panel')).toBeInTheDocument()
     expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBeNull()
   })
 
@@ -191,8 +191,8 @@ describe('PanelDrawer', () => {
       resolvePageKey: () => 'x.test/here',
     })
     screen.getByText('open').click()
-    await waitFor(() => screen.getByTestId('comments-panel-row'))
-    act(() => screen.getByTestId('comments-panel-row').click())
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    act(() => screen.getByTestId('airside-panel-row').click())
     await waitFor(() => expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument())
     expect(screen.queryByRole('button', { name: 'Open' })).not.toBeInTheDocument()
   })
@@ -203,11 +203,11 @@ describe('PanelDrawer', () => {
       resolvePageKey: () => 'x.test/here',
     })
     screen.getByText('open').click()
-    await waitFor(() => screen.getByTestId('comments-panel-row'))
-    act(() => screen.getByTestId('comments-panel-row').click())
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    act(() => screen.getByTestId('airside-panel-row').click())
     await waitFor(() => screen.getByRole('button', { name: /back/i }))
     act(() => screen.getByRole('button', { name: /back/i }).click())
-    await waitFor(() => expect(screen.getByTestId('comments-panel-row')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByTestId('airside-panel-row')).toBeInTheDocument())
   })
 
   it('detail view renders comments for a thread not in the list (cross-page fallback, openId null)', async () => {
@@ -225,7 +225,7 @@ describe('PanelDrawer', () => {
 
     // Open the panel and wait for the initial rows to render.
     screen.getByText('open').click()
-    await waitFor(() => expect(screen.getAllByTestId('comments-panel-row')).toHaveLength(1))
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(1))
 
     // Clear the mock so only calls AFTER this point are counted.
     client.listThreads.mockClear()
@@ -242,7 +242,7 @@ describe('PanelDrawer', () => {
     act(() => {
       screen.getByText('close').click()
     })
-    await waitFor(() => expect(screen.queryByTestId('comments-panel')).not.toBeInTheDocument())
+    await waitFor(() => expect(screen.queryByTestId('airside-panel')).not.toBeInTheDocument())
 
     // Another status change must NOT trigger a refetch since the listener was removed.
     client.listThreads.mockClear()

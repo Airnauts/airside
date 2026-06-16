@@ -56,7 +56,7 @@ export function CommentsMount() {
 
 ```tsx
 // app/layout.tsx
-import { CommentsMount } from './components/airside-mount'
+import { CommentsMount } from './components/comments-mount'
 
 export default function RootLayout({ children }) {
   return (
