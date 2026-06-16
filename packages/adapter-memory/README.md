@@ -5,6 +5,9 @@
       <img src="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-light.svg" alt="Airside" height="40">
     </picture>
   </a>
+  <h1 align="center">
+Embeddable Commenting Tool
+</h1>
 </p>
 
 # @airnauts/airside-adapter-memory
