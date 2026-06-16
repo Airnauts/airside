@@ -62,18 +62,18 @@ importers:
       '@airnauts/airside-client':
         specifier: workspace:*
         version: link:../../packages/client
-      '@airnauts/airside-extension-jira':
-        specifier: workspace:*
-        version: link:../../packages/integration-jira
-      '@airnauts/airside-integration-next':
-        specifier: workspace:*
-        version: link:../../packages/next
       '@airnauts/airside-extension-email':
         specifier: workspace:*
         version: link:../../packages/notifier-email
+      '@airnauts/airside-extension-jira':
+        specifier: workspace:*
+        version: link:../../packages/integration-jira
       '@airnauts/airside-extension-slack':
         specifier: workspace:*
         version: link:../../packages/notifier-slack
+      '@airnauts/airside-integration-next':
+        specifier: workspace:*
+        version: link:../../packages/next
       '@airnauts/airside-server':
         specifier: workspace:*
         version: link:../../packages/server
@@ -271,6 +271,37 @@ importers:
       '@airnauts/airside-test-support':
         specifier: workspace:*
         version: link:../test-support
+
+  packages/integration-react:
+    dependencies:
+      '@airnauts/airside-client':
+        specifier: workspace:^
+        version: link:../client
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.6.3
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^16.2.0
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.15
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.15)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.4
+        version: 4.7.0(vite@7.3.3(@types/node@22.19.19)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.3)(yaml@2.9.0))
+      jsdom:
+        specifier: ^26.0.0
+        version: 26.1.0
+      react:
+        specifier: ^19.0.0
+        version: 19.2.6
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.6(react@19.2.6)
 
   packages/next:
     dependencies:
