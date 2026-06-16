@@ -12,7 +12,7 @@ beforeAll(async () => {
   mongod = await MongoMemoryServer.create()
   client = new MongoClient(mongod.getUri())
   await client.connect()
-  db = client.db('comments_test')
+  db = client.db('airside_test')
   await ensureIndexes(db)
 }, 60_000)
 

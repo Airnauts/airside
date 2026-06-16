@@ -72,7 +72,7 @@ describe('createNextPagesHandler', () => {
     await handler(
       fakeReq({
         method: 'POST',
-        url: '/api/comments/threads',
+        url: '/api/airside/threads',
         query: { path: ['threads'] },
         headers,
         body: JSON.stringify(makeCreateThreadBody()),
@@ -87,7 +87,7 @@ describe('createNextPagesHandler', () => {
     await handler(
       fakeReq({
         method: 'GET',
-        url: `/api/comments/threads/${id}`,
+        url: `/api/airside/threads/${id}`,
         query: { path: ['threads', id] },
         headers,
       }),
@@ -101,7 +101,7 @@ describe('createNextPagesHandler', () => {
     const handler = build()
     const req = fakeReq({
       method: 'POST',
-      url: '/api/comments/threads',
+      url: '/api/airside/threads',
       query: { path: ['threads'] },
       headers,
     })
@@ -117,7 +117,7 @@ describe('createNextPagesHandler', () => {
     await handler(
       fakeReq({
         method: 'OPTIONS',
-        url: '/api/comments/threads',
+        url: '/api/airside/threads',
         query: { path: ['threads'] },
         headers: { origin: 'https://app.example.com', 'access-control-request-method': 'POST' },
       }),

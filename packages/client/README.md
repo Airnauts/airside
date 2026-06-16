@@ -19,7 +19,7 @@ pnpm add react react-dom
 import { AirsideLayer } from '@airnauts/airside-client/react'
 
 export function AirsideMount() {
-  return <AirsideLayer airsideKey="your-secret-key" endpoint="/api/comments" />
+  return <AirsideLayer airsideKey="your-secret-key" endpoint="/api/airside" />
 }
 ```
 
@@ -32,7 +32,7 @@ import { airside } from '@airnauts/airside-client'
 
 const handle = await airside.init({
   key: 'your-secret-key',
-  endpoint: '/api/comments',
+  endpoint: '/api/airside',
 })
 
 // Later, to tear down:
@@ -56,7 +56,7 @@ const handle: AirsideHandle = await airside.init(options)
 | Option | Type | Description |
 |---|---|---|
 | `key` | `string` | Secret key sent as `x-airside-key` on every API request |
-| `endpoint` | `string` | Base URL of the comments API (e.g. `"/api/comments"`) |
+| `endpoint` | `string` | Base URL of the comments API (e.g. `"/api/airside"`) |
 | `pageKey` | `(url: string) => string` | Override the default `origin + pathname` page identity |
 | `keyParam` | `string` | URL param the activation gate reads (default `"airside-key"`) |
 | `threadParam` | `string` | URL param used for thread deep-links (default `"airside-thread"`) |
@@ -119,7 +119,7 @@ All `InitOptions` fields except `key`, which becomes `airsideKey` (React reserve
 ```tsx
 <AirsideLayer
   airsideKey="your-secret-key"
-  endpoint="/api/comments"
+  endpoint="/api/airside"
   features={{ screenshots: true, textAnchors: true }}
   pageKey={(url) => new URL(url).origin + new URL(url).pathname}
 />

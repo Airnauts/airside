@@ -19,7 +19,7 @@ The v1 reference deployment (architecture §2; ADR-0001, ADR-0003). It mounts
 | Var | Purpose |
 |---|---|
 | `MONGODB_URI` | Atlas connection string |
-| `AIRSIDE_DB_NAME` | database name (e.g. `comments`) |
+| `AIRSIDE_DB_NAME` | database name (e.g. `airside`) |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (read automatically by `@vercel/blob`) |
 | `AIRSIDE_SECRET_KEY` | the capability key — the value the widget sends |
 | `AIRSIDE_ALLOWED_ORIGINS` | comma-separated origin allowlist |
@@ -63,7 +63,7 @@ export async function getServer() {
 ## 4. Mount the route (one line)
 
 ```ts
-// app/api/comments/[...path]/route.ts
+// app/api/airside/[...path]/route.ts
 import { createAirsideAppRoute } from '@airnauts/airside-next'
 import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
@@ -80,7 +80,7 @@ export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
 ## 5. Verify the round-trip
 
 ```bash
-curl -i -X POST https://YOUR_APP/api/comments/threads \
+curl -i -X POST https://YOUR_APP/api/airside/threads \
   -H "x-airside-key: $AIRSIDE_SECRET_KEY" \
   -H "origin: https://YOUR_APP" \
   -H 'content-type: application/json' \

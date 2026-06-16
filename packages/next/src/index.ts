@@ -11,7 +11,7 @@ type AppRouteHandlers = ReturnType<typeof createNextHandler>
 
 /**
  * Build the commenting server and its Next **App Router** catch-all handlers in
- * one call. Mount as `app/api/comments/[...path]/route.ts`:
+ * one call. Mount as `app/api/airside/[...path]/route.ts`:
  *
  *   export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute(config)
  *
@@ -31,7 +31,7 @@ export function createAirsideAppRoute(
 
 /**
  * Build the commenting server and a single Next **Pages Router** API-route
- * handler. Mount as `pages/api/comments/[...path].ts`:
+ * handler. Mount as `pages/api/airside/[...path].ts`:
  *
  *   export const config = { api: { bodyParser: false } } // required — Next reads it statically
  *   export default createAirsidePagesRoute(config)

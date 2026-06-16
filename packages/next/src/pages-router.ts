@@ -15,7 +15,7 @@ export type NodePagesRequest = IncomingMessage & {
 export type NodePagesHandler = (req: NodePagesRequest, res: ServerResponse) => Promise<void>
 
 /**
- * Pages Router glue for `pages/api/comments/[...path].ts`:
+ * Pages Router glue for `pages/api/airside/[...path].ts`:
  *   export const config = { api: { bodyParser: false } }
  *   export default createNextPagesHandler(server)
  *

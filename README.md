@@ -21,7 +21,7 @@ pnpm add @airnauts/airside-next @airnauts/airside-client \
 
 ### 2. Mount the API route
 
-Create `app/api/comments/[...path]/route.ts`:
+Create `app/api/airside/[...path]/route.ts`:
 
 ```ts
 import { createAirsideAppRoute } from '@airnauts/airside-next'
@@ -46,7 +46,7 @@ In your root layout:
 import { AirsideLayer } from '@airnauts/airside-client/react'
 
 export function AirsideMount() {
-  return <AirsideLayer airsideKey={process.env.NEXT_PUBLIC_AIRSIDE_KEY!} endpoint="/api/comments" />
+  return <AirsideLayer airsideKey={process.env.NEXT_PUBLIC_AIRSIDE_KEY!} endpoint="/api/airside" />
 }
 ```
 
@@ -93,7 +93,7 @@ the widget's origin in its `allowedOrigins`.
 On the Pages Router, mount a catch-all API route with `createAirsidePagesRoute`:
 
 ```ts
-// pages/api/comments/[...path].ts
+// pages/api/airside/[...path].ts
 import { createAirsidePagesRoute } from '@airnauts/airside-next'
 import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 
@@ -134,7 +134,7 @@ export function App() {
       {/* your app */}
       <AirsideLayer
         airsideKey={import.meta.env.VITE_AIRSIDE_KEY}
-        endpoint="https://api.example.com/api/comments"
+        endpoint="https://api.example.com/api/airside"
       />
     </>
   )
@@ -154,7 +154,7 @@ import { airside } from '@airnauts/airside-client'
 
 const handle = await airside.init({
   key: 'your-secret-key',
-  endpoint: '/api/comments', // or an absolute URL to a server on another origin
+  endpoint: '/api/airside', // or an absolute URL to a server on another origin
 })
 
 // later, to remove the widget:

@@ -21,7 +21,7 @@ Import trace for requested module:
   .../mongodb/lib/client-side-encryption/client_encryption.js
   .../mongodb/lib/index.js
   ../../packages/adapter-mongo/dist/index.js
-  ./app/api/comments/[...path]/route.ts
+  ./app/api/airside/[...path]/route.ts
 ```
 
 **Root cause.** `mongodb` loads its optional native deps (`aws4`, `kerberos`,

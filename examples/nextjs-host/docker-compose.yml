@@ -1,12 +1,12 @@
 # Local MongoDB for testing the Next.js host integration.
 #
 #   docker compose up -d
-#   MONGODB_URI="mongodb://localhost:27017/comments" pnpm dev
+#   MONGODB_URI="mongodb://localhost:27017/airside" pnpm dev
 #
-# The host route (app/api/comments/[...path]/route.ts) switches to Mongo
+# The host route (app/api/airside/[...path]/route.ts) switches to Mongo
 # persistence via mongoRepository({ uri }) whenever MONGODB_URI is set; otherwise
 # it stays in-memory. The database name comes
-# from the connection string ("comments" above). No auth / replica set — the
+# from the connection string ("airside" above). No auth / replica set — the
 # adapter uses neither transactions nor change streams, so a standalone node
 # is enough for local testing.
 services:

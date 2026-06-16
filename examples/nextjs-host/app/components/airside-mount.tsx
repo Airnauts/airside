@@ -11,7 +11,7 @@ export function AirsideMount() {
   return (
     <AirsideLayer
       airsideKey="dev-key"
-      endpoint="/api/comments"
+      endpoint="/api/airside"
       features={{ screenshots: true, textAnchors: true }}
       // Default-equivalent pageKey (origin + path), but honoring an optional `?ns=`
       // namespace. The e2e suite shares one in-memory store across tests, so each test

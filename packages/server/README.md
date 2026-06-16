@@ -119,7 +119,7 @@ Generic Node↔Web bridge for mounting the server on any Node host (Express, bar
 import { nodeRequestToWeb, webToNode } from '@airnauts/airside-server/node'
 
 // In an Express/http handler — bridge the Node req/res to the Web standard:
-app.use('/api/comments', async (req, res) => {
+app.use('/api/airside', async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`)
   const webRes = await server.handle(await nodeRequestToWeb(req, url))
   await webToNode(webRes, res)

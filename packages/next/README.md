@@ -12,7 +12,7 @@ pnpm add @airnauts/airside-adapter-mongo @airnauts/airside-storage-vercel-blob
 
 ## Quick start — App Router
 
-Create a catch-all route handler at `app/api/comments/[...path]/route.ts`:
+Create a catch-all route handler at `app/api/airside/[...path]/route.ts`:
 
 ```ts
 import { createAirsideAppRoute } from '@airnauts/airside-next'
@@ -47,7 +47,7 @@ export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
 
 ## Quick start — Pages Router
 
-Create a catch-all API route at `pages/api/comments/[...path].ts`:
+Create a catch-all API route at `pages/api/airside/[...path].ts`:
 
 ```ts
 import { createAirsidePagesRoute } from '@airnauts/airside-next'

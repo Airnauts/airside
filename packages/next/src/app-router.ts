@@ -10,7 +10,7 @@ type NextRouteContext = { params: Promise<{ path?: string[] }> }
 type NextHandler = (req: Request, ctx: NextRouteContext) => Promise<Response>
 
 /**
- * App Router glue for `app/api/comments/[...path]/route.ts`:
+ * App Router glue for `app/api/airside/[...path]/route.ts`:
  *   export const { GET, POST, PATCH, OPTIONS } = createNextHandler(server)
  *
  * Next strips the mount prefix and hands us the remaining segments in

@@ -22,7 +22,7 @@ beforeAll(async () => {
   mongod = await MongoMemoryServer.create()
   client = new MongoClient(mongod.getUri())
   await client.connect()
-  db = client.db('comments_integration')
+  db = client.db('airside_integration')
   await ensureIndexes(db)
 }, 60_000)
 
@@ -49,7 +49,7 @@ it('round-trips a thread through the Next handler against MongoDB', async () => 
   const { GET, POST } = createNextHandler(server)
 
   const created = await POST(
-    new Request('https://host/api/comments/threads', {
+    new Request('https://host/api/airside/threads', {
       method: 'POST',
       headers,
       body: JSON.stringify(makeCreateThreadBody()),
@@ -59,7 +59,7 @@ it('round-trips a thread through the Next handler against MongoDB', async () => 
   expect(created.status).toBe(201)
   const { id } = await created.json()
 
-  const got = await GET(new Request(`https://host/api/comments/threads/${id}`, { headers }), {
+  const got = await GET(new Request(`https://host/api/airside/threads/${id}`, { headers }), {
     params: Promise.resolve({ path: ['threads', id] }),
   })
   expect(got.status).toBe(200)

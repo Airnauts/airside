@@ -54,7 +54,7 @@ export function buildOpenApiDocument(): ReturnType<typeof createDocument> {
 
   return createDocument({
     openapi: '3.1.0',
-    info: { title: 'Comments API', version: '1.0.0' },
+    info: { title: 'Airside API', version: '1.0.0' },
     components: {
       securitySchemes: {
         airsideKey: { type: 'apiKey', in: 'header', name: KEY_HEADER_NAME },

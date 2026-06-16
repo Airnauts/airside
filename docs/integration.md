@@ -12,7 +12,7 @@ pnpm add @airnauts/airside-client @airnauts/airside-next @airnauts/airside-adapt
 
 ## 2. Add the API route
 
-Create `app/api/comments/[...path]/route.ts`:
+Create `app/api/airside/[...path]/route.ts`:
 
 ```ts
 import { createAirsideAppRoute } from '@airnauts/airside-next'
@@ -50,7 +50,7 @@ In a client component rendered from your root layout:
 import { AirsideLayer } from '@airnauts/airside-client/react'
 
 export function AirsideMount() {
-  return <AirsideLayer airsideKey="dev-key" endpoint="/api/comments" />
+  return <AirsideLayer airsideKey="dev-key" endpoint="/api/airside" />
 }
 ```
 
@@ -95,7 +95,7 @@ infrastructure is config — no bespoke glue:
 - **Origins:** set `allowedOrigins` to your real site origins.
 
 ```ts
-// app/api/comments/[...path]/route.ts
+// app/api/airside/[...path]/route.ts
 import { join } from 'node:path'
 import { createAirsideAppRoute } from '@airnauts/airside-next'
 import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
@@ -117,7 +117,7 @@ export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
 })
 ```
 
-See [`examples/nextjs-host/app/api/comments/[...path]/route.ts`](../examples/nextjs-host/app/api/comments/%5B...path%5D/route.ts)
+See [`examples/nextjs-host/app/api/airside/[...path]/route.ts`](../examples/nextjs-host/app/api/airside/%5B...path%5D/route.ts)
 for this env-switched build: in-memory locally, Mongo + Blob in production.
 
 ## Extensions: notifications and thread actions

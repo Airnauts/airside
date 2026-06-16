@@ -68,7 +68,7 @@ describe('createAirsideAppRoute', () => {
     const { GET, POST, server } = createAirsideAppRoute(baseConfig())
     expect(typeof server?.handle).toBe('function')
     const created = await POST(
-      new Request('https://host/api/comments/threads', {
+      new Request('https://host/api/airside/threads', {
         method: 'POST',
         headers,
         body: JSON.stringify(makeCreateThreadBody()),
@@ -77,7 +77,7 @@ describe('createAirsideAppRoute', () => {
     )
     expect(created.status).toBe(201)
     const { id } = await created.json()
-    const got = await GET(new Request(`https://host/api/comments/threads/${id}`, { headers }), {
+    const got = await GET(new Request(`https://host/api/airside/threads/${id}`, { headers }), {
       params: Promise.resolve({ path: ['threads', id] }),
     })
     expect(got.status).toBe(200)
@@ -89,7 +89,7 @@ describe('createAirsideAppRoute', () => {
     expect(route.server).toBeUndefined()
     const ctx = { params: Promise.resolve({ path: ['threads'] }) }
     for (const m of ['GET', 'POST', 'PATCH', 'OPTIONS'] as const) {
-      expect((await route[m](new Request('https://host/api/comments/threads'), ctx)).status).toBe(
+      expect((await route[m](new Request('https://host/api/airside/threads'), ctx)).status).toBe(
         404,
       )
     }
@@ -105,7 +105,7 @@ describe('createAirsidePagesRoute', () => {
     await handler(
       fakeReq({
         method: 'POST',
-        url: '/api/comments/threads',
+        url: '/api/airside/threads',
         query: { path: ['threads'] },
         headers,
         body: JSON.stringify(makeCreateThreadBody()),
@@ -119,7 +119,7 @@ describe('createAirsidePagesRoute', () => {
     await handler(
       fakeReq({
         method: 'GET',
-        url: `/api/comments/threads/${id}`,
+        url: `/api/airside/threads/${id}`,
         query: { path: ['threads', id] },
         headers,
       }),
@@ -136,7 +136,7 @@ describe('createAirsidePagesRoute', () => {
     await handler(
       fakeReq({
         method: 'GET',
-        url: '/api/comments/threads',
+        url: '/api/airside/threads',
         query: { path: ['threads'] },
         headers,
       }),

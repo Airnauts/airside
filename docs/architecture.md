@@ -154,9 +154,9 @@ the notification half. See ADR-0034.
 handlers in one call:
 
 ```ts
-// App Router — app/api/comments/[...path]/route.ts
+// App Router — app/api/airside/[...path]/route.ts
 export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute(config)
-// Pages Router — pages/api/comments/[...path].ts
+// Pages Router — pages/api/airside/[...path].ts
 export default createAirsidePagesRoute(config)
 ```
 
@@ -250,7 +250,7 @@ collection later if ever needed.
 
 Defined once as zod in `@airnauts/airside-core`; OpenAPI generated from it (served at
 `GET /openapi.json` + a Scalar page at `/docs`; static artifact at build).
-Mounted under a base path, e.g. `/api/comments`.
+Mounted under a base path, e.g. `/api/airside`.
 
 | Method | Path | Purpose |
 |---|---|---|

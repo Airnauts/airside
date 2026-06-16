@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { AirsideMount } from './components/airside-mount'
 
 export const metadata = {
-  title: 'Comments host app',
+  title: 'Airside host app',
   description: 'M9 integration host for the embeddable commenting tool',
 }
 
