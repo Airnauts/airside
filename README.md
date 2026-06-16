@@ -133,10 +133,10 @@ storage stub for `mongoRepository({ uri })` + `createVercelBlobStorage({ token }
 ### Widget — React (any framework)
 
 `AirsideLayer` is a plain React component — it works in any React app (Vite, CRA,
-Remix…), not just Next.js. Install the React integration package alongside the client:
+Remix…), not just Next.js. Install the React integration package:
 
 ```bash
-pnpm add @airnauts/airside-integration-react @airnauts/airside-client
+pnpm add @airnauts/airside-integration-react
 ```
 
 Render it once near your app root and point `endpoint` at the
@@ -159,8 +159,8 @@ export function App() {
 }
 ```
 
-`react` and `react-dom` are optional peers of `@airnauts/airside-integration-react` — already
-present in your React app, so there's nothing extra to install beyond the packages above.
+`@airnauts/airside-integration-react` needs `react` as a peer — already present in your React
+app, so there's nothing extra to install beyond the package above.
 
 ### Widget — Vanilla JS (no framework)
 
@@ -192,7 +192,8 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 | Package | Description |
 |---|---|
 | [`@airnauts/airside-core`](packages/core) | Isomorphic: Zod schemas, HTTP contract types, `pageKey` normalization, anchor scoring/threshold policy, OpenAPI generator |
-| [`@airnauts/airside-client`](packages/client) | Widget engine (`init()`), light-DOM anchoring runtime, React wrapper (`AirsideLayer`) |
+| [`@airnauts/airside-client`](packages/client) | Widget engine (`init()`), light-DOM anchoring runtime |
+| [`@airnauts/airside-integration-react`](packages/integration-react) | React host wrapper (`AirsideLayer`) — calls `init()` in an effect |
 | [`@airnauts/airside-server`](packages/server) | Web-standard HTTP handler, use cases, CORS/security, adapter interfaces, generic Node bridge, dev server |
 | [`@airnauts/airside-integration-next`](packages/next) | One-call Next.js App and Pages Router integration (`createAirsideAppRoute` / `createAirsidePagesRoute`) |
 | [`@airnauts/airside-adapter-mongo`](packages/adapter-mongo) | MongoDB Atlas / self-hosted repository adapter |
