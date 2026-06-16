@@ -27,10 +27,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./react": {
-      "types": "./dist/react.d.ts",
-      "import": "./dist/react.js"
     }
   },
   "files": [
@@ -56,18 +52,6 @@
     "@radix-ui/react-popover": "^1.1.6",
     "clsx": "^2.1.1",
     "tailwind-merge": "^2.6.0"
-  },
-  "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    },
-    "react-dom": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@airnauts/airside-adapter-memory": "workspace:*",

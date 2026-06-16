@@ -12,14 +12,12 @@ Embeddable Commenting Tool
 
 # @airnauts/airside-client
 
-Embeddable commenting widget and React wrapper for [Airside](https://github.com/Airnauts/airside). Mounts a light-DOM, self-contained commenting overlay onto any web page — no iframe, no Shadow DOM.
+Embeddable commenting widget for [Airside](https://github.com/Airnauts/airside). Mounts a light-DOM, self-contained commenting overlay onto any web page — no iframe, no Shadow DOM. For React hosts, use [`@airnauts/airside-integration-react`](https://github.com/Airnauts/airside/blob/main/packages/integration-react/README.md) (or `@airnauts/airside-integration-next/client` in Next.js).
 
 ## Installation
 
 ```bash
 pnpm add @airnauts/airside-client
-# React host apps also need the optional peer:
-pnpm add react react-dom
 ```
 
 ## Quick start
@@ -27,15 +25,8 @@ pnpm add react react-dom
 ### React (recommended for React apps)
 
 ```tsx
-'use client'
-import { AirsideLayer } from '@airnauts/airside-client/react'
-
-export function AirsideMount() {
-  return <AirsideLayer airsideKey="your-secret-key" endpoint="/api/airside" />
-}
+// The React mount now ships separately — see @airnauts/airside-integration-react.
 ```
-
-Render `<AirsideMount />` once in your root layout. The widget stays inert until the URL carries `?airside-key=your-secret-key`; after that, the key is persisted to `localStorage` so subsequent visits work without the param.
 
 ### Vanilla JS
 
@@ -116,35 +107,7 @@ import { captureElement, extractSignals, buildSelectors } from '@airnauts/airsid
 | `buildSelectors(el)` | Build the dual `[structuralPath, classPath]` selector tuple |
 | `resolveUnique(selector, root?)` | Resolve a structural selector to a single element, or null if ambiguous |
 
-## Subpath: `@airnauts/airside-client/react`
-
-```tsx
-import { AirsideLayer } from '@airnauts/airside-client/react'
-```
-
-Thin React wrapper that calls `airside.init()` in a `useEffect` and tears down on unmount.
-
-#### `AirsideLayerProps`
-
-All `InitOptions` fields except `key`, which becomes `airsideKey` (React reserves the `key` prop name):
-
-```tsx
-<AirsideLayer
-  airsideKey="your-secret-key"
-  endpoint="/api/airside"
-  features={{ screenshots: true, textAnchors: true }}
-  pageKey={(url) => new URL(url).origin + new URL(url).pathname}
-/>
-```
-
-The effect re-runs only when `airsideKey`, `endpoint`, or `keyParam` change — not on every render.
-
-## Peer dependencies & requirements
-
-| Peer | Required | Notes |
-|---|---|---|
-| `react` | Optional (^19.0.0) | Only needed for `@airnauts/airside-client/react` |
-| `react-dom` | Optional (^19.0.0) | Only needed for `@airnauts/airside-client/react` |
+## Requirements
 
 The main entry (`@airnauts/airside-client`) bundles its own React and does **not** require the host app to have React installed.
 
@@ -152,6 +115,7 @@ The main entry (`@airnauts/airside-client`) bundles its own React and does **not
 
 ## Related packages
 
+- **`@airnauts/airside-integration-react`** — `<AirsideLayer/>` React mount (the React host integration)
 - **`@airnauts/airside-server`** — the HTTP API the widget talks to
 - **`@airnauts/airside-integration-next`** — one-call Next.js App Router server integration
 - **`@airnauts/airside-core`** — shared types (consumed transitively)
