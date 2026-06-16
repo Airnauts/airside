@@ -76,7 +76,7 @@ describe('MarkerLayer place mode', () => {
     expect(body.anchor.offset.fx).toBeCloseTo(0.5)
     // A successful create must not fire the "anchor lost" orphan toast.
     // (DetachedThread may render its banner for pinless threads; check for the toast element specifically.)
-    expect(document.querySelector('[data-comments-toast]')).toBeNull()
+    expect(document.querySelector('[data-airside-toast]')).toBeNull()
   })
 
   it('shows the just-posted comment in the popover immediately, with no extra getThread (BUG A)', async () => {

@@ -44,8 +44,8 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       {...rest}
       ref={ref}
       type="button"
-      data-comments-pin
-      data-comments-pin-id={item.id}
+      data-airside-pin
+      data-airside-pin-id={item.id}
       data-testid="comments-pin"
       data-focused={focused ? 'true' : undefined}
       data-active={active ? 'true' : undefined}

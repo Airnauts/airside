@@ -63,7 +63,7 @@ export function ThreadPopover({ item, pin, client, focused, selected }: ThreadPo
           // controlled `open={openId === id}`, so this can't strand two pin popovers open.
           onInteractOutside={(e) => {
             const target = e.detail.originalEvent.target as Element | null
-            if (target?.closest('[data-comments-root]')) e.preventDefault()
+            if (target?.closest('[data-airside-root]')) e.preventDefault()
           }}
           className="cmnt:z-[var(--cmnt-z-surface)] cmnt:pointer-events-auto"
         >

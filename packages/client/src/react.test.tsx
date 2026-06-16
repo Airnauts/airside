@@ -17,8 +17,8 @@ describe('@airnauts/comments-client/react', () => {
   it('mounts the widget on render and removes it on unmount', async () => {
     const { unmount } = render(<CommentsLayer commentsKey="secret" endpoint="http://x" />)
     // init() is async; wait for the mount to land.
-    await waitFor(() => expect(document.querySelector('[data-comments-root]')).not.toBeNull())
+    await waitFor(() => expect(document.querySelector('[data-airside-root]')).not.toBeNull())
     unmount()
-    expect(document.querySelector('[data-comments-root]')).toBeNull()
+    expect(document.querySelector('[data-airside-root]')).toBeNull()
   })
 })

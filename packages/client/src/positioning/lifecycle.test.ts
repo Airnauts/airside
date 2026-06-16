@@ -45,7 +45,7 @@ describe('observeReposition', () => {
   })
 
   it('ignores mutations that originate inside the widget root (prevents the re-render loop)', () => {
-    document.body.innerHTML = '<div data-comments-root><span id="own">x</span></div>'
+    document.body.innerHTML = '<div data-airside-root><span id="own">x</span></div>'
     const spies = installObserverSpies()
     const onMutation = vi.fn()
     const stop = observeReposition({
@@ -65,7 +65,7 @@ describe('observeReposition', () => {
 
   it('still reacts to host-page mutations outside the widget root', () => {
     document.body.innerHTML =
-      '<main><p id="host">host</p></main><div data-comments-root><span id="own">x</span></div>'
+      '<main><p id="host">host</p></main><div data-airside-root><span id="own">x</span></div>'
     const spies = installObserverSpies()
     const onMutation = vi.fn()
     const stop = observeReposition({

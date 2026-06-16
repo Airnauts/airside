@@ -26,7 +26,7 @@ export function DraftPopover({ client, onCreate }: DraftPopoverProps) {
   const draft = state.draft
   if (!draft) return null
   return (
-    <div data-comments-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
+    <div data-airside-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
       <Popover.Root open onOpenChange={(o) => !o && dispatch({ type: 'CLEAR_DRAFT' })}>
         <Popover.Anchor asChild>
           <div

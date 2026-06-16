@@ -13,22 +13,22 @@ describe('comments.init', () => {
   it('is a no-op when the key param is absent', async () => {
     history.replaceState({}, '', '/?nothing=1')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
-    expect(document.querySelector('[data-comments-root]')).toBeNull()
+    expect(document.querySelector('[data-airside-root]')).toBeNull()
     handle.destroy() // must not throw
   })
 
   it('mounts when the key param matches', async () => {
     history.replaceState({}, '', '/?comments-key=secret')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
-    expect(document.querySelector('[data-comments-root]')).not.toBeNull()
+    expect(document.querySelector('[data-airside-root]')).not.toBeNull()
     handle.destroy()
-    expect(document.querySelector('[data-comments-root]')).toBeNull()
+    expect(document.querySelector('[data-airside-root]')).toBeNull()
   })
 
   it('does not mount when the key param differs', async () => {
     history.replaceState({}, '', '/?comments-key=wrong')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
-    expect(document.querySelector('[data-comments-root]')).toBeNull()
+    expect(document.querySelector('[data-airside-root]')).toBeNull()
     handle.destroy()
   })
 
@@ -52,7 +52,7 @@ describe('comments.init', () => {
     localStorage.setItem('airside:key', JSON.stringify('secret'))
     history.replaceState({}, '', '/')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
-    expect(document.querySelector('[data-comments-root]')).not.toBeNull()
+    expect(document.querySelector('[data-airside-root]')).not.toBeNull()
     handle.destroy()
   })
 
@@ -60,7 +60,7 @@ describe('comments.init', () => {
     localStorage.setItem('airside:key', JSON.stringify('old-key'))
     history.replaceState({}, '', '/')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
-    expect(document.querySelector('[data-comments-root]')).toBeNull()
+    expect(document.querySelector('[data-airside-root]')).toBeNull()
     handle.destroy()
   })
 })

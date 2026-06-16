@@ -46,10 +46,10 @@
 /* No Preflight means form controls keep their UA font (serif). Force them to
    inherit the sans-serif family set on the widget root (see app/mount.tsx). */
 @layer base {
-  [data-comments-root] button,
-  [data-comments-root] input,
-  [data-comments-root] textarea,
-  [data-comments-root] select {
+  [data-airside-root] button,
+  [data-airside-root] input,
+  [data-airside-root] textarea,
+  [data-airside-root] select {
     font-family: inherit;
   }
 
@@ -58,10 +58,10 @@
      px-[5px], …) assume border-box — otherwise borders/padding inflate the pin avatar,
      count badge, and teardrop. Restore border-box, scoped to the widget root so the
      host page is untouched (this mirrors what Preflight would do globally). */
-  [data-comments-root],
-  [data-comments-root] *,
-  [data-comments-root] *::before,
-  [data-comments-root] *::after {
+  [data-airside-root],
+  [data-airside-root] *,
+  [data-airside-root] *::before,
+  [data-airside-root] *::after {
     box-sizing: border-box;
   }
 
@@ -72,7 +72,7 @@
      `cmnt:` utilities, scoped to the widget root so host headings are untouched
      (this mirrors Preflight's heading reset). Layered below the utilities, so an
      explicit `cmnt:text-*`/`cmnt:font-*` still wins. */
-  [data-comments-root] :is(h1, h2, h3, h4, h5, h6) {
+  [data-airside-root] :is(h1, h2, h3, h4, h5, h6) {
     margin: 0;
     font-size: inherit;
     font-weight: inherit;

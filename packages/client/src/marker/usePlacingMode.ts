@@ -18,7 +18,7 @@ export function usePlacingMode(dispatch: (a: Action) => void) {
       if (
         !target ||
         (target as HTMLElement).dataset?.commentsPlace !== undefined ||
-        target.closest('[data-comments-overlay]')
+        target.closest('[data-airside-overlay]')
       )
         return
       e.preventDefault()

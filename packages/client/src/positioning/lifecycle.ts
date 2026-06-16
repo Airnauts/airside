@@ -38,14 +38,14 @@ export function observeReposition(opts: ObserveOptions): () => void {
   // more widget mutations → infinite loop. Only HOST-page mutations can actually move anchors.
   //
   // INVARIANT: this depends on every widget-rendered node — INCLUDING portalled popovers and
-  // toasts — living under [data-comments-root]. mount() asserts this at startup (warns if a
+  // toasts — living under [data-airside-root]. mount() asserts this at startup (warns if a
   // portal/toast container escapes the root). Edge case: if a widget node is detached and then
   // mutated, `closest` returns null and the record is treated as host → at worst ONE spurious
   // rematch, which self-heals (its own re-render churn is filtered, so it can't loop).
   const isOwnMutation = (rec: MutationRecord): boolean => {
     const t = rec.target
     const el = t instanceof Element ? t : t.parentElement
-    return !!el?.closest('[data-comments-root]')
+    return !!el?.closest('[data-airside-root]')
   }
   const onMutations = (records: MutationRecord[]) => {
     // Skip only when every record is widget-internal. An empty batch (degenerate; a real

@@ -46,7 +46,7 @@ export function Launcher({
       <Button
         variant="primary"
         size="icon"
-        data-comments-place
+        data-airside-place
         data-testid="comments-place"
         aria-pressed={placing}
         aria-label={placing ? 'Click on the page to comment' : 'Add comment'}

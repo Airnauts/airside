@@ -18,13 +18,13 @@ export function PinLayer({ placements, client }: PinLayerProps) {
   // even though selecting it in the panel never opens the pin's popover.
   const { detailThreadId } = usePanelState()
   return (
-    <div data-comments-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
+    <div data-airside-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
       {placements.flatMap((p) =>
         p.highlight.map((h) => (
           <div
             key={`${p.item.id}-hl-${h.x}-${h.y}-${h.width}-${h.height}`}
             data-testid="comments-highlight"
-            data-comments-highlight
+            data-airside-highlight
             className="cmnt:absolute cmnt:bg-blue-600/20 cmnt:pointer-events-none"
             // transform + dims are computed → inline
             style={{ transform: `translate(${h.x}px, ${h.y}px)`, width: h.width, height: h.height }}
