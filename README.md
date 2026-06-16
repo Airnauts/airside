@@ -55,7 +55,7 @@ In your root layout:
 
 ```tsx
 'use client'
-import { AirsideLayer } from '@airnauts/airside-client/react'
+import { AirsideLayer } from '@airnauts/airside-integration-next/client'
 
 export function AirsideMount() {
   return <AirsideLayer airsideKey={process.env.NEXT_PUBLIC_AIRSIDE_KEY!} endpoint="/api/airside" />
@@ -133,12 +133,18 @@ storage stub for `mongoRepository({ uri })` + `createVercelBlobStorage({ token }
 ### Widget — React (any framework)
 
 `AirsideLayer` is a plain React component — it works in any React app (Vite, CRA,
-Remix…), not just Next.js. Render it once near your app root and point `endpoint` at the
+Remix…), not just Next.js. Install the React integration package alongside the client:
+
+```bash
+pnpm add @airnauts/airside-integration-react @airnauts/airside-client
+```
+
+Render it once near your app root and point `endpoint` at the
 mounted server (use an absolute URL when the API is on another origin, and add that origin
 to the server's `allowedOrigins`):
 
 ```tsx
-import { AirsideLayer } from '@airnauts/airside-client/react'
+import { AirsideLayer } from '@airnauts/airside-integration-react'
 
 export function App() {
   return (
@@ -153,8 +159,8 @@ export function App() {
 }
 ```
 
-`react` and `react-dom` are optional peers — already present in your React app, so there's
-nothing extra to install.
+`react` and `react-dom` are optional peers of `@airnauts/airside-integration-react` — already
+present in your React app, so there's nothing extra to install beyond the packages above.
 
 ### Widget — Vanilla JS (no framework)
 
