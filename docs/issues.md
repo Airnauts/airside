@@ -81,23 +81,46 @@ A purely host-side alternative (a webpack `IgnorePlugin` for the optional deps i
 `next.config.ts`) also works but only fixes this one example app, not every
 downstream consumer — hence the adapter-side fix is preferred when we act.
 
-## Text-selection highlight is misaligned after window resize
+## Text-selection highlight drifts off its text on scroll and window resize
 
 **Status:** open — bug.
 
-**Symptom.** The highlight rectangles drawn over selected text drift away from
-the text they belong to after the browser window is resized. In the captured
-example the blue highlight boxes sit well to the left of (and above) the actual
-selected words instead of covering them — the overlay no longer tracks the live
-DOM geometry. See `docs/screenshots/selection-off-after-resize.png`.
+**Symptom.** The highlight rectangles drawn over a thread's selected text drift
+away from the text they belong to when the page is **scrolled** or the browser
+window is **resized**. In the captured examples the blue highlight boxes sit well
+to the left of (and above) the actual selected words instead of covering them —
+the highlight no longer tracks the live DOM geometry, even though the pin itself
+stays put. See `docs/screenshots/selection-off-after-scroll.png` (scroll) and
+`docs/screenshots/selection-off-after-resize.png` (resize).
 
-**Likely root cause (unconfirmed).** Selection highlight rects appear to be
-computed once (e.g. cached `getBoundingClientRect()` / `Range` rects at selection
-time) and not recomputed on `resize` (and probably not on scroll or reflow
-either). When the layout reflows on resize, the cached coordinates go stale.
+**Root cause (confirmed).** Highlight rects are computed **once, at match time**
+and then reused unchanged on every reposition emit, while the pin coordinate is
+recomputed live — so the two diverge on scroll/resize.
 
-**Expected.** Highlight rects should be recomputed against the current DOM
-geometry on resize/reflow so they stay locked to their text.
+- The highlight `Box[]` is produced only inside `matchAndReport`
+  (`packages/client/src/anchor/runtime.ts:75-76`): `mapRects(range.getClientRects())`
+  for an `anchored` result. It is stored on the retained match and never touched
+  again until the next *rematch*.
+- Every emit goes through `toPlacedThread` (`runtime.ts:24-27`), which recomputes
+  `pin` from a fresh `p.el.getBoundingClientRect()` but passes the stored
+  `p.highlight` through verbatim.
+- `reposition` is just `emit` (`runtime.ts:146`), and the scroll/resize listeners
+  wire `onReposition → rt.reposition()` (`packages/client/src/marker/MarkerLayer.tsx:109-112`).
+  So a scroll or resize re-emits with a **live pin but stale highlight rects**.
+  (DOM-mutation reflows instead go through `onMutation → rt.rematchAll()`, which
+  *does* recompute the highlight — which is why the drift is specific to
+  scroll/resize.)
+
+**Expected.** Highlight rects should track the current DOM geometry on
+scroll/resize the same way the pin does, staying locked to their text.
+
+**Validated fix (deferred — not applied).** Retain the matched `Range` on the
+`RetainedMatch` and recompute `mapRects(range.getClientRects())` inside
+`toPlacedThread` on each emit (mirroring the live `getBoundingClientRect()` already
+done for the pin), rather than caching `highlight` once at match time. Client
+anchoring logic is built test-first (ADR-0010), so this wants a failing
+runtime/reposition test (highlight rects move with the element on a reposition
+emit) before the change.
 
 ## Selection highlight is not shown when its thread is opened
 
@@ -202,3 +225,106 @@ is built test-first (ADR-0010), so this wants a failing rematch test first (bare
 
 **How the e2e relates.** The orphan test gives the target a `data-anchor` so
 `signalsAgree` rejects the wrong sibling; the bare-element mis-anchor is documented here.
+
+## Place mode drops a pin on the widget's own launcher and panel chrome
+
+**Status:** open — bug (rebrand regression).
+
+**Symptom.** With "Add comment" (place mode) active, clicking the launcher pill or
+the comments sidebar **places a pin on the widget's own chrome** instead of
+behaving normally. Clicking the ☰ panel button should open/close the sidebar;
+clicking the active ✎ place button should exit place mode; clicking inside the
+open sidebar should interact with it. Instead each of those drops a draft pin.
+
+**Root cause.** The place-mode click guard in
+`packages/client/src/marker/usePlacingMode.ts:16-24` only bails out for two
+things: a target whose dataset has `commentsPlace`, or a target inside
+`[data-airside-overlay]`. Both checks miss the launcher and the panel:
+
+- **Stale rebrand attribute.** The guard checks `target.dataset?.commentsPlace`
+  (i.e. `data-comments-place`), but the launcher's place button now renders
+  `data-airside-place` → `dataset.airsidePlace`
+  (`packages/client/src/ui/Launcher.tsx:49`). The rebrand (comments→airside,
+  ADR-0038) renamed the attribute on the button but not the key the guard looks
+  for, so `commentsPlace` is **never set anymore** and the check is dead. Clicking
+  the active place button therefore captures an anchor and places a pin instead of
+  toggling place mode off — and because the listener runs in the capture phase and
+  calls `e.stopPropagation()`, it also kills the React `onClick` toggle.
+- **Launcher and panel aren't marked as overlay.** `data-airside-overlay` only sits
+  on the pin layer (`packages/client/src/positioning/layer.tsx:21`) and the draft
+  popover (`marker/DraftPopover.tsx:29`). The launcher
+  (`ui/Launcher.tsx`) and the panel drawer (`panel/PanelDrawer.tsx`, rendered with
+  `data-testid="airside-panel"`) carry no overlay marker, so `target.closest(
+  '[data-airside-overlay]')` never matches them and clicks fall through to pin
+  placement.
+
+**Impact.** Place mode is hard to exit (clicking the ✎ button to turn it off
+instead drops a pin), and the launcher/sidebar can't be operated while placing —
+exactly the controls a user reaches for to bail out. No data corruption, but it
+makes place mode feel broken.
+
+**Validated fix (deferred — not applied).** Extend the guard to ignore any click
+that lands inside the widget's own chrome, not just the overlay layers — e.g. mark
+the launcher and panel with `data-airside-overlay` (or a shared
+`data-airside-chrome` marker) and have the guard skip
+`target.closest('[data-airside-overlay], [data-airside-chrome]')`, and repair the
+dead place-button check (use `dataset.airsidePlace`, or drop it in favour of the
+chrome marker on the launcher). Then clicking the launcher/sidebar in place mode
+behaves "like without add pin mode". Client logic is built test-first (ADR-0010),
+so this wants a failing `usePlacingMode` test (a click on launcher/panel chrome
+does not dispatch `SET_DRAFT`) first.
+
+## Cross-element text selection (across `</code>`) anchors to a generic ancestor and is lost on re-render
+
+**Status:** open — bug. Same root forces as the two anchoring issues above
+("Signal-less element cannot re-anchor under structural mutation" and "Tag-only
+fast-path agreement produces a confidently-wrong pin on sibling removal").
+
+**Symptom.** In the playground, selecting text that **crosses an element
+boundary** — e.g. starting inside `<code>?airside-key=dev-key</code>` and ending in
+the text node after `</code>` ("…dev-key**</code> to activate**…") — produces a
+comment whose anchor is lost almost immediately: the open thread shows the ⚠ "This
+comment's anchor was lost" card (or the highlight silently jumps to a different
+paragraph). A selection kept **inside** a single element (e.g. wholly within
+`<code>`) does not have this problem.
+
+**Root cause (confirmed via a jsdom repro of the exact markup).** `captureSelection`
+anchors to `range.commonAncestorContainer` (`packages/client/src/anchor/capture.ts:40-46`).
+For a selection inside one element the common ancestor *is* that distinctive leaf
+(`<code>`); for a selection that crosses `</code>` it is the **enclosing block**
+(a bare, signal-less `<p>`). The two then re-anchor very differently:
+
+- **In-`<code>`** → `selectors = ['… > code', 'code']`, `signals.tag = 'code'`. The
+  distinctive `code` selector stays unique even when sibling order shifts, so the
+  fast path re-anchors → `anchored`.
+- **Cross-`</code>`** → `selectors = ['article > p:nth-of-type(3)', 'p']`,
+  `signals.tag = 'p'`. The `<p>` has no `id`/`class`/`data-*`, so:
+  - a sibling shift (host re-render that inserts/reorders a paragraph) makes the
+    stored `nth-of-type` selector resolve to the **wrong** `<p>`, which
+    `signalsAgree` accepts on tag alone → `finishMatch` can't find the quote there →
+    `selectionLost` (the pin silently moves to a different paragraph, highlight
+    dropped) — the *tag-only fast-path* failure mode;
+  - a wrapper/restructure (host moves the copy into a new container) makes both
+    stored selectors miss, so the scored path runs and a signal-less `<p>` caps at
+    `text + sibling + ancestor = 0.35 < 0.60` accept → `orphaned: belowAccept` → the
+    ⚠ "anchor lost" card — the *signal-less* failure mode.
+
+On a **static** DOM (the bare playground with no host re-render) every case
+re-anchors fine, so the trigger is a DOM mutation between capture and the
+create-time `refresh()` rematch — routine on a React/CMS host like the live
+catalog the screenshots come from.
+
+**Impact.** Cross-element selections are far more fragile than in-element ones
+because they bind to a generic ancestor rather than the distinctive leaf the user
+actually started in. The user perceives it as "select across a tag → instantly
+anchor lost". Trust-eroding (PRD §7), and the `selectionLost`→wrong-paragraph
+variant is a confidently-wrong pin.
+
+**Validated fix (deferred — not applied).** Prefer a more distinctive anchor host
+than the raw common ancestor when a selection spans elements — e.g. anchor to the
+start endpoint's element (the leaf the selection began in) and resolve the quote
+relative to it, or climb to the nearest element with a stable signal — so a
+cross-boundary selection doesn't degrade to a bare block. Pairs naturally with
+fixing the tag-only fast path (require a corroborating signal before accepting a
+signal-less element). Built test-first (ADR-0010): add the failing capture/rematch
+case (cross-`</code>` selection survives a sibling shift) before the change.
