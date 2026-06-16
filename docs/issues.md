@@ -110,6 +110,39 @@ highlighted range in the document.
 **Expected.** When a thread is opened, its associated selection should be
 rendered/visible so the reader can see exactly what the comment refers to.
 
+## Thread's page URL renders twice because the page title is never captured
+
+**Status:** open — rough edge (cosmetic; fix is small).
+
+**Symptom.** In the sidebar detail's page-context card the same URL appears on both
+lines — a bold line and a gray line — instead of "Page Title" over "URL". Seen on
+`https://dev.catalog.lear.com/` (see `docs/screenshots/`).
+
+**Root cause.** Two parts, one underlying cause:
+
+- The card renders `pageTitle ?? pageUrl` (bold) over `pageUrl` (gray) —
+  `packages/client/src/ui/ThreadConversation.tsx:108-115` (same fallback in
+  `panel/PanelRow.tsx:21`). With `pageTitle` present this reads title-over-URL; with it
+  absent the bold line falls back to the URL, so the URL shows twice.
+- `pageTitle` is **always** absent. The schema accepts it
+  (`packages/core/src/contract/requests.ts:21`, `schemas/thread.ts:26`), but the client's
+  `createThread` body never sends it — `packages/client/src/marker/MarkerLayer.tsx:137-145`
+  passes `pageUrl`, `pageKey`, `anchor`, `comment`, `author`, `captureContext`,
+  `provenance` and no `pageTitle`. So every thread stores `pageTitle: undefined` and the
+  fallback always triggers.
+
+**Impact.** Cosmetic only — the card is still informative (URL is shown), just redundant
+and missing the friendlier page title. No data or anchoring effect.
+
+**Validated fix (deferred — not applied).** Capture the title at create time: add
+`pageTitle: document.title` (trimmed; omit when empty) to the `createThread` body in
+`MarkerLayer.tsx`. Backend/core is built test-first (ADR-0010), but the schema field
+already exists, so this is a client-only change — exercise it via the marker/create path.
+Optionally also guard the render so the gray URL line is hidden when `pageTitle` is absent
+or equals `pageUrl`, so old threads with no captured title stop double-printing. Note an
+empty `document.title` (`""`) would make the bold line render *blank* rather than the URL,
+so trim-and-omit rather than passing `""`.
+
 ## Signal-less element cannot re-anchor under structural mutation
 
 **Status:** open — known limitation of the v1 scoring policy. Surfaced by the M10 e2e.

@@ -14,6 +14,23 @@ sidebar master–detail iteration to keep that change focused. Shape: track the 
 `detailThreadId` within `panel.state.list`; chevrons dispatch `OPEN_DETAIL` for the
 neighbor + `requestFocus`.
 
+## Re-navigate to a thread's pin from the open detail
+
+**Trigger:** opening a thread scrolls to its pin once, but if you then scroll away (or
+SPA-navigate elsewhere), there's no way back — you have to close the detail and re-open
+it. The open detail should offer a "take me back to the pin" affordance.
+
+The scroll machinery already exists: `requestFocus(id)` waits for placement, then
+`scrollIntoView({ block: 'center' })` + pulses the pin (`marker/useFocusPin.ts:36`). The
+gap is purely that the *open* detail never re-fires it — it only runs on the initial
+open. So this is exposing a re-trigger, not building scroll logic.
+
+Natural home: make the sidebar detail's page-context card clickable
+(`ui/ThreadConversation.tsx:108-115`) and re-run the same same-page-vs-cross-page split
+already in `PanelDrawer.onSelect` (`panel/PanelDrawer.tsx:40-52`): same page →
+`requestFocus(id)`; different page → `goToThread`. Small. Making that card a link also
+naturally dedups the doubled-URL rough edge (see `issues.md`).
+
 ## Emoji reactions on comments
 
 React to a comment with emoji. Deferred — it is a full backend feature: a new field on
