@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-client",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Embeddable commenting widget and React wrapper for the Airnauts commenting tool.",
   "keywords": [
     "comments",

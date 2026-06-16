@@ -1,5 +1,11 @@
 # @airnauts/airside-core
 
+## 0.8.1
+
+### Patch Changes
+
+- 4404855: Add the Airside logo and "Embeddable Commenting Tool" tagline as a centered, dark/light-aware header to the package README.
+
 ## 0.8.0
 
 ### Minor Changes
