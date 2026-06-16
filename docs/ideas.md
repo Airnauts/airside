@@ -193,3 +193,67 @@ and revisit (2) if a second notifier needs richer thread data.
 Deferred — the manual create action ships first; sync is a clean follow-on that needs
 the `NotificationEvent`-carries-`externalLinks` decision (option 1 above) made first,
 plus an ADR note since it changes a public event shape. No urgency.
+
+## Drag-and-drop image upload
+
+**Date:** 2026-06-16 · **Status:** idea · **Trigger:** uploading an image to a comment
+should be a drag-and-drop (and paste) gesture onto the composer, not just a file picker.
+
+Add a drop zone over the comment composer that accepts an image dragged from the desktop
+(and `paste` of an image from the clipboard), shows a thumbnail/progress while it
+uploads, then attaches it to the comment. Builds on the existing attachment storage path
+(`airside_attachments`) — this is a composer UX layer, not a new backend capability,
+though it should reuse the same upload + size/type validation the file picker already
+runs. Open questions: multi-file drop, paste-image naming, and a max-size affordance.
+
+## Authentication providers (email-with-code, Google)
+
+**Date:** 2026-06-16 · **Status:** idea · **Trigger:** reviewers are identified loosely
+today; offer real sign-in so a comment's author is a verified identity, not a typed name.
+
+Add pluggable auth so a reviewer can prove who they are before commenting:
+
+- **Email with code** — enter email, receive a one-time code, verify. Pairs naturally
+  with the email notifier's SMTP path (a verified email is also a deliverable address).
+- **Google** — OAuth sign-in, identity + avatar from the Google profile.
+
+Architecturally this wants to mirror the extension seam already used server-side: an
+*auth provider* abstraction the host registers (like notifiers/integrations), so the
+widget stays provider-agnostic and the host picks email/Google/none. Large feature —
+touches the identity model end to end (schema author fields, session/token handling,
+the widget's identity context, and both adapters). Needs its own ADR (auth model is hard
+to change later) and a milestone; not a UI-only change.
+
+## Airside logo placement with repo link
+
+**Date:** 2026-06-16 · **Status:** idea · **Trigger:** a small, tasteful "powered by
+Airside" mark in the widget chrome that links back to the repo.
+
+A subtle Airside logo in a corner of the widget chrome (or the panel footer) linking to
+`Airnauts/airside`. Cheap, mostly a branding/attribution affordance. Decisions to make:
+which surface (overlay corner vs. sidebar footer), and whether it's host-configurable
+(on/off, or swap for the host's own mark) so it doesn't intrude on production hosts.
+
+## Changelog popup ("what's new")
+
+**Date:** 2026-06-16 · **Status:** idea · **Trigger:** surface recent releases to
+reviewers in-widget instead of only in the generated per-package `CHANGELOG.md` files.
+
+A "what's new" modal that shows recent user-facing changes, opened from the widget chrome
+and optionally auto-shown once per new version (track last-seen version in localStorage,
+same pattern as the persisted activation key). Source could be curated release notes
+derived from the Changesets summaries (which are already written for the changelog
+reader). Open question: hand-curated highlights vs. rendering the changelog directly.
+
+## Hide all pins from the screen
+
+**Date:** 2026-06-16 · **Status:** idea · **Trigger:** sometimes you want to read the
+page unobstructed — a single toggle to hide every pin/highlight without leaving comment
+mode.
+
+A show/hide-pins toggle in the widget chrome that hides the entire marker overlay (pins
+and highlights) while keeping the session active, so the page can be read clean and pins
+restored with one click. Mostly a visibility flag on the overlay layer (`app/mount.tsx`
+overlay + `MarkerLayer`); no anchoring or data changes. Decisions: whether the open
+detail/panel stays visible while pins are hidden, and whether the state persists across
+reloads.
