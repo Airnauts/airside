@@ -21,7 +21,7 @@ export async function dispatchNotifications(
   results.forEach((result, i) => {
     if (result.status === 'rejected') {
       const name = notifications[i]?.name ?? 'unknown'
-      log(`[comments] notifier "${name}" failed: ${String(result.reason)}`)
+      log(`[airside] notifier "${name}" failed: ${String(result.reason)}`)
     }
   })
 }

@@ -104,7 +104,7 @@ export function MarkerLayer({
       // test with no backend) must degrade to "no threads yet", not surface as an unhandled
       // rejection. Swallow with a debug breadcrumb, matching the runtime's refreshAnchor catches.
       .catch((err) => {
-        console.debug('[comments] initial thread load failed', err)
+        console.debug('[airside] initial thread load failed', err)
       })
     const stop = observeReposition({
       targets: [],

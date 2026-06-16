@@ -182,7 +182,7 @@ describe('createRuntime.refresh', () => {
     await rt.refresh()
     expect(debug).toHaveBeenCalledTimes(1)
     expect(debug).toHaveBeenCalledWith(
-      '[comments] anchor lost',
+      '[airside] anchor lost',
       expect.objectContaining({
         threadId: 'thd',
         pageKey: 'k',

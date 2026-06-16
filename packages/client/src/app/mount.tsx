@@ -47,7 +47,7 @@ export function mount(options: InitOptions): WidgetHandle {
   for (const sel of ['[data-portal-container]', '[data-toasts-container]']) {
     if (!host.querySelector(sel)) {
       console.warn(
-        `[comments] ${sel} is not inside [data-airside-root]; the MutationObserver self-mutation ` +
+        `[airside] ${sel} is not inside [data-airside-root]; the MutationObserver self-mutation ` +
           'filter will misclassify its DOM as host changes and may reintroduce the re-render loop.',
       )
     }
