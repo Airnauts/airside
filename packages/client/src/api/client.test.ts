@@ -33,7 +33,7 @@ describe('createApiClient', () => {
     await client.createThread(body)
     expect(calls[0]?.url).toBe('http://x/api/threads') // trailing slash on endpoint normalized away
     const headers = calls[0]?.init?.headers as Record<string, string>
-    expect(headers['x-comments-key']).toBe('k')
+    expect(headers['x-airside-key']).toBe('k')
   })
 
   it('builds list query strings', async () => {
@@ -81,7 +81,7 @@ describe('createApiClient', () => {
     expect(calls[0]?.url).toBe('http://x/api/threads/t1/actions/jira.createIssue')
     expect(calls[0]?.init?.method).toBe('POST')
     const headers = calls[0]?.init?.headers as Record<string, string>
-    expect(headers['x-comments-key']).toBe('k')
+    expect(headers['x-airside-key']).toBe('k')
     expect(result).toEqual(threadView)
   })
 })

@@ -55,7 +55,7 @@ const handle: CommentsHandle = await comments.init(options)
 
 | Option | Type | Description |
 |---|---|---|
-| `key` | `string` | Secret key sent as `x-comments-key` on every API request |
+| `key` | `string` | Secret key sent as `x-airside-key` on every API request |
 | `endpoint` | `string` | Base URL of the comments API (e.g. `"/api/comments"`) |
 | `pageKey` | `(url: string) => string` | Override the default `origin + pathname` page identity |
 | `keyParam` | `string` | URL param the activation gate reads (default `"comments-key"`) |

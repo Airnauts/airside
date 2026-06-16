@@ -39,7 +39,7 @@ Returns a `CommentsServer` with a single `handle(req: Request): Promise<Response
 
 | Option | Type | Required | Description |
 |---|---|---|---|
-| `secretKey` | `string` | ✓ | Shared bearer token; clients send it as `x-comments-key` |
+| `secretKey` | `string` | ✓ | Shared bearer token; clients send it as `x-airside-key` |
 | `projectId` | `string` | ✓ | Namespace for all threads in this mount |
 | `allowedOrigins` | `string[]` | ✓ | CORS origin allowlist; requests from other origins get 403 |
 | `repository` | `Repository` | ✓ | Persistence adapter (mongo, postgres, memory, …) |

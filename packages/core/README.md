@@ -92,7 +92,7 @@ These types describe the wire API served by `@airnauts/comments-server` and cons
 
 | Export | Value |
 |---|---|
-| `KEY_HEADER_NAME` | `"x-comments-key"` |
+| `KEY_HEADER_NAME` | `"x-airside-key"` |
 | `ERROR_CODES` | Tuple of all error code strings |
 | `ERROR_STATUS` | `Record<ErrorCode, number>` mapping codes to HTTP status |
 | `ErrorCode` | Union of all error code strings |

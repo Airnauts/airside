@@ -163,14 +163,14 @@ export default createCommentsPagesRoute(config)
 Other Node hosts wrap the same core via `@airnauts/comments-server/node`.
 
 **Security model (v1).** The secret key is a **bearer capability token, not user
-auth**: one shared secret per mount, sent as the `x-comments-key` **header**
+auth**: one shared secret per mount, sent as the `x-airside-key` **header**
 (never the query string — leaks via referrer/logs), validated server-side, paired
 with a configurable **origin allowlist** so a leaked link can't post from
 arbitrary sites. Basic per-key/IP rate limiting (429).
 
 The same secret value flows through three transports: `init({ key })`
 (integrator config) → the **URL parameter** the client activation gate checks
-(parameter name configurable) → the **`x-comments-key` header** the server
+(parameter name configurable) → the **`x-airside-key` header** the server
 validates. One value, three places — not three different secrets.
 
 ---
@@ -263,7 +263,7 @@ Mounted under a base path, e.g. `/api/comments`.
 | POST | `/uploads` | multipart image → StorageAdapter → `{id, url, name, contentType, size}` |
 | GET | `/openapi.json`, `/docs` | contract + Scalar UI |
 
-**Conventions:** `x-comments-key` header on every request; origin allowlist +
+**Conventions:** `x-airside-key` header on every request; origin allowlist +
 CORS; JSON; ISO-8601 timestamps; nanoid ids; cursor pagination; two-step uploads
 (`POST /uploads` then reference `attachmentIds`; Vercel Blob client-upload token
 is a later optimization).

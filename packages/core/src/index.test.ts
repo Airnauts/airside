@@ -14,7 +14,7 @@ describe('@airnauts/comments-core public surface', () => {
     expect(typeof normalizePageKey).toBe('function')
     expect(typeof buildOpenApiDocument).toBe('function')
     expect(ANCHOR_SCHEMA_VERSION).toBe(1)
-    expect(KEY_HEADER_NAME).toBe('x-comments-key')
+    expect(KEY_HEADER_NAME).toBe('x-airside-key')
     expect(Array.isArray(operations)).toBe(true)
     expect(ThreadId.parse('t1')).toBe('t1')
     expect(Anchor).toBeDefined()

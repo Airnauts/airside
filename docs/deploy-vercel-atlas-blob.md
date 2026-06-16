@@ -81,7 +81,7 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
 
 ```bash
 curl -i -X POST https://YOUR_APP/api/comments/threads \
-  -H "x-comments-key: $COMMENTS_SECRET_KEY" \
+  -H "x-airside-key: $COMMENTS_SECRET_KEY" \
   -H "origin: https://YOUR_APP" \
   -H 'content-type: application/json' \
   -d '{

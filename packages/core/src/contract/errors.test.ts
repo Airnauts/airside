@@ -21,6 +21,6 @@ describe('error model', () => {
 
 describe('wire constants', () => {
   it('freezes the auth header name', () => {
-    expect(KEY_HEADER_NAME).toBe('x-comments-key')
+    expect(KEY_HEADER_NAME).toBe('x-airside-key')
   })
 })
