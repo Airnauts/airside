@@ -14,6 +14,7 @@ behind [`docs/integration.md`](../../docs/integration.md).
      --filter @airnauts/airside-client \
      --filter @airnauts/airside-adapter-memory \
      --filter @airnauts/airside-adapter-mongo \
+     --filter @airnauts/airside-extension-email \
      --filter @airnauts/airside-extension-jira \
      --filter @airnauts/airside-extension-slack \
      --filter @airnauts/airside-storage-fs \

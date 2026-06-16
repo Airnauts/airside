@@ -80,8 +80,10 @@ type JiraConfig = {
 
 | Env var | Description |
 |---|---|
+| `JIRA_SITE_URL` | Jira Cloud base URL, e.g. `https://acme.atlassian.net` |
 | `JIRA_EMAIL` | Atlassian account email |
 | `JIRA_API_TOKEN` | API token from [id.atlassian.com](https://id.atlassian.com/manage-profile/security/api-tokens) |
+| `JIRA_PROJECT_KEY` | Project key, e.g. `PROJ` |
 
 ## Requirements
 
