@@ -3,7 +3,7 @@ export type Identity = {
   name?: string
 }
 
-const STORAGE_KEY = 'comments:identity'
+const STORAGE_KEY = 'airside:identity'
 
 export function loadIdentity(store: Storage = localStorage): Identity | null {
   try {

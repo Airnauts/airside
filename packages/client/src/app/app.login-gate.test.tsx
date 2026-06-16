@@ -4,7 +4,7 @@ import { mockRect } from '../../test/test-helpers/dom'
 import type { ApiClient } from '../api/client'
 import { WidgetApp } from './app'
 
-const IDENTITY_KEY = 'comments:identity'
+const IDENTITY_KEY = 'airside:identity'
 
 // A thread anchored to #t so that, once logged in, the runtime places it and a pin renders.
 function clientWithOneThread(): ApiClient {

@@ -35,7 +35,7 @@ describe('comments.init', () => {
   it('persists the key and strips the param after activating via URL', async () => {
     history.replaceState({}, '', '/?comments-key=secret')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
-    expect(localStorage.getItem('comments:key')).toBe(JSON.stringify('secret'))
+    expect(localStorage.getItem('airside:key')).toBe(JSON.stringify('secret'))
     expect(window.location.search).toBe('')
     handle.destroy()
   })
@@ -49,7 +49,7 @@ describe('comments.init', () => {
   })
 
   it('mounts from a stored key when the param is absent', async () => {
-    localStorage.setItem('comments:key', JSON.stringify('secret'))
+    localStorage.setItem('airside:key', JSON.stringify('secret'))
     history.replaceState({}, '', '/')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
     expect(document.querySelector('[data-comments-root]')).not.toBeNull()
@@ -57,7 +57,7 @@ describe('comments.init', () => {
   })
 
   it('does not mount from a stale stored key', async () => {
-    localStorage.setItem('comments:key', JSON.stringify('old-key'))
+    localStorage.setItem('airside:key', JSON.stringify('old-key'))
     history.replaceState({}, '', '/')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
     expect(document.querySelector('[data-comments-root]')).toBeNull()

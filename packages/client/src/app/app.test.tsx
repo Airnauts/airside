@@ -19,7 +19,7 @@ function mockClient(): ApiClient {
 
 // Logged-in state: seed identity so WidgetApp renders the full commenting UI (past the gate).
 function login() {
-  localStorage.setItem('comments:identity', JSON.stringify({ email: 'known@example.com' }))
+  localStorage.setItem('airside:identity', JSON.stringify({ email: 'known@example.com' }))
 }
 
 function clickTarget() {

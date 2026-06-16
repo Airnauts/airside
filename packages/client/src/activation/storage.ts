@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'comments:key'
+const STORAGE_KEY = 'airside:key'
 
 /** The activation key persisted after a successful URL-param activation, or null. */
 export function loadActivationKey(store: Storage = localStorage): string | null {

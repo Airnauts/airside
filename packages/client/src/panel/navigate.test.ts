@@ -28,7 +28,7 @@ describe('focus handoff', () => {
 
   it('tolerates a legacy bare-string id', () => {
     const storage = memStorage()
-    storage.setItem('cmnt:focus', 't9')
+    storage.setItem('airside:focus', 't9')
     expect(takeFocusHandoff(storage)).toEqual({ id: 't9', openDetail: false })
   })
 

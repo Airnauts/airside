@@ -7,7 +7,7 @@ export type LauncherEdge = 'left' | 'right'
  *  the viewport height (the pill is centred on `top`). Horizontal position is never free-form. */
 export type LauncherPosition = { edge: LauncherEdge; top: number }
 
-const STORAGE_KEY = 'comments:launcher-position'
+const STORAGE_KEY = 'airside:launcher-position'
 
 /** Bottom-right-ish, matching the pre-drag default. */
 export const DEFAULT_LAUNCHER_POSITION: LauncherPosition = { edge: 'right', top: 92 }
