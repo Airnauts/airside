@@ -23,7 +23,7 @@ behind [`docs/integration.md`](../../docs/integration.md).
    ```bash
    pnpm --filter @airnauts/comments-nextjs-host dev
    ```
-3. Open <http://localhost:3000/?comments-key=dev-key>. Without the `comments-key`
+3. Open <http://localhost:3000/?airside-key=dev-key>. Without the `airside-key`
    param the page is untouched and the widget is inert.
 
 Data is **in-memory and resets on restart**. To persist, set `MONGODB_URI` (and,
@@ -36,7 +36,7 @@ mode are written to a gitignored `public/uploads/` and served by Next.
 Run against `pnpm --filter @airnauts/comments-nextjs-host dev`:
 
 1. Open `/` **without** the key → page untouched, widget inert.
-2. Open `/?comments-key=dev-key` → comment affordance appears; the first action
+2. Open `/?airside-key=dev-key` → comment affordance appears; the first action
    prompts for your email (remembered afterward).
 3. **Element pin:** place a pin on the landing page → reload → it re-anchors.
 4. **Text selection:** select a paragraph on `/article` → comment → reload → the

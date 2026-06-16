@@ -6,7 +6,7 @@ describe('@airnauts/comments-client/react', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     localStorage.clear()
-    history.replaceState({}, '', '/?comments-key=secret')
+    history.replaceState({}, '', '/?airside-key=secret')
   })
   afterEach(() => history.replaceState({}, '', '/'))
 

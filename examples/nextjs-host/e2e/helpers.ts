@@ -16,7 +16,7 @@ export function urlFor(path: string, params: Record<string, string> = {}) {
  *  single in-memory store don't see each other's threads. Pass a unique `ns` per test
  *  (and carry the same `ns` on any later navigation/reload within that test). */
 export async function activate(page: Page, path = '/', ns = '') {
-  await page.goto(urlFor(path, { ns, 'comments-key': DEV_KEY }))
+  await page.goto(urlFor(path, { ns, 'airside-key': DEV_KEY }))
   // The widget mounted — either the logged-out Log In pill or, if identity is already in
   // localStorage (a later navigation within a logged-in test), the full launcher. `login()`
   // drives the actual sign-in; it is idempotent, so calling it after every activate is safe.

@@ -23,7 +23,7 @@ const key = normalizePageKey('https://example.com/page/?q=1')
 
 // Build a deep-link URL that focuses a thread when the page is opened
 const url = threadLink('https://example.com/page', 'thread-abc123')
-// → "https://example.com/page?comments-thread=thread-abc123"
+// → "https://example.com/page?airside-thread=thread-abc123"
 ```
 
 ## API reference
@@ -40,7 +40,7 @@ const url = threadLink('https://example.com/page', 'thread-abc123')
 | Export | Signature / value |
 |---|---|
 | `threadLink` | `(pageUrl: string, threadId: string, param?: string) => string` — appends `?<param>=<id>` to the page URL |
-| `DEFAULT_THREAD_PARAM` | `"comments-thread"` |
+| `DEFAULT_THREAD_PARAM` | `"airside-thread"` |
 
 ### Anchor scoring (pure policy)
 

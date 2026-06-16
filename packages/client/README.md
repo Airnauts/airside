@@ -23,7 +23,7 @@ export function CommentsMount() {
 }
 ```
 
-Render `<CommentsMount />` once in your root layout. The widget stays inert until the URL carries `?comments-key=your-secret-key`; after that, the key is persisted to `localStorage` so subsequent visits work without the param.
+Render `<CommentsMount />` once in your root layout. The widget stays inert until the URL carries `?airside-key=your-secret-key`; after that, the key is persisted to `localStorage` so subsequent visits work without the param.
 
 ### Vanilla JS
 
@@ -58,8 +58,8 @@ const handle: CommentsHandle = await comments.init(options)
 | `key` | `string` | Secret key sent as `x-airside-key` on every API request |
 | `endpoint` | `string` | Base URL of the comments API (e.g. `"/api/comments"`) |
 | `pageKey` | `(url: string) => string` | Override the default `origin + pathname` page identity |
-| `keyParam` | `string` | URL param the activation gate reads (default `"comments-key"`) |
-| `threadParam` | `string` | URL param used for thread deep-links (default `"comments-thread"`) |
+| `keyParam` | `string` | URL param the activation gate reads (default `"airside-key"`) |
+| `threadParam` | `string` | URL param used for thread deep-links (default `"airside-thread"`) |
 | `features.screenshots` | `boolean` | Enable screenshot capture (default off) |
 | `features.textAnchors` | `boolean` | Enable text-selection anchoring (default off) |
 | `provenance` | `Provenance` | Optional deploy metadata attached to new threads (`commitSha`, `branch`, `deploymentId`) |
@@ -80,14 +80,14 @@ import { consumeThreadParam, DEFAULT_THREAD_PARAM } from '@airnauts/comments-cli
 consumeThreadParam(DEFAULT_THREAD_PARAM)
 ```
 
-Reads a `?comments-thread=<id>` deep-link param from the current URL, stores the thread ID in `sessionStorage` so the widget opens that thread's panel on load, then strips the param from the address bar. Call this before `init` if you need to handle deep-links in a vanilla (non-React) context; the React `<CommentsLayer>` handles it automatically.
+Reads a `?airside-thread=<id>` deep-link param from the current URL, stores the thread ID in `sessionStorage` so the widget opens that thread's panel on load, then strips the param from the address bar. Call this before `init` if you need to handle deep-links in a vanilla (non-React) context; the React `<CommentsLayer>` handles it automatically.
 
 ### Constants
 
 | Export | Value |
 |---|---|
-| `DEFAULT_KEY_PARAM` | `"comments-key"` |
-| `DEFAULT_THREAD_PARAM` | `"comments-thread"` |
+| `DEFAULT_KEY_PARAM` | `"airside-key"` |
+| `DEFAULT_THREAD_PARAM` | `"airside-thread"` |
 
 ### Anchor utilities (advanced)
 

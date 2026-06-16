@@ -50,7 +50,7 @@ export function CommentsMount() {
 }
 ```
 
-The widget is inert until a page is opened with `?comments-key=<your-secret-key>` in the URL. After that, the key is persisted to `localStorage` so it stays active on subsequent visits.
+The widget is inert until a page is opened with `?airside-key=<your-secret-key>` in the URL. After that, the key is persisted to `localStorage` so it stays active on subsequent visits.
 
 ### Local development (no database)
 
@@ -162,7 +162,7 @@ const handle = await comments.init({
 ```
 
 As with the React wrapper, the widget stays inert until the page is opened with
-`?comments-key=<key>` (after which the key is persisted and the param stripped from the
+`?airside-key=<key>` (after which the key is persisted and the param stripped from the
 URL). Use it from any bundler, or from a `<script type="module">` on a plain HTML page.
 
 ---

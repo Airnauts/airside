@@ -3,7 +3,7 @@ import { isActivated } from './gate'
 
 describe('isActivated', () => {
   it('activates when the default param is present and equals the key', () => {
-    expect(isActivated({ search: '?comments-key=secret', key: 'secret' })).toBe(true)
+    expect(isActivated({ search: '?airside-key=secret', key: 'secret' })).toBe(true)
   })
 
   it('does not activate when the param is absent', () => {
@@ -12,7 +12,7 @@ describe('isActivated', () => {
   })
 
   it('does not activate when the param value differs from the key', () => {
-    expect(isActivated({ search: '?comments-key=wrong', key: 'secret' })).toBe(false)
+    expect(isActivated({ search: '?airside-key=wrong', key: 'secret' })).toBe(false)
   })
 
   it('honors a custom param name', () => {

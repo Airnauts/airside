@@ -110,7 +110,7 @@ test.describe('sidebar master–detail', () => {
     await expect(page.getByTestId('comments-panel').getByPlaceholder(/reply/i)).toBeFocused()
   })
 
-  test('?comments-thread deep-link opens the detail and strips the param', async ({ page }) => {
+  test('?airside-thread deep-link opens the detail and strips the param', async ({ page }) => {
     const ns = 'sidebar-deeplink'
     const body = 'Deep-link sidebar detail body'
 
@@ -127,12 +127,12 @@ test.describe('sidebar master–detail', () => {
 
     // Load the article fresh with the deep-link param.
     await page.goto(
-      urlFor('/article', { ns, 'comments-key': DEV_KEY, 'comments-thread': id as string }),
+      urlFor('/article', { ns, 'airside-key': DEV_KEY, 'airside-thread': id as string }),
     )
 
     // The detail opens automatically and the deep-link param is stripped from the URL.
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
     await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
-    await expect(page).not.toHaveURL(/comments-thread/)
+    await expect(page).not.toHaveURL(/airside-thread/)
   })
 })

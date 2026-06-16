@@ -22,7 +22,7 @@ describe('buildNotificationEvent', () => {
       { projectId: 'proj_x' },
       thread,
       comment,
-      'comments-thread',
+      'airside-thread',
     )
     expect(event).toEqual({
       type: 'thread.created',
@@ -30,7 +30,7 @@ describe('buildNotificationEvent', () => {
       threadId: 't_1',
       pageUrl: 'https://example.com/about',
       pageTitle: 'About',
-      threadUrl: 'https://example.com/about?comments-thread=t_1',
+      threadUrl: 'https://example.com/about?airside-thread=t_1',
       participants: [],
       text: 'Looks off here',
       author: { email: 'alice@example.com', name: 'Alice' },
@@ -57,7 +57,7 @@ describe('buildNotificationEvent', () => {
         author: { email: 'bob@example.com' },
         createdAt: '2026-06-03T12:00:00.000Z',
       },
-      'comments-thread',
+      'airside-thread',
     )
     expect(event.participants).toEqual(['alice@example.com', 'carol@example.com'])
   })
@@ -76,7 +76,7 @@ describe('buildNotificationEvent', () => {
         author: { email: 'alice@example.com' },
         createdAt: '2026-06-03T12:00:00.000Z',
       },
-      'comments-thread',
+      'airside-thread',
     )
     expect(event.participants).toEqual([])
   })
@@ -98,7 +98,7 @@ describe('buildNotificationEvent', () => {
       { projectId: 'proj_x' },
       { id: 't_2' as ThreadId, pageUrl: 'https://example.com/', comments: [] },
       { text: 'hi', author: { email: 'bob@example.com' }, createdAt: '2026-06-03T11:00:00.000Z' },
-      'comments-thread',
+      'airside-thread',
     )
     expect(event.env).toBeUndefined()
     expect(event.pageTitle).toBeUndefined()
@@ -112,7 +112,7 @@ describe('buildNotificationEvent', () => {
       { projectId: 'proj_x', env: 'staging' },
       thread,
       comment,
-      'comments-thread',
+      'airside-thread',
     )
     expect(event.env).toBe('staging')
   })

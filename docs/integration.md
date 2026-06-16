@@ -72,7 +72,7 @@ export default function RootLayout({ children }) {
 
 ## 4. Activate
 
-Open any page with `?comments-key=dev-key`. The widget stays completely inert
+Open any page with `?airside-key=dev-key`. The widget stays completely inert
 (never mounts, renders, or fetches) until the key in the URL matches `secretKey`.
 
 ## 5. Go to production
@@ -166,7 +166,7 @@ createCommentsServer({
 
 A notification failure never breaks the comment write, and the webhook request is bounded
 by a 3-second timeout. The link points at the page; a recipient sees the comments only if
-they already hold the activation key (it is remembered after the first `?comments-key=…`
+they already hold the activation key (it is remembered after the first `?airside-key=…`
 activation).
 
 ## Jira issues

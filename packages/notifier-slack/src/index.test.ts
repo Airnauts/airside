@@ -9,7 +9,7 @@ const event: NotificationEvent = {
   threadId: 't_1' as ThreadId,
   pageUrl: 'https://example.com/about',
   pageTitle: 'About',
-  threadUrl: 'https://example.com/about?comments-thread=t_1',
+  threadUrl: 'https://example.com/about?airside-thread=t_1',
   participants: [],
   text: 'Looks off here',
   author: { email: 'alice@example.com', name: 'Alice' },
@@ -53,7 +53,7 @@ describe('slackExtension', () => {
 
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     const blocks = JSON.stringify(JSON.parse(init.body as string).blocks)
-    expect(blocks).toContain('https://example.com/about?comments-thread=t_1')
+    expect(blocks).toContain('https://example.com/about?airside-thread=t_1')
   })
 
   it('throws on a non-2xx response without leaking the webhook URL', async () => {
@@ -89,7 +89,7 @@ describe('formatSlackMessage', () => {
 
   it('links each block to the thread deep-link', () => {
     const blocks = JSON.stringify(formatSlackMessage(event).blocks)
-    expect(blocks).toContain('https://example.com/about?comments-thread=t_1')
+    expect(blocks).toContain('https://example.com/about?airside-thread=t_1')
     expect(blocks).not.toContain('|https://example.com/about>') // never a bare page link
   })
 })

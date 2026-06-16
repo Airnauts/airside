@@ -15,7 +15,7 @@ export type InitOptions = {
   provenance?: Provenance
 }
 
-export const DEFAULT_KEY_PARAM = 'comments-key'
+export const DEFAULT_KEY_PARAM = 'airside-key'
 
 export { DEFAULT_THREAD_PARAM, threadLink } from '@airnauts/comments-core'
 

@@ -32,7 +32,7 @@ export type CreateCommentsServerOptions = {
   extensions?: ServerExtension[]
   /** @deprecated Use `extensions`. Wrapped into notification extensions. */
   notifiers?: Notifier[]
-  /** Query param the widget reads to focus a thread; used to build notification deep-links. Defaults to "comments-thread". */
+  /** Query param the widget reads to focus a thread; used to build notification deep-links. Defaults to "airside-thread". */
   threadParam?: string
   /** false to disable; defaults to { writesPerMin: 60, readsPerMin: 600 }. */
   rateLimit?: RateLimitConfig | false

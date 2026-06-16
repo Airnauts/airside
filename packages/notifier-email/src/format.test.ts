@@ -9,7 +9,7 @@ const event: NotificationEvent = {
   threadId: 't_1' as ThreadId,
   pageUrl: 'https://example.com/about',
   pageTitle: 'About',
-  threadUrl: 'https://example.com/about?comments-thread=t_1',
+  threadUrl: 'https://example.com/about?airside-thread=t_1',
   participants: [],
   text: 'Looks off here',
   author: { email: 'alice@example.com', name: 'Alice' },
@@ -55,8 +55,8 @@ describe('formatEmail', () => {
 
   it('links both parts to the deep-link', () => {
     const out = formatEmail(event)
-    expect(out.text).toContain('https://example.com/about?comments-thread=t_1')
-    expect(out.html).toContain('href="https://example.com/about?comments-thread=t_1"')
+    expect(out.text).toContain('https://example.com/about?airside-thread=t_1')
+    expect(out.html).toContain('href="https://example.com/about?airside-thread=t_1"')
   })
 
   it('escapes user-controlled text and author name in the HTML part', () => {

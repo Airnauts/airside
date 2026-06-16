@@ -114,7 +114,7 @@ describe('PanelRow', () => {
       />,
     )
     fireEvent.click(screen.getByRole('button', { name: /copy link/i }))
-    expect(writeText).toHaveBeenCalledWith('https://site.com/a?comments-thread=t42')
+    expect(writeText).toHaveBeenCalledWith('https://site.com/a?airside-thread=t42')
   })
 
   it('flips the label to "Copied!" briefly after copying, then back', () => {

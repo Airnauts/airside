@@ -23,7 +23,7 @@ function stripKeyParam(keyParam: string): void {
 }
 
 /**
- * Translate a `?comments-thread=<id>` deep-link into the cross-page focus handoff
+ * Translate a `?airside-thread=<id>` deep-link into the cross-page focus handoff
  * (so the boot consumer opens that thread's sidebar detail), then strip the param
  * from the address bar — mirroring the key-param handling.
  */

@@ -18,7 +18,7 @@ describe('comments.init', () => {
   })
 
   it('mounts when the key param matches', async () => {
-    history.replaceState({}, '', '/?comments-key=secret')
+    history.replaceState({}, '', '/?airside-key=secret')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
     expect(document.querySelector('[data-airside-root]')).not.toBeNull()
     handle.destroy()
@@ -26,14 +26,14 @@ describe('comments.init', () => {
   })
 
   it('does not mount when the key param differs', async () => {
-    history.replaceState({}, '', '/?comments-key=wrong')
+    history.replaceState({}, '', '/?airside-key=wrong')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
     expect(document.querySelector('[data-airside-root]')).toBeNull()
     handle.destroy()
   })
 
   it('persists the key and strips the param after activating via URL', async () => {
-    history.replaceState({}, '', '/?comments-key=secret')
+    history.replaceState({}, '', '/?airside-key=secret')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
     expect(localStorage.getItem('airside:key')).toBe(JSON.stringify('secret'))
     expect(window.location.search).toBe('')
@@ -41,7 +41,7 @@ describe('comments.init', () => {
   })
 
   it('preserves other params and the hash when stripping', async () => {
-    history.replaceState({}, '', '/?comments-key=secret&foo=1#section')
+    history.replaceState({}, '', '/?airside-key=secret&foo=1#section')
     const handle = await init({ key: 'secret', endpoint: 'http://x' })
     expect(window.location.search).toBe('?foo=1')
     expect(window.location.hash).toBe('#section')

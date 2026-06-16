@@ -47,7 +47,7 @@ Returns a `CommentsServer` with a single `handle(req: Request): Promise<Response
 | `env` | `string` | | Optional sub-namespace (e.g. `"staging"`) within a project |
 | `extensions` | `ServerExtension[]` | | Notification and thread-action plugins; see below |
 | `notifiers` | `Notifier[]` | | **Deprecated** — use `extensions` |
-| `threadParam` | `string` | | URL param for thread deep-links (default `"comments-thread"`) |
+| `threadParam` | `string` | | URL param for thread deep-links (default `"airside-thread"`) |
 | `rateLimit` | `RateLimitConfig \| false` | | Per-key/IP rate limit; default `{ writesPerMin: 60, readsPerMin: 600 }`; `false` disables |
 | `rateLimiter` | `RateLimiter` | | Override the rate-limiter implementation |
 | `uploads` | `{ maxBytes?: number }` | | Per-upload size cap (default 5 MB) |

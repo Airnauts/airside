@@ -9,7 +9,7 @@ const event: NotificationEvent = {
   projectId: 'proj_x',
   threadId: 't_1' as ThreadId,
   pageUrl: 'https://example.com/about',
-  threadUrl: 'https://example.com/about?comments-thread=t_1',
+  threadUrl: 'https://example.com/about?airside-thread=t_1',
   participants: [],
   text: 'hi',
   author: { email: 'alice@example.com' },

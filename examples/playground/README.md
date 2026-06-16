@@ -25,7 +25,7 @@ Minimal local development sandbox for the `@airnauts/comments-client` widget. Ru
    ```bash
    pnpm --filter @airnauts/comments-playground dev
    ```
-4. Open <http://localhost:5173/?comments-key=dev-key>. Without the `comments-key` param the widget is inert. With it: a **+ Comment** button appears; the first click prompts for your email; placing a marker creates a thread that persists across a reload.
+4. Open <http://localhost:5173/?airside-key=dev-key>. Without the `airside-key` param the widget is inert. With it: a **+ Comment** button appears; the first click prompts for your email; placing a marker creates a thread that persists across a reload.
 
 ## Packages used
 
