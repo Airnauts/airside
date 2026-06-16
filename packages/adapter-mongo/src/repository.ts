@@ -24,8 +24,8 @@ import {
 import { type Db, type Filter, MongoClient, type UpdateFilter } from 'mongodb'
 import { ensureIndexes } from './indexes'
 
-export const COLLECTION = 'threads'
-export const ATTACHMENTS_COLLECTION = 'attachments'
+export const COLLECTION = 'airside_threads'
+export const ATTACHMENTS_COLLECTION = 'airside_attachments'
 
 /** Stored shape: the wire Thread (minus its `id`) keyed by `_id`, plus server-only scope. */
 type StoredThread = Omit<Thread, 'id'> & {

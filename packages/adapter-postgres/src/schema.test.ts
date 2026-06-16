@@ -16,16 +16,16 @@ afterAll(async () => {
 it('creates the threads and attachments tables', async () => {
   const { rows } = await db.query<{ table_name: string }>(
     `SELECT table_name FROM information_schema.tables
-     WHERE table_schema = 'public' AND table_name IN ('comments_threads', 'comments_attachments')
+     WHERE table_schema = 'public' AND table_name IN ('airside_threads', 'airside_attachments')
      ORDER BY table_name`,
   )
-  expect(rows.map((r) => r.table_name)).toEqual(['comments_attachments', 'comments_threads'])
+  expect(rows.map((r) => r.table_name)).toEqual(['airside_attachments', 'airside_threads'])
 })
 
 it('creates the list index used for keyset pagination', async () => {
   const { rows } = await db.query<{ indexname: string }>(
     `SELECT indexname FROM pg_indexes
-     WHERE tablename = 'comments_threads' AND indexname = 'comments_threads_list'`,
+     WHERE tablename = 'airside_threads' AND indexname = 'airside_threads_list'`,
   )
   expect(rows).toHaveLength(1)
 })

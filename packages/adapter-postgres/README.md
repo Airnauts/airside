@@ -54,7 +54,7 @@ const repository = createPostgresRepository({ sql: pool })
 
 ### `ensureSchema(sql)`
 
-Creates the `comments_threads` and `comments_attachments` tables and their indexes with `CREATE … IF NOT EXISTS` — safe to call on every startup. Use this when managing your own executor; `postgresRepository` calls it automatically.
+Creates the `airside_threads` and `airside_attachments` tables and their indexes with `CREATE … IF NOT EXISTS` — safe to call on every startup. Use this when managing your own executor; `postgresRepository` calls it automatically.
 
 Production teams that prefer managed migrations can run the equivalent DDL through their own tooling instead.
 

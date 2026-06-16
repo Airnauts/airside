@@ -24,12 +24,12 @@ afterAll(async () => {
 // The contract suite calls makeRepo in beforeEach and registers no afterEach,
 // so isolation lives here: clear the shared collection before each test.
 repositoryContract('mongo', async () => {
-  await db.collection('threads').deleteMany({})
+  await db.collection('airside_threads').deleteMany({})
   return createMongoRepository({ db })
 })
 
 it('ensureIndexes creates the three scoped indexes with the expected key specs', async () => {
-  const indexes = await db.collection('threads').indexes()
+  const indexes = await db.collection('airside_threads').indexes()
   const byName = new Map(indexes.map((i) => [i.name, i.key]))
   // Assert names AND key specs/directions — keyset pagination depends on
   // projectId_updatedAt sorting updatedAt descending.

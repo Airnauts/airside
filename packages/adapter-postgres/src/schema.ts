@@ -7,14 +7,14 @@ export interface SqlExecutor {
   query(text: string, params?: unknown[]): Promise<{ rows: unknown[] }>
 }
 
-export const THREADS_TABLE = 'comments_threads'
-export const ATTACHMENTS_TABLE = 'comments_attachments'
+export const THREADS_TABLE = 'airside_threads'
+export const ATTACHMENTS_TABLE = 'airside_attachments'
 
 // Idempotent DDL (CREATE … IF NOT EXISTS). `updated_at` is text holding the exact
 // ISO string so keyset comparison stays byte-for-byte consistent with the cursor;
 // `env` is NOT NULL DEFAULT '' so absent env is plain equality, never SQL NULL.
 const DDL: string[] = [
-  `CREATE TABLE IF NOT EXISTS comments_threads (
+  `CREATE TABLE IF NOT EXISTS airside_threads (
      id          text PRIMARY KEY,
      project_id  text NOT NULL,
      env         text NOT NULL DEFAULT '',
@@ -23,9 +23,9 @@ const DDL: string[] = [
      updated_at  text NOT NULL,
      doc         jsonb NOT NULL
    )`,
-  `CREATE INDEX IF NOT EXISTS comments_threads_list
-     ON comments_threads (project_id, env, updated_at DESC, id DESC)`,
-  `CREATE TABLE IF NOT EXISTS comments_attachments (
+  `CREATE INDEX IF NOT EXISTS airside_threads_list
+     ON airside_threads (project_id, env, updated_at DESC, id DESC)`,
+  `CREATE TABLE IF NOT EXISTS airside_attachments (
      id          text PRIMARY KEY,
      project_id  text NOT NULL,
      env         text NOT NULL DEFAULT '',

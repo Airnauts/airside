@@ -64,7 +64,7 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
         ...(input.provenance !== undefined ? { provenance: input.provenance } : {}),
       }
       await sql.query(
-        `INSERT INTO comments_threads (id, project_id, env, page_key, status, updated_at, doc)
+        `INSERT INTO airside_threads (id, project_id, env, page_key, status, updated_at, doc)
          VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
         [
           input.id,
@@ -81,7 +81,7 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
 
     async getThread(scope: Scope, id: ThreadId): Promise<Thread | null> {
       const { rows } = (await sql.query(
-        `SELECT doc FROM comments_threads WHERE id = $1 AND project_id = $2 AND env = $3`,
+        `SELECT doc FROM airside_threads WHERE id = $1 AND project_id = $2 AND env = $3`,
         [id, scope.projectId, scopeEnv(scope)],
       )) as { rows: Array<{ doc: Thread }> }
       const row = rows[0]
@@ -109,7 +109,7 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
       const { rows } = (await sql.query(
         `SELECT doc - 'comments' - 'captureContext' - 'provenance' AS base,
                 doc->'comments'->0 AS root
-         FROM comments_threads
+         FROM airside_threads
          WHERE ${where.join(' AND ')}
          ORDER BY updated_at DESC, id DESC
          LIMIT $${params.length}`,
@@ -128,7 +128,7 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
       // unresolvedCount is intentionally untouched: it tracks `status` only, and
       // addComment never changes status. Single statement => atomic without a txn.
       const { rows } = (await sql.query(
-        `UPDATE comments_threads
+        `UPDATE airside_threads
          SET doc = jsonb_set(
                      jsonb_set(
                        jsonb_set(
@@ -155,7 +155,7 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
       now: string,
     ): Promise<Thread> {
       const { rows } = (await sql.query(
-        `UPDATE comments_threads
+        `UPDATE airside_threads
          SET status = $4,
              updated_at = $5,
              doc = jsonb_set(
@@ -188,7 +188,7 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
       // the array, then write the whole doc back. Two statements => not atomic, which
       // matches the mongo adapter's documented behaviour for this v1 op.
       const { rows } = (await sql.query(
-        `SELECT doc FROM comments_threads WHERE id = $1 AND project_id = $2 AND env = $3`,
+        `SELECT doc FROM airside_threads WHERE id = $1 AND project_id = $2 AND env = $3`,
         [threadId, scope.projectId, scopeEnv(scope)],
       )) as { rows: Array<{ doc: Thread }> }
       const current = rows[0]?.doc
@@ -201,7 +201,7 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
         lastActivityAt: now,
       }
       await sql.query(
-        `UPDATE comments_threads
+        `UPDATE airside_threads
          SET doc = $4::jsonb, updated_at = $5
          WHERE id = $1 AND project_id = $2 AND env = $3`,
         [threadId, scope.projectId, scopeEnv(scope), JSON.stringify(next), now],
@@ -239,7 +239,7 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
       let docExpr = 'doc'
       for (const s of sets) docExpr = `jsonb_set(${docExpr}, ${s})`
       const { rows } = (await sql.query(
-        `UPDATE comments_threads
+        `UPDATE airside_threads
          SET doc = ${docExpr}, updated_at = $5
          WHERE id = $1 AND project_id = $2 AND env = $3
          RETURNING doc - 'comments' - 'captureContext' - 'provenance' AS base,
@@ -253,7 +253,7 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
 
     async putAttachment(scope: Scope, attachment: Attachment): Promise<void> {
       await sql.query(
-        `INSERT INTO comments_attachments (id, project_id, env, doc)
+        `INSERT INTO airside_attachments (id, project_id, env, doc)
          VALUES ($1, $2, $3, $4::jsonb)
          ON CONFLICT (id) DO UPDATE SET project_id = EXCLUDED.project_id,
                                         env = EXCLUDED.env,
@@ -268,7 +268,7 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
       const placeholders = ids.map((_, i) => `$${i + 1}`).join(', ')
       const params: unknown[] = [...ids, scope.projectId, scopeEnv(scope)]
       const { rows } = (await sql.query(
-        `SELECT doc FROM comments_attachments
+        `SELECT doc FROM airside_attachments
          WHERE id IN (${placeholders})
            AND project_id = $${ids.length + 1}
            AND env = $${ids.length + 2}`,

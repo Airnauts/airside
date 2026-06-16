@@ -1329,3 +1329,23 @@ are unchanged. Refines the adapter-construction convention of ADR-0021.
 - Versioning **continues the line**: the final `comments` release was `0.7.0`; airside debuts at `0.8.0` (one breaking minor under the pre-1.0 policy), same code and maturity.
 
 **Consequences.** Existing embeds lose persisted state on upgrade (identity re-prompt, launcher position reset, one extra activation) — an accepted one-time cost vs. a permanent dual-read shim. Every internal `workspace:^` dep flips in one change, so the Changesets-only publish path is load-bearing (a hand `npm publish` would leak `workspace:^`). The one published consumer (lear-frontend) breaks and needs a cross-repo follow-up (new package names, `airsideKey`, `?airside-key`). ADR-0020's package-naming decision is superseded; its npm-scope and MIT/Changesets decisions stand.
+
+## ADR-0039 — Brand and unify the persistence storage identifiers
+
+**Date:** 2026-06-16
+**Status:** accepted (supersedes the table-naming portion of ADR-0035 and the "Mongo database name stays" point of ADR-0038)
+
+**Context.** The Airside rebrand (ADR-0038) initially kept the persistence-layer names as domain. That left two `comments`-branded identifiers in the storage schema, asymmetrically between adapters:
+- **Postgres** stored data in tables `comments_threads` / `comments_attachments` (ADR-0035). Postgres tables live in a *shared* schema (default `public`) alongside the consumer's own tables, so a namespacing prefix is needed to avoid collisions.
+- **Mongo** used *unprefixed* collections `threads` / `attachments`. Mongo collections live in a *dedicated database* (the db name in `MONGODB_URI`), so the database itself is the namespace and no prefix was used.
+
+The example also pointed `MONGODB_URI` at a database literally named `comments`. The asymmetry (one adapter prefixed, one not) and the lingering `comments` brand were both worth resolving while still pre-1.0.
+
+**Decision.** Brand and **unify** the storage identifiers on the `airside_` prefix across both adapters:
+- Postgres tables `comments_threads` / `comments_attachments` → `airside_threads` / `airside_attachments` (and the index `comments_threads_list` → `airside_threads_list`).
+- Mongo collections `threads` / `attachments` → `airside_threads` / `airside_attachments`.
+- The example Mongo database name `comments` → `airside` (`MONGODB_URI=…/airside`); the host route path `/api/comments` → `/api/airside` (example/doc convention only — the handler routes off the catch-all sub-path, so the prefix is arbitrary).
+
+We unify **"up"** (prefix both) rather than **"down"** (drop the Postgres prefix to bare `threads`): the Postgres prefix is load-bearing in a shared schema, and prefixing Mongo too — though mildly redundant given its dedicated database — yields identical identifiers across adapters and stays safe if a consumer ever points Mongo at a shared database.
+
+**Consequences.** This is a breaking storage-schema change: `ensureSchema` / index creation make fresh `airside_*` tables/collections, so any pre-existing data under the old names is orphaned (a deliberate reset, consistent with ADR-0038's pre-1.0 stance). Safe to take now — the Postgres adapter is new with no production deployments, and the one Mongo consumer (lear-frontend) has not deployed its integration, so no live data is affected. Existing deployments, if any, must rename their tables/collections or re-create them. The `Comment` domain type, `comments[]` data fields, and "Add comment"/"Reply" UI copy remain unchanged — only the physical storage identifiers moved.
