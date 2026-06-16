@@ -57,9 +57,9 @@ describe('login gate', () => {
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
 
     expect(await screen.findByTestId('comments-login')).toBeInTheDocument()
-    expect(screen.queryByTestId('comments-place')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('comments-panel-open')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('comments-pin')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('airside-place')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('airside-panel-open')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('airside-pin')).not.toBeInTheDocument()
     expect(client.listThreads).not.toHaveBeenCalled()
   })
 
@@ -75,8 +75,8 @@ describe('login gate', () => {
     })
     fireEvent.click(within(dialog).getByRole('button', { name: /log in/i }))
 
-    expect(await screen.findByTestId('comments-place')).toBeInTheDocument()
-    expect(await screen.findByTestId('comments-pin')).toBeInTheDocument()
+    expect(await screen.findByTestId('airside-place')).toBeInTheDocument()
+    expect(await screen.findByTestId('airside-pin')).toBeInTheDocument()
     expect(localStorage.getItem(IDENTITY_KEY)).toContain('rev@example.com')
   })
 
@@ -86,7 +86,7 @@ describe('login gate', () => {
     const client = clientWithOneThread()
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
 
-    expect(await screen.findByTestId('comments-place')).toBeInTheDocument()
+    expect(await screen.findByTestId('airside-place')).toBeInTheDocument()
     expect(screen.queryByTestId('comments-login')).not.toBeInTheDocument()
   })
 })

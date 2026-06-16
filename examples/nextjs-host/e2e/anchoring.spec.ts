@@ -21,12 +21,12 @@ test.describe('anchoring', () => {
       await login(page)
       // Target the 2nd <li> by text unique to it ("Content signals" also occurs in a nearby <p>).
       await placeElementPin(page, 'disambiguate near-matches', `pin for ${variant}`)
-      await expect(page.getByTestId('comments-pin')).toHaveCount(1)
+      await expect(page.getByTestId('airside-pin')).toHaveCount(1)
 
       // Reload the mutated variant (same ns → same pageKey); must re-anchor.
       await page.goto(urlFor('/article', { ns, variant }))
-      await expect(page.getByTestId('comments-place')).toBeVisible() // active via localStorage
-      await expect(page.getByTestId('comments-pin')).toHaveCount(1)
+      await expect(page.getByTestId('airside-place')).toBeVisible() // active via localStorage
+      await expect(page.getByTestId('airside-pin')).toHaveCount(1)
       await expect(page.getByTestId('comments-detached')).toHaveCount(0)
     })
   }
@@ -37,15 +37,15 @@ test.describe('anchoring', () => {
     await login(page)
     // Target the 2nd <li> by text unique to it ("Content signals" also occurs in a nearby <p>).
     await placeElementPin(page, 'disambiguate near-matches', 'pin that will orphan')
-    await expect(page.getByTestId('comments-pin')).toHaveCount(1)
+    await expect(page.getByTestId('airside-pin')).toHaveCount(1)
 
     await page.goto(urlFor('/article', { ns, variant: 'removed' }))
-    await expect(page.getByTestId('comments-place')).toBeVisible()
+    await expect(page.getByTestId('airside-place')).toBeVisible()
     // The anchored <li> is gone → no positioned pin; the thread surfaces as detached
     // and/or in the panel's needs-review section.
-    await expect(page.getByTestId('comments-pin')).toHaveCount(0)
+    await expect(page.getByTestId('airside-pin')).toHaveCount(0)
     const detached = page.getByTestId('comments-detached')
-    await page.getByTestId('comments-panel-open').click()
+    await page.getByTestId('airside-panel-open').click()
     const needsReview = page.getByTestId('comments-needs-review')
     await expect(detached.or(needsReview).first()).toBeVisible()
   })

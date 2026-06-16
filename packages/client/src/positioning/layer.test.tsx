@@ -56,7 +56,7 @@ describe('PinLayer', () => {
         highlight: [{ x: 1, y: 2, width: 5, height: 6 }],
       },
     ])
-    const pins = screen.getAllByTestId('comments-pin')
+    const pins = screen.getAllByTestId('airside-pin')
     expect(pins).toHaveLength(2)
     expect(pins[0].style.transform).toContain('translate(10px, 20px)')
   })

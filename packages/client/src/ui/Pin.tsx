@@ -46,7 +46,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       type="button"
       data-airside-pin
       data-airside-pin-id={item.id}
-      data-testid="comments-pin"
+      data-testid="airside-pin"
       data-focused={focused ? 'true' : undefined}
       data-active={active ? 'true' : undefined}
       aria-label={label}
@@ -68,7 +68,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       {focused && (
         <span
           aria-hidden={true}
-          data-testid="comments-pin-pulse"
+          data-testid="airside-pin-pulse"
           className="cmnt:absolute cmnt:inset-0 cmnt:rounded-full cmnt:bg-blue-500/40 cmnt:animate-ping"
         />
       )}

@@ -49,7 +49,7 @@ export function ThreadPopover({ item, pin, client, focused, selected }: ThreadPo
       </Popover.Trigger>
       <Popover.Portal container={container ?? undefined}>
         <Popover.Content
-          data-testid="comments-pin-popover"
+          data-testid="airside-pin-popover"
           side="bottom"
           align="center"
           sideOffset={8}

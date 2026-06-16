@@ -58,7 +58,7 @@ describe('MarkerLayer place mode', () => {
     mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 80, height: 16 })
     const c = client()
     renderMarker(props(c))
-    fireEvent.click(screen.getByTestId('comments-place'))
+    fireEvent.click(screen.getByTestId('airside-place'))
     const target = document.querySelector('#t') as Element
     fireEvent.click(target, { clientX: 40, clientY: 8 })
     // A draft popover opens; no thread is created yet.
@@ -122,7 +122,7 @@ describe('MarkerLayer place mode', () => {
       }
     })
     renderMarker(props(c))
-    fireEvent.click(screen.getByTestId('comments-place'))
+    fireEvent.click(screen.getByTestId('airside-place'))
     fireEvent.click(document.querySelector('#t') as Element, { clientX: 40, clientY: 8 })
     expect(await screen.findByTestId('comments-draft')).toBeInTheDocument()
     fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
@@ -140,7 +140,7 @@ describe('MarkerLayer place mode', () => {
     document.body.innerHTML = '<main><p id="t">x</p></main>'
     const c = client()
     renderMarker(props(c))
-    fireEvent.click(screen.getByTestId('comments-place'))
+    fireEvent.click(screen.getByTestId('airside-place'))
     fireEvent.keyDown(document, { key: 'Escape' })
     fireEvent.click(document.querySelector('#t') as Element, { clientX: 1, clientY: 1 })
     expect(screen.queryByTestId('comments-draft')).toBeNull()
@@ -176,7 +176,7 @@ describe('MarkerLayer place mode', () => {
     } as unknown as Selection)
     const c = client()
     renderMarker(props(c))
-    fireEvent.click(screen.getByTestId('comments-place'))
+    fireEvent.click(screen.getByTestId('airside-place'))
     fireEvent.click(document.querySelector('#p') as Element, { clientX: 5, clientY: 5 })
     expect(await screen.findByTestId('comments-draft')).toBeInTheDocument()
     fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
@@ -272,14 +272,14 @@ describe('MarkerLayer mutation wiring', () => {
     })
     renderMarker(props(c))
     // Pin renders for the open thread.
-    const pin = await screen.findByTestId('comments-pin')
+    const pin = await screen.findByTestId('airside-pin')
     expect(pin).toHaveAccessibleName(/^Comment thread by/i)
     // Open it and resolve.
     fireEvent.click(pin)
     await waitFor(() => expect(screen.getByText('the comment')).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
     await waitFor(() =>
-      expect(screen.getByTestId('comments-pin')).toHaveAccessibleName(/resolved/i),
+      expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i),
     )
     // Now simulate what the live app does: the popover's own content change is a DOM mutation
     // under document.body → rematchAll() re-emits from the runtime's cached list. Without the
@@ -289,9 +289,9 @@ describe('MarkerLayer mutation wiring', () => {
     spies.fireResize()
     // The pin must STAY resolved (✓) — no clobber back to the blue "open" avatar.
     await waitFor(() =>
-      expect(screen.getByTestId('comments-pin')).toHaveAccessibleName(/resolved/i),
+      expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i),
     )
-    expect(screen.getByTestId('comments-pin')).toHaveTextContent('✓')
+    expect(screen.getByTestId('airside-pin')).toHaveTextContent('✓')
     // listThreads must not have been called again (no refetch; cache patch sufficed).
     expect(c.listThreads).toHaveBeenCalledTimes(1)
     spies.restore()
@@ -334,7 +334,7 @@ describe('MarkerLayer panel integration', () => {
       getThread: vi.fn(),
     }
     renderLayer(client)
-    screen.getByTestId('comments-panel-open').click()
+    screen.getByTestId('airside-panel-open').click()
     await waitFor(() => expect(screen.getByTestId('comments-panel')).toBeInTheDocument())
   })
 

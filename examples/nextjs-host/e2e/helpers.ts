@@ -21,7 +21,7 @@ export async function activate(page: Page, path = '/', ns = '') {
   // localStorage (a later navigation within a logged-in test), the full launcher. `login()`
   // drives the actual sign-in; it is idempotent, so calling it after every activate is safe.
   await expect(
-    page.getByTestId('comments-login').or(page.getByTestId('comments-place')),
+    page.getByTestId('comments-login').or(page.getByTestId('airside-place')),
   ).toBeVisible()
 }
 
@@ -35,18 +35,18 @@ export async function login(page: Page, email = 'reviewer@example.com') {
   await dialog.getByRole('textbox', { name: 'Email', exact: true }).fill(email)
   await dialog.getByRole('button', { name: 'Log in' }).click()
   // The full launcher proves login completed.
-  await expect(page.getByTestId('comments-place')).toBeVisible()
+  await expect(page.getByTestId('airside-place')).toBeVisible()
 }
 
 /** Enter place mode, click an element target, fill the draft composer, submit. */
 export async function placeElementPin(page: Page, targetText: string, body: string) {
-  await page.getByTestId('comments-place').click()
+  await page.getByTestId('airside-place').click()
   await page.getByText(targetText, { exact: false }).first().click()
   const draft = page.getByTestId('comments-draft')
   await expect(draft).toBeVisible()
   await draft.getByRole('textbox').fill(body)
   await draft.getByRole('button', { name: 'Send' }).click()
-  await expect(page.getByTestId('comments-pin').first()).toBeVisible()
+  await expect(page.getByTestId('airside-pin').first()).toBeVisible()
 }
 
 /** Enter place mode, select a literal text run via the DOM Selection API, then dispatch a
@@ -54,7 +54,7 @@ export async function placeElementPin(page: Page, targetText: string, body: stri
  *  and captures a text (selection) anchor. A real mouse-drag clears the selection on the
  *  click's mousedown, so we build the Range explicitly and fire a synthetic click. */
 export async function placeTextSelection(page: Page, targetText: string, body: string) {
-  await page.getByTestId('comments-place').click()
+  await page.getByTestId('airside-place').click()
   // Select `targetText` within whichever element contains it, then dispatch a click whose
   // coordinates fall on the selected range. The handler reads getSelection() before reacting.
   const ok = await page.evaluate((needle) => {
@@ -101,6 +101,6 @@ export async function placeTextSelection(page: Page, targetText: string, body: s
 export async function openThread(page: Page) {
   const statusButton = page.getByRole('button', { name: /Resolve|Reopen/ })
   if (await statusButton.isVisible().catch(() => false)) return
-  await page.getByTestId('comments-pin').first().click()
+  await page.getByTestId('airside-pin').first().click()
   await expect(statusButton).toBeVisible()
 }

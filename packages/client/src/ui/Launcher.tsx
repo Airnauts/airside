@@ -37,7 +37,7 @@ export function Launcher({
         size="icon"
         aria-label={panelOpen ? 'Close comments panel' : 'Open comments panel'}
         aria-expanded={panelOpen}
-        data-testid="comments-panel-open"
+        data-testid="airside-panel-open"
         onClick={onTogglePanel}
         className="cmnt:hover:bg-gray-100"
       >
@@ -47,7 +47,7 @@ export function Launcher({
         variant="primary"
         size="icon"
         data-airside-place
-        data-testid="comments-place"
+        data-testid="airside-place"
         aria-pressed={placing}
         aria-label={placing ? 'Click on the page to comment' : 'Add comment'}
         onClick={onTogglePlace}

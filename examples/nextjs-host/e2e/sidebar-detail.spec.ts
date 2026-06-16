@@ -13,7 +13,7 @@ test.describe('sidebar master–detail', () => {
     await login(page)
     await placeElementPin(page, 'Starter', body)
 
-    await page.getByTestId('comments-panel-open').click()
+    await page.getByTestId('airside-panel-open').click()
     await expect(page.getByTestId('comments-panel')).toBeVisible()
 
     // Click this test's row (root text appears in the card).
@@ -24,7 +24,7 @@ test.describe('sidebar master–detail', () => {
     // The in-sidebar detail opens (Back button) while the panel stays open and the pin focuses.
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
     await expect(page.getByTestId('comments-panel')).toBeVisible()
-    await expect(page.getByTestId('comments-pin-pulse')).toBeVisible()
+    await expect(page.getByTestId('airside-pin-pulse')).toBeVisible()
     // The thread's comment must actually render in the detail on the FIRST open (regression guard:
     // the detail used to read comments via openId, which the pin popover nulled → empty on first open).
     await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
@@ -50,16 +50,16 @@ test.describe('sidebar master–detail', () => {
     await login(page)
     // Placing a comment leaves its pin popover open.
     await placeElementPin(page, 'Starter', body)
-    await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
+    await expect(page.getByTestId('airside-pin-popover')).toBeVisible()
 
     // Opening the sidebar must NOT dismiss the open pin popover.
-    await page.getByTestId('comments-panel-open').click()
+    await page.getByTestId('airside-panel-open').click()
     await expect(page.getByTestId('comments-panel')).toBeVisible()
-    await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
+    await expect(page.getByTestId('airside-pin-popover')).toBeVisible()
 
     // Interacting with the sidebar (a filter chip) must NOT dismiss it either.
     await page.getByRole('button', { name: 'All' }).click()
-    await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
+    await expect(page.getByTestId('airside-pin-popover')).toBeVisible()
   })
 
   test('clicking a pin opens the popover with the reply input focused', async ({ page }) => {
@@ -73,11 +73,11 @@ test.describe('sidebar master–detail', () => {
     // Reload so the popover starts closed, then open it by clicking the pin.
     await activate(page, '/pricing', ns)
     await login(page)
-    await page.getByTestId('comments-pin').first().click()
-    await expect(page.getByTestId('comments-pin-popover')).toBeVisible()
+    await page.getByTestId('airside-pin').first().click()
+    await expect(page.getByTestId('airside-pin-popover')).toBeVisible()
     // The popover's reply input is focused on open (deferred-rAF autofocus beats Radix's
     // open-autofocus, which we prevent on the popover content).
-    await expect(page.getByTestId('comments-pin-popover').getByPlaceholder(/reply/i)).toBeFocused()
+    await expect(page.getByTestId('airside-pin-popover').getByPlaceholder(/reply/i)).toBeFocused()
   })
 
   test('cross-page row click navigates and restores the detail view', async ({ page }) => {
@@ -93,7 +93,7 @@ test.describe('sidebar master–detail', () => {
     // localStorage, so login() is a no-op here).
     await activate(page, '/pricing', ns)
     await login(page)
-    await page.getByTestId('comments-panel-open').click()
+    await page.getByTestId('airside-panel-open').click()
     await expect(page.getByTestId('comments-panel')).toBeVisible()
     const row = page.getByTestId('comments-panel-row').filter({ hasText: body })
     await expect(row).toHaveCount(1)
@@ -102,7 +102,7 @@ test.describe('sidebar master–detail', () => {
     // Navigates to /article and reopens the sidebar detail there, with the pin focused.
     await expect(page).toHaveURL(/\/article/)
     await expect(page.getByRole('button', { name: /back/i })).toBeVisible()
-    await expect(page.getByTestId('comments-pin-pulse')).toBeVisible()
+    await expect(page.getByTestId('airside-pin-pulse')).toBeVisible()
     // The restored detail must render the thread's comment (cross-page fallback reads detail by id).
     await expect(page.getByTestId('comments-panel').getByText(body)).toBeVisible()
     // Cross-page focus: the reply input is focused after the fresh-page Dialog open + restore.
@@ -119,7 +119,7 @@ test.describe('sidebar master–detail', () => {
     await placeElementPin(page, 'disambiguate near-matches', body)
 
     // Read the thread id from its panel row wrapper (data-thread-id).
-    await page.getByTestId('comments-panel-open').click()
+    await page.getByTestId('airside-panel-open').click()
     const rowWrapper = page.locator('[data-thread-id]').filter({ hasText: body })
     await expect(rowWrapper).toHaveCount(1)
     const id = await rowWrapper.first().getAttribute('data-thread-id')
