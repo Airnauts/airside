@@ -15,6 +15,10 @@ A self-contained, open-source commenting overlay you host yourself. Drop the wid
 - **Database:** MongoDB Atlas or PostgreSQL — you choose; the driver only enters builds that import the matching adapter.
 - **Storage:** Vercel Blob or local filesystem for image attachments.
 
+<p align="center">
+  <img src="assets/airside-demo.gif" alt="Airside demo — log in, drop a pin to leave a comment, and triage threads from the side panel" width="640">
+</p>
+
 ---
 
 ## Quick start (Next.js App Router)
