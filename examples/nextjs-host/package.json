@@ -14,7 +14,7 @@
     "@airnauts/airside-adapter-mongo": "workspace:*",
     "@airnauts/airside-client": "workspace:*",
     "@airnauts/airside-extension-jira": "workspace:*",
-    "@airnauts/airside-next": "workspace:*",
+    "@airnauts/airside-integration-next": "workspace:*",
     "@airnauts/airside-extension-email": "workspace:*",
     "@airnauts/airside-extension-slack": "workspace:*",
     "@airnauts/airside-server": "workspace:*",

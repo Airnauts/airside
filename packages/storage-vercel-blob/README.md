@@ -18,7 +18,7 @@ const storage = createVercelBlobStorage({
 })
 ```
 
-Pass `storage` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-next`).
+Pass `storage` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-integration-next`).
 
 ## API reference
 

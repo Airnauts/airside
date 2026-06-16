@@ -141,7 +141,7 @@ The main entry (`@airnauts/airside-client`) bundles its own React and does **not
 ## Related packages
 
 - **`@airnauts/airside-server`** — the HTTP API the widget talks to
-- **`@airnauts/airside-next`** — one-call Next.js App Router server integration
+- **`@airnauts/airside-integration-next`** — one-call Next.js App Router server integration
 - **`@airnauts/airside-core`** — shared types (consumed transitively)
 
 See the [integration guide](https://github.com/Airnauts/airside/blob/main/docs/integration.md) for a full walkthrough, with `examples/nextjs-host` as the worked example.

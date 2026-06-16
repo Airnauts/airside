@@ -16,7 +16,7 @@ import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 const repository = createMemoryRepository()
 ```
 
-Pass `repository` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-next`).
+Pass `repository` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-integration-next`).
 
 ## API reference
 

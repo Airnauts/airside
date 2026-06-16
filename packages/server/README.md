@@ -27,7 +27,7 @@ const server = createAirsideServer({
 // Mount it in any framework — Next.js, Hono, bare Node http, etc.
 ```
 
-For Next.js (App Router or Pages Router), prefer `@airnauts/airside-next` which wraps the above into single one-call integrations: `createAirsideAppRoute(config)` for the App Router and `createAirsidePagesRoute(config)` for the Pages Router.
+For Next.js (App Router or Pages Router), prefer `@airnauts/airside-integration-next` which wraps the above into single one-call integrations: `createAirsideAppRoute(config)` for the App Router and `createAirsidePagesRoute(config)` for the Pages Router.
 
 ## API reference
 
@@ -113,7 +113,7 @@ Wraps a `() => Promise<Repository>` factory so it connects lazily on first use a
 
 ### `@airnauts/airside-server/node`
 
-Generic Node↔Web bridge for mounting the server on any Node host (Express, bare `node:http`, etc.). Usually consumed via `@airnauts/airside-next` for Next.js hosts.
+Generic Node↔Web bridge for mounting the server on any Node host (Express, bare `node:http`, etc.). Usually consumed via `@airnauts/airside-integration-next` for Next.js hosts.
 
 ```ts
 import { nodeRequestToWeb, webToNode } from '@airnauts/airside-server/node'
@@ -144,7 +144,7 @@ const { port } = await dev.listen()
 
 ## Related packages
 
-- **`@airnauts/airside-next`** — one-call Next.js App and Pages Router integration (`createAirsideAppRoute` / `createAirsidePagesRoute`)
+- **`@airnauts/airside-integration-next`** — one-call Next.js App and Pages Router integration (`createAirsideAppRoute` / `createAirsidePagesRoute`)
 - **`@airnauts/airside-adapter-mongo`** — MongoDB repository
 - **`@airnauts/airside-adapter-postgres`** — PostgreSQL repository
 - **`@airnauts/airside-adapter-memory`** — in-memory repository for dev/tests

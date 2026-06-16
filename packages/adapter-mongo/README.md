@@ -16,7 +16,7 @@ import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 const repository = mongoRepository({ uri: process.env.MONGODB_URI! })
 ```
 
-Pass `repository` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-next`). The adapter connects lazily on first use.
+Pass `repository` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-integration-next`). The adapter connects lazily on first use.
 
 ## API reference
 
@@ -62,7 +62,7 @@ Creates the required indexes on the `threads` and `attachments` collections. Saf
 - **`@airnauts/airside-server`** — defines the `Repository` interface
 - **`@airnauts/airside-adapter-postgres`** — PostgreSQL alternative
 - **`@airnauts/airside-adapter-memory`** — in-memory adapter for dev/tests
-- **`@airnauts/airside-next`** — Next.js integration that accepts this adapter
+- **`@airnauts/airside-integration-next`** — Next.js integration that accepts this adapter
 
 ## License
 

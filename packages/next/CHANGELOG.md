@@ -1,4 +1,4 @@
-# @airnauts/airside-next
+# @airnauts/airside-integration-next
 
 ## 0.8.0
 

@@ -5,7 +5,7 @@ import { emailExtension } from '@airnauts/airside-extension-email'
 import { resendTransport } from '@airnauts/airside-extension-email/resend'
 import { jiraExtension } from '@airnauts/airside-extension-jira'
 import { slackExtension } from '@airnauts/airside-extension-slack'
-import { createAirsideAppRoute } from '@airnauts/airside-next'
+import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
 import { createFileSystemStorage } from '@airnauts/airside-storage-fs'
 import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 

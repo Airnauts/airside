@@ -10,7 +10,7 @@
       "@airnauts/airside-client",
       "@airnauts/airside-core",
       "@airnauts/airside-extension-jira",
-      "@airnauts/airside-next",
+      "@airnauts/airside-integration-next",
       "@airnauts/airside-extension-email",
       "@airnauts/airside-extension-slack",
       "@airnauts/airside-server",

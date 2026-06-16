@@ -47,7 +47,7 @@ endpoint with no client change.
   logic; depends only on adapter interfaces. Subpath **`@airnauts/airside-server/node`**
   is a generic Node↔Web bridge (`nodeRequestToWeb` / `webToNode`) for mounting on any
   Node server.
-- **`@airnauts/airside-next`** — all Next.js glue: App Router (`createAirsideAppRoute`)
+- **`@airnauts/airside-integration-next`** — all Next.js glue: App Router (`createAirsideAppRoute`)
   and Pages Router (`createAirsidePagesRoute`) one-call integrations.
 - **`@airnauts/airside-adapter-mongo`** — MongoDB repository (only package that pulls the
   mongo driver).
@@ -150,7 +150,7 @@ reviewer-triggered actions evaluated per thread and run via
 thread (e.g. the created Jira issue). The older `notifiers?` option is a deprecated alias for
 the notification half. See ADR-0034.
 
-**Next.js glue is near-zero** — `@airnauts/airside-next` builds the server and its
+**Next.js glue is near-zero** — `@airnauts/airside-integration-next` builds the server and its
 handlers in one call:
 
 ```ts

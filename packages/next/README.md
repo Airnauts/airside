@@ -1,11 +1,11 @@
-# @airnauts/airside-next
+# @airnauts/airside-integration-next
 
 Next.js App and Pages Router integration for [Airside](https://github.com/Airnauts/airside). Wraps `createAirsideServer` and the Next.js handler glue into single one-call integrations: `createAirsideAppRoute(config)` for the App Router and `createAirsidePagesRoute(config)` for the Pages Router.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/airside-next
+pnpm add @airnauts/airside-integration-next
 # Plus a persistence adapter and storage adapter, e.g.:
 pnpm add @airnauts/airside-adapter-mongo @airnauts/airside-storage-vercel-blob
 ```
@@ -15,7 +15,7 @@ pnpm add @airnauts/airside-adapter-mongo @airnauts/airside-storage-vercel-blob
 Create a catch-all route handler at `app/api/airside/[...path]/route.ts`:
 
 ```ts
-import { createAirsideAppRoute } from '@airnauts/airside-next'
+import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
 import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
@@ -50,7 +50,7 @@ export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
 Create a catch-all API route at `pages/api/airside/[...path].ts`:
 
 ```ts
-import { createAirsidePagesRoute } from '@airnauts/airside-next'
+import { createAirsidePagesRoute } from '@airnauts/airside-integration-next'
 import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 

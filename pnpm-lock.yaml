@@ -65,7 +65,7 @@ importers:
       '@airnauts/airside-extension-jira':
         specifier: workspace:*
         version: link:../../packages/integration-jira
-      '@airnauts/airside-next':
+      '@airnauts/airside-integration-next':
         specifier: workspace:*
         version: link:../../packages/next
       '@airnauts/airside-extension-email':
@@ -147,7 +147,7 @@ importers:
         specifier: ^6.12.0
         version: 6.21.0
     devDependencies:
-      '@airnauts/airside-next':
+      '@airnauts/airside-integration-next':
         specifier: workspace:*
         version: link:../next
       '@airnauts/airside-test-support':

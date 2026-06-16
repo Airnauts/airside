@@ -64,7 +64,7 @@ export async function getServer() {
 
 ```ts
 // app/api/airside/[...path]/route.ts
-import { createAirsideAppRoute } from '@airnauts/airside-next'
+import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
 import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 

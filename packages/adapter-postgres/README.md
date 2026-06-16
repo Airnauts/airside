@@ -22,7 +22,7 @@ const repository = postgresRepository({
 })
 ```
 
-Pass `repository` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-next`). The adapter connects lazily on first use and runs `ensureSchema` automatically.
+Pass `repository` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-integration-next`). The adapter connects lazily on first use and runs `ensureSchema` automatically.
 
 ## API reference
 
@@ -81,7 +81,7 @@ Implement this interface to plug in any Postgres-compatible driver.
 - **`@airnauts/airside-server`** — defines the `Repository` interface
 - **`@airnauts/airside-adapter-mongo`** — MongoDB alternative
 - **`@airnauts/airside-adapter-memory`** — in-memory adapter for dev/tests
-- **`@airnauts/airside-next`** — Next.js integration that accepts this adapter
+- **`@airnauts/airside-integration-next`** — Next.js integration that accepts this adapter
 
 ## License
 

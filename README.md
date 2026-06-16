@@ -14,7 +14,7 @@ A self-contained, open-source commenting overlay you host yourself. Drop the wid
 ### 1. Install
 
 ```bash
-pnpm add @airnauts/airside-next @airnauts/airside-client \
+pnpm add @airnauts/airside-integration-next @airnauts/airside-client \
   @airnauts/airside-adapter-mongo @airnauts/airside-storage-vercel-blob
 # React is required in your Next.js app already; no extra peer to install.
 ```
@@ -24,7 +24,7 @@ pnpm add @airnauts/airside-next @airnauts/airside-client \
 Create `app/api/airside/[...path]/route.ts`:
 
 ```ts
-import { createAirsideAppRoute } from '@airnauts/airside-next'
+import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
 import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
@@ -94,7 +94,7 @@ On the Pages Router, mount a catch-all API route with `createAirsidePagesRoute`:
 
 ```ts
 // pages/api/airside/[...path].ts
-import { createAirsidePagesRoute } from '@airnauts/airside-next'
+import { createAirsidePagesRoute } from '@airnauts/airside-integration-next'
 import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 
 // REQUIRED: Next reads this statically, so the helper can't set it. The comments
@@ -176,7 +176,7 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 | [`@airnauts/airside-core`](packages/core) | Isomorphic: Zod schemas, HTTP contract types, `pageKey` normalization, anchor scoring/threshold policy, OpenAPI generator |
 | [`@airnauts/airside-client`](packages/client) | Widget engine (`init()`), light-DOM anchoring runtime, React wrapper (`AirsideLayer`) |
 | [`@airnauts/airside-server`](packages/server) | Web-standard HTTP handler, use cases, CORS/security, adapter interfaces, generic Node bridge, dev server |
-| [`@airnauts/airside-next`](packages/next) | One-call Next.js App and Pages Router integration (`createAirsideAppRoute` / `createAirsidePagesRoute`) |
+| [`@airnauts/airside-integration-next`](packages/next) | One-call Next.js App and Pages Router integration (`createAirsideAppRoute` / `createAirsidePagesRoute`) |
 | [`@airnauts/airside-adapter-mongo`](packages/adapter-mongo) | MongoDB Atlas / self-hosted repository adapter |
 | [`@airnauts/airside-adapter-postgres`](packages/adapter-postgres) | PostgreSQL repository adapter (hybrid columns + `jsonb`; driver-agnostic) |
 | [`@airnauts/airside-adapter-memory`](packages/adapter-memory) | In-memory repository for local development and tests |

@@ -1,5 +1,5 @@
 import { KEY_HEADER_NAME } from '@airnauts/airside-core'
-import { createNextHandler } from '@airnauts/airside-next'
+import { createNextHandler } from '@airnauts/airside-integration-next'
 import type { StorageAdapter } from '@airnauts/airside-server'
 import { createAirsideServer } from '@airnauts/airside-server'
 import { makeCreateThreadBody } from '@airnauts/airside-test-support'

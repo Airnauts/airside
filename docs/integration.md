@@ -7,7 +7,7 @@ lifted from it.
 ## 1. Install
 
 ```bash
-pnpm add @airnauts/airside-client @airnauts/airside-next @airnauts/airside-adapter-memory
+pnpm add @airnauts/airside-client @airnauts/airside-integration-next @airnauts/airside-adapter-memory
 ```
 
 ## 2. Add the API route
@@ -15,7 +15,7 @@ pnpm add @airnauts/airside-client @airnauts/airside-next @airnauts/airside-adapt
 Create `app/api/airside/[...path]/route.ts`:
 
 ```ts
-import { createAirsideAppRoute } from '@airnauts/airside-next'
+import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
 import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 
 export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
@@ -97,7 +97,7 @@ infrastructure is config — no bespoke glue:
 ```ts
 // app/api/airside/[...path]/route.ts
 import { join } from 'node:path'
-import { createAirsideAppRoute } from '@airnauts/airside-next'
+import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
 import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 import { createFileSystemStorage } from '@airnauts/airside-storage-fs'

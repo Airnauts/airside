@@ -27,7 +27,7 @@ export function createNextPagesHandler(server: AirsideServer): NodePagesHandler 
   return async (req, res) => {
     if (req.body !== undefined) {
       throw new Error(
-        "@airnauts/airside-next: Next's body parser consumed the request body. Add " +
+        "@airnauts/airside-integration-next: Next's body parser consumed the request body. Add " +
           '`export const config = { api: { bodyParser: false } }` to the route module.',
       )
     }
