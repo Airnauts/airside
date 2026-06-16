@@ -81,6 +81,20 @@ export default createAirsidePagesRoute({
 
 A single default export handles every method — `server.handle` answers the CORS preflight (`OPTIONS`) internally. Keep this on the **Node runtime** (the default): the server uses `node:crypto`, `Buffer`, and Node-only database drivers; it cannot run on the Edge runtime.
 
+## Client mount
+
+This package re-exports the React mount so a Next app needs only one install for both halves. In a client component (or directly in an RSC tree — the export ships `'use client'`):
+
+```tsx
+import { AirsideLayer } from '@airnauts/airside-integration-next/client'
+
+export function AirsideMount() {
+  return <AirsideLayer airsideKey={process.env.NEXT_PUBLIC_AIRSIDE_KEY!} endpoint="/api/airside" />
+}
+```
+
+`AirsideLayer` is re-exported from [`@airnauts/airside-integration-react`](https://github.com/Airnauts/airside/blob/main/packages/integration-react/README.md); use that package directly in non-Next React hosts.
+
 ## API reference
 
 ### `createAirsideAppRoute(config)`

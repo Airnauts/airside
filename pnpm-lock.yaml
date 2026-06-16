@@ -305,9 +305,15 @@ importers:
 
   packages/next:
     dependencies:
+      '@airnauts/airside-integration-react':
+        specifier: workspace:^
+        version: link:../integration-react
       '@airnauts/airside-server':
         specifier: workspace:^
         version: link:../server
+      react:
+        specifier: ^19.0.0
+        version: 19.2.6
     devDependencies:
       '@airnauts/airside-adapter-memory':
         specifier: workspace:*
