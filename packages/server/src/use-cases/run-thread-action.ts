@@ -1,4 +1,4 @@
-import type { ThreadActionParam, ThreadView } from '@airnauts/comments-core'
+import type { ThreadActionParam, ThreadView } from '@airnauts/airside-core'
 import type { Ctx } from '../ctx'
 import { ConflictError, NotFoundError } from '../errors'
 import type { ExtensionRegistry } from '../extensions/registry'

@@ -11,7 +11,7 @@ describe('mount', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const handle = mount({ key: 'k', endpoint: 'http://x' })
 
-    const host = document.querySelector('[data-comments-root]') as HTMLElement
+    const host = document.querySelector('[data-airside-root]') as HTMLElement
     // The self-mutation-filter invariant: both portal containers live under the widget root.
     expect(host.querySelector('[data-portal-container]')).not.toBeNull()
     expect(host.querySelector('[data-toasts-container]')).not.toBeNull()
@@ -25,15 +25,15 @@ describe('mount', () => {
   it('injects a single host root with the compiled stylesheet and tears down cleanly', () => {
     const handle = mount({ key: 'k', endpoint: 'http://x' })
 
-    const host = document.querySelector('[data-comments-root]')
+    const host = document.querySelector('[data-airside-root]')
     expect(host).not.toBeNull()
-    const style = host?.querySelector('[data-comments-style]')
+    const style = host?.querySelector('[data-airside-style]')
     // Prefixed Tailwind output is present (proves the CSS pipeline ran).
-    expect(style?.textContent).toContain('cmnt')
+    expect(style?.textContent).toContain('air')
     // The widget rendered its logged-out entry point (the Log In button) inside the host.
-    expect(host?.querySelector('[data-testid="comments-login"]')).not.toBeNull()
+    expect(host?.querySelector('[data-testid="airside-login"]')).not.toBeNull()
 
     handle.destroy()
-    expect(document.querySelector('[data-comments-root]')).toBeNull()
+    expect(document.querySelector('[data-airside-root]')).toBeNull()
   })
 })

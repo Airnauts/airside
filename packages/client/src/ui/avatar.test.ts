@@ -1,5 +1,5 @@
 // packages/client/src/ui/avatar.test.ts
-import type { Author } from '@airnauts/comments-core'
+import type { Author } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
 import { avatarColor, initials } from './avatar'
 

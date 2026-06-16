@@ -19,7 +19,7 @@ function mockClient(): ApiClient {
 
 // Logged-in state: seed identity so WidgetApp renders the full commenting UI (past the gate).
 function login() {
-  localStorage.setItem('comments:identity', JSON.stringify({ email: 'known@example.com' }))
+  localStorage.setItem('airside:identity', JSON.stringify({ email: 'known@example.com' }))
 }
 
 function clickTarget() {
@@ -50,7 +50,7 @@ describe('WidgetApp', () => {
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
     const target = clickTarget()
 
-    fireEvent.click(screen.getByTestId('comments-place'))
+    fireEvent.click(screen.getByTestId('airside-place'))
     fireEvent.click(target, { clientX: 50, clientY: 10 })
     fireEvent.change(await screen.findByPlaceholderText(/add a comment/i), {
       target: { value: 'Looks good' },
@@ -83,13 +83,13 @@ describe('WidgetApp', () => {
     login()
     const client = mockClient()
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
-    expect(await screen.findByTestId('comments-place')).toBeInTheDocument()
-    expect(screen.getByTestId('comments-panel-open')).toBeInTheDocument()
+    expect(await screen.findByTestId('airside-place')).toBeInTheDocument()
+    expect(screen.getByTestId('airside-panel-open')).toBeInTheDocument()
   })
 
   it('renders the Launcher panel button when logged in', () => {
     login()
     render(<WidgetApp options={{ key: 'k', endpoint: 'https://api.test' }} client={mockClient()} />)
-    expect(screen.getByTestId('comments-panel-open')).toBeInTheDocument()
+    expect(screen.getByTestId('airside-panel-open')).toBeInTheDocument()
   })
 })

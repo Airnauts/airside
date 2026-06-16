@@ -36,7 +36,7 @@ describe('buildOpenApiDocument', () => {
     expect(Object.keys(schemas)).toEqual(
       expect.arrayContaining(['ThreadView', 'Anchor', 'Signals']),
     )
-    const scheme = doc.components?.securitySchemes?.commentsKey
+    const scheme = doc.components?.securitySchemes?.airsideKey
     expect(scheme).toMatchObject({ type: 'apiKey', in: 'header', name: KEY_HEADER_NAME })
   })
 })

@@ -1,6 +1,6 @@
 // packages/client/src/marker/DraftPopover.tsx
 
-import type { Anchor } from '@airnauts/comments-core'
+import type { Anchor } from '@airnauts/airside-core'
 import * as Popover from '@radix-ui/react-popover'
 import type { ApiClient } from '../api/client'
 import { usePortalContainer } from '../app/providers'
@@ -26,20 +26,20 @@ export function DraftPopover({ client, onCreate }: DraftPopoverProps) {
   const draft = state.draft
   if (!draft) return null
   return (
-    <div data-comments-overlay className="cmnt:absolute cmnt:inset-0 cmnt:pointer-events-none">
+    <div data-airside-overlay className="air:absolute air:inset-0 air:pointer-events-none">
       <Popover.Root open onOpenChange={(o) => !o && dispatch({ type: 'CLEAR_DRAFT' })}>
         <Popover.Anchor asChild>
           <div
-            data-testid="comments-draft-pin"
+            data-testid="airside-draft-pin"
             aria-hidden="true"
-            className="cmnt:absolute cmnt:w-[42px] cmnt:h-[42px] cmnt:-ml-[21px] cmnt:-mt-[42px] cmnt:pointer-events-none"
+            className="air:absolute air:w-[42px] air:h-[42px] air:-ml-[21px] air:-mt-[42px] air:pointer-events-none"
             style={{ transform: `translate(${draft.pin.x}px, ${draft.pin.y}px)` }}
           >
             <span
-              className="cmnt:absolute cmnt:inset-0 cmnt:border-2 cmnt:border-white cmnt:shadow-lg cmnt:bg-blue-600"
+              className="air:absolute air:inset-0 air:border-2 air:border-white air:shadow-lg air:bg-blue-600"
               style={TEARDROP_STYLE}
             />
-            <span className="cmnt:absolute cmnt:top-1.5 cmnt:left-1.5 cmnt:w-[30px] cmnt:h-[30px] cmnt:rounded-full cmnt:border-2 cmnt:border-white cmnt:bg-blue-600 cmnt:text-white cmnt:text-xs cmnt:flex cmnt:items-center cmnt:justify-center cmnt:font-semibold">
+            <span className="air:absolute air:top-1.5 air:left-1.5 air:w-[30px] air:h-[30px] air:rounded-full air:border-2 air:border-white air:bg-blue-600 air:text-white air:text-xs air:flex air:items-center air:justify-center air:font-semibold">
               {identity ? initials(identity) : ''}
             </span>
           </div>
@@ -51,11 +51,11 @@ export function DraftPopover({ client, onCreate }: DraftPopoverProps) {
             sideOffset={8}
             collisionPadding={8}
             onOpenAutoFocus={(e) => e.preventDefault()}
-            data-testid="comments-draft"
-            className="cmnt:z-[var(--cmnt-z-surface)] cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:pointer-events-auto cmnt:overflow-hidden cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
+            data-testid="airside-draft"
+            className="air:z-[var(--air-z-surface)] air:w-80 air:max-w-[calc(100vw-16px)] air:bg-white air:border air:border-gray-200 air:rounded-xl air:pointer-events-auto air:overflow-hidden air:shadow-[0_12px_32px_rgba(0,0,0,0.18)]"
           >
             {draft.anchor.selection?.quote && (
-              <div className="cmnt:mx-3 cmnt:mt-2 cmnt:px-2 cmnt:py-1.5 cmnt:border-l-[3px] cmnt:border-blue-600 cmnt:bg-[#f3f6fc] cmnt:text-xs cmnt:text-gray-700 cmnt:italic">
+              <div className="air:mx-3 air:mt-2 air:px-2 air:py-1.5 air:border-l-[3px] air:border-blue-600 air:bg-[#f3f6fc] air:text-xs air:text-gray-700 air:italic">
                 “{draft.anchor.selection.quote}”
               </div>
             )}

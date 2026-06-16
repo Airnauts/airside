@@ -1,4 +1,4 @@
-import { KEY_HEADER_NAME } from '@airnauts/comments-core'
+import { KEY_HEADER_NAME } from '@airnauts/airside-core'
 
 const ALLOWED_METHODS = 'GET, POST, PATCH, OPTIONS'
 const ALLOWED_HEADERS = `content-type, ${KEY_HEADER_NAME}`

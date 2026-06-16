@@ -9,7 +9,7 @@ import {
 
 describe('config', () => {
   it('exposes the default key param name', () => {
-    expect(DEFAULT_KEY_PARAM).toBe('comments-key')
+    expect(DEFAULT_KEY_PARAM).toBe('airside-key')
   })
 
   it('resolves pageKey via core normalization by default', () => {
@@ -42,8 +42,8 @@ describe('config', () => {
 describe('threadLink', () => {
   it('appends the thread param to a page URL', () => {
     expect(threadLink('https://site.com/a?x=1', 't42')).toBe(
-      'https://site.com/a?x=1&comments-thread=t42',
+      'https://site.com/a?x=1&airside-thread=t42',
     )
-    expect(DEFAULT_THREAD_PARAM).toBe('comments-thread')
+    expect(DEFAULT_THREAD_PARAM).toBe('airside-thread')
   })
 })

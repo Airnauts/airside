@@ -42,11 +42,11 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
 
   return (
     <>
-      <div className="cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200">
-        <Dialog.Title className="cmnt:text-sm cmnt:font-semibold cmnt:text-gray-900">
+      <div className="air:flex air:items-center air:justify-between air:px-3 air:py-2 air:border-b air:border-gray-200">
+        <Dialog.Title className="air:text-sm air:font-semibold air:text-gray-900">
           Comments
         </Dialog.Title>
-        <Dialog.Description className="cmnt:sr-only">
+        <Dialog.Description className="air:sr-only">
           Comment threads across all pages
         </Dialog.Description>
         <Dialog.Close asChild>
@@ -56,9 +56,9 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
         </Dialog.Close>
       </div>
 
-      <fieldset className="cmnt:m-0 cmnt:p-0 cmnt:border-0 cmnt:min-w-0">
-        <legend className="cmnt:sr-only">Filter threads</legend>
-        <div className="cmnt:flex cmnt:gap-1 cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200">
+      <fieldset className="air:m-0 air:p-0 air:border-0 air:min-w-0">
+        <legend className="air:sr-only">Filter threads</legend>
+        <div className="air:flex air:gap-1 air:px-3 air:py-2 air:border-b air:border-gray-200">
           {FILTERS.map((f) => (
             <button
               key={f.value}
@@ -66,10 +66,10 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
               aria-pressed={state.filter === f.value}
               onClick={() => void panel.setFilter(f.value)}
               className={cn(
-                'cmnt:rounded-full cmnt:px-3 cmnt:py-1 cmnt:text-xs cmnt:font-medium cmnt:border cmnt:cursor-pointer',
+                'air:rounded-full air:px-3 air:py-1 air:text-xs air:font-medium air:border air:cursor-pointer',
                 state.filter === f.value
-                  ? 'cmnt:bg-blue-600 cmnt:text-white cmnt:border-blue-600'
-                  : 'cmnt:bg-white cmnt:text-gray-600 cmnt:border-gray-200',
+                  ? 'air:bg-blue-600 air:text-white air:border-blue-600'
+                  : 'air:bg-white air:text-gray-600 air:border-gray-200',
               )}
             >
               {f.label}
@@ -78,50 +78,48 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
         </div>
       </fieldset>
 
-      <div className="cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200">
-        <span className="cmnt:text-xs cmnt:text-gray-500">Show resolved pins on page</span>
+      <div className="air:flex air:items-center air:justify-between air:px-3 air:py-2 air:border-b air:border-gray-200">
+        <span className="air:text-xs air:text-gray-500">Show resolved pins on page</span>
         <button
           type="button"
           role="switch"
           aria-checked={showResolved}
           aria-label="Show resolved threads"
           onClick={() => threads.setShowResolved(!showResolved)}
-          className="cmnt:inline-flex cmnt:items-center cmnt:bg-transparent cmnt:border-0 cmnt:cursor-pointer cmnt:p-0"
+          className="air:inline-flex air:items-center air:bg-transparent air:border-0 air:cursor-pointer air:p-0"
         >
           <span
             aria-hidden={true}
             className={cn(
-              'cmnt:w-7 cmnt:h-4 cmnt:rounded-full cmnt:relative cmnt:transition-colors',
-              showResolved ? 'cmnt:bg-blue-600' : 'cmnt:bg-gray-300',
+              'air:w-7 air:h-4 air:rounded-full air:relative air:transition-colors',
+              showResolved ? 'air:bg-blue-600' : 'air:bg-gray-300',
             )}
           >
             <span
               className={cn(
-                'cmnt:absolute cmnt:top-0.5 cmnt:w-3 cmnt:h-3 cmnt:rounded-full cmnt:bg-white cmnt:transition-all',
-                showResolved ? 'cmnt:left-[14px]' : 'cmnt:left-0.5',
+                'air:absolute air:top-0.5 air:w-3 air:h-3 air:rounded-full air:bg-white air:transition-all',
+                showResolved ? 'air:left-[14px]' : 'air:left-0.5',
               )}
             />
           </span>
         </button>
       </div>
 
-      <div className="cmnt:flex-1 cmnt:overflow-y-auto">
+      <div className="air:flex-1 air:overflow-y-auto">
         {state.needsReview.length > 0 && (
-          <div data-testid="comments-needs-review">
-            <div className="cmnt:px-3 cmnt:py-1.5 cmnt:text-[11px] cmnt:font-semibold cmnt:text-amber-700 cmnt:bg-amber-50">
+          <div data-testid="airside-needs-review">
+            <div className="air:px-3 air:py-1.5 air:text-[11px] air:font-semibold air:text-amber-700 air:bg-amber-50">
               ⚠ Needs review ({state.needsReview.length})
             </div>
             {state.needsReview.map(renderRow)}
-            <div className="cmnt:h-px cmnt:bg-gray-200" />
+            <div className="air:h-px air:bg-gray-200" />
           </div>
         )}
 
-        {state.loading && (
-          <StatusNotice data-testid="comments-panel-loading">Loading…</StatusNotice>
-        )}
+        {state.loading && <StatusNotice data-testid="airside-panel-loading">Loading…</StatusNotice>}
 
         {state.error && !state.loading && (
-          <StatusNotice className="cmnt:text-gray-500" onRetry={() => void panel.refresh()}>
+          <StatusNotice className="air:text-gray-500" onRetry={() => void panel.refresh()}>
             Couldn't load comments.
           </StatusNotice>
         )}
@@ -130,7 +128,7 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
           !state.error &&
           mainList.length === 0 &&
           state.needsReview.length === 0 && (
-            <StatusNotice data-testid="comments-panel-empty">No comments yet</StatusNotice>
+            <StatusNotice data-testid="airside-panel-empty">No comments yet</StatusNotice>
           )}
 
         {mainList.map(renderRow)}
@@ -139,10 +137,10 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
           <Button
             variant="link"
             size="inline"
-            data-testid="comments-panel-loadmore"
+            data-testid="airside-panel-loadmore"
             onClick={() => void panel.loadMore()}
             disabled={state.loadingMore}
-            className="cmnt:w-full cmnt:py-2.5 cmnt:text-xs cmnt:border-t cmnt:border-gray-200 cmnt:hover:no-underline"
+            className="air:w-full air:py-2.5 air:text-xs air:border-t air:border-gray-200 air:hover:no-underline"
           >
             {state.loadingMore ? 'Loading…' : 'Load more'}
           </Button>

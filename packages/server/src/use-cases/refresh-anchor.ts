@@ -3,7 +3,7 @@ import type {
   ThreadId,
   ThreadIdParam,
   ThreadListItemView,
-} from '@airnauts/comments-core'
+} from '@airnauts/airside-core'
 import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
 import type { ExtensionRegistry } from '../extensions/registry'

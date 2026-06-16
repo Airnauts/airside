@@ -1,4 +1,4 @@
-import type { NotificationEvent } from '@airnauts/comments-server'
+import type { NotificationEvent } from '@airnauts/airside-server'
 
 export type EmailFormat = { subject: string; html: string; text: string }
 export type FormatEmailOptions = { subjectPrefix?: string }

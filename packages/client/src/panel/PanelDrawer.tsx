@@ -62,12 +62,12 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
     <Dialog.Root open={state.open} modal={false} onOpenChange={(o) => !o && panel.closePanel()}>
       <Dialog.Portal container={container ?? undefined}>
         <Dialog.Content
-          data-testid="comments-panel"
+          data-testid="airside-panel"
           onInteractOutside={(e) => e.preventDefault()}
           // Don't let the dialog grab focus on open (e.g. onto the close button). The detail
           // view's reply composer focuses itself; on the list view nothing should be focused.
           onOpenAutoFocus={(e) => e.preventDefault()}
-          className="cmnt:fixed cmnt:z-[var(--cmnt-z-surface)] cmnt:top-0 cmnt:right-0 cmnt:bottom-0 cmnt:w-[360px] cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border-l cmnt:border-gray-200 cmnt:flex cmnt:flex-col cmnt:pointer-events-auto cmnt:shadow-[-8px_0_24px_rgba(0,0,0,0.12)]"
+          className="air:fixed air:z-[var(--air-z-surface)] air:top-0 air:right-0 air:bottom-0 air:w-[360px] air:max-w-[calc(100vw-16px)] air:bg-white air:border-l air:border-gray-200 air:flex air:flex-col air:pointer-events-auto air:shadow-[-8px_0_24px_rgba(0,0,0,0.12)]"
         >
           {state.view === 'detail' && state.detailThreadId ? (
             <PanelDetailView

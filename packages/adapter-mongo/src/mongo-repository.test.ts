@@ -1,4 +1,4 @@
-import type { ListQuery } from '@airnauts/comments-server'
+import type { ListQuery } from '@airnauts/airside-server'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest'
 import { mongoRepository } from './index'

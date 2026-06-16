@@ -1,6 +1,6 @@
 {
-  "name": "@airnauts/comments-client",
-  "version": "0.7.0",
+  "name": "@airnauts/airside-client",
+  "version": "0.8.0",
   "description": "Embeddable commenting widget and React wrapper for the Airnauts commenting tool.",
   "keywords": [
     "comments",
@@ -13,14 +13,14 @@
   ],
   "license": "MIT",
   "author": "Airnauts",
-  "homepage": "https://github.com/Airnauts/commenting-tool#readme",
+  "homepage": "https://github.com/Airnauts/airside#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Airnauts/commenting-tool.git",
+    "url": "git+https://github.com/Airnauts/airside.git",
     "directory": "packages/client"
   },
   "bugs": {
-    "url": "https://github.com/Airnauts/commenting-tool/issues"
+    "url": "https://github.com/Airnauts/airside/issues"
   },
   "type": "module",
   "exports": {
@@ -50,7 +50,7 @@
     "size": "size-limit"
   },
   "dependencies": {
-    "@airnauts/comments-core": "workspace:^",
+    "@airnauts/airside-core": "workspace:^",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.17",
     "@radix-ui/react-popover": "^1.1.6",
@@ -70,8 +70,8 @@
     }
   },
   "devDependencies": {
-    "@airnauts/comments-adapter-memory": "workspace:*",
-    "@airnauts/comments-server": "workspace:*",
+    "@airnauts/airside-adapter-memory": "workspace:*",
+    "@airnauts/airside-server": "workspace:*",
     "@size-limit/preset-small-lib": "^11.1.6",
     "@tailwindcss/cli": "^4.0.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -87,7 +87,7 @@
   },
   "size-limit": [
     {
-      "name": "@airnauts/comments-client (esm, brotli)",
+      "name": "@airnauts/airside-client (esm, brotli)",
       "path": "dist/index.js",
       "limit": "300 kB"
     }

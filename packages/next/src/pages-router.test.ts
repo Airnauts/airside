@@ -1,9 +1,9 @@
 import type { ServerResponse } from 'node:http'
 import { Readable } from 'node:stream'
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { KEY_HEADER_NAME } from '@airnauts/comments-core'
-import { createCommentsServer, type StorageAdapter } from '@airnauts/comments-server'
-import { makeCreateThreadBody } from '@airnauts/comments-test-support'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
+import { KEY_HEADER_NAME } from '@airnauts/airside-core'
+import { createAirsideServer, type StorageAdapter } from '@airnauts/airside-server'
+import { makeCreateThreadBody } from '@airnauts/airside-test-support'
 import { describe, expect, it } from 'vitest'
 import { createNextPagesHandler, type NodePagesRequest } from './pages-router'
 
@@ -20,7 +20,7 @@ const headers = {
 
 function build() {
   return createNextPagesHandler(
-    createCommentsServer({
+    createAirsideServer({
       secretKey: 'sk_test',
       projectId: 'proj_x',
       allowedOrigins: ['https://app.example.com'],
@@ -72,7 +72,7 @@ describe('createNextPagesHandler', () => {
     await handler(
       fakeReq({
         method: 'POST',
-        url: '/api/comments/threads',
+        url: '/api/airside/threads',
         query: { path: ['threads'] },
         headers,
         body: JSON.stringify(makeCreateThreadBody()),
@@ -87,7 +87,7 @@ describe('createNextPagesHandler', () => {
     await handler(
       fakeReq({
         method: 'GET',
-        url: `/api/comments/threads/${id}`,
+        url: `/api/airside/threads/${id}`,
         query: { path: ['threads', id] },
         headers,
       }),
@@ -101,7 +101,7 @@ describe('createNextPagesHandler', () => {
     const handler = build()
     const req = fakeReq({
       method: 'POST',
-      url: '/api/comments/threads',
+      url: '/api/airside/threads',
       query: { path: ['threads'] },
       headers,
     })
@@ -117,7 +117,7 @@ describe('createNextPagesHandler', () => {
     await handler(
       fakeReq({
         method: 'OPTIONS',
-        url: '/api/comments/threads',
+        url: '/api/airside/threads',
         query: { path: ['threads'] },
         headers: { origin: 'https://app.example.com', 'access-control-request-method': 'POST' },
       }),

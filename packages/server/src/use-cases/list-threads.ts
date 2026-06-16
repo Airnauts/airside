@@ -1,4 +1,4 @@
-import type { ListThreadsQuery, ThreadListResponse } from '@airnauts/comments-core'
+import type { ListThreadsQuery, ThreadListResponse } from '@airnauts/airside-core'
 import type { Ctx } from '../ctx'
 import { decodeCursor } from '../cursor'
 import { ValidationError } from '../errors'

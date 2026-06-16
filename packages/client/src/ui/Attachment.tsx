@@ -25,24 +25,22 @@ export function PendingAttachment({
             ? `Upload failed for ${name}`
             : name
       }
-      className="cmnt:relative cmnt:w-[88px] cmnt:h-[58px] cmnt:rounded-lg cmnt:overflow-hidden cmnt:border cmnt:border-slate-300 cmnt:bg-[#dbe3f0] cmnt:flex cmnt:items-center cmnt:justify-center cmnt:mb-2"
+      className="air:relative air:w-[88px] air:h-[58px] air:rounded-lg air:overflow-hidden air:border air:border-slate-300 air:bg-[#dbe3f0] air:flex air:items-center air:justify-center air:mb-2"
     >
       {previewUrl ? (
-        <img src={previewUrl} alt={name} className="cmnt:w-full cmnt:h-full cmnt:object-cover" />
+        <img src={previewUrl} alt={name} className="air:w-full air:h-full air:object-cover" />
       ) : (
-        <span className="cmnt:text-slate-500 cmnt:text-[11px] cmnt:p-1 cmnt:text-center">
-          {name}
-        </span>
+        <span className="air:text-slate-500 air:text-[11px] air:p-1 air:text-center">{name}</span>
       )}
       {status === 'uploading' && (
         <div
           aria-hidden
           data-testid="attachment-spinner"
-          className="cmnt:absolute cmnt:inset-0 cmnt:bg-white/55 cmnt:flex cmnt:items-center cmnt:justify-center"
+          className="air:absolute air:inset-0 air:bg-white/55 air:flex air:items-center air:justify-center"
         >
           <span
             aria-hidden
-            className="cmnt:w-5 cmnt:h-5 cmnt:border-2 cmnt:border-blue-600 cmnt:border-t-transparent cmnt:rounded-full cmnt:animate-spin"
+            className="air:w-5 air:h-5 air:border-2 air:border-blue-600 air:border-t-transparent air:rounded-full air:animate-spin"
           />
         </div>
       )}
@@ -51,7 +49,7 @@ export function PendingAttachment({
           type="button"
           aria-label="Retry upload"
           onClick={onRetry}
-          className="cmnt:absolute cmnt:inset-0 cmnt:bg-red-500/15 cmnt:border-none cmnt:text-red-700 cmnt:text-[11px] cmnt:cursor-pointer"
+          className="air:absolute air:inset-0 air:bg-red-500/15 air:border-none air:text-red-700 air:text-[11px] air:cursor-pointer"
         >
           Retry
         </button>
@@ -60,7 +58,7 @@ export function PendingAttachment({
         type="button"
         aria-label="Remove attachment"
         onClick={onRemove}
-        className="cmnt:absolute cmnt:top-0.5 cmnt:right-0.5 cmnt:w-4 cmnt:h-4 cmnt:rounded-full cmnt:bg-gray-900 cmnt:text-white cmnt:text-[10px] cmnt:border-none cmnt:cursor-pointer cmnt:flex cmnt:items-center cmnt:justify-center"
+        className="air:absolute air:top-0.5 air:right-0.5 air:w-4 air:h-4 air:rounded-full air:bg-gray-900 air:text-white air:text-[10px] air:border-none air:cursor-pointer air:flex air:items-center air:justify-center"
       >
         ✕
       </button>

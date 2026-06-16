@@ -1,5 +1,5 @@
 // packages/client/src/ui/CommentList.test.tsx
-import type { Comment } from '@airnauts/comments-core'
+import type { Comment } from '@airnauts/airside-core'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { CommentList } from './CommentList'
@@ -17,7 +17,7 @@ const comment = (over: Partial<Comment> = {}): Comment =>
 describe('CommentList', () => {
   it('renders a skeleton while loading', () => {
     render(<CommentList comments={[]} loading error={false} />)
-    expect(screen.getByTestId('comments-skeleton')).toBeInTheDocument()
+    expect(screen.getByTestId('airside-skeleton')).toBeInTheDocument()
   })
   it('renders the empty state when there are no comments and not loading', () => {
     render(<CommentList comments={[]} loading={false} error={false} />)
@@ -73,9 +73,9 @@ describe('CommentList', () => {
     // bottom with a large gap. It must size to content while still scrolling when long.
     render(<CommentList loading={false} error={false} comments={[comment()]} variant="sidebar" />)
     const list = screen.getByTestId('comment-list-scroll')
-    expect(list.className).not.toContain('cmnt:flex-1')
-    expect(list.className).toContain('cmnt:min-h-0')
-    expect(list.className).toContain('cmnt:overflow-auto')
+    expect(list.className).not.toContain('air:flex-1')
+    expect(list.className).toContain('air:min-h-0')
+    expect(list.className).toContain('air:overflow-auto')
   })
 
   it('scrolls the list to the bottom when a new comment is added', () => {

@@ -1,4 +1,4 @@
-import { storageContract } from '@airnauts/comments-test-support'
+import { storageContract } from '@airnauts/airside-test-support'
 import { del } from '@vercel/blob'
 import { afterAll, describe, expect, it } from 'vitest'
 import { createVercelBlobStorage, VercelBlobStorage } from './index'

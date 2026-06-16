@@ -1,8 +1,8 @@
-import { KEY_HEADER_NAME } from '@airnauts/comments-core'
-import { createNextHandler } from '@airnauts/comments-next'
-import type { StorageAdapter } from '@airnauts/comments-server'
-import { createCommentsServer } from '@airnauts/comments-server'
-import { makeCreateThreadBody } from '@airnauts/comments-test-support'
+import { KEY_HEADER_NAME } from '@airnauts/airside-core'
+import { createNextHandler } from '@airnauts/airside-integration-next'
+import type { StorageAdapter } from '@airnauts/airside-server'
+import { createAirsideServer } from '@airnauts/airside-server'
+import { makeCreateThreadBody } from '@airnauts/airside-test-support'
 import { type Db, MongoClient } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
 import { afterAll, beforeAll, expect, it } from 'vitest'
@@ -22,7 +22,7 @@ beforeAll(async () => {
   mongod = await MongoMemoryServer.create()
   client = new MongoClient(mongod.getUri())
   await client.connect()
-  db = client.db('comments_integration')
+  db = client.db('airside_integration')
   await ensureIndexes(db)
 }, 60_000)
 
@@ -38,7 +38,7 @@ const headers = {
 }
 
 it('round-trips a thread through the Next handler against MongoDB', async () => {
-  const server = createCommentsServer({
+  const server = createAirsideServer({
     secretKey: 'sk_test',
     projectId: 'proj_x',
     allowedOrigins: ['https://app.example.com'],
@@ -49,7 +49,7 @@ it('round-trips a thread through the Next handler against MongoDB', async () => 
   const { GET, POST } = createNextHandler(server)
 
   const created = await POST(
-    new Request('https://host/api/comments/threads', {
+    new Request('https://host/api/airside/threads', {
       method: 'POST',
       headers,
       body: JSON.stringify(makeCreateThreadBody()),
@@ -59,7 +59,7 @@ it('round-trips a thread through the Next handler against MongoDB', async () => 
   expect(created.status).toBe(201)
   const { id } = await created.json()
 
-  const got = await GET(new Request(`https://host/api/comments/threads/${id}`, { headers }), {
+  const got = await GET(new Request(`https://host/api/airside/threads/${id}`, { headers }), {
     params: Promise.resolve({ path: ['threads', id] }),
   })
   expect(got.status).toBe(200)

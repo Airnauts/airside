@@ -1,15 +1,15 @@
 import { join } from 'node:path'
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { mongoRepository } from '@airnauts/comments-adapter-mongo'
-import { jiraExtension } from '@airnauts/comments-integration-jira'
-import { createCommentsAppRoute } from '@airnauts/comments-next'
-import { emailExtension } from '@airnauts/comments-notifier-email'
-import { resendTransport } from '@airnauts/comments-notifier-email/resend'
-import { slackExtension } from '@airnauts/comments-notifier-slack'
-import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
-import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
+import { mongoRepository } from '@airnauts/airside-adapter-mongo'
+import { emailExtension } from '@airnauts/airside-extension-email'
+import { resendTransport } from '@airnauts/airside-extension-email/resend'
+import { jiraExtension } from '@airnauts/airside-extension-jira'
+import { slackExtension } from '@airnauts/airside-extension-slack'
+import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
+import { createFileSystemStorage } from '@airnauts/airside-storage-fs'
+import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: 'dev-key', // demo only — replace with a real secret in production
   projectId: 'nextjs-host',
   allowedOrigins: [
@@ -41,9 +41,9 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
           from: process.env.RESEND_FROM ?? 'onboarding@resend.dev',
         })
       : []),
-    // Slack notifications when COMMENTS_SLACK_WEBHOOK_URL is set, else none.
-    ...(process.env.COMMENTS_SLACK_WEBHOOK_URL
-      ? slackExtension({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL })
+    // Slack notifications when AIRSIDE_SLACK_WEBHOOK_URL is set, else none.
+    ...(process.env.AIRSIDE_SLACK_WEBHOOK_URL
+      ? slackExtension({ webhookUrl: process.env.AIRSIDE_SLACK_WEBHOOK_URL })
       : []),
     // "Create Jira issue" thread action when JIRA_API_TOKEN is set, else none.
     // The other fields are required too; jiraExtension throws fast if any is blank.

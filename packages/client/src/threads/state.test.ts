@@ -1,5 +1,5 @@
 // packages/client/src/threads/state.test.ts
-import type { Comment, ThreadListItem, ThreadView } from '@airnauts/comments-core'
+import type { Comment, ThreadListItem, ThreadView } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
 import type { PlacedThread } from './state'
 import { initialState, reducer, visiblePlacements } from './state'

@@ -1,5 +1,5 @@
 // packages/client/src/panel/PanelRow.tsx
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import { useEffect, useRef, useState } from 'react'
 import { threadLink } from '../config'
 import { relativeTime } from '../threads/relativeTime'
@@ -32,53 +32,53 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
   }
 
   return (
-    <div data-thread-id={item.id} className="cmnt:border-b cmnt:border-[#f1f3f5]">
+    <div data-thread-id={item.id} className="air:border-b air:border-[#f1f3f5]">
       <button
         type="button"
-        data-testid="comments-panel-row"
+        data-testid="airside-panel-row"
         onClick={onSelect}
         aria-label={`Open thread on ${context}`}
-        className="cmnt:w-full cmnt:flex cmnt:items-start cmnt:gap-2 cmnt:px-3 cmnt:pt-2.5 cmnt:pb-1 cmnt:text-left cmnt:bg-transparent cmnt:border-0 cmnt:cursor-pointer cmnt:hover:bg-gray-50"
+        className="air:w-full air:flex air:items-start air:gap-2 air:px-3 air:pt-2.5 air:pb-1 air:text-left air:bg-transparent air:border-0 air:cursor-pointer air:hover:bg-gray-50"
       >
         <span
           aria-hidden={true}
-          className="cmnt:shrink-0 cmnt:w-[26px] cmnt:h-[26px] cmnt:rounded-full cmnt:text-white cmnt:flex cmnt:items-center cmnt:justify-center cmnt:text-[11px] cmnt:font-semibold"
+          className="air:shrink-0 air:w-[26px] air:h-[26px] air:rounded-full air:text-white air:flex air:items-center air:justify-center air:text-[11px] air:font-semibold"
           style={{ backgroundColor: avatarColor(author.email) }}
         >
           {initials(author)}
         </span>
-        <span className="cmnt:flex-1 cmnt:min-w-0">
-          <span className="cmnt:flex cmnt:items-center cmnt:gap-1.5">
-            <b className="cmnt:text-xs cmnt:truncate">{author.name ?? author.email}</b>
-            <span className="cmnt:text-gray-400 cmnt:text-[11px]">
+        <span className="air:flex-1 air:min-w-0">
+          <span className="air:flex air:items-center air:gap-1.5">
+            <b className="air:text-xs air:truncate">{author.name ?? author.email}</b>
+            <span className="air:text-gray-400 air:text-[11px]">
               {relativeTime(item.updatedAt)}
             </span>
             {orphaned && (
-              <span className="cmnt:ml-1 cmnt:px-1.5 cmnt:py-0.5 cmnt:rounded-[4px] cmnt:bg-amber-100 cmnt:text-amber-700 cmnt:font-medium cmnt:text-[11px]">
+              <span className="air:ml-1 air:px-1.5 air:py-0.5 air:rounded-[4px] air:bg-amber-100 air:text-amber-700 air:font-medium air:text-[11px]">
                 <span aria-hidden={true}>⚠</span> anchor lost
               </span>
             )}
           </span>
-          <span className="cmnt:mt-0.5 cmnt:block cmnt:text-[13px] cmnt:text-gray-900 cmnt:truncate">
-            {rootText !== '' ? rootText : <span className="cmnt:text-gray-400">📎 Attachment</span>}
+          <span className="air:mt-0.5 air:block air:text-[13px] air:text-gray-900 air:truncate">
+            {rootText !== '' ? rootText : <span className="air:text-gray-400">📎 Attachment</span>}
           </span>
-          <span className="cmnt:mt-0.5 cmnt:block cmnt:text-[11px] cmnt:text-gray-400 cmnt:truncate">
+          <span className="air:mt-0.5 air:block air:text-[11px] air:text-gray-400 air:truncate">
             {context}
           </span>
         </span>
       </button>
-      <div className="cmnt:px-3 cmnt:pb-2 cmnt:pl-[46px] cmnt:flex cmnt:items-center">
+      <div className="air:px-3 air:pb-2 air:pl-[46px] air:flex air:items-center">
         {replies > 0 ? (
           <Button
             variant="link"
             size="inline"
             onClick={onSelect}
-            className="cmnt:text-[11px] cmnt:text-gray-500"
+            className="air:text-[11px] air:text-gray-500"
           >
             {replies} {replies === 1 ? 'Reply' : 'Replies'}
           </Button>
         ) : (
-          <Button variant="link" size="inline" onClick={onReply} className="cmnt:text-[11px]">
+          <Button variant="link" size="inline" onClick={onReply} className="air:text-[11px]">
             Reply
           </Button>
         )}
@@ -87,7 +87,7 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
           size="inline"
           onClick={onResolve}
           aria-label={item.status === 'resolved' ? 'Reopen thread' : 'Resolve thread'}
-          className="cmnt:ml-3 cmnt:text-[11px] cmnt:font-semibold cmnt:text-green-600"
+          className="air:ml-3 air:text-[11px] air:font-semibold air:text-green-600"
         >
           {item.status === 'resolved' ? '↺ Reopen' : '✓ Resolve'}
         </Button>
@@ -96,7 +96,7 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
           size="inline"
           aria-label="Copy link"
           onClick={onCopy}
-          className="cmnt:ml-3 cmnt:text-[11px] cmnt:text-gray-500"
+          className="air:ml-3 air:text-[11px] air:text-gray-500"
         >
           {copied ? 'Copied!' : 'Copy link'}
         </Button>

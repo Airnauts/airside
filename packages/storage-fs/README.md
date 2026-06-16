@@ -1,17 +1,17 @@
-# @airnauts/comments-storage-fs
+# @airnauts/airside-storage-fs
 
-Filesystem attachment-storage adapter for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server. Writes uploaded images to a local directory and returns either `file://` URLs or browser-served paths.
+Filesystem attachment-storage adapter for the [Airside](https://github.com/Airnauts/airside) server. Writes uploaded images to a local directory and returns either `file://` URLs or browser-served paths.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/comments-storage-fs
+pnpm add @airnauts/airside-storage-fs
 ```
 
 ## Quick start
 
 ```ts
-import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
+import { createFileSystemStorage } from '@airnauts/airside-storage-fs'
 
 const storage = createFileSystemStorage({
   rootDir: './uploads',
@@ -19,7 +19,7 @@ const storage = createFileSystemStorage({
 })
 ```
 
-Pass `storage` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsAppRoute` / `createCommentsPagesRoute` from `@airnauts/comments-next`).
+Pass `storage` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-integration-next`).
 
 ## API reference
 
@@ -39,7 +39,7 @@ Files are written under `rootDir/<timestamp>/<random>-<safename>`. When `baseUrl
 The underlying class, exported for subclassing or direct construction:
 
 ```ts
-import { FileSystemStorage } from '@airnauts/comments-storage-fs'
+import { FileSystemStorage } from '@airnauts/airside-storage-fs'
 
 const storage = new FileSystemStorage({ rootDir: './uploads', baseUrl: '/uploads' })
 ```
@@ -59,8 +59,8 @@ type FileSystemStorageOptions = {
 
 ## Related packages
 
-- **`@airnauts/comments-server`** — defines the `StorageAdapter` interface this adapter implements
-- **`@airnauts/comments-storage-vercel-blob`** — Vercel Blob storage for production / serverless deployments
+- **`@airnauts/airside-server`** — defines the `StorageAdapter` interface this adapter implements
+- **`@airnauts/airside-storage-vercel-blob`** — Vercel Blob storage for production / serverless deployments
 
 ## License
 

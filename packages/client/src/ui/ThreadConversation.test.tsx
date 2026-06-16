@@ -1,5 +1,5 @@
 // packages/client/src/ui/ThreadConversation.test.tsx
-import type { Thread, ThreadListItem } from '@airnauts/comments-core'
+import type { Thread, ThreadListItem } from '@airnauts/airside-core'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { type ReactElement, useEffect } from 'react'
 import { describe, expect, it, vi } from 'vitest'

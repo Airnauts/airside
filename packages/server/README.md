@@ -1,22 +1,22 @@
-# @airnauts/comments-server
+# @airnauts/airside-server
 
-Server runtime for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool): Web-standard `Request → Response` HTTP handler, use cases, CORS/security, and the adapter interfaces for persistence and storage.
+Server runtime for [Airside](https://github.com/Airnauts/airside): Web-standard `Request → Response` HTTP handler, use cases, CORS/security, and the adapter interfaces for persistence and storage.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/comments-server
+pnpm add @airnauts/airside-server
 ```
 
 ## Quick start
 
 ```ts
-import { createCommentsServer } from '@airnauts/comments-server'
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
+import { createAirsideServer } from '@airnauts/airside-server'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
+import { createFileSystemStorage } from '@airnauts/airside-storage-fs'
 
-const server = createCommentsServer({
-  secretKey: process.env.COMMENTS_SECRET!,
+const server = createAirsideServer({
+  secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   repository: createMemoryRepository(),
@@ -27,19 +27,19 @@ const server = createCommentsServer({
 // Mount it in any framework — Next.js, Hono, bare Node http, etc.
 ```
 
-For Next.js (App Router or Pages Router), prefer `@airnauts/comments-next` which wraps the above into single one-call integrations: `createCommentsAppRoute(config)` for the App Router and `createCommentsPagesRoute(config)` for the Pages Router.
+For Next.js (App Router or Pages Router), prefer `@airnauts/airside-integration-next` which wraps the above into single one-call integrations: `createAirsideAppRoute(config)` for the App Router and `createAirsidePagesRoute(config)` for the Pages Router.
 
 ## API reference
 
-### `createCommentsServer(options)`
+### `createAirsideServer(options)`
 
-Returns a `CommentsServer` with a single `handle(req: Request): Promise<Response>` method.
+Returns a `AirsideServer` with a single `handle(req: Request): Promise<Response>` method.
 
-#### `CreateCommentsServerOptions`
+#### `CreateAirsideServerOptions`
 
 | Option | Type | Required | Description |
 |---|---|---|---|
-| `secretKey` | `string` | ✓ | Shared bearer token; clients send it as `x-comments-key` |
+| `secretKey` | `string` | ✓ | Shared bearer token; clients send it as `x-airside-key` |
 | `projectId` | `string` | ✓ | Namespace for all threads in this mount |
 | `allowedOrigins` | `string[]` | ✓ | CORS origin allowlist; requests from other origins get 403 |
 | `repository` | `Repository` | ✓ | Persistence adapter (mongo, postgres, memory, …) |
@@ -47,7 +47,7 @@ Returns a `CommentsServer` with a single `handle(req: Request): Promise<Response
 | `env` | `string` | | Optional sub-namespace (e.g. `"staging"`) within a project |
 | `extensions` | `ServerExtension[]` | | Notification and thread-action plugins; see below |
 | `notifiers` | `Notifier[]` | | **Deprecated** — use `extensions` |
-| `threadParam` | `string` | | URL param for thread deep-links (default `"comments-thread"`) |
+| `threadParam` | `string` | | URL param for thread deep-links (default `"airside-thread"`) |
 | `rateLimit` | `RateLimitConfig \| false` | | Per-key/IP rate limit; default `{ writesPerMin: 60, readsPerMin: 600 }`; `false` disables |
 | `rateLimiter` | `RateLimiter` | | Override the rate-limiter implementation |
 | `uploads` | `{ maxBytes?: number }` | | Per-upload size cap (default 5 MB) |
@@ -60,10 +60,10 @@ Extensions come in two kinds, both passed to `extensions: [...]`.
 **Notification extensions** (`NotificationExtension`) receive a `NotificationEvent` after each write (thread created or comment added). Failures are isolated — they never break the write.
 
 ```ts
-import { slackExtension } from '@airnauts/comments-notifier-slack'
-import { emailExtension } from '@airnauts/comments-notifier-email'
+import { slackExtension } from '@airnauts/airside-extension-slack'
+import { emailExtension } from '@airnauts/airside-extension-email'
 
-createCommentsServer({
+createAirsideServer({
   // ...
   extensions: [
     ...slackExtension({ webhookUrl: process.env.SLACK_WEBHOOK! }),
@@ -75,9 +75,9 @@ createCommentsServer({
 **Thread-action extensions** (`ThreadActionExtension`) add reviewer-triggered actions to the thread toolbar (e.g. "Create Jira issue"). Each action declares an `id`, `label`, `slot`, optional `visibleWhen` predicate, and a `run` handler that may persist an `externalLink` back on the thread.
 
 ```ts
-import { jiraExtension } from '@airnauts/comments-integration-jira'
+import { jiraExtension } from '@airnauts/airside-extension-jira'
 
-createCommentsServer({
+createAirsideServer({
   // ...
   extensions: jiraExtension({ siteUrl: '...', email: '...', apiToken: '...', projectKey: 'PROJ' }),
 })
@@ -88,7 +88,7 @@ createCommentsServer({
 The types below are what custom adapters must implement:
 
 ```ts
-import type { Repository, StorageAdapter } from '@airnauts/comments-server'
+import type { Repository, StorageAdapter } from '@airnauts/airside-server'
 ```
 
 **`Repository`** — persistence; implement `createThread`, `getThread`, `listThreads`, `addComment`, `setStatus`, `updateAnchor`, `upsertExternalLink`, `putAttachment`, `getAttachments`.
@@ -111,27 +111,27 @@ Wraps a `() => Promise<Repository>` factory so it connects lazily on first use a
 
 ## Subpath exports
 
-### `@airnauts/comments-server/node`
+### `@airnauts/airside-server/node`
 
-Generic Node↔Web bridge for mounting the server on any Node host (Express, bare `node:http`, etc.). Usually consumed via `@airnauts/comments-next` for Next.js hosts.
+Generic Node↔Web bridge for mounting the server on any Node host (Express, bare `node:http`, etc.). Usually consumed via `@airnauts/airside-integration-next` for Next.js hosts.
 
 ```ts
-import { nodeRequestToWeb, webToNode } from '@airnauts/comments-server/node'
+import { nodeRequestToWeb, webToNode } from '@airnauts/airside-server/node'
 
 // In an Express/http handler — bridge the Node req/res to the Web standard:
-app.use('/api/comments', async (req, res) => {
+app.use('/api/airside', async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`)
   const webRes = await server.handle(await nodeRequestToWeb(req, url))
   await webToNode(webRes, res)
 })
 ```
 
-### `@airnauts/comments-server/dev`
+### `@airnauts/airside-server/dev`
 
 Minimal Node `http` server that bridges Web `Request/Response` — for local development of non-Next.js consumers.
 
 ```ts
-import { createDevServer } from '@airnauts/comments-server/dev'
+import { createDevServer } from '@airnauts/airside-server/dev'
 
 const dev = createDevServer((req) => server.handle(req), { port: 4321 })
 const { port } = await dev.listen()
@@ -144,18 +144,18 @@ const { port } = await dev.listen()
 
 ## Related packages
 
-- **`@airnauts/comments-next`** — one-call Next.js App and Pages Router integration (`createCommentsAppRoute` / `createCommentsPagesRoute`)
-- **`@airnauts/comments-adapter-mongo`** — MongoDB repository
-- **`@airnauts/comments-adapter-postgres`** — PostgreSQL repository
-- **`@airnauts/comments-adapter-memory`** — in-memory repository for dev/tests
-- **`@airnauts/comments-storage-vercel-blob`** — Vercel Blob storage
-- **`@airnauts/comments-storage-fs`** — filesystem storage
-- **`@airnauts/comments-notifier-slack`** — Slack notification extension
-- **`@airnauts/comments-notifier-email`** — email notification extension
-- **`@airnauts/comments-integration-jira`** — Jira thread-action extension
-- **`@airnauts/comments-core`** — shared types and schemas (consumed transitively)
+- **`@airnauts/airside-integration-next`** — one-call Next.js App and Pages Router integration (`createAirsideAppRoute` / `createAirsidePagesRoute`)
+- **`@airnauts/airside-adapter-mongo`** — MongoDB repository
+- **`@airnauts/airside-adapter-postgres`** — PostgreSQL repository
+- **`@airnauts/airside-adapter-memory`** — in-memory repository for dev/tests
+- **`@airnauts/airside-storage-vercel-blob`** — Vercel Blob storage
+- **`@airnauts/airside-storage-fs`** — filesystem storage
+- **`@airnauts/airside-extension-slack`** — Slack notification extension
+- **`@airnauts/airside-extension-email`** — email notification extension
+- **`@airnauts/airside-extension-jira`** — Jira thread-action extension
+- **`@airnauts/airside-core`** — shared types and schemas (consumed transitively)
 
-See [docs/architecture.md](https://github.com/Airnauts/commenting-tool/blob/main/docs/architecture.md) and the [integration guide](https://github.com/Airnauts/commenting-tool/blob/main/docs/integration.md).
+See [docs/architecture.md](https://github.com/Airnauts/airside/blob/main/docs/architecture.md) and the [integration guide](https://github.com/Airnauts/airside/blob/main/docs/integration.md).
 
 ## License
 

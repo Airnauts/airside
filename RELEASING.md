@@ -1,4 +1,4 @@
-# Releasing `@airnauts/comments-*`
+# Releasing `@airnauts/airside-*`
 
 Publishing is **automatic on `main`**: the `publish` job in
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push to `main`,
@@ -19,12 +19,12 @@ repo → Settings → Secrets and variables → Actions → New repository secre
 
 The initial changesets have already been consumed on `main` (`chore: version packages`),
 so the public packages are versioned (currently **`0.1.0`**, except
-`@airnauts/comments-client` at **`0.1.1`**) with no pending changesets and nothing is
+`@airnauts/airside-client` at **`0.1.1`**) with no pending changesets and nothing is
 published yet. The first green push to `main` (with `NPM_TOKEN` set) publishes all 8 at
 their current versions automatically. Verify:
 
 ```bash
-npm view @airnauts/comments-core version
+npm view @airnauts/airside-core version
 ```
 
 (If you want to publish the current `main` state without waiting for another push, re-run

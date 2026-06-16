@@ -1,4 +1,4 @@
-export const DEFAULT_THREAD_PARAM = 'comments-thread'
+export const DEFAULT_THREAD_PARAM = 'airside-thread'
 
 /** Build a deep-link URL that focuses a thread on its page. */
 export function threadLink(

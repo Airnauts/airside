@@ -12,7 +12,7 @@
 | # | Decision | ADR |
 |---|---|---|
 | 1 | **Topology:** library-first, hosted-ready. Client talks HTTP to a configurable endpoint; integrator mounts the server in their app. Vercel/Next.js + Vercel Blob is the first-class v1 target. | ADR-0001 |
-| 2 | **Widget delivery:** self-contained vanilla `init()` engine with its own bundled React + a thin `<CommentsLayer/>` React wrapper. | ADR-0002 |
+| 2 | **Widget delivery:** self-contained vanilla `init()` engine with its own bundled React + a thin `<AirsideLayer/>` React wrapper. | ADR-0002 |
 | 3 | **Adapter scope:** all seams designed; minimal concretes in v1 — **MongoDB** (Atlas/Vercel), **Vercel Blob + filesystem** storage, **Next.js/Web-standard** route handler. No auth adapter. PostgreSQL repository added in ADR-0035. | ADR-0003 |
 | 4 | **Anchoring:** composite fingerprint + scored re-match; element anchor with optional additive text `selection`. | ADR-0004, ADR-0008 |
 | 5 | **UI stack:** shadcn/ui (Radix + Tailwind), bundled in the widget. | ADR-0005 |
@@ -36,50 +36,50 @@ endpoint with no client change.
 
 **Monorepo** (pnpm workspaces, tsup builds, ESM-first):
 
-- **`@airnauts/comments-core`** — isomorphic, no DOM/Node. Types, zod schemas + the HTTP
+- **`@airnauts/airside-core`** — isomorphic, no DOM/Node. Types, zod schemas + the HTTP
   contract (source for OpenAPI), the anchor fingerprint schema + `schemaVersion`,
   and the pure scoring/threshold policy.
-- **`@airnauts/comments-client`** — the widget engine: `init()` (vanilla, light-DOM
+- **`@airnauts/airside-client`** — the widget engine: `init()` (vanilla, light-DOM
   mount), the React UI (shadcn), the anchoring *runtime* (DOM capture / re-match
-  / overlay), and the API client. Subpath **`@airnauts/comments-client/react`** exports the
-  thin `<CommentsLayer/>` wrapper (tree-shaken away if unused).
-- **`@airnauts/comments-server`** — the Web-standard `Request → Response` core + business
-  logic; depends only on adapter interfaces. Subpath **`@airnauts/comments-server/node`**
+  / overlay), and the API client. Subpath **`@airnauts/airside-client/react`** exports the
+  thin `<AirsideLayer/>` wrapper (tree-shaken away if unused).
+- **`@airnauts/airside-server`** — the Web-standard `Request → Response` core + business
+  logic; depends only on adapter interfaces. Subpath **`@airnauts/airside-server/node`**
   is a generic Node↔Web bridge (`nodeRequestToWeb` / `webToNode`) for mounting on any
   Node server.
-- **`@airnauts/comments-next`** — all Next.js glue: App Router (`createCommentsAppRoute`)
-  and Pages Router (`createCommentsPagesRoute`) one-call integrations.
-- **`@airnauts/comments-adapter-mongo`** — MongoDB repository (only package that pulls the
+- **`@airnauts/airside-integration-next`** — all Next.js glue: App Router (`createAirsideAppRoute`)
+  and Pages Router (`createAirsidePagesRoute`) one-call integrations.
+- **`@airnauts/airside-adapter-mongo`** — MongoDB repository (only package that pulls the
   mongo driver).
-- **`@airnauts/comments-adapter-postgres`** — PostgreSQL repository (hybrid columns +
+- **`@airnauts/airside-adapter-postgres`** — PostgreSQL repository (hybrid columns +
   `jsonb`); driver-agnostic via a host-supplied `query()` executor, with a `pg`-based
   lazy convenience.
-- **`@airnauts/comments-storage-vercel-blob`**, **`@airnauts/comments-storage-fs`** — storage
+- **`@airnauts/airside-storage-vercel-blob`**, **`@airnauts/airside-storage-fs`** — storage
   concretes.
-- **`@airnauts/comments-notifier-slack`**, **`@airnauts/comments-notifier-email`** —
+- **`@airnauts/airside-extension-slack`**, **`@airnauts/airside-extension-email`** —
   notification extensions (Slack Incoming Webhook; pluggable email transport) that post
   new-comment notifications.
-- **`@airnauts/comments-integration-jira`** — thread-action extension: a "Create Jira issue"
+- **`@airnauts/airside-extension-jira`** — thread-action extension: a "Create Jira issue"
   action that turns a thread into a Jira Cloud issue.
 - Seams with no v1 concrete: auth, other DBs, other frameworks, S3.
 
 **"Enable/disable via subpackage imports":** integrators install/import only the
 adapters they use (so e.g. the mongo driver never enters a build that doesn't
-import `@airnauts/comments-adapter-mongo`). Client features (screenshots, text anchors) are
+import `@airnauts/airside-adapter-mongo`). Client features (screenshots, text anchors) are
 gated in `init({ features })` and dynamically imported. **Bundle delivery is
 npm-only in v1**; a CDN/script-tag build is a deliberate fast-follow.
 
 ---
 
-## 3. Client architecture (`@airnauts/comments-client`)
+## 3. Client architecture (`@airnauts/airside-client`)
 
-**Mount.** A single call — `comments.init({ key, endpoint, pageKey?, features? })`
+**Mount.** A single call — `airside.init({ key, endpoint, pageKey?, features? })`
 — injects one root host element at `<body>` (`position: fixed; inset: 0;
 pointer-events: none`) and renders the widget into it in the **light DOM**, with
 the widget's own bundled React. Isolation is via `all: revert` on the root,
 Tailwind with preflight disabled, and a scoped class prefix; Radix portals/menus/
 toasts render into a single high-z-index portal container inside the host. The
-`<CommentsLayer/>` React wrapper simply calls `init()` in an effect. The widget
+`<AirsideLayer/>` React wrapper simply calls `init()` in an effect. The widget
 never reads the host's React/runtime state — it only speaks HTTP.
 
 **Layers.** (1) an **overlay** layer rendering pin dots + text-range highlights,
@@ -106,13 +106,13 @@ cross-page panel, and the email-identity modal.
 - **api client** — endpoint + key header; optimistic posts with rollback.
 
 **core ↔ client split.** Pure, headless-testable logic (fingerprint schema,
-scoring weights, threshold policy, HTTP contract types) lives in `@airnauts/comments-core`.
+scoring weights, threshold policy, HTTP contract types) lives in `@airnauts/airside-core`.
 Only DOM-touching code (building fingerprints from real nodes, running the search,
-rendering the overlay) lives in `@airnauts/comments-client`.
+rendering the overlay) lives in `@airnauts/airside-client`.
 
 ---
 
-## 4. Server architecture (`@airnauts/comments-server`)
+## 4. Server architecture (`@airnauts/airside-server`)
 
 A framework-agnostic core built on the Web `Request → Response` standard, with
 thin per-framework glue and injected adapters.
@@ -128,8 +128,8 @@ report-orphan / refresh-anchor, upload attachment.
 **Construction & adapters:**
 
 ```ts
-createCommentsServer({
-  repository,      // @airnauts/comments-adapter-mongo
+createAirsideServer({
+  repository,      // @airnauts/airside-adapter-mongo
   storage,         // vercel-blob | fs
   secretKey,
   allowedOrigins,
@@ -150,27 +150,27 @@ reviewer-triggered actions evaluated per thread and run via
 thread (e.g. the created Jira issue). The older `notifiers?` option is a deprecated alias for
 the notification half. See ADR-0034.
 
-**Next.js glue is near-zero** — `@airnauts/comments-next` builds the server and its
+**Next.js glue is near-zero** — `@airnauts/airside-integration-next` builds the server and its
 handlers in one call:
 
 ```ts
-// App Router — app/api/comments/[...path]/route.ts
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute(config)
-// Pages Router — pages/api/comments/[...path].ts
-export default createCommentsPagesRoute(config)
+// App Router — app/api/airside/[...path]/route.ts
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute(config)
+// Pages Router — pages/api/airside/[...path].ts
+export default createAirsidePagesRoute(config)
 ```
 
-Other Node hosts wrap the same core via `@airnauts/comments-server/node`.
+Other Node hosts wrap the same core via `@airnauts/airside-server/node`.
 
 **Security model (v1).** The secret key is a **bearer capability token, not user
-auth**: one shared secret per mount, sent as the `x-comments-key` **header**
+auth**: one shared secret per mount, sent as the `x-airside-key` **header**
 (never the query string — leaks via referrer/logs), validated server-side, paired
 with a configurable **origin allowlist** so a leaked link can't post from
 arbitrary sites. Basic per-key/IP rate limiting (429).
 
 The same secret value flows through three transports: `init({ key })`
 (integrator config) → the **URL parameter** the client activation gate checks
-(parameter name configurable) → the **`x-comments-key` header** the server
+(parameter name configurable) → the **`x-airside-key` header** the server
 validates. One value, three places — not three different secrets.
 
 ---
@@ -248,9 +248,9 @@ collection later if ever needed.
 
 ## 6. HTTP API contract
 
-Defined once as zod in `@airnauts/comments-core`; OpenAPI generated from it (served at
+Defined once as zod in `@airnauts/airside-core`; OpenAPI generated from it (served at
 `GET /openapi.json` + a Scalar page at `/docs`; static artifact at build).
-Mounted under a base path, e.g. `/api/comments`.
+Mounted under a base path, e.g. `/api/airside`.
 
 | Method | Path | Purpose |
 |---|---|---|
@@ -263,7 +263,7 @@ Mounted under a base path, e.g. `/api/comments`.
 | POST | `/uploads` | multipart image → StorageAdapter → `{id, url, name, contentType, size}` |
 | GET | `/openapi.json`, `/docs` | contract + Scalar UI |
 
-**Conventions:** `x-comments-key` header on every request; origin allowlist +
+**Conventions:** `x-airside-key` header on every request; origin allowlist +
 CORS; JSON; ISO-8601 timestamps; nanoid ids; cursor pagination; two-step uploads
 (`POST /uploads` then reference `attachmentIds`; Vercel Blob client-upload token
 is a later optimization).
@@ -279,8 +279,8 @@ On-page load → `GET /threads?pageKey=…` → client runs scored re-match. Pan
 
 ## 7. Anchoring mechanism
 
-Pure scoring/threshold policy in `@airnauts/comments-core`; DOM capture/search/positioning
-in `@airnauts/comments-client`. All knobs have defaults and are tunable (PRD §9).
+Pure scoring/threshold policy in `@airnauts/airside-core`; DOM capture/search/positioning
+in `@airnauts/airside-client`. All knobs have defaults and are tunable (PRD §9).
 
 **Capture (on click / selection).** target = `elementFromPoint` (or the
 selection's container); build dual `selectors` (structural nth-of-type + class

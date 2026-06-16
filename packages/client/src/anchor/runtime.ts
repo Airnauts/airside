@@ -1,5 +1,5 @@
 // packages/client/src/anchor/runtime.ts
-import type { Anchor, ThreadListItem, ThreadStatus } from '@airnauts/comments-core'
+import type { Anchor, ThreadListItem, ThreadStatus } from '@airnauts/airside-core'
 import type { ApiClient } from '../api/client'
 import { type Box, mapRects, pinXY } from '../positioning/coords'
 import type { PlacedThread } from '../threads/state'
@@ -40,7 +40,7 @@ export function createRuntime(opts: RuntimeOptions) {
   function matchAndReport(item: ThreadListItem, anchor: Anchor): RetainedMatch | null {
     const res = rematch(anchor, root)
     if (res.kind === 'orphaned') {
-      console.debug('[comments] anchor lost', {
+      console.debug('[airside] anchor lost', {
         threadId: item.id,
         pageKey: opts.pageKey,
         reason: res.reason,

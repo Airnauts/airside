@@ -1,6 +1,6 @@
-import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { KEY_HEADER_NAME, operations } from '@airnauts/comments-core'
-import { makeAuthor, makeCreateThreadBody } from '@airnauts/comments-test-support'
+import { InMemoryRepository } from '@airnauts/airside-adapter-memory'
+import { KEY_HEADER_NAME, operations } from '@airnauts/airside-core'
+import { makeAuthor, makeCreateThreadBody } from '@airnauts/airside-test-support'
 import { describe, expect, it, vi } from 'vitest'
 import {
   IntegrationError,
@@ -9,7 +9,7 @@ import {
   type ThreadActionResult,
 } from '../extensions/types'
 import type { UseCaseMap } from '../router'
-import { assertUseCasesCoverOperations, createCommentsServer } from '../server'
+import { assertUseCasesCoverOperations, createAirsideServer } from '../server'
 import type { StorageAdapter } from '../storage/types'
 
 const stubStorage: StorageAdapter = {
@@ -18,8 +18,8 @@ const stubStorage: StorageAdapter = {
   },
 }
 
-function build(overrides: Partial<Parameters<typeof createCommentsServer>[0]> = {}) {
-  return createCommentsServer({
+function build(overrides: Partial<Parameters<typeof createAirsideServer>[0]> = {}) {
+  return createAirsideServer({
     secretKey: 'sk_test',
     projectId: 'proj_x',
     allowedOrigins: ['https://app.example.com'],

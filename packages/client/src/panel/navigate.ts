@@ -1,5 +1,5 @@
 // packages/client/src/panel/navigate.ts
-export const FOCUS_STORAGE_KEY = 'cmnt:focus'
+export const FOCUS_STORAGE_KEY = 'airside:focus'
 
 export type FocusHandoff = { id: string; openDetail: boolean }
 

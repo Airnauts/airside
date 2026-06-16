@@ -1,4 +1,4 @@
-import type { ThreadId, ThreadIdParam, ThreadView } from '@airnauts/comments-core'
+import type { ThreadId, ThreadIdParam, ThreadView } from '@airnauts/airside-core'
 import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
 import type { ExtensionRegistry } from '../extensions/registry'

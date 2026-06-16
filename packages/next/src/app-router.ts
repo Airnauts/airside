@@ -1,4 +1,4 @@
-import type { CommentsServer } from '@airnauts/comments-server'
+import type { AirsideServer } from '@airnauts/airside-server'
 import { operationUrl } from './operation-url'
 
 /**
@@ -10,14 +10,14 @@ type NextRouteContext = { params: Promise<{ path?: string[] }> }
 type NextHandler = (req: Request, ctx: NextRouteContext) => Promise<Response>
 
 /**
- * App Router glue for `app/api/comments/[...path]/route.ts`:
+ * App Router glue for `app/api/airside/[...path]/route.ts`:
  *   export const { GET, POST, PATCH, OPTIONS } = createNextHandler(server)
  *
  * Next strips the mount prefix and hands us the remaining segments in
  * `params.path`; we rebuild the operation-relative URL the dispatcher expects,
  * so the server core stays unaware of where it is mounted (no basePath).
  */
-export function createNextHandler(server: CommentsServer): {
+export function createNextHandler(server: AirsideServer): {
   GET: NextHandler
   POST: NextHandler
   PATCH: NextHandler

@@ -7,8 +7,8 @@ import type {
   ThreadId,
   ThreadListItem,
   ThreadStatus,
-} from '@airnauts/comments-core'
-import { unresolvedCountOf } from '@airnauts/comments-core'
+} from '@airnauts/airside-core'
+import { unresolvedCountOf } from '@airnauts/airside-core'
 import {
   type AnchorPatch,
   decodeCursor,
@@ -20,12 +20,12 @@ import {
   type NewThread,
   type Repository,
   type Scope,
-} from '@airnauts/comments-server'
+} from '@airnauts/airside-server'
 import { type Db, type Filter, MongoClient, type UpdateFilter } from 'mongodb'
 import { ensureIndexes } from './indexes'
 
-export const COLLECTION = 'threads'
-export const ATTACHMENTS_COLLECTION = 'attachments'
+export const COLLECTION = 'airside_threads'
+export const ATTACHMENTS_COLLECTION = 'airside_attachments'
 
 /** Stored shape: the wire Thread (minus its `id`) keyed by `_id`, plus server-only scope. */
 type StoredThread = Omit<Thread, 'id'> & {

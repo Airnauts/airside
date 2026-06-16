@@ -11,7 +11,7 @@ import type {
   ThreadId,
   ThreadListItem,
   ThreadStatus,
-} from '@airnauts/comments-core'
+} from '@airnauts/airside-core'
 
 export type Scope = {
   projectId: string

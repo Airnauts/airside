@@ -4,7 +4,7 @@ import { mockRect } from '../../test/test-helpers/dom'
 import type { ApiClient } from '../api/client'
 import { WidgetApp } from './app'
 
-const IDENTITY_KEY = 'comments:identity'
+const IDENTITY_KEY = 'airside:identity'
 
 // A thread anchored to #t so that, once logged in, the runtime places it and a pin renders.
 function clientWithOneThread(): ApiClient {
@@ -56,10 +56,10 @@ describe('login gate', () => {
     const client = clientWithOneThread()
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
 
-    expect(await screen.findByTestId('comments-login')).toBeInTheDocument()
-    expect(screen.queryByTestId('comments-place')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('comments-panel-open')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('comments-pin')).not.toBeInTheDocument()
+    expect(await screen.findByTestId('airside-login')).toBeInTheDocument()
+    expect(screen.queryByTestId('airside-place')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('airside-panel-open')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('airside-pin')).not.toBeInTheDocument()
     expect(client.listThreads).not.toHaveBeenCalled()
   })
 
@@ -68,15 +68,15 @@ describe('login gate', () => {
     const client = clientWithOneThread()
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
 
-    fireEvent.click(await screen.findByTestId('comments-login'))
+    fireEvent.click(await screen.findByTestId('airside-login'))
     const dialog = await screen.findByRole('dialog')
     fireEvent.change(within(dialog).getByLabelText('Email'), {
       target: { value: 'rev@example.com' },
     })
     fireEvent.click(within(dialog).getByRole('button', { name: /log in/i }))
 
-    expect(await screen.findByTestId('comments-place')).toBeInTheDocument()
-    expect(await screen.findByTestId('comments-pin')).toBeInTheDocument()
+    expect(await screen.findByTestId('airside-place')).toBeInTheDocument()
+    expect(await screen.findByTestId('airside-pin')).toBeInTheDocument()
     expect(localStorage.getItem(IDENTITY_KEY)).toContain('rev@example.com')
   })
 
@@ -86,7 +86,7 @@ describe('login gate', () => {
     const client = clientWithOneThread()
     render(<WidgetApp options={{ key: 'k', endpoint: 'http://x' }} client={client} />)
 
-    expect(await screen.findByTestId('comments-place')).toBeInTheDocument()
-    expect(screen.queryByTestId('comments-login')).not.toBeInTheDocument()
+    expect(await screen.findByTestId('airside-place')).toBeInTheDocument()
+    expect(screen.queryByTestId('airside-login')).not.toBeInTheDocument()
   })
 })

@@ -1,4 +1,4 @@
-import type { Anchor, AttachmentId, Provenance } from '@airnauts/comments-core'
+import type { Anchor, AttachmentId, Provenance } from '@airnauts/airside-core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createRuntime } from '../anchor/runtime'
 import type { ApiClient } from '../api/client'
@@ -104,7 +104,7 @@ export function MarkerLayer({
       // test with no backend) must degrade to "no threads yet", not surface as an unhandled
       // rejection. Swallow with a debug breadcrumb, matching the runtime's refreshAnchor catches.
       .catch((err) => {
-        console.debug('[comments] initial thread load failed', err)
+        console.debug('[airside] initial thread load failed', err)
       })
     const stop = observeReposition({
       targets: [],

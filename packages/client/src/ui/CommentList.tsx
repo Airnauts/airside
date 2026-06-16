@@ -1,5 +1,5 @@
 // packages/client/src/ui/CommentList.tsx
-import type { Comment } from '@airnauts/comments-core'
+import type { Comment } from '@airnauts/airside-core'
 import { useEffect, useRef } from 'react'
 import { relativeTime } from '../threads/relativeTime'
 import { avatarColor, initials } from './avatar'
@@ -37,7 +37,7 @@ export function CommentList({
     return (
       <StatusNotice
         onRetry={onRetry}
-        className="cmnt:p-3 cmnt:text-left cmnt:text-[13px] cmnt:text-gray-500"
+        className="air:p-3 air:text-left air:text-[13px] air:text-gray-500"
       >
         Couldn't load this thread.
       </StatusNotice>
@@ -46,18 +46,18 @@ export function CommentList({
   if (loading) {
     return (
       <div
-        data-testid="comments-skeleton"
+        data-testid="airside-skeleton"
         role="status"
         aria-busy="true"
         aria-label="Loading comments"
-        className="cmnt:p-3"
+        className="air:p-3"
       >
         {[0, 1].map((i) => (
-          <div key={i} className="cmnt:flex cmnt:gap-[9px] cmnt:mb-3.5">
-            <div className="cmnt:w-[26px] cmnt:h-[26px] cmnt:rounded-full cmnt:bg-gray-200" />
-            <div className="cmnt:flex-1">
-              <div className="cmnt:w-2/5 cmnt:h-2.5 cmnt:bg-gray-200 cmnt:rounded-[4px]" />
-              <div className="cmnt:w-[85%] cmnt:h-2.5 cmnt:bg-gray-100 cmnt:rounded-[4px] cmnt:mt-1.5" />
+          <div key={i} className="air:flex air:gap-[9px] air:mb-3.5">
+            <div className="air:w-[26px] air:h-[26px] air:rounded-full air:bg-gray-200" />
+            <div className="air:flex-1">
+              <div className="air:w-2/5 air:h-2.5 air:bg-gray-200 air:rounded-[4px]" />
+              <div className="air:w-[85%] air:h-2.5 air:bg-gray-100 air:rounded-[4px] air:mt-1.5" />
             </div>
           </div>
         ))}
@@ -66,7 +66,7 @@ export function CommentList({
   }
   if (comments.length === 0) {
     return (
-      <StatusNotice className="cmnt:py-4 cmnt:text-[13px]">
+      <StatusNotice className="air:py-4 air:text-[13px]">
         <span aria-hidden="true">💬</span> No comments yet — start the thread.
       </StatusNotice>
     )
@@ -81,27 +81,25 @@ export function CommentList({
             // min-h-0 + overflow so a long thread shrinks and scrolls within the drawer instead
             // of pushing the composer off-screen. NOT flex-1 — that stretched the list to fill
             // the drawer and pinned the composer to the bottom.
-            'cmnt:min-h-0 cmnt:overflow-auto cmnt:p-3'
-          : 'cmnt:max-h-[230px] cmnt:overflow-auto cmnt:p-3'
+            'air:min-h-0 air:overflow-auto air:p-3'
+          : 'air:max-h-[230px] air:overflow-auto air:p-3'
       }
     >
       {comments.map((c) => (
-        <div key={c.id} className="cmnt:flex cmnt:gap-[9px] cmnt:mb-3.5">
+        <div key={c.id} className="air:flex air:gap-[9px] air:mb-3.5">
           <div
             aria-hidden
-            className="cmnt:shrink-0 cmnt:w-[26px] cmnt:h-[26px] cmnt:rounded-full cmnt:text-white cmnt:flex cmnt:items-center cmnt:justify-center cmnt:text-[11px] cmnt:font-semibold"
+            className="air:shrink-0 air:w-[26px] air:h-[26px] air:rounded-full air:text-white air:flex air:items-center air:justify-center air:text-[11px] air:font-semibold"
             style={{ backgroundColor: avatarColor(c.author.email) }} // per-author color is computed → inline
           >
             {initials(c.author)}
           </div>
-          <div className="cmnt:min-w-0">
-            <div className="cmnt:flex cmnt:gap-1.5 cmnt:items-baseline">
-              <b className="cmnt:text-xs">{c.author.name ?? c.author.email}</b>
-              <span className="cmnt:text-gray-400 cmnt:text-[11px]">
-                {relativeTime(c.createdAt)}
-              </span>
+          <div className="air:min-w-0">
+            <div className="air:flex air:gap-1.5 air:items-baseline">
+              <b className="air:text-xs">{c.author.name ?? c.author.email}</b>
+              <span className="air:text-gray-400 air:text-[11px]">{relativeTime(c.createdAt)}</span>
             </div>
-            <div className="cmnt:mt-0.5 cmnt:leading-relaxed cmnt:text-[13px] cmnt:whitespace-pre-wrap">
+            <div className="air:mt-0.5 air:leading-relaxed air:text-[13px] air:whitespace-pre-wrap">
               {c.text}
             </div>
             {c.attachments.map((a) => (
@@ -112,12 +110,12 @@ export function CommentList({
                 rel="noopener noreferrer"
                 aria-label={`Open ${a.name} in a new tab`}
                 title="Open in new tab"
-                className="cmnt:group cmnt:relative cmnt:mt-1.5 cmnt:block cmnt:w-max cmnt:rounded-lg cmnt:border cmnt:border-slate-300 cmnt:overflow-hidden"
+                className="air:group air:relative air:mt-1.5 air:block air:w-max air:rounded-lg air:border air:border-slate-300 air:overflow-hidden"
               >
-                <img src={a.url} alt={a.name} className="cmnt:max-w-[160px] cmnt:block" />
+                <img src={a.url} alt={a.name} className="air:max-w-[160px] air:block" />
                 <span
                   aria-hidden
-                  className="cmnt:absolute cmnt:top-1 cmnt:right-1 cmnt:flex cmnt:items-center cmnt:justify-center cmnt:w-5 cmnt:h-5 cmnt:rounded-[4px] cmnt:bg-black/55 cmnt:text-white cmnt:opacity-80 cmnt:group-hover:opacity-100 cmnt:transition-opacity"
+                  className="air:absolute air:top-1 air:right-1 air:flex air:items-center air:justify-center air:w-5 air:h-5 air:rounded-[4px] air:bg-black/55 air:text-white air:opacity-80 air:group-hover:opacity-100 air:transition-opacity"
                 >
                   <svg
                     viewBox="0 0 24 24"

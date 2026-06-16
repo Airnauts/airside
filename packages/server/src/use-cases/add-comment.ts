@@ -1,4 +1,4 @@
-import type { AddCommentBody, Comment, ThreadId, ThreadIdParam } from '@airnauts/comments-core'
+import type { AddCommentBody, Comment, ThreadId, ThreadIdParam } from '@airnauts/airside-core'
 import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
 import type { NotificationExtension } from '../extensions/types'

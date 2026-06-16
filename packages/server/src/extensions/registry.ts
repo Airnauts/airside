@@ -1,4 +1,4 @@
-import type { ThreadActionDescriptor } from '@airnauts/comments-core'
+import type { ThreadActionDescriptor } from '@airnauts/airside-core'
 import {
   type ActionVisibilityContext,
   isNotification,

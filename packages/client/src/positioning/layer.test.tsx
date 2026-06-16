@@ -1,4 +1,4 @@
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { DraftsProvider } from '../drafts/DraftsProvider'
@@ -56,7 +56,7 @@ describe('PinLayer', () => {
         highlight: [{ x: 1, y: 2, width: 5, height: 6 }],
       },
     ])
-    const pins = screen.getAllByTestId('comments-pin')
+    const pins = screen.getAllByTestId('airside-pin')
     expect(pins).toHaveLength(2)
     expect(pins[0].style.transform).toContain('translate(10px, 20px)')
   })
@@ -69,6 +69,6 @@ describe('PinLayer', () => {
         highlight: [{ x: 1, y: 2, width: 5, height: 6 }],
       },
     ])
-    expect(screen.getAllByTestId('comments-highlight')).toHaveLength(1)
+    expect(screen.getAllByTestId('airside-highlight')).toHaveLength(1)
   })
 })

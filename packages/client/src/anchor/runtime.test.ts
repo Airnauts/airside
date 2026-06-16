@@ -1,4 +1,4 @@
-import { ANCHOR_SCHEMA_VERSION, type Anchor, type ThreadListItem } from '@airnauts/comments-core'
+import { ANCHOR_SCHEMA_VERSION, type Anchor, type ThreadListItem } from '@airnauts/airside-core'
 import { describe, expect, it, vi } from 'vitest'
 import { mockRect } from '../../test/test-helpers/dom'
 import { extractSignals } from './extract'
@@ -182,7 +182,7 @@ describe('createRuntime.refresh', () => {
     await rt.refresh()
     expect(debug).toHaveBeenCalledTimes(1)
     expect(debug).toHaveBeenCalledWith(
-      '[comments] anchor lost',
+      '[airside] anchor lost',
       expect.objectContaining({
         threadId: 'thd',
         pageKey: 'k',

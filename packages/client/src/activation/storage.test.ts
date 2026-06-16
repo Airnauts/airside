@@ -14,12 +14,12 @@ describe('activation storage', () => {
   })
 
   it('returns null on malformed json', () => {
-    localStorage.setItem('comments:key', '{not json')
+    localStorage.setItem('airside:key', '{not json')
     expect(loadActivationKey()).toBeNull()
   })
 
   it('returns null when the stored value is not a string', () => {
-    localStorage.setItem('comments:key', JSON.stringify({ key: 'nope' }))
+    localStorage.setItem('airside:key', JSON.stringify({ key: 'nope' }))
     expect(loadActivationKey()).toBeNull()
   })
 })

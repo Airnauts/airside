@@ -20,7 +20,7 @@ describe('cors helpers', () => {
     const headers = buildCorsHeaders('https://app.example.com', allowed)
     expect(headers.get('access-control-allow-origin')).toBe('https://app.example.com')
     expect(headers.get('vary')).toBe('Origin')
-    expect(headers.get('access-control-allow-headers')).toContain('x-comments-key')
+    expect(headers.get('access-control-allow-headers')).toContain('x-airside-key')
     expect(headers.get('access-control-allow-methods')).toContain('PATCH')
   })
 

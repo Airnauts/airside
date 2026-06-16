@@ -1,5 +1,5 @@
 // packages/client/src/ui/useAttachmentUpload.ts
-import type { Attachment } from '@airnauts/comments-core'
+import type { Attachment } from '@airnauts/airside-core'
 import { type ChangeEvent, useEffect, useRef, useState } from 'react'
 import type { PendingStatus } from './Attachment'
 

@@ -1,7 +1,7 @@
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { KEY_HEADER_NAME } from '@airnauts/comments-core'
-import { createCommentsServer, type StorageAdapter } from '@airnauts/comments-server'
-import { makeCreateThreadBody } from '@airnauts/comments-test-support'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
+import { KEY_HEADER_NAME } from '@airnauts/airside-core'
+import { createAirsideServer, type StorageAdapter } from '@airnauts/airside-server'
+import { makeCreateThreadBody } from '@airnauts/airside-test-support'
 import { describe, expect, it } from 'vitest'
 import { createNextHandler } from './app-router'
 
@@ -12,7 +12,7 @@ const stubStorage: StorageAdapter = {
 }
 
 function build() {
-  const server = createCommentsServer({
+  const server = createAirsideServer({
     secretKey: 'sk_test',
     projectId: 'proj_x',
     allowedOrigins: ['https://app.example.com'],
@@ -33,7 +33,7 @@ describe('createNextHandler', () => {
   it('maps the catch-all path and round-trips create → get', async () => {
     const { GET, POST } = build()
     const created = await POST(
-      new Request('https://host/api/comments/threads', {
+      new Request('https://host/api/airside/threads', {
         method: 'POST',
         headers,
         body: JSON.stringify(makeCreateThreadBody()),
@@ -44,7 +44,7 @@ describe('createNextHandler', () => {
     const { id } = await created.json()
     expect(typeof id).toBe('string')
 
-    const got = await GET(new Request(`https://host/api/comments/threads/${id}`, { headers }), {
+    const got = await GET(new Request(`https://host/api/airside/threads/${id}`, { headers }), {
       params: Promise.resolve({ path: ['threads', id] }),
     })
     expect(got.status).toBe(200)
@@ -54,7 +54,7 @@ describe('createNextHandler', () => {
   it('carries a PATCH body through the glue (setThreadStatus)', async () => {
     const { PATCH, POST } = build()
     const created = await POST(
-      new Request('https://host/api/comments/threads', {
+      new Request('https://host/api/airside/threads', {
         method: 'POST',
         headers,
         body: JSON.stringify(makeCreateThreadBody()),
@@ -63,7 +63,7 @@ describe('createNextHandler', () => {
     )
     const { id } = await created.json()
     const res = await PATCH(
-      new Request(`https://host/api/comments/threads/${id}`, {
+      new Request(`https://host/api/airside/threads/${id}`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ status: 'resolved' }),
@@ -77,7 +77,7 @@ describe('createNextHandler', () => {
   it('handles an OPTIONS preflight through the glue', async () => {
     const { OPTIONS } = build()
     const res = await OPTIONS(
-      new Request('https://host/api/comments/threads', {
+      new Request('https://host/api/airside/threads', {
         method: 'OPTIONS',
         headers: { origin: 'https://app.example.com', 'access-control-request-method': 'POST' },
       }),
@@ -90,7 +90,7 @@ describe('createNextHandler', () => {
   it('preserves the query string when mapping nested paths', async () => {
     const { GET } = build()
     const res = await GET(
-      new Request('https://host/api/comments/threads?status=open&pageKey=example.com/about', {
+      new Request('https://host/api/airside/threads?status=open&pageKey=example.com/about', {
         headers,
       }),
       { params: Promise.resolve({ path: ['threads'] }) },
@@ -101,7 +101,7 @@ describe('createNextHandler', () => {
 
   it('accepts a synchronous params object (Next 14)', async () => {
     const { GET } = build()
-    const res = await GET(new Request('https://host/api/comments/threads', { headers }), {
+    const res = await GET(new Request('https://host/api/airside/threads', { headers }), {
       params: { path: ['threads'] } as unknown as Promise<{ path?: string[] }>, // Next 14 plain object
     })
     expect(res.status).toBe(200)

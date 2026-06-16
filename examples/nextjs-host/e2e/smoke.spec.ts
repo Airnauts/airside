@@ -17,7 +17,7 @@ test.describe('single-page commenting loop', () => {
     // Place an element pin + first comment (identity modal handled inside). Target the 2nd
     // <li> by text unique to it ("Content signals" also occurs in a nearby <p>).
     await placeElementPin(page, 'disambiguate near-matches', 'First comment on the list item')
-    await expect(page.getByTestId('comments-pin')).toHaveCount(1)
+    await expect(page.getByTestId('airside-pin')).toHaveCount(1)
 
     // Open the thread and wait for it to load (the first comment is visible).
     await openThread(page)
@@ -52,7 +52,7 @@ test.describe('single-page commenting loop', () => {
 
     // Reload: the pin re-anchors and the comment persists.
     await page.reload()
-    await expect(page.getByTestId('comments-pin')).toHaveCount(1)
+    await expect(page.getByTestId('airside-pin')).toHaveCount(1)
     await openThread(page)
     await expect(page.getByText('First comment on the list item')).toBeVisible()
     await expect(page.getByText('Reply with a screenshot')).toBeVisible()

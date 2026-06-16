@@ -8,7 +8,7 @@ import {
   readAllBytes,
   type StorageAdapter,
   sanitizeName,
-} from '@airnauts/comments-server'
+} from '@airnauts/airside-server'
 
 export type FileSystemStorageOptions = {
   rootDir: string
@@ -53,4 +53,4 @@ export function createFileSystemStorage(opts: FileSystemStorageOptions): Storage
 /** @deprecated Renamed to {@link createFileSystemStorage}; kept for one release. */
 export const fileSystemStorage = createFileSystemStorage
 
-export const packageName = '@airnauts/comments-storage-fs'
+export const packageName = '@airnauts/airside-storage-fs'

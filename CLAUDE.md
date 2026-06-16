@@ -54,8 +54,8 @@ the package won't be versioned or released.
   `NPM_TOKEN` prerequisite) in `RELEASING.md`. (`pnpm release` still publishes locally
   as a fallback.)
 
-The eight publishable `@airnauts/comments-*` packages get changelogs; the three ignored
-workspaces (`comments-test-support`, `comments-nextjs-host`, `comments-playground` in
+The eight publishable `@airnauts/airside-*` packages get changelogs; the three ignored
+workspaces (`airside-test-support`, `airside-nextjs-host`, `airside-playground` in
 `.changeset/config.json`) do not — don't write changesets for them.
 
 Write summaries for the **changelog reader** (someone adopting the package), not as a

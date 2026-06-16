@@ -1,4 +1,4 @@
-import type { ServerExtension } from '@airnauts/comments-server'
+import type { ServerExtension } from '@airnauts/airside-server'
 import type { JiraConfig } from './client'
 import { makeCreateJiraIssueFromThread } from './create-issue'
 
@@ -6,9 +6,6 @@ export type { JiraConfig } from './client'
 
 /** Options for {@link jiraExtension}: a {@link JiraConfig} plus optional labels. */
 export type JiraExtensionOptions = JiraConfig & { labels?: string[] }
-
-/** @deprecated Renamed to {@link JiraExtensionOptions}; kept for one release. */
-export type JiraIssuesOptions = JiraExtensionOptions
 
 function hasExternalLink(
   thread: { externalLinks?: { provider: string }[] },
@@ -41,6 +38,3 @@ export function jiraExtension(opts: JiraExtensionOptions): ServerExtension[] {
     },
   ]
 }
-
-/** @deprecated Renamed to {@link jiraExtension}; kept for one release. */
-export const jiraIssues = jiraExtension

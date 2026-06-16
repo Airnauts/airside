@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto'
-import { KEY_HEADER_NAME } from '@airnauts/comments-core'
+import { KEY_HEADER_NAME } from '@airnauts/airside-core'
 import { AuthInvalidKeyError, OriginNotAllowedError } from './errors'
 
 /**
@@ -18,7 +18,7 @@ export function checkOrigin(req: Request, allowedOrigins: readonly string[]): st
   return origin
 }
 
-/** Throws `AuthInvalidKeyError` if the `x-comments-key` header is missing or doesn't match `secretKey` (constant-time compare). */
+/** Throws `AuthInvalidKeyError` if the `x-airside-key` header is missing or doesn't match `secretKey` (constant-time compare). */
 export function checkKey(req: Request, secretKey: string): void {
   const provided = req.headers.get(KEY_HEADER_NAME)
   if (!provided) throw new AuthInvalidKeyError()

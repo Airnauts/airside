@@ -15,7 +15,7 @@ describe('Launcher', () => {
         onTogglePanel={() => {}}
       />,
     )
-    const place = screen.getByTestId('comments-place')
+    const place = screen.getByTestId('airside-place')
     // Icon-only: the open count shows as a badge, not inline text.
     expect(place).toHaveTextContent('2')
     expect(place).toHaveAttribute('aria-pressed', 'false')
@@ -30,9 +30,9 @@ describe('Launcher', () => {
         onTogglePanel={() => {}}
       />,
     )
-    expect(screen.getByTestId('comments-place')).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByTestId('airside-place')).toHaveAttribute('aria-pressed', 'true')
     // While placing, the badge is hidden in favour of the active-state icon.
-    expect(screen.getByTestId('comments-place')).not.toHaveTextContent('2')
+    expect(screen.getByTestId('airside-place')).not.toHaveTextContent('2')
   })
 
   it('toggles the panel via the list button, reflecting open state', () => {

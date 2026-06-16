@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { CommentsServer } from '@airnauts/comments-server'
-import { nodeRequestToWeb, webToNode } from '@airnauts/comments-server/node'
+import type { AirsideServer } from '@airnauts/airside-server'
+import { nodeRequestToWeb, webToNode } from '@airnauts/airside-server/node'
 import { operationUrl } from './operation-url'
 
 /**
@@ -15,7 +15,7 @@ export type NodePagesRequest = IncomingMessage & {
 export type NodePagesHandler = (req: NodePagesRequest, res: ServerResponse) => Promise<void>
 
 /**
- * Pages Router glue for `pages/api/comments/[...path].ts`:
+ * Pages Router glue for `pages/api/airside/[...path].ts`:
  *   export const config = { api: { bodyParser: false } }
  *   export default createNextPagesHandler(server)
  *
@@ -23,11 +23,11 @@ export type NodePagesHandler = (req: NodePagesRequest, res: ServerResponse) => P
  * module, so the helper cannot set it, and the comments API parses the raw body
  * itself. The guard below fails loud if it is left on.
  */
-export function createNextPagesHandler(server: CommentsServer): NodePagesHandler {
+export function createNextPagesHandler(server: AirsideServer): NodePagesHandler {
   return async (req, res) => {
     if (req.body !== undefined) {
       throw new Error(
-        "@airnauts/comments-next: Next's body parser consumed the request body. Add " +
+        "@airnauts/airside-integration-next: Next's body parser consumed the request body. Add " +
           '`export const config = { api: { bodyParser: false } }` to the route module.',
       )
     }

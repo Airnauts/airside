@@ -1,4 +1,4 @@
-import { IntegrationError } from '@airnauts/comments-server'
+import { IntegrationError } from '@airnauts/airside-server'
 import { describe, expect, it, vi } from 'vitest'
 import { createJiraClient } from './client'
 

@@ -23,9 +23,9 @@ test.describe('cross-page panel', () => {
 
     // Open the panel. It lists threads across pages; the shared store means other specs'
     // threads may also appear, so assert on this test's rows by page URL, not a total count.
-    await page.getByTestId('comments-panel-open').click()
-    await expect(page.getByTestId('comments-panel')).toBeVisible()
-    const rows = page.getByTestId('comments-panel-row')
+    await page.getByTestId('airside-panel-open').click()
+    await expect(page.getByTestId('airside-panel')).toBeVisible()
+    const rows = page.getByTestId('airside-panel-row')
     const pricingRow = rows.filter({ hasText: '/pricing' })
     await expect(pricingRow).toHaveCount(1)
     // The article page is represented too (at least this test's thread; maybe others').
@@ -35,6 +35,6 @@ test.describe('cross-page panel', () => {
     // renders a pulse element).
     await pricingRow.first().click()
     await expect(page).toHaveURL(/\/pricing/)
-    await expect(page.getByTestId('comments-pin-pulse')).toBeVisible()
+    await expect(page.getByTestId('airside-pin-pulse')).toBeVisible()
   })
 })

@@ -1,5 +1,5 @@
 {
-  "name": "@airnauts/comments-nextjs-host",
+  "name": "@airnauts/airside-nextjs-host",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -10,16 +10,16 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@airnauts/comments-adapter-memory": "workspace:*",
-    "@airnauts/comments-adapter-mongo": "workspace:*",
-    "@airnauts/comments-client": "workspace:*",
-    "@airnauts/comments-integration-jira": "workspace:*",
-    "@airnauts/comments-next": "workspace:*",
-    "@airnauts/comments-notifier-email": "workspace:*",
-    "@airnauts/comments-notifier-slack": "workspace:*",
-    "@airnauts/comments-server": "workspace:*",
-    "@airnauts/comments-storage-fs": "workspace:*",
-    "@airnauts/comments-storage-vercel-blob": "workspace:*",
+    "@airnauts/airside-adapter-memory": "workspace:*",
+    "@airnauts/airside-adapter-mongo": "workspace:*",
+    "@airnauts/airside-client": "workspace:*",
+    "@airnauts/airside-extension-jira": "workspace:*",
+    "@airnauts/airside-integration-next": "workspace:*",
+    "@airnauts/airside-extension-email": "workspace:*",
+    "@airnauts/airside-extension-slack": "workspace:*",
+    "@airnauts/airside-server": "workspace:*",
+    "@airnauts/airside-storage-fs": "workspace:*",
+    "@airnauts/airside-storage-vercel-blob": "workspace:*",
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

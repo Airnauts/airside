@@ -1,24 +1,24 @@
-# @airnauts/comments-storage-vercel-blob
+# @airnauts/airside-storage-vercel-blob
 
-Vercel Blob attachment-storage adapter for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server. Uploads images to Vercel Blob and returns public CDN URLs.
+Vercel Blob attachment-storage adapter for the [Airside](https://github.com/Airnauts/airside) server. Uploads images to Vercel Blob and returns public CDN URLs.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/comments-storage-vercel-blob
+pnpm add @airnauts/airside-storage-vercel-blob
 ```
 
 ## Quick start
 
 ```ts
-import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
 const storage = createVercelBlobStorage({
   token: process.env.BLOB_READ_WRITE_TOKEN!,
 })
 ```
 
-Pass `storage` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsAppRoute` / `createCommentsPagesRoute` from `@airnauts/comments-next`).
+Pass `storage` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-integration-next`).
 
 ## API reference
 
@@ -38,7 +38,7 @@ Each upload calls `@vercel/blob`'s `put` with `access: "public"` and `addRandomS
 The underlying class, exported for direct construction:
 
 ```ts
-import { VercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { VercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
 const storage = new VercelBlobStorage({ token: process.env.BLOB_READ_WRITE_TOKEN! })
 ```
@@ -67,8 +67,8 @@ The token is passed explicitly to `createVercelBlobStorage({ token })` — the a
 
 ## Related packages
 
-- **`@airnauts/comments-server`** — defines the `StorageAdapter` interface
-- **`@airnauts/comments-storage-fs`** — filesystem alternative for local development
+- **`@airnauts/airside-server`** — defines the `StorageAdapter` interface
+- **`@airnauts/airside-storage-fs`** — filesystem alternative for local development
 
 ## License
 

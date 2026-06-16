@@ -54,13 +54,13 @@ export function buildOpenApiDocument(): ReturnType<typeof createDocument> {
 
   return createDocument({
     openapi: '3.1.0',
-    info: { title: 'Comments API', version: '1.0.0' },
+    info: { title: 'Airside API', version: '1.0.0' },
     components: {
       securitySchemes: {
-        commentsKey: { type: 'apiKey', in: 'header', name: KEY_HEADER_NAME },
+        airsideKey: { type: 'apiKey', in: 'header', name: KEY_HEADER_NAME },
       },
     },
-    security: [{ commentsKey: [] }],
+    security: [{ airsideKey: [] }],
     paths,
   })
 }

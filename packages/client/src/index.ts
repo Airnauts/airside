@@ -3,17 +3,17 @@ import { DEFAULT_KEY_PARAM, DEFAULT_THREAD_PARAM, type InitOptions } from './con
 import { isActivated, isUrlActivation } from './gate'
 import { FOCUS_STORAGE_KEY } from './panel/navigate'
 
-export const packageName = '@airnauts/comments-client'
+export const packageName = '@airnauts/airside-client'
 
 export * from './anchor'
 export type { InitOptions } from './config'
 export { DEFAULT_KEY_PARAM, DEFAULT_THREAD_PARAM } from './config'
 
-export type CommentsHandle = {
+export type AirsideHandle = {
   destroy(): void
 }
 
-const NOOP_HANDLE: CommentsHandle = { destroy() {} }
+const NOOP_HANDLE: AirsideHandle = { destroy() {} }
 
 /** Drop the key param from the address bar, preserving every other param and the hash. */
 function stripKeyParam(keyParam: string): void {
@@ -23,7 +23,7 @@ function stripKeyParam(keyParam: string): void {
 }
 
 /**
- * Translate a `?comments-thread=<id>` deep-link into the cross-page focus handoff
+ * Translate a `?airside-thread=<id>` deep-link into the cross-page focus handoff
  * (so the boot consumer opens that thread's sidebar detail), then strip the param
  * from the address bar — mirroring the key-param handling.
  */
@@ -51,7 +51,7 @@ export function consumeThreadParam(param: string): void {
  * gate still keeps the widget inert (never mounts, renders, or fetches) when the
  * key is absent.
  */
-export async function init(options: InitOptions): Promise<CommentsHandle> {
+export async function init(options: InitOptions): Promise<AirsideHandle> {
   if (typeof window === 'undefined') return NOOP_HANDLE
   const keyParam = options.keyParam ?? DEFAULT_KEY_PARAM
   const search = window.location.search
@@ -71,4 +71,4 @@ export async function init(options: InitOptions): Promise<CommentsHandle> {
   return mount(options)
 }
 
-export const comments = { init }
+export const airside = { init }

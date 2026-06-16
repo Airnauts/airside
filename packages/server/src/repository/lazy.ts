@@ -4,7 +4,7 @@ import type {
   ExternalLink,
   ThreadId,
   ThreadStatus,
-} from '@airnauts/comments-core'
+} from '@airnauts/airside-core'
 import type { AnchorPatch, ListQuery, NewComment, NewThread, Repository, Scope } from './types'
 
 // One connected Repository per cacheKey, memoized across warm serverless

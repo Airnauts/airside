@@ -1,5 +1,5 @@
 // packages/client/src/ui/Composer.tsx
-import type { Attachment } from '@airnauts/comments-core'
+import type { Attachment } from '@airnauts/airside-core'
 import { useEffect, useRef, useState } from 'react'
 import { useIdentity } from '../identity/IdentityProvider'
 import type { Identity } from '../identity/storage'
@@ -87,7 +87,7 @@ export function Composer({
   const placeholder = mode === 'newThread' ? 'Add a comment…' : 'Reply…'
 
   return (
-    <div className="cmnt:border-t cmnt:first:border-t-0 cmnt:border-[#f1f3f5] cmnt:px-3 cmnt:py-[9px]">
+    <div className="air:border-t air:first:border-t-0 air:border-[#f1f3f5] air:px-3 air:py-[9px]">
       {att.pending && (
         <PendingAttachment
           name={att.pending.name}
@@ -106,13 +106,13 @@ export function Composer({
           onRetry={() => {}}
         />
       )}
-      <div className="cmnt:flex cmnt:items-center cmnt:gap-2">
+      <div className="air:flex air:items-center air:gap-2">
         <Button
           variant="ghost"
           size="icon"
           aria-label="Attach image"
           onClick={() => fileRef.current?.click()}
-          className="cmnt:text-base cmnt:text-gray-400"
+          className="air:text-base air:text-gray-400"
         >
           📎
         </Button>
@@ -122,7 +122,7 @@ export function Composer({
           type="file"
           accept="image/*"
           onChange={att.onPick}
-          className="cmnt:hidden"
+          className="air:hidden"
         />
         <input
           ref={inputRef}
@@ -139,7 +139,7 @@ export function Composer({
           // min-w-0 lets flex-1 shrink the input below its intrinsic min-width so the
           // 📎 + input + Cancel + Send row fits within the fixed w-80 popover (Send was
           // being clipped by overflow-hidden because a flex item defaults to min-width:auto).
-          className="cmnt:flex-1 cmnt:min-w-0 cmnt:border-none cmnt:outline-none cmnt:text-[13px] cmnt:bg-transparent"
+          className="air:flex-1 air:min-w-0 air:border-none air:outline-none air:text-[13px] air:bg-transparent"
         />
         {onCancel && (
           <Button variant="outline" size="sm" onClick={onCancel}>
@@ -151,7 +151,7 @@ export function Composer({
           size="sm"
           onClick={onSendClick}
           disabled={!canSend}
-          className={cn(!canSend && 'cmnt:bg-[#93b4f5]')}
+          className={cn(!canSend && 'air:bg-[#93b4f5]')}
         >
           Send
         </Button>

@@ -1,5 +1,5 @@
 {
-  "name": "@airnauts/comments-playground",
+  "name": "@airnauts/airside-playground",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,9 +8,9 @@
     "dev:server": "node dev-server.mjs"
   },
   "dependencies": {
-    "@airnauts/comments-adapter-memory": "workspace:*",
-    "@airnauts/comments-client": "workspace:*",
-    "@airnauts/comments-server": "workspace:*"
+    "@airnauts/airside-adapter-memory": "workspace:*",
+    "@airnauts/airside-client": "workspace:*",
+    "@airnauts/airside-server": "workspace:*"
   },
   "devDependencies": {
     "vite": "^7.0.0"

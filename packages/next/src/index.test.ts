@@ -1,11 +1,11 @@
 import type { ServerResponse } from 'node:http'
 import { Readable } from 'node:stream'
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { KEY_HEADER_NAME } from '@airnauts/comments-core'
-import type { StorageAdapter } from '@airnauts/comments-server'
-import { makeCreateThreadBody } from '@airnauts/comments-test-support'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
+import { KEY_HEADER_NAME } from '@airnauts/airside-core'
+import type { StorageAdapter } from '@airnauts/airside-server'
+import { makeCreateThreadBody } from '@airnauts/airside-test-support'
 import { describe, expect, it } from 'vitest'
-import { createCommentsAppRoute, createCommentsPagesRoute } from './index'
+import { createAirsideAppRoute, createAirsidePagesRoute } from './index'
 import type { NodePagesRequest } from './pages-router'
 
 const stubStorage: StorageAdapter = {
@@ -63,12 +63,12 @@ function fakeRes() {
   return out
 }
 
-describe('createCommentsAppRoute', () => {
+describe('createAirsideAppRoute', () => {
   it('round-trips create → get and exposes the server', async () => {
-    const { GET, POST, server } = createCommentsAppRoute(baseConfig())
+    const { GET, POST, server } = createAirsideAppRoute(baseConfig())
     expect(typeof server?.handle).toBe('function')
     const created = await POST(
-      new Request('https://host/api/comments/threads', {
+      new Request('https://host/api/airside/threads', {
         method: 'POST',
         headers,
         body: JSON.stringify(makeCreateThreadBody()),
@@ -77,7 +77,7 @@ describe('createCommentsAppRoute', () => {
     )
     expect(created.status).toBe(201)
     const { id } = await created.json()
-    const got = await GET(new Request(`https://host/api/comments/threads/${id}`, { headers }), {
+    const got = await GET(new Request(`https://host/api/airside/threads/${id}`, { headers }), {
       params: Promise.resolve({ path: ['threads', id] }),
     })
     expect(got.status).toBe(200)
@@ -85,27 +85,27 @@ describe('createCommentsAppRoute', () => {
   })
 
   it('404s every handler and builds no server when disabled', async () => {
-    const route = createCommentsAppRoute({ ...baseConfig(), disabled: true })
+    const route = createAirsideAppRoute({ ...baseConfig(), disabled: true })
     expect(route.server).toBeUndefined()
     const ctx = { params: Promise.resolve({ path: ['threads'] }) }
     for (const m of ['GET', 'POST', 'PATCH', 'OPTIONS'] as const) {
-      expect((await route[m](new Request('https://host/api/comments/threads'), ctx)).status).toBe(
+      expect((await route[m](new Request('https://host/api/airside/threads'), ctx)).status).toBe(
         404,
       )
     }
   })
 })
 
-describe('createCommentsPagesRoute', () => {
+describe('createAirsidePagesRoute', () => {
   it('round-trips create → get and exposes the server', async () => {
-    const handler = createCommentsPagesRoute(baseConfig())
+    const handler = createAirsidePagesRoute(baseConfig())
     expect(typeof handler.server?.handle).toBe('function')
 
     const createRes = fakeRes()
     await handler(
       fakeReq({
         method: 'POST',
-        url: '/api/comments/threads',
+        url: '/api/airside/threads',
         query: { path: ['threads'] },
         headers,
         body: JSON.stringify(makeCreateThreadBody()),
@@ -119,7 +119,7 @@ describe('createCommentsPagesRoute', () => {
     await handler(
       fakeReq({
         method: 'GET',
-        url: `/api/comments/threads/${id}`,
+        url: `/api/airside/threads/${id}`,
         query: { path: ['threads', id] },
         headers,
       }),
@@ -130,13 +130,13 @@ describe('createCommentsPagesRoute', () => {
   })
 
   it('404s and builds no server when disabled', async () => {
-    const handler = createCommentsPagesRoute({ ...baseConfig(), disabled: true })
+    const handler = createAirsidePagesRoute({ ...baseConfig(), disabled: true })
     expect(handler.server).toBeUndefined()
     const res = fakeRes()
     await handler(
       fakeReq({
         method: 'GET',
-        url: '/api/comments/threads',
+        url: '/api/airside/threads',
         query: { path: ['threads'] },
         headers,
       }),

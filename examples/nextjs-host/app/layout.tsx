@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react'
-import { CommentsMount } from './components/comments-mount'
+import { AirsideMount } from './components/airside-mount'
 
 export const metadata = {
-  title: 'Comments host app',
+  title: 'Airside host app',
   description: 'M9 integration host for the embeddable commenting tool',
 }
 
@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en">
       <body>
         {children}
-        <CommentsMount />
+        <AirsideMount />
       </body>
     </html>
   )

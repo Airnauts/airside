@@ -1,5 +1,5 @@
 // packages/client/src/panel/state.test.ts
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
 import { initialState, mainListExcludingReview, reducer } from './state'
 

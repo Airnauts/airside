@@ -1,5 +1,5 @@
 // packages/client/src/ui/ThreadMetadata.test.tsx
-import type { ExternalLink } from '@airnauts/comments-core'
+import type { ExternalLink } from '@airnauts/airside-core'
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { ThreadMetadata } from './ThreadMetadata'

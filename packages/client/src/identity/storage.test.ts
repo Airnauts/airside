@@ -19,12 +19,12 @@ describe('identity storage', () => {
   })
 
   it('returns null on malformed json', () => {
-    localStorage.setItem('comments:identity', '{not json')
+    localStorage.setItem('airside:identity', '{not json')
     expect(loadIdentity()).toBeNull()
   })
 
   it('returns null when email is missing', () => {
-    localStorage.setItem('comments:identity', JSON.stringify({ name: 'no email' }))
+    localStorage.setItem('airside:identity', JSON.stringify({ name: 'no email' }))
     expect(loadIdentity()).toBeNull()
   })
 })

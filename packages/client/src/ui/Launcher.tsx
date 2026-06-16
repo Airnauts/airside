@@ -28,8 +28,8 @@ export function Launcher({
       onPointerDown={onPointerDown}
       onClickCapture={onClickCapture}
       className={cn(
-        'cmnt:fixed cmnt:z-[var(--cmnt-z-launcher)] cmnt:flex cmnt:items-center cmnt:gap-1 cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-full cmnt:p-1 cmnt:pointer-events-auto cmnt:select-none cmnt:touch-none cmnt:shadow-[0_6px_20px_rgba(0,0,0,0.18)]',
-        dragging ? 'cmnt:cursor-grabbing' : 'cmnt:cursor-grab',
+        'air:fixed air:z-[var(--air-z-launcher)] air:flex air:items-center air:gap-1 air:bg-white air:border air:border-gray-200 air:rounded-full air:p-1 air:pointer-events-auto air:select-none air:touch-none air:shadow-[0_6px_20px_rgba(0,0,0,0.18)]',
+        dragging ? 'air:cursor-grabbing' : 'air:cursor-grab',
       )}
     >
       <Button
@@ -37,27 +37,27 @@ export function Launcher({
         size="icon"
         aria-label={panelOpen ? 'Close comments panel' : 'Open comments panel'}
         aria-expanded={panelOpen}
-        data-testid="comments-panel-open"
+        data-testid="airside-panel-open"
         onClick={onTogglePanel}
-        className="cmnt:hover:bg-gray-100"
+        className="air:hover:bg-gray-100"
       >
         <span aria-hidden={true}>☰</span>
       </Button>
       <Button
         variant="primary"
         size="icon"
-        data-comments-place
-        data-testid="comments-place"
+        data-airside-place
+        data-testid="airside-place"
         aria-pressed={placing}
         aria-label={placing ? 'Click on the page to comment' : 'Add comment'}
         onClick={onTogglePlace}
-        className={cn('cmnt:relative', placing && 'cmnt:bg-blue-800')}
+        className={cn('air:relative', placing && 'air:bg-blue-800')}
       >
         <span aria-hidden={true}>{placing ? '✎' : '＋'}</span>
         {!placing && openCount > 0 && (
           <span
             aria-hidden={true}
-            className="cmnt:absolute cmnt:-top-1 cmnt:-right-1 cmnt:min-w-4 cmnt:h-4 cmnt:px-1 cmnt:rounded-full cmnt:bg-blue-800 cmnt:text-white cmnt:text-[10px] cmnt:leading-4 cmnt:text-center cmnt:pointer-events-none"
+            className="air:absolute air:-top-1 air:-right-1 air:min-w-4 air:h-4 air:px-1 air:rounded-full air:bg-blue-800 air:text-white air:text-[10px] air:leading-4 air:text-center air:pointer-events-none"
           >
             {openCount}
           </span>

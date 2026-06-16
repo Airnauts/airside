@@ -1,12 +1,9 @@
-import type { NotificationEvent, NotificationExtension } from '@airnauts/comments-server'
+import type { NotificationEvent, NotificationExtension } from '@airnauts/airside-server'
 
 export type SlackExtensionOptions = {
   /** Slack Incoming Webhook URL. The target channel is baked into this URL. */
   webhookUrl: string
 }
-
-/** @deprecated Renamed to {@link SlackExtensionOptions}; kept for one release. */
-export type SlackNotifierOptions = SlackExtensionOptions
 
 /** Abort the webhook request after this many ms so a hung endpoint can't stall a write. */
 const TIMEOUT_MS = 3000
@@ -31,9 +28,6 @@ export function slackExtension(opts: SlackExtensionOptions): NotificationExtensi
     },
   ]
 }
-
-/** @deprecated Renamed to {@link slackExtension}; kept for one release. */
-export const slackNotifications = slackExtension
 
 export type SlackMessage = {
   text: string

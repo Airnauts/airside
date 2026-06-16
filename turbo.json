@@ -16,32 +16,32 @@
     "size": {
       "dependsOn": ["build"]
     },
-    "@airnauts/comments-server#build": {
-      "dependsOn": ["@airnauts/comments-core#build"],
+    "@airnauts/airside-server#build": {
+      "dependsOn": ["@airnauts/airside-core#build"],
       "outputs": ["dist/**", "!dist/**/*.tsbuildinfo"]
     },
-    "@airnauts/comments-server#typecheck": {
-      "dependsOn": ["@airnauts/comments-server#build", "@airnauts/comments-core#build"],
+    "@airnauts/airside-server#typecheck": {
+      "dependsOn": ["@airnauts/airside-server#build", "@airnauts/airside-core#build"],
       "inputs": ["src/**/*.{ts,tsx}", "tsconfig.json", "../../tsconfig.base.json"],
       "outputs": []
     },
-    "@airnauts/comments-server#test": {
+    "@airnauts/airside-server#test": {
       "dependsOn": [
-        "@airnauts/comments-core#build",
-        "@airnauts/comments-test-support#build",
-        "@airnauts/comments-adapter-memory#build"
+        "@airnauts/airside-core#build",
+        "@airnauts/airside-test-support#build",
+        "@airnauts/airside-adapter-memory#build"
       ]
     },
-    "@airnauts/comments-test-support#build": {
-      "dependsOn": ["@airnauts/comments-core#build", "@airnauts/comments-server#build"],
+    "@airnauts/airside-test-support#build": {
+      "dependsOn": ["@airnauts/airside-core#build", "@airnauts/airside-server#build"],
       "outputs": ["dist/**", "!dist/**/*.tsbuildinfo"]
     },
-    "@airnauts/comments-test-support#typecheck": {
-      "dependsOn": ["@airnauts/comments-test-support#build"],
+    "@airnauts/airside-test-support#typecheck": {
+      "dependsOn": ["@airnauts/airside-test-support#build"],
       "inputs": ["src/**/*.{ts,tsx}", "tsconfig.json", "../../tsconfig.base.json"],
       "outputs": []
     },
-    "@airnauts/comments-nextjs-host#build": {
+    "@airnauts/airside-nextjs-host#build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"]
     }

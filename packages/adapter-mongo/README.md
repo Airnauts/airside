@@ -1,22 +1,22 @@
-# @airnauts/comments-adapter-mongo
+# @airnauts/airside-adapter-mongo
 
-MongoDB repository adapter for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server. Persists threads and attachments to a MongoDB Atlas (or self-hosted) database.
+MongoDB repository adapter for the [Airside](https://github.com/Airnauts/airside) server. Persists threads and attachments to a MongoDB Atlas (or self-hosted) database.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/comments-adapter-mongo mongodb
+pnpm add @airnauts/airside-adapter-mongo mongodb
 ```
 
 ## Quick start
 
 ```ts
-import { mongoRepository } from '@airnauts/comments-adapter-mongo'
+import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 
 const repository = mongoRepository({ uri: process.env.MONGODB_URI! })
 ```
 
-Pass `repository` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsAppRoute` / `createCommentsPagesRoute` from `@airnauts/comments-next`). The adapter connects lazily on first use.
+Pass `repository` to `createAirsideServer` from `@airnauts/airside-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/airside-integration-next`). The adapter connects lazily on first use.
 
 ## API reference
 
@@ -36,7 +36,7 @@ mongoRepository({
 Lower-level factory for callers that manage their own `Db` instance:
 
 ```ts
-import { createMongoRepository, ensureIndexes } from '@airnauts/comments-adapter-mongo'
+import { createMongoRepository, ensureIndexes } from '@airnauts/airside-adapter-mongo'
 import { MongoClient } from 'mongodb'
 
 const client = new MongoClient(process.env.MONGODB_URI!)
@@ -59,10 +59,10 @@ Creates the required indexes on the `threads` and `attachments` collections. Saf
 
 ## Related packages
 
-- **`@airnauts/comments-server`** — defines the `Repository` interface
-- **`@airnauts/comments-adapter-postgres`** — PostgreSQL alternative
-- **`@airnauts/comments-adapter-memory`** — in-memory adapter for dev/tests
-- **`@airnauts/comments-next`** — Next.js integration that accepts this adapter
+- **`@airnauts/airside-server`** — defines the `Repository` interface
+- **`@airnauts/airside-adapter-postgres`** — PostgreSQL alternative
+- **`@airnauts/airside-adapter-memory`** — in-memory adapter for dev/tests
+- **`@airnauts/airside-integration-next`** — Next.js integration that accepts this adapter
 
 ## License
 

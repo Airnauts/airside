@@ -1,4 +1,4 @@
-import type { StorageAdapter } from '@airnauts/comments-server'
+import type { StorageAdapter } from '@airnauts/airside-server'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 const PNG_PIXEL = new Uint8Array([

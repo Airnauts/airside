@@ -1,6 +1,6 @@
 {
-  "name": "@airnauts/comments-adapter-memory",
-  "version": "0.7.0",
+  "name": "@airnauts/airside-adapter-memory",
+  "version": "0.8.0",
   "description": "In-memory repository adapter for the Airnauts commenting tool server.",
   "keywords": [
     "comments",
@@ -13,14 +13,14 @@
   ],
   "license": "MIT",
   "author": "Airnauts",
-  "homepage": "https://github.com/Airnauts/commenting-tool#readme",
+  "homepage": "https://github.com/Airnauts/airside#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Airnauts/commenting-tool.git",
+    "url": "git+https://github.com/Airnauts/airside.git",
     "directory": "packages/adapter-memory"
   },
   "bugs": {
-    "url": "https://github.com/Airnauts/commenting-tool/issues"
+    "url": "https://github.com/Airnauts/airside/issues"
   },
   "type": "module",
   "exports": {
@@ -44,10 +44,10 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@airnauts/comments-core": "workspace:^",
-    "@airnauts/comments-server": "workspace:^"
+    "@airnauts/airside-core": "workspace:^",
+    "@airnauts/airside-server": "workspace:^"
   },
   "devDependencies": {
-    "@airnauts/comments-test-support": "workspace:*"
+    "@airnauts/airside-test-support": "workspace:*"
   }
 }

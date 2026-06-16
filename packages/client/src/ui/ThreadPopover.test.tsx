@@ -1,5 +1,5 @@
 // packages/client/src/ui/ThreadPopover.test.tsx
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
@@ -120,7 +120,7 @@ describe('ThreadPopover', () => {
         <Harness client={c} />
       </ThreadsProvider>,
     )
-    fireEvent.click(screen.getByTestId('comments-pin'))
+    fireEvent.click(screen.getByTestId('airside-pin'))
     await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
     expect((c as never as { getThread: ReturnType<typeof vi.fn> }).getThread).toHaveBeenCalledWith(
       'a',
@@ -351,14 +351,12 @@ describe('ThreadPopover', () => {
     fireEvent.click(screen.getByText('open-a'))
     await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
     // Pin starts unresolved.
-    expect(screen.getByTestId('comments-pin')).toHaveAccessibleName(/^Comment thread by/i)
+    expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/^Comment thread by/i)
     // Resolve from the popover.
     fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
     // WITHOUT any refresh/re-ingest: the pin is still rendered (open-exemption) and shows ✓...
-    await waitFor(() =>
-      expect(screen.getByTestId('comments-pin')).toHaveAccessibleName(/resolved/i),
-    )
-    expect(screen.getByTestId('comments-pin')).toHaveTextContent('✓')
+    await waitFor(() => expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i))
+    expect(screen.getByTestId('airside-pin')).toHaveTextContent('✓')
     // ...and the popover stays open with a Resolved header.
     expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument()
   })

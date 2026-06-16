@@ -1,5 +1,5 @@
-import type { ThreadId } from '@airnauts/comments-core'
-import type { NotificationEvent } from '@airnauts/comments-server'
+import type { ThreadId } from '@airnauts/airside-core'
+import type { NotificationEvent } from '@airnauts/airside-server'
 import { describe, expect, it } from 'vitest'
 import { type EmailMessage, type EmailTransport, emailExtension } from './index'
 
@@ -10,7 +10,7 @@ const event: NotificationEvent = {
   threadId: 't_1' as ThreadId,
   pageUrl: 'https://example.com/about',
   pageTitle: 'About',
-  threadUrl: 'https://example.com/about?comments-thread=t_1',
+  threadUrl: 'https://example.com/about?airside-thread=t_1',
   participants: ['watcher@example.com'],
   text: 'Looks off here',
   author: { email: 'alice@example.com', name: 'Alice' },
@@ -77,7 +77,7 @@ describe('emailExtension', () => {
     )
     const msg = transport.sent[0]!
     expect(msg.subject).toBe('[Acme] New reply on About')
-    expect(msg.html).toContain('href="https://example.com/about?comments-thread=t_1"')
+    expect(msg.html).toContain('href="https://example.com/about?airside-thread=t_1"')
     expect(msg.text).toContain('Looks off here')
   })
 

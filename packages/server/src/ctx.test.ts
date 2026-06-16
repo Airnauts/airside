@@ -1,4 +1,4 @@
-import type { ThreadId } from '@airnauts/comments-core'
+import type { ThreadId } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
 import { defaultIds, makeCtx } from './ctx'
 
@@ -22,9 +22,9 @@ describe('ctx', () => {
     expect(ctx.ids.thread()).toBe('t_fixed')
   })
 
-  it('defaults threadParam to "comments-thread"', () => {
+  it('defaults threadParam to "airside-thread"', () => {
     const ctx = makeCtx({ projectId: 'p' })
-    expect(ctx.threadParam).toBe('comments-thread')
+    expect(ctx.threadParam).toBe('airside-thread')
   })
 
   it('accepts a custom threadParam', () => {

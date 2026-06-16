@@ -1,11 +1,11 @@
-# @airnauts/comments-notifier-email
+# @airnauts/airside-extension-email
 
-Email notification extension for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool) server. Emails the existing thread participants whenever someone replies — so reviewers are notified without a dedicated notification inbox.
+Email notification extension for the [Airside](https://github.com/Airnauts/airside) server. Emails the existing thread participants whenever someone replies — so reviewers are notified without a dedicated notification inbox.
 
 ## Installation
 
 ```bash
-pnpm add @airnauts/comments-notifier-email
+pnpm add @airnauts/airside-extension-email
 # For SMTP transport only — not needed for the Resend transport:
 pnpm add nodemailer
 ```
@@ -19,19 +19,19 @@ Recipients are derived per event from the thread itself. On a reply (`comment.ad
 ### Resend (recommended for serverless / edge)
 
 ```ts
-import { createCommentsServer } from '@airnauts/comments-server'
-import { emailExtension } from '@airnauts/comments-notifier-email'
-import { resendTransport } from '@airnauts/comments-notifier-email/resend'
+import { createAirsideServer } from '@airnauts/airside-server'
+import { emailExtension } from '@airnauts/airside-extension-email'
+import { resendTransport } from '@airnauts/airside-extension-email/resend'
 
-createCommentsServer({
+createAirsideServer({
   repository,
   storage,
-  secretKey: process.env.COMMENTS_SECRET!,
+  secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   extensions: emailExtension({
     transport: resendTransport({ apiKey: process.env.RESEND_API_KEY! }),
-    from: 'Comments <noreply@acme.com>',
+    from: 'Airside <noreply@acme.com>',
   }),
 })
 ```
@@ -39,8 +39,8 @@ createCommentsServer({
 ### SMTP (Node server)
 
 ```ts
-import { emailExtension } from '@airnauts/comments-notifier-email'
-import { smtpTransport } from '@airnauts/comments-notifier-email/smtp'
+import { emailExtension } from '@airnauts/airside-extension-email'
+import { smtpTransport } from '@airnauts/airside-extension-email/smtp'
 
 extensions: emailExtension({
   transport: smtpTransport({
@@ -69,7 +69,7 @@ emailExtension({
 
 Notification failures are isolated — a hung or erroring transport never breaks the comment write.
 
-### `resendTransport(opts)` (`@airnauts/comments-notifier-email/resend`)
+### `resendTransport(opts)` (`@airnauts/airside-extension-email/resend`)
 
 ```ts
 resendTransport({
@@ -79,7 +79,7 @@ resendTransport({
 
 Uses the Resend HTTP API; safe on edge runtimes. The request is bounded by a 5-second timeout.
 
-### `smtpTransport(opts)` (`@airnauts/comments-notifier-email/smtp`)
+### `smtpTransport(opts)` (`@airnauts/airside-extension-email/smtp`)
 
 ```ts
 smtpTransport({
@@ -108,7 +108,7 @@ interface EmailTransport {
 ### `formatEmail(event, opts?)`
 
 ```ts
-import { formatEmail } from '@airnauts/comments-notifier-email'
+import { formatEmail } from '@airnauts/airside-extension-email'
 
 const { subject, html, text } = formatEmail(event, { subjectPrefix: '[Acme] ' })
 ```
@@ -131,15 +131,15 @@ Renders a `NotificationEvent` into an email. Exported for testing or custom disp
 
 | Peer | Required | Notes |
 |---|---|---|
-| `nodemailer` | Optional (≥6) | Only needed for `@airnauts/comments-notifier-email/smtp` |
+| `nodemailer` | Optional (≥6) | Only needed for `@airnauts/airside-extension-email/smtp` |
 
 - Node.js ≥ 18 for the Resend transport; Node.js ≥ 18 for SMTP (CJS, not edge-safe)
 
 ## Related packages
 
-- **`@airnauts/comments-server`** — defines `NotificationExtension` and `NotificationEvent`
-- **`@airnauts/comments-notifier-slack`** — Slack notification alternative
-- **`@airnauts/comments-integration-jira`** — Jira thread-action extension
+- **`@airnauts/airside-server`** — defines `NotificationExtension` and `NotificationEvent`
+- **`@airnauts/airside-extension-slack`** — Slack notification alternative
+- **`@airnauts/airside-extension-jira`** — Jira thread-action extension
 
 ## License
 

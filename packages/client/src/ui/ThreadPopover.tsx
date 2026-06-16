@@ -1,6 +1,6 @@
 // packages/client/src/ui/ThreadPopover.tsx
 
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import * as Popover from '@radix-ui/react-popover'
 import { useRef } from 'react'
 import type { ApiClient } from '../api/client'
@@ -49,7 +49,7 @@ export function ThreadPopover({ item, pin, client, focused, selected }: ThreadPo
       </Popover.Trigger>
       <Popover.Portal container={container ?? undefined}>
         <Popover.Content
-          data-testid="comments-pin-popover"
+          data-testid="airside-pin-popover"
           side="bottom"
           align="center"
           sideOffset={8}
@@ -63,9 +63,9 @@ export function ThreadPopover({ item, pin, client, focused, selected }: ThreadPo
           // controlled `open={openId === id}`, so this can't strand two pin popovers open.
           onInteractOutside={(e) => {
             const target = e.detail.originalEvent.target as Element | null
-            if (target?.closest('[data-comments-root]')) e.preventDefault()
+            if (target?.closest('[data-airside-root]')) e.preventDefault()
           }}
-          className="cmnt:z-[var(--cmnt-z-surface)] cmnt:pointer-events-auto"
+          className="air:z-[var(--air-z-surface)] air:pointer-events-auto"
         >
           <ThreadConversation
             item={item}

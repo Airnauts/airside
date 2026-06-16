@@ -15,7 +15,7 @@ export class WidgetErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: unknown, info: ErrorInfo): void {
-    console.error('[comments] widget error (contained):', error, info.componentStack)
+    console.error('[airside] widget error (contained):', error, info.componentStack)
   }
 
   override render(): ReactNode {

@@ -7,7 +7,7 @@ export default function HomePage() {
       <h1>Acme Widgets</h1>
       <p id="hero-tagline">
         The fastest way to put comments on any page. Open this site once with
-        <code> ?comments-key=dev-key </code> to enable the widget — the key is then saved to this
+        <code> ?airside-key=dev-key </code> to enable the widget — the key is then saved to this
         browser and the param drops from the URL, so it stays on without it.
       </p>
       <section>

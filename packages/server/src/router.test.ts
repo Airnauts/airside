@@ -1,4 +1,4 @@
-import { operations } from '@airnauts/comments-core'
+import { operations } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
 import { NotFoundError } from './errors'
 import { compileRoutes, dispatch, match, type UseCaseMap } from './router'

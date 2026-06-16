@@ -1,5 +1,5 @@
 // packages/client/src/panel/PanelRow.test.tsx
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { PanelRow } from './PanelRow'
@@ -29,7 +29,7 @@ describe('PanelRow', () => {
     expect(screen.getByText('Ann')).toBeInTheDocument()
     expect(screen.getByText('Pricing')).toBeInTheDocument()
     expect(screen.getByText('2 Replies')).toBeInTheDocument()
-    fireEvent.click(screen.getByTestId('comments-panel-row'))
+    fireEvent.click(screen.getByTestId('airside-panel-row'))
     expect(onSelect).toHaveBeenCalled()
   })
 
@@ -85,7 +85,7 @@ describe('PanelRow', () => {
 
   it('exposes a descriptive aria-label', () => {
     render(<PanelRow item={item()} onSelect={() => {}} onReply={() => {}} onResolve={() => {}} />)
-    expect(screen.getByTestId('comments-panel-row')).toHaveAccessibleName(/open thread on Pricing/i)
+    expect(screen.getByTestId('airside-panel-row')).toHaveAccessibleName(/open thread on Pricing/i)
   })
 
   it('calls onResolve when the resolve button is clicked', () => {
@@ -114,7 +114,7 @@ describe('PanelRow', () => {
       />,
     )
     fireEvent.click(screen.getByRole('button', { name: /copy link/i }))
-    expect(writeText).toHaveBeenCalledWith('https://site.com/a?comments-thread=t42')
+    expect(writeText).toHaveBeenCalledWith('https://site.com/a?airside-thread=t42')
   })
 
   it('flips the label to "Copied!" briefly after copying, then back', () => {

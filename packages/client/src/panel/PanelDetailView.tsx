@@ -1,6 +1,6 @@
 // packages/client/src/panel/PanelDetailView.tsx
 
-import type { ThreadListItem } from '@airnauts/comments-core'
+import type { ThreadListItem } from '@airnauts/airside-core'
 import * as Dialog from '@radix-ui/react-dialog'
 import type { ApiClient } from '../api/client'
 import { useDraft } from '../drafts/DraftsProvider'
@@ -26,24 +26,24 @@ export function PanelDetailView({ threadId, listItem, client, onBack }: PanelDet
   const item = listItem ?? detail
   return (
     <>
-      <div className="cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-gray-200">
+      <div className="air:flex air:items-center air:justify-between air:px-3 air:py-2 air:border-b air:border-gray-200">
         <button
           type="button"
           onClick={onBack}
           aria-label="Back"
-          className="cmnt:flex cmnt:items-center cmnt:gap-1 cmnt:bg-transparent cmnt:border-0 cmnt:cursor-pointer cmnt:text-sm cmnt:text-gray-700 cmnt:px-1"
+          className="air:flex air:items-center air:gap-1 air:bg-transparent air:border-0 air:cursor-pointer air:text-sm air:text-gray-700 air:px-1"
         >
           <span aria-hidden={true}>‹</span> Back
         </button>
-        <Dialog.Title className="cmnt:sr-only">Thread</Dialog.Title>
-        <Dialog.Description className="cmnt:sr-only">Thread detail</Dialog.Description>
+        <Dialog.Title className="air:sr-only">Thread</Dialog.Title>
+        <Dialog.Description className="air:sr-only">Thread detail</Dialog.Description>
         <Dialog.Close asChild>
           <Button variant="ghost" size="icon" aria-label="Close panel">
             ✕
           </Button>
         </Dialog.Close>
       </div>
-      <div className="cmnt:flex-1 cmnt:overflow-y-auto cmnt:flex cmnt:flex-col cmnt:min-h-0">
+      <div className="air:flex-1 air:overflow-y-auto air:flex air:flex-col air:min-h-0">
         {item && (
           <ThreadConversation
             item={item}

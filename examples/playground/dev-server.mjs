@@ -1,6 +1,6 @@
-import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
-import { createCommentsServer } from '@airnauts/comments-server'
-import { createDevServer } from '@airnauts/comments-server/dev'
+import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
+import { createAirsideServer } from '@airnauts/airside-server'
+import { createDevServer } from '@airnauts/airside-server/dev'
 
 const storageStub = {
   async put(blob) {
@@ -8,7 +8,7 @@ const storageStub = {
   },
 }
 
-const server = createCommentsServer({
+const server = createAirsideServer({
   secretKey: 'dev-key',
   projectId: 'playground',
   allowedOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173'],

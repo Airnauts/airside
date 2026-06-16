@@ -1,8 +1,8 @@
 # Deploying the comments backend — Vercel + MongoDB Atlas + Vercel Blob
 
 The v1 reference deployment (architecture §2; ADR-0001, ADR-0003). It mounts
-`@airnauts/comments-server` in a Next.js App Router app, persists to MongoDB Atlas via
-`@airnauts/comments-adapter-mongo`, and stores image uploads in Vercel Blob.
+`@airnauts/airside-server` in a Next.js App Router app, persists to MongoDB Atlas via
+`@airnauts/airside-adapter-mongo`, and stores image uploads in Vercel Blob.
 
 > Scope: this is the **deploy-ready recipe**. The full widget host app, the
 > Playwright E2E, and the dogfood deployment are M9.
@@ -19,10 +19,10 @@ The v1 reference deployment (architecture §2; ADR-0001, ADR-0003). It mounts
 | Var | Purpose |
 |---|---|
 | `MONGODB_URI` | Atlas connection string |
-| `COMMENTS_DB_NAME` | database name (e.g. `comments`) |
+| `AIRSIDE_DB_NAME` | database name (e.g. `airside`) |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (read automatically by `@vercel/blob`) |
-| `COMMENTS_SECRET_KEY` | the capability key — the value the widget sends |
-| `COMMENTS_ALLOWED_ORIGINS` | comma-separated origin allowlist |
+| `AIRSIDE_SECRET_KEY` | the capability key — the value the widget sends |
+| `AIRSIDE_ALLOWED_ORIGINS` | comma-separated origin allowlist |
 
 ## 3. Connect once, reuse across invocations
 
@@ -32,25 +32,25 @@ once.
 
 ```ts
 // lib/comments.ts
-import { createCommentsServer } from '@airnauts/comments-server'
-import { createMongoRepository, ensureIndexes } from '@airnauts/comments-adapter-mongo'
-import { VercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+import { createAirsideServer } from '@airnauts/airside-server'
+import { createMongoRepository, ensureIndexes } from '@airnauts/airside-adapter-mongo'
+import { VercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 import { MongoClient } from 'mongodb'
 
 const client = new MongoClient(process.env.MONGODB_URI!)
 const dbReady = (async () => {
   await client.connect()
-  const db = client.db(process.env.COMMENTS_DB_NAME)
+  const db = client.db(process.env.AIRSIDE_DB_NAME)
   await ensureIndexes(db)
   return db
 })()
 
 export async function getServer() {
   const db = await dbReady
-  return createCommentsServer({
-    secretKey: process.env.COMMENTS_SECRET_KEY!,
+  return createAirsideServer({
+    secretKey: process.env.AIRSIDE_SECRET_KEY!,
     projectId: 'default', // v1: one project per mount (architecture §5)
-    allowedOrigins: (process.env.COMMENTS_ALLOWED_ORIGINS ?? '')
+    allowedOrigins: (process.env.AIRSIDE_ALLOWED_ORIGINS ?? '')
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
@@ -63,13 +63,13 @@ export async function getServer() {
 ## 4. Mount the route (one line)
 
 ```ts
-// app/api/comments/[...path]/route.ts
-import { createCommentsAppRoute } from '@airnauts/comments-next'
-import { mongoRepository } from '@airnauts/comments-adapter-mongo'
-import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
+// app/api/airside/[...path]/route.ts
+import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
+import { mongoRepository } from '@airnauts/airside-adapter-mongo'
+import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
-  secretKey: process.env.COMMENTS_SECRET!,
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
+  secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: [process.env.ALLOWED_ORIGIN!],
   repository: mongoRepository({ uri: process.env.MONGODB_URI! }),
@@ -80,8 +80,8 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
 ## 5. Verify the round-trip
 
 ```bash
-curl -i -X POST https://YOUR_APP/api/comments/threads \
-  -H "x-comments-key: $COMMENTS_SECRET_KEY" \
+curl -i -X POST https://YOUR_APP/api/airside/threads \
+  -H "x-airside-key: $AIRSIDE_SECRET_KEY" \
   -H "origin: https://YOUR_APP" \
   -H 'content-type: application/json' \
   -d '{

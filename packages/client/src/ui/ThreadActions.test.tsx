@@ -1,5 +1,5 @@
 // packages/client/src/ui/ThreadActions.test.tsx
-import type { ThreadActionDescriptor } from '@airnauts/comments-core'
+import type { ThreadActionDescriptor } from '@airnauts/airside-core'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'

@@ -1,4 +1,4 @@
-import { type Operation, operations } from '@airnauts/comments-core'
+import { type Operation, operations } from '@airnauts/airside-core'
 import { buildCorsHeaders, isPreflight, preflightResponse } from './cors'
 import type { Ctx, IdFactory } from './ctx'
 import { defaultIds, makeCtx } from './ctx'
@@ -21,7 +21,7 @@ import { runThreadAction } from './use-cases/run-thread-action'
 import { setThreadStatus } from './use-cases/set-thread-status'
 import { uploadAttachment } from './use-cases/upload-attachment'
 
-export type CreateCommentsServerOptions = {
+export type CreateAirsideServerOptions = {
   secretKey: string
   projectId: string
   env?: string
@@ -32,7 +32,7 @@ export type CreateCommentsServerOptions = {
   extensions?: ServerExtension[]
   /** @deprecated Use `extensions`. Wrapped into notification extensions. */
   notifiers?: Notifier[]
-  /** Query param the widget reads to focus a thread; used to build notification deep-links. Defaults to "comments-thread". */
+  /** Query param the widget reads to focus a thread; used to build notification deep-links. Defaults to "airside-thread". */
   threadParam?: string
   /** false to disable; defaults to { writesPerMin: 60, readsPerMin: 600 }. */
   rateLimit?: RateLimitConfig | false
@@ -48,7 +48,7 @@ export type CreateCommentsServerOptions = {
   extractIp?: (req: Request) => string
 }
 
-export type CommentsServer = {
+export type AirsideServer = {
   handle: (req: Request) => Promise<Response>
 }
 
@@ -88,12 +88,12 @@ export function assertUseCasesCoverOperations(
 ): void {
   for (const op of ops) {
     if (typeof useCases[op.operationId] !== 'function') {
-      throw new Error(`createCommentsServer: missing use-case for '${op.operationId}'`)
+      throw new Error(`createAirsideServer: missing use-case for '${op.operationId}'`)
     }
   }
 }
 
-export function createCommentsServer(opts: CreateCommentsServerOptions): CommentsServer {
+export function createAirsideServer(opts: CreateAirsideServerOptions): AirsideServer {
   const ids = opts.ids ?? defaultIds()
   const now = opts.now ?? (() => new Date())
   const ctxBase: Ctx = makeCtx({

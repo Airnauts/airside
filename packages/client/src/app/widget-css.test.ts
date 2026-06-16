@@ -10,7 +10,7 @@ import { widgetCss } from './widget-css.generated'
 // silently strips our borders, radii, and padding. They must stay un-layered.
 describe('widget.css cascade-layer policy (ADR-0025)', () => {
   it('emits utilities (so the build actually produced them)', () => {
-    expect(widgetCss).toContain('.cmnt\\:rounded-full')
+    expect(widgetCss).toContain('.air\\:rounded-full')
   })
 
   it('does NOT wrap utilities in @layer utilities', () => {
