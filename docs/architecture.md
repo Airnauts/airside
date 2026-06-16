@@ -12,7 +12,7 @@
 | # | Decision | ADR |
 |---|---|---|
 | 1 | **Topology:** library-first, hosted-ready. Client talks HTTP to a configurable endpoint; integrator mounts the server in their app. Vercel/Next.js + Vercel Blob is the first-class v1 target. | ADR-0001 |
-| 2 | **Widget delivery:** self-contained vanilla `init()` engine with its own bundled React + a thin `<AirsideLayer/>` React wrapper. | ADR-0002 |
+| 2 | **Widget delivery:** self-contained vanilla `init()` engine with its own bundled React + a thin `<AirsideLayer/>` React wrapper (the wrapper ships as the separate `@airnauts/airside-integration-react` package). | ADR-0002, ADR-0040 |
 | 3 | **Adapter scope:** all seams designed; minimal concretes in v1 — **MongoDB** (Atlas/Vercel), **Vercel Blob + filesystem** storage, **Next.js/Web-standard** route handler. No auth adapter. PostgreSQL repository added in ADR-0035. | ADR-0003 |
 | 4 | **Anchoring:** composite fingerprint + scored re-match; element anchor with optional additive text `selection`. | ADR-0004, ADR-0008 |
 | 5 | **UI stack:** shadcn/ui (Radix + Tailwind), bundled in the widget. | ADR-0005 |
