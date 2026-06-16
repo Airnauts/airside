@@ -11,11 +11,11 @@ pnpm add @airnauts/comments-server
 ## Quick start
 
 ```ts
-import { createCommentsServer } from '@airnauts/comments-server'
+import { createAirsideServer } from '@airnauts/comments-server'
 import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 
-const server = createCommentsServer({
+const server = createAirsideServer({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
@@ -27,15 +27,15 @@ const server = createCommentsServer({
 // Mount it in any framework — Next.js, Hono, bare Node http, etc.
 ```
 
-For Next.js (App Router or Pages Router), prefer `@airnauts/comments-next` which wraps the above into single one-call integrations: `createCommentsAppRoute(config)` for the App Router and `createCommentsPagesRoute(config)` for the Pages Router.
+For Next.js (App Router or Pages Router), prefer `@airnauts/comments-next` which wraps the above into single one-call integrations: `createAirsideAppRoute(config)` for the App Router and `createAirsidePagesRoute(config)` for the Pages Router.
 
 ## API reference
 
-### `createCommentsServer(options)`
+### `createAirsideServer(options)`
 
-Returns a `CommentsServer` with a single `handle(req: Request): Promise<Response>` method.
+Returns a `AirsideServer` with a single `handle(req: Request): Promise<Response>` method.
 
-#### `CreateCommentsServerOptions`
+#### `CreateAirsideServerOptions`
 
 | Option | Type | Required | Description |
 |---|---|---|---|
@@ -63,7 +63,7 @@ Extensions come in two kinds, both passed to `extensions: [...]`.
 import { slackExtension } from '@airnauts/comments-notifier-slack'
 import { emailExtension } from '@airnauts/comments-notifier-email'
 
-createCommentsServer({
+createAirsideServer({
   // ...
   extensions: [
     ...slackExtension({ webhookUrl: process.env.SLACK_WEBHOOK! }),
@@ -77,7 +77,7 @@ createCommentsServer({
 ```ts
 import { jiraExtension } from '@airnauts/comments-integration-jira'
 
-createCommentsServer({
+createAirsideServer({
   // ...
   extensions: jiraExtension({ siteUrl: '...', email: '...', apiToken: '...', projectKey: 'PROJ' }),
 })
@@ -144,7 +144,7 @@ const { port } = await dev.listen()
 
 ## Related packages
 
-- **`@airnauts/comments-next`** — one-call Next.js App and Pages Router integration (`createCommentsAppRoute` / `createCommentsPagesRoute`)
+- **`@airnauts/comments-next`** — one-call Next.js App and Pages Router integration (`createAirsideAppRoute` / `createAirsidePagesRoute`)
 - **`@airnauts/comments-adapter-mongo`** — MongoDB repository
 - **`@airnauts/comments-adapter-postgres`** — PostgreSQL repository
 - **`@airnauts/comments-adapter-memory`** — in-memory repository for dev/tests

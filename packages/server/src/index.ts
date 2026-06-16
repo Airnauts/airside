@@ -36,8 +36,8 @@ export type {
   Repository,
   Scope,
 } from './repository/types'
-export type { CommentsServer, CreateCommentsServerOptions } from './server'
-export { createCommentsServer } from './server'
+export type { AirsideServer, CreateAirsideServerOptions } from './server'
+export { createAirsideServer } from './server'
 export type { PutBlob, PutResult, StorageAdapter } from './storage/types'
 export { readAllBytes, sanitizeName } from './storage/util'
 

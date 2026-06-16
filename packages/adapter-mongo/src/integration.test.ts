@@ -1,7 +1,7 @@
 import { KEY_HEADER_NAME } from '@airnauts/comments-core'
 import { createNextHandler } from '@airnauts/comments-next'
 import type { StorageAdapter } from '@airnauts/comments-server'
-import { createCommentsServer } from '@airnauts/comments-server'
+import { createAirsideServer } from '@airnauts/comments-server'
 import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { type Db, MongoClient } from 'mongodb'
 import { MongoMemoryServer } from 'mongodb-memory-server'
@@ -38,7 +38,7 @@ const headers = {
 }
 
 it('round-trips a thread through the Next handler against MongoDB', async () => {
-  const server = createCommentsServer({
+  const server = createAirsideServer({
     secretKey: 'sk_test',
     projectId: 'proj_x',
     allowedOrigins: ['https://app.example.com'],

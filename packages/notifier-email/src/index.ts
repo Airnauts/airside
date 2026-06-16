@@ -30,9 +30,6 @@ export type EmailExtensionOptions = {
   subjectPrefix?: string
 }
 
-/** @deprecated Renamed to {@link EmailExtensionOptions}; kept for one release. */
-export type EmailNotifierOptions = EmailExtensionOptions
-
 export function emailExtension(opts: EmailExtensionOptions): NotificationExtension[] {
   return [
     {
@@ -57,9 +54,6 @@ export function emailExtension(opts: EmailExtensionOptions): NotificationExtensi
     },
   ]
 }
-
-/** @deprecated Renamed to {@link emailExtension}; kept for one release. */
-export const emailNotifications = emailExtension
 
 export type { EmailFormat, FormatEmailOptions } from './format'
 export { formatEmail } from './format'

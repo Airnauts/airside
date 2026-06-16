@@ -1,6 +1,6 @@
 import { InMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { ANCHOR_SCHEMA_VERSION } from '@airnauts/comments-core'
-import { createCommentsServer, type StorageAdapter } from '@airnauts/comments-server'
+import { createAirsideServer, type StorageAdapter } from '@airnauts/comments-server'
 import { createDevServer, type DevServerHandle } from '@airnauts/comments-server/dev'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildCaptureContext } from '../config'
@@ -29,7 +29,7 @@ let dev: DevServerHandle
 let endpoint: string
 
 beforeAll(async () => {
-  const server = createCommentsServer({
+  const server = createAirsideServer({
     secretKey: KEY,
     projectId: 'p1',
     allowedOrigins: [ORIGIN],

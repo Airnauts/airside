@@ -4,7 +4,7 @@ Minimal local development sandbox for the `@airnauts/comments-client` widget. Ru
 
 ## What this shows
 
-- How to mount the widget with the vanilla `comments.init()` API
+- How to mount the widget with the vanilla `airside.init()` API
 - How to run the server locally with `@airnauts/comments-server/dev` (`createDevServer`)
 - How to wire `createMemoryRepository` for zero-config local testing
 
@@ -31,8 +31,8 @@ Minimal local development sandbox for the `@airnauts/comments-client` widget. Ru
 
 | Package | Role |
 |---|---|
-| `@airnauts/comments-client` | Widget engine (`comments.init()`) |
-| `@airnauts/comments-server` | HTTP handler (`createCommentsServer`) and dev server (`createDevServer`) |
+| `@airnauts/comments-client` | Widget engine (`airside.init()`) |
+| `@airnauts/comments-server` | HTTP handler (`createAirsideServer`) and dev server (`createDevServer`) |
 | `@airnauts/comments-adapter-memory` | In-memory `Repository` |
 
 For the full integration example with Next.js, MongoDB, Vercel Blob, Slack notifications, and Playwright e2e tests, see `examples/nextjs-host`.

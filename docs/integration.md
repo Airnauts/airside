@@ -15,10 +15,10 @@ pnpm add @airnauts/comments-client @airnauts/comments-next @airnauts/comments-ad
 Create `app/api/comments/[...path]/route.ts`:
 
 ```ts
-import { createCommentsAppRoute } from '@airnauts/comments-next'
+import { createAirsideAppRoute } from '@airnauts/comments-next'
 import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
@@ -28,11 +28,11 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
 })
 ```
 
-`createCommentsAppRoute` builds the server and its four Next App Router handlers in one
+`createAirsideAppRoute` builds the server and its four Next App Router handlers in one
 call (it also returns `server` for server-side reads or tests). The handler strips
 the mount prefix, so the server core does not need to know where it is mounted.
 
-For the Pages Router, use `createCommentsPagesRoute` instead — see the root README for
+For the Pages Router, use `createAirsidePagesRoute` instead — see the root README for
 the full example.
 
 Pass `disabled: true` to keep the route mounted but dormant — every handler returns
@@ -47,10 +47,10 @@ In a client component rendered from your root layout:
 
 ```tsx
 'use client'
-import { CommentsLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/comments-client/react'
 
 export function CommentsMount() {
-  return <CommentsLayer commentsKey="dev-key" endpoint="/api/comments" />
+  return <AirsideLayer airsideKey="dev-key" endpoint="/api/comments" />
 }
 ```
 
@@ -97,13 +97,13 @@ infrastructure is config — no bespoke glue:
 ```ts
 // app/api/comments/[...path]/route.ts
 import { join } from 'node:path'
-import { createCommentsAppRoute } from '@airnauts/comments-next'
+import { createAirsideAppRoute } from '@airnauts/comments-next'
 import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: process.env.AIRSIDE_SECRET ?? 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
@@ -128,7 +128,7 @@ all wired through one option: `extensions`. Each factory (`slackExtension`,
 into a single list:
 
 ```ts
-createCommentsServer({
+createAirsideServer({
   repository,
   storage,
   extensions: [
@@ -157,7 +157,7 @@ the comment text, and a link to the page.
 ```ts
 import { slackExtension } from '@airnauts/comments-notifier-slack'
 
-createCommentsServer({
+createAirsideServer({
   repository,
   storage,
   extensions: [...slackExtension({ webhookUrl: process.env.AIRSIDE_SLACK_WEBHOOK_URL! })],
@@ -186,7 +186,7 @@ deployment provenance) and persists a Jira link back on the thread.
 ```ts
 import { jiraExtension } from '@airnauts/comments-integration-jira'
 
-createCommentsServer({
+createAirsideServer({
   repository,
   storage,
   extensions: [

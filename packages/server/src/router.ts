@@ -90,7 +90,7 @@ export async function dispatch(
   const { op, params } = found
   const handler = useCases[op.operationId]
   if (!handler) {
-    // Defensive — createCommentsServer (Task 25) verifies handler completeness at boot,
+    // Defensive — createAirsideServer (Task 25) verifies handler completeness at boot,
     // so this should be unreachable in production. Kept for direct/test callers of dispatch.
     throw new Error(`no use-case registered for operationId '${op.operationId}'`)
   }

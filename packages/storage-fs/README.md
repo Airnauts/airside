@@ -19,7 +19,7 @@ const storage = createFileSystemStorage({
 })
 ```
 
-Pass `storage` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsAppRoute` / `createCommentsPagesRoute` from `@airnauts/comments-next`).
+Pass `storage` to `createAirsideServer` from `@airnauts/comments-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/comments-next`).
 
 ## API reference
 

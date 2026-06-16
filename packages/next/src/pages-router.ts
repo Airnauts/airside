@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import type { CommentsServer } from '@airnauts/comments-server'
+import type { AirsideServer } from '@airnauts/comments-server'
 import { nodeRequestToWeb, webToNode } from '@airnauts/comments-server/node'
 import { operationUrl } from './operation-url'
 
@@ -23,7 +23,7 @@ export type NodePagesHandler = (req: NodePagesRequest, res: ServerResponse) => P
  * module, so the helper cannot set it, and the comments API parses the raw body
  * itself. The guard below fails loud if it is left on.
  */
-export function createNextPagesHandler(server: CommentsServer): NodePagesHandler {
+export function createNextPagesHandler(server: AirsideServer): NodePagesHandler {
   return async (req, res) => {
     if (req.body !== undefined) {
       throw new Error(

@@ -16,10 +16,10 @@ pnpm add react react-dom
 
 ```tsx
 'use client'
-import { CommentsLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/comments-client/react'
 
 export function CommentsMount() {
-  return <CommentsLayer commentsKey="your-secret-key" endpoint="/api/comments" />
+  return <AirsideLayer airsideKey="your-secret-key" endpoint="/api/comments" />
 }
 ```
 
@@ -28,9 +28,9 @@ Render `<CommentsMount />` once in your root layout. The widget stays inert unti
 ### Vanilla JS
 
 ```ts
-import { comments } from '@airnauts/comments-client'
+import { airside } from '@airnauts/comments-client'
 
-const handle = await comments.init({
+const handle = await airside.init({
   key: 'your-secret-key',
   endpoint: '/api/comments',
 })
@@ -41,12 +41,12 @@ handle.destroy()
 
 ## API reference
 
-### `init(options)` / `comments.init(options)`
+### `init(options)` / `airside.init(options)`
 
 ```ts
-import { init, comments } from '@airnauts/comments-client'
+import { init, airside } from '@airnauts/comments-client'
 
-const handle: CommentsHandle = await comments.init(options)
+const handle: AirsideHandle = await airside.init(options)
 ```
 
 `init` is a no-op (returns a handle whose `destroy` is also a no-op) when no valid key is found in either the URL or `localStorage`. It is async by contract; in the current build the app bundle is static (no dynamic import split at the gate).
@@ -64,10 +64,10 @@ const handle: CommentsHandle = await comments.init(options)
 | `features.textAnchors` | `boolean` | Enable text-selection anchoring (default off) |
 | `provenance` | `Provenance` | Optional deploy metadata attached to new threads (`commitSha`, `branch`, `deploymentId`) |
 
-#### `CommentsHandle`
+#### `AirsideHandle`
 
 ```ts
-type CommentsHandle = { destroy(): void }
+type AirsideHandle = { destroy(): void }
 ```
 
 Call `destroy()` to unmount the widget and clean up all listeners.
@@ -80,7 +80,7 @@ import { consumeThreadParam, DEFAULT_THREAD_PARAM } from '@airnauts/comments-cli
 consumeThreadParam(DEFAULT_THREAD_PARAM)
 ```
 
-Reads a `?airside-thread=<id>` deep-link param from the current URL, stores the thread ID in `sessionStorage` so the widget opens that thread's panel on load, then strips the param from the address bar. Call this before `init` if you need to handle deep-links in a vanilla (non-React) context; the React `<CommentsLayer>` handles it automatically.
+Reads a `?airside-thread=<id>` deep-link param from the current URL, stores the thread ID in `sessionStorage` so the widget opens that thread's panel on load, then strips the param from the address bar. Call this before `init` if you need to handle deep-links in a vanilla (non-React) context; the React `<AirsideLayer>` handles it automatically.
 
 ### Constants
 
@@ -107,25 +107,25 @@ import { captureElement, extractSignals, buildSelectors } from '@airnauts/commen
 ## Subpath: `@airnauts/comments-client/react`
 
 ```tsx
-import { CommentsLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/comments-client/react'
 ```
 
-Thin React wrapper that calls `comments.init()` in a `useEffect` and tears down on unmount.
+Thin React wrapper that calls `airside.init()` in a `useEffect` and tears down on unmount.
 
-#### `CommentsLayerProps`
+#### `AirsideLayerProps`
 
-All `InitOptions` fields except `key`, which becomes `commentsKey` (React reserves the `key` prop name):
+All `InitOptions` fields except `key`, which becomes `airsideKey` (React reserves the `key` prop name):
 
 ```tsx
-<CommentsLayer
-  commentsKey="your-secret-key"
+<AirsideLayer
+  airsideKey="your-secret-key"
   endpoint="/api/comments"
   features={{ screenshots: true, textAnchors: true }}
   pageKey={(url) => new URL(url).origin + new URL(url).pathname}
 />
 ```
 
-The effect re-runs only when `commentsKey`, `endpoint`, or `keyParam` change — not on every render.
+The effect re-runs only when `airsideKey`, `endpoint`, or `keyParam` change — not on every render.
 
 ## Peer dependencies & requirements
 

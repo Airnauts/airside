@@ -11,10 +11,10 @@ pnpm add @airnauts/comments-integration-jira
 ## Quick start
 
 ```ts
-import { createCommentsServer } from '@airnauts/comments-server'
+import { createAirsideServer } from '@airnauts/comments-server'
 import { jiraExtension } from '@airnauts/comments-integration-jira'
 
-createCommentsServer({
+createAirsideServer({
   repository,
   storage,
   secretKey: process.env.AIRSIDE_SECRET!,

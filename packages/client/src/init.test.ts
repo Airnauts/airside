@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { init } from './index'
 
-describe('comments.init', () => {
+describe('airside.init', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     localStorage.clear()

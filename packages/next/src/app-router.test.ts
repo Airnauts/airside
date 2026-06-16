@@ -1,6 +1,6 @@
 import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { KEY_HEADER_NAME } from '@airnauts/comments-core'
-import { createCommentsServer, type StorageAdapter } from '@airnauts/comments-server'
+import { createAirsideServer, type StorageAdapter } from '@airnauts/comments-server'
 import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { createNextHandler } from './app-router'
@@ -12,7 +12,7 @@ const stubStorage: StorageAdapter = {
 }
 
 function build() {
-  const server = createCommentsServer({
+  const server = createAirsideServer({
     secretKey: 'sk_test',
     projectId: 'proj_x',
     allowedOrigins: ['https://app.example.com'],

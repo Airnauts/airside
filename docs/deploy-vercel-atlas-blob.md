@@ -32,7 +32,7 @@ once.
 
 ```ts
 // lib/comments.ts
-import { createCommentsServer } from '@airnauts/comments-server'
+import { createAirsideServer } from '@airnauts/comments-server'
 import { createMongoRepository, ensureIndexes } from '@airnauts/comments-adapter-mongo'
 import { VercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 import { MongoClient } from 'mongodb'
@@ -47,7 +47,7 @@ const dbReady = (async () => {
 
 export async function getServer() {
   const db = await dbReady
-  return createCommentsServer({
+  return createAirsideServer({
     secretKey: process.env.AIRSIDE_SECRET_KEY!,
     projectId: 'default', // v1: one project per mount (architecture §5)
     allowedOrigins: (process.env.AIRSIDE_ALLOWED_ORIGINS ?? '')
@@ -64,11 +64,11 @@ export async function getServer() {
 
 ```ts
 // app/api/comments/[...path]/route.ts
-import { createCommentsAppRoute } from '@airnauts/comments-next'
+import { createAirsideAppRoute } from '@airnauts/comments-next'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: [process.env.ALLOWED_ORIGIN!],

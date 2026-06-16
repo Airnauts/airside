@@ -24,11 +24,11 @@ pnpm add @airnauts/comments-next @airnauts/comments-client \
 Create `app/api/comments/[...path]/route.ts`:
 
 ```ts
-import { createCommentsAppRoute } from '@airnauts/comments-next'
+import { createAirsideAppRoute } from '@airnauts/comments-next'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
@@ -43,10 +43,10 @@ In your root layout:
 
 ```tsx
 'use client'
-import { CommentsLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/comments-client/react'
 
 export function CommentsMount() {
-  return <CommentsLayer commentsKey={process.env.NEXT_PUBLIC_AIRSIDE_KEY!} endpoint="/api/comments" />
+  return <AirsideLayer airsideKey={process.env.NEXT_PUBLIC_AIRSIDE_KEY!} endpoint="/api/comments" />
 }
 ```
 
@@ -60,7 +60,7 @@ Swap in the in-memory adapter:
 import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
@@ -82,7 +82,7 @@ independently — pick **one server mount** and **one widget mount**:
   passes its `Request` straight in; a classic Node host (Express, `http`) bridges
   `req`/`res` via `@airnauts/comments-server/node`. Node-compatible runtimes only
   (the server uses `node:crypto`, `Buffer`, and Node database drivers).
-- **Widget** — `CommentsLayer` for React (below), or `comments.init()` for vanilla
+- **Widget** — `AirsideLayer` for React (below), or `airside.init()` for vanilla
   JS (below).
 
 The widget only needs an `endpoint` pointing at a mounted server; the server only needs
@@ -90,18 +90,18 @@ the widget's origin in its `allowedOrigins`.
 
 ### Server — Next.js Pages Router
 
-On the Pages Router, mount a catch-all API route with `createCommentsPagesRoute`:
+On the Pages Router, mount a catch-all API route with `createAirsidePagesRoute`:
 
 ```ts
 // pages/api/comments/[...path].ts
-import { createCommentsPagesRoute } from '@airnauts/comments-next'
+import { createAirsidePagesRoute } from '@airnauts/comments-next'
 import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 
 // REQUIRED: Next reads this statically, so the helper can't set it. The comments
 // API parses JSON/multipart itself, so the raw body must reach it unparsed.
 export const config = { api: { bodyParser: false } }
 
-export default createCommentsPagesRoute({
+export default createAirsidePagesRoute({
   secretKey: process.env.AIRSIDE_SECRET ?? 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
@@ -120,20 +120,20 @@ storage stub for `mongoRepository({ uri })` + `createVercelBlobStorage({ token }
 
 ### Widget — React (any framework)
 
-`CommentsLayer` is a plain React component — it works in any React app (Vite, CRA,
+`AirsideLayer` is a plain React component — it works in any React app (Vite, CRA,
 Remix…), not just Next.js. Render it once near your app root and point `endpoint` at the
 mounted server (use an absolute URL when the API is on another origin, and add that origin
 to the server's `allowedOrigins`):
 
 ```tsx
-import { CommentsLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/comments-client/react'
 
 export function App() {
   return (
     <>
       {/* your app */}
-      <CommentsLayer
-        commentsKey={import.meta.env.VITE_AIRSIDE_KEY}
+      <AirsideLayer
+        airsideKey={import.meta.env.VITE_AIRSIDE_KEY}
         endpoint="https://api.example.com/api/comments"
       />
     </>
@@ -146,13 +146,13 @@ nothing extra to install.
 
 ### Widget — Vanilla JS (no framework)
 
-Without React, call `comments.init()` directly. It returns a handle you can `destroy()` to
+Without React, call `airside.init()` directly. It returns a handle you can `destroy()` to
 tear the widget down again:
 
 ```ts
-import { comments } from '@airnauts/comments-client'
+import { airside } from '@airnauts/comments-client'
 
-const handle = await comments.init({
+const handle = await airside.init({
   key: 'your-secret-key',
   endpoint: '/api/comments', // or an absolute URL to a server on another origin
 })
@@ -174,9 +174,9 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 | Package | Description |
 |---|---|
 | [`@airnauts/comments-core`](packages/core) | Isomorphic: Zod schemas, HTTP contract types, `pageKey` normalization, anchor scoring/threshold policy, OpenAPI generator |
-| [`@airnauts/comments-client`](packages/client) | Widget engine (`init()`), light-DOM anchoring runtime, React wrapper (`CommentsLayer`) |
+| [`@airnauts/comments-client`](packages/client) | Widget engine (`init()`), light-DOM anchoring runtime, React wrapper (`AirsideLayer`) |
 | [`@airnauts/comments-server`](packages/server) | Web-standard HTTP handler, use cases, CORS/security, adapter interfaces, generic Node bridge, dev server |
-| [`@airnauts/comments-next`](packages/next) | One-call Next.js App and Pages Router integration (`createCommentsAppRoute` / `createCommentsPagesRoute`) |
+| [`@airnauts/comments-next`](packages/next) | One-call Next.js App and Pages Router integration (`createAirsideAppRoute` / `createAirsidePagesRoute`) |
 | [`@airnauts/comments-adapter-mongo`](packages/adapter-mongo) | MongoDB Atlas / self-hosted repository adapter |
 | [`@airnauts/comments-adapter-postgres`](packages/adapter-postgres) | PostgreSQL repository adapter (hybrid columns + `jsonb`; driver-agnostic) |
 | [`@airnauts/comments-adapter-memory`](packages/adapter-memory) | In-memory repository for local development and tests |

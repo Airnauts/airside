@@ -5,7 +5,7 @@ import { KEY_HEADER_NAME } from '@airnauts/comments-core'
 import type { StorageAdapter } from '@airnauts/comments-server'
 import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
-import { createCommentsAppRoute, createCommentsPagesRoute } from './index'
+import { createAirsideAppRoute, createAirsidePagesRoute } from './index'
 import type { NodePagesRequest } from './pages-router'
 
 const stubStorage: StorageAdapter = {
@@ -63,9 +63,9 @@ function fakeRes() {
   return out
 }
 
-describe('createCommentsAppRoute', () => {
+describe('createAirsideAppRoute', () => {
   it('round-trips create → get and exposes the server', async () => {
-    const { GET, POST, server } = createCommentsAppRoute(baseConfig())
+    const { GET, POST, server } = createAirsideAppRoute(baseConfig())
     expect(typeof server?.handle).toBe('function')
     const created = await POST(
       new Request('https://host/api/comments/threads', {
@@ -85,7 +85,7 @@ describe('createCommentsAppRoute', () => {
   })
 
   it('404s every handler and builds no server when disabled', async () => {
-    const route = createCommentsAppRoute({ ...baseConfig(), disabled: true })
+    const route = createAirsideAppRoute({ ...baseConfig(), disabled: true })
     expect(route.server).toBeUndefined()
     const ctx = { params: Promise.resolve({ path: ['threads'] }) }
     for (const m of ['GET', 'POST', 'PATCH', 'OPTIONS'] as const) {
@@ -96,9 +96,9 @@ describe('createCommentsAppRoute', () => {
   })
 })
 
-describe('createCommentsPagesRoute', () => {
+describe('createAirsidePagesRoute', () => {
   it('round-trips create → get and exposes the server', async () => {
-    const handler = createCommentsPagesRoute(baseConfig())
+    const handler = createAirsidePagesRoute(baseConfig())
     expect(typeof handler.server?.handle).toBe('function')
 
     const createRes = fakeRes()
@@ -130,7 +130,7 @@ describe('createCommentsPagesRoute', () => {
   })
 
   it('404s and builds no server when disabled', async () => {
-    const handler = createCommentsPagesRoute({ ...baseConfig(), disabled: true })
+    const handler = createAirsidePagesRoute({ ...baseConfig(), disabled: true })
     expect(handler.server).toBeUndefined()
     const res = fakeRes()
     await handler(

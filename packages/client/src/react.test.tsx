@@ -1,6 +1,6 @@
 import { render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { CommentsLayer, packageName } from './react'
+import { AirsideLayer, packageName } from './react'
 
 describe('@airnauts/comments-client/react', () => {
   beforeEach(() => {
@@ -15,7 +15,7 @@ describe('@airnauts/comments-client/react', () => {
   })
 
   it('mounts the widget on render and removes it on unmount', async () => {
-    const { unmount } = render(<CommentsLayer commentsKey="secret" endpoint="http://x" />)
+    const { unmount } = render(<AirsideLayer airsideKey="secret" endpoint="http://x" />)
     // init() is async; wait for the mount to land.
     await waitFor(() => expect(document.querySelector('[data-airside-root]')).not.toBeNull())
     unmount()

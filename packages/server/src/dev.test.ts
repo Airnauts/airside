@@ -3,7 +3,7 @@ import { KEY_HEADER_NAME } from '@airnauts/comments-core'
 import { makeCreateThreadBody } from '@airnauts/comments-test-support'
 import { describe, expect, it } from 'vitest'
 import { createDevServer } from './dev'
-import { createCommentsServer } from './server'
+import { createAirsideServer } from './server'
 import type { StorageAdapter } from './storage/types'
 
 const stubStorage: StorageAdapter = {
@@ -14,7 +14,7 @@ const stubStorage: StorageAdapter = {
 
 describe('createDevServer', () => {
   it('serves the same handler over HTTP and returns 401 on missing key', async () => {
-    const server = createCommentsServer({
+    const server = createAirsideServer({
       secretKey: 'sk_test',
       projectId: 'proj_x',
       allowedOrigins: ['http://127.0.0.1'],

@@ -175,12 +175,12 @@ deploys to Vercel against Atlas and round-trips a thread.
 **Goal.** The widget mounts on any page, stays isolated, gates on the key, knows who
 you are, and can talk to the backend — before any anchoring.
 
-**In scope.** `comments.init({ key, endpoint, pageKey?, features? })`; **light-DOM
+**In scope.** `airside.init({ key, endpoint, pageKey?, features? })`; **light-DOM
 mount** (single host, `all: revert`, Tailwind no-preflight, scoped prefix, portal
 container); **shadcn/Radix** setup inside the widget; React **error boundary**;
 **activation gate** (valid key in URL); **self-asserted email identity** modal +
 `localStorage`; the **API client** (key header, optimistic + rollback); the thin
-**`<CommentsLayer/>`** wrapper. A placeholder fixed-position marker proves the
+**`<AirsideLayer/>`** wrapper. A placeholder fixed-position marker proves the
 backend round-trip end to end.
 
 **Out of scope.** Real anchoring (M6); thread/composer/panel UI (M7–M8).
@@ -274,7 +274,7 @@ through their public seams, and document "integrate in minutes." Manual/visual
 proof; automated e2e + dogfood deploy move to M10.
 
 **In scope.** A sample **Next.js host app in `examples/nextjs-host`** (kept alongside
-the Vite `playground`): `<CommentsLayer/>` mounted in the layout; a
+the Vite `playground`): `<AirsideLayer/>` mounted in the layout; a
 `createNextHandler` catch-all API route; **env-switched persistence** (`MONGODB_URI`
 → Mongo, else in-memory) and storage (`BLOB_READ_WRITE_TOKEN` → Vercel Blob, else
 local `public/uploads/`); three content routes exercising element pins, text

@@ -19,11 +19,11 @@ Recipients are derived per event from the thread itself. On a reply (`comment.ad
 ### Resend (recommended for serverless / edge)
 
 ```ts
-import { createCommentsServer } from '@airnauts/comments-server'
+import { createAirsideServer } from '@airnauts/comments-server'
 import { emailExtension } from '@airnauts/comments-notifier-email'
 import { resendTransport } from '@airnauts/comments-notifier-email/resend'
 
-createCommentsServer({
+createAirsideServer({
   repository,
   storage,
   secretKey: process.env.AIRSIDE_SECRET!,

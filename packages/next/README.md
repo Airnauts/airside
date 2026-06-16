@@ -1,6 +1,6 @@
 # @airnauts/comments-next
 
-Next.js App and Pages Router integration for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool). Wraps `createCommentsServer` and the Next.js handler glue into single one-call integrations: `createCommentsAppRoute(config)` for the App Router and `createCommentsPagesRoute(config)` for the Pages Router.
+Next.js App and Pages Router integration for the [Airnauts commenting tool](https://github.com/Airnauts/commenting-tool). Wraps `createAirsideServer` and the Next.js handler glue into single one-call integrations: `createAirsideAppRoute(config)` for the App Router and `createAirsidePagesRoute(config)` for the Pages Router.
 
 ## Installation
 
@@ -15,11 +15,11 @@ pnpm add @airnauts/comments-adapter-mongo @airnauts/comments-storage-vercel-blob
 Create a catch-all route handler at `app/api/comments/[...path]/route.ts`:
 
 ```ts
-import { createCommentsAppRoute } from '@airnauts/comments-next'
+import { createAirsideAppRoute } from '@airnauts/comments-next'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
@@ -35,7 +35,7 @@ import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 import { join } from 'node:path'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
@@ -50,7 +50,7 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
 Create a catch-all API route at `pages/api/comments/[...path].ts`:
 
 ```ts
-import { createCommentsPagesRoute } from '@airnauts/comments-next'
+import { createAirsidePagesRoute } from '@airnauts/comments-next'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
@@ -58,7 +58,7 @@ import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 // API parses JSON/multipart itself, so the raw body must reach it unparsed.
 export const config = { api: { bodyParser: false } }
 
-export default createCommentsPagesRoute({
+export default createAirsidePagesRoute({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
@@ -71,9 +71,9 @@ A single default export handles every method — `server.handle` answers the COR
 
 ## API reference
 
-### `createCommentsAppRoute(config)`
+### `createAirsideAppRoute(config)`
 
-Accepts all [`CreateCommentsServerOptions`](https://github.com/Airnauts/commenting-tool/blob/main/packages/server/README.md) from `@airnauts/comments-server`, plus:
+Accepts all [`CreateAirsideServerOptions`](https://github.com/Airnauts/commenting-tool/blob/main/packages/server/README.md) from `@airnauts/comments-server`, plus:
 
 | Option | Type | Description |
 |---|---|---|
@@ -82,11 +82,11 @@ Accepts all [`CreateCommentsServerOptions`](https://github.com/Airnauts/commenti
 Returns `{ GET, POST, PATCH, OPTIONS, server? }`:
 
 - `GET`, `POST`, `PATCH`, `OPTIONS` — Next.js App Router route handlers; destructure and re-export directly.
-- `server` — the underlying `CommentsServer` instance (absent when `disabled: true`); useful for server-side reads, additional custom routes, or integration tests.
+- `server` — the underlying `AirsideServer` instance (absent when `disabled: true`); useful for server-side reads, additional custom routes, or integration tests.
 
-### `createCommentsPagesRoute(config)`
+### `createAirsidePagesRoute(config)`
 
-Accepts the same options as `createCommentsAppRoute`. Returns a single Node.js API-route handler function (the Pages Router `default` export). The function carries `.server` (absent when `disabled: true`) for the same uses as the App Router variant.
+Accepts the same options as `createAirsideAppRoute`. Returns a single Node.js API-route handler function (the Pages Router `default` export). The function carries `.server` (absent when `disabled: true`) for the same uses as the App Router variant.
 
 **`export const config = { api: { bodyParser: false } }` is required** in the route module — Next reads it statically and the helper cannot set it for you. The comments API parses `application/json` and `multipart/form-data` bodies itself, so the raw body must reach it unparsed.
 

@@ -22,7 +22,7 @@ const repository = postgresRepository({
 })
 ```
 
-Pass `repository` to `createCommentsServer` from `@airnauts/comments-server` (or to `createCommentsAppRoute` / `createCommentsPagesRoute` from `@airnauts/comments-next`). The adapter connects lazily on first use and runs `ensureSchema` automatically.
+Pass `repository` to `createAirsideServer` from `@airnauts/comments-server` (or to `createAirsideAppRoute` / `createAirsidePagesRoute` from `@airnauts/comments-next`). The adapter connects lazily on first use and runs `ensureSchema` automatically.
 
 ## API reference
 

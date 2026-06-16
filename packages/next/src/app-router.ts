@@ -1,4 +1,4 @@
-import type { CommentsServer } from '@airnauts/comments-server'
+import type { AirsideServer } from '@airnauts/comments-server'
 import { operationUrl } from './operation-url'
 
 /**
@@ -17,7 +17,7 @@ type NextHandler = (req: Request, ctx: NextRouteContext) => Promise<Response>
  * `params.path`; we rebuild the operation-relative URL the dispatcher expects,
  * so the server core stays unaware of where it is mounted (no basePath).
  */
-export function createNextHandler(server: CommentsServer): {
+export function createNextHandler(server: AirsideServer): {
   GET: NextHandler
   POST: NextHandler
   PATCH: NextHandler

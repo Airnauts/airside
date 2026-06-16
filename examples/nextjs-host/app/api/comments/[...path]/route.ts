@@ -2,14 +2,14 @@ import { join } from 'node:path'
 import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { jiraExtension } from '@airnauts/comments-integration-jira'
-import { createCommentsAppRoute } from '@airnauts/comments-next'
+import { createAirsideAppRoute } from '@airnauts/comments-next'
 import { emailExtension } from '@airnauts/comments-notifier-email'
 import { resendTransport } from '@airnauts/comments-notifier-email/resend'
 import { slackExtension } from '@airnauts/comments-notifier-slack'
 import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
   secretKey: 'dev-key', // demo only — replace with a real secret in production
   projectId: 'nextjs-host',
   allowedOrigins: [

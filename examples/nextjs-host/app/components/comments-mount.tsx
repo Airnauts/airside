@@ -1,6 +1,6 @@
 'use client'
 
-import { CommentsLayer } from '@airnauts/comments-client/react'
+import { AirsideLayer } from '@airnauts/comments-client/react'
 
 /**
  * Mounts the comments widget. `init()`'s gate keeps it inert until the page is
@@ -9,8 +9,8 @@ import { CommentsLayer } from '@airnauts/comments-client/react'
  */
 export function CommentsMount() {
   return (
-    <CommentsLayer
-      commentsKey="dev-key"
+    <AirsideLayer
+      airsideKey="dev-key"
       endpoint="/api/comments"
       features={{ screenshots: true, textAnchors: true }}
       // Default-equivalent pageKey (origin + path), but honoring an optional `?ns=`

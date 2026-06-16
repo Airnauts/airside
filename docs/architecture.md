@@ -12,7 +12,7 @@
 | # | Decision | ADR |
 |---|---|---|
 | 1 | **Topology:** library-first, hosted-ready. Client talks HTTP to a configurable endpoint; integrator mounts the server in their app. Vercel/Next.js + Vercel Blob is the first-class v1 target. | ADR-0001 |
-| 2 | **Widget delivery:** self-contained vanilla `init()` engine with its own bundled React + a thin `<CommentsLayer/>` React wrapper. | ADR-0002 |
+| 2 | **Widget delivery:** self-contained vanilla `init()` engine with its own bundled React + a thin `<AirsideLayer/>` React wrapper. | ADR-0002 |
 | 3 | **Adapter scope:** all seams designed; minimal concretes in v1 — **MongoDB** (Atlas/Vercel), **Vercel Blob + filesystem** storage, **Next.js/Web-standard** route handler. No auth adapter. PostgreSQL repository added in ADR-0035. | ADR-0003 |
 | 4 | **Anchoring:** composite fingerprint + scored re-match; element anchor with optional additive text `selection`. | ADR-0004, ADR-0008 |
 | 5 | **UI stack:** shadcn/ui (Radix + Tailwind), bundled in the widget. | ADR-0005 |
@@ -42,13 +42,13 @@ endpoint with no client change.
 - **`@airnauts/comments-client`** — the widget engine: `init()` (vanilla, light-DOM
   mount), the React UI (shadcn), the anchoring *runtime* (DOM capture / re-match
   / overlay), and the API client. Subpath **`@airnauts/comments-client/react`** exports the
-  thin `<CommentsLayer/>` wrapper (tree-shaken away if unused).
+  thin `<AirsideLayer/>` wrapper (tree-shaken away if unused).
 - **`@airnauts/comments-server`** — the Web-standard `Request → Response` core + business
   logic; depends only on adapter interfaces. Subpath **`@airnauts/comments-server/node`**
   is a generic Node↔Web bridge (`nodeRequestToWeb` / `webToNode`) for mounting on any
   Node server.
-- **`@airnauts/comments-next`** — all Next.js glue: App Router (`createCommentsAppRoute`)
-  and Pages Router (`createCommentsPagesRoute`) one-call integrations.
+- **`@airnauts/comments-next`** — all Next.js glue: App Router (`createAirsideAppRoute`)
+  and Pages Router (`createAirsidePagesRoute`) one-call integrations.
 - **`@airnauts/comments-adapter-mongo`** — MongoDB repository (only package that pulls the
   mongo driver).
 - **`@airnauts/comments-adapter-postgres`** — PostgreSQL repository (hybrid columns +
@@ -73,13 +73,13 @@ npm-only in v1**; a CDN/script-tag build is a deliberate fast-follow.
 
 ## 3. Client architecture (`@airnauts/comments-client`)
 
-**Mount.** A single call — `comments.init({ key, endpoint, pageKey?, features? })`
+**Mount.** A single call — `airside.init({ key, endpoint, pageKey?, features? })`
 — injects one root host element at `<body>` (`position: fixed; inset: 0;
 pointer-events: none`) and renders the widget into it in the **light DOM**, with
 the widget's own bundled React. Isolation is via `all: revert` on the root,
 Tailwind with preflight disabled, and a scoped class prefix; Radix portals/menus/
 toasts render into a single high-z-index portal container inside the host. The
-`<CommentsLayer/>` React wrapper simply calls `init()` in an effect. The widget
+`<AirsideLayer/>` React wrapper simply calls `init()` in an effect. The widget
 never reads the host's React/runtime state — it only speaks HTTP.
 
 **Layers.** (1) an **overlay** layer rendering pin dots + text-range highlights,
@@ -128,7 +128,7 @@ report-orphan / refresh-anchor, upload attachment.
 **Construction & adapters:**
 
 ```ts
-createCommentsServer({
+createAirsideServer({
   repository,      // @airnauts/comments-adapter-mongo
   storage,         // vercel-blob | fs
   secretKey,
@@ -155,9 +155,9 @@ handlers in one call:
 
 ```ts
 // App Router — app/api/comments/[...path]/route.ts
-export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute(config)
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute(config)
 // Pages Router — pages/api/comments/[...path].ts
-export default createCommentsPagesRoute(config)
+export default createAirsidePagesRoute(config)
 ```
 
 Other Node hosts wrap the same core via `@airnauts/comments-server/node`.

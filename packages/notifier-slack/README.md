@@ -12,13 +12,13 @@ pnpm add @airnauts/comments-notifier-slack
 
 1. In Slack, create (or pick) an app, enable **Incoming Webhooks**, and add a webhook to your channel. Copy the `https://hooks.slack.com/services/…` URL — the channel is baked into it.
 
-2. Pass the result to `createCommentsServer`:
+2. Pass the result to `createAirsideServer`:
 
 ```ts
-import { createCommentsServer } from '@airnauts/comments-server'
+import { createAirsideServer } from '@airnauts/comments-server'
 import { slackExtension } from '@airnauts/comments-notifier-slack'
 
-createCommentsServer({
+createAirsideServer({
   repository,
   storage,
   secretKey: process.env.AIRSIDE_SECRET!,

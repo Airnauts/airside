@@ -57,10 +57,10 @@ export function buildOpenApiDocument(): ReturnType<typeof createDocument> {
     info: { title: 'Comments API', version: '1.0.0' },
     components: {
       securitySchemes: {
-        commentsKey: { type: 'apiKey', in: 'header', name: KEY_HEADER_NAME },
+        airsideKey: { type: 'apiKey', in: 'header', name: KEY_HEADER_NAME },
       },
     },
-    security: [{ commentsKey: [] }],
+    security: [{ airsideKey: [] }],
     paths,
   })
 }

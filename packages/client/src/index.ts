@@ -9,11 +9,11 @@ export * from './anchor'
 export type { InitOptions } from './config'
 export { DEFAULT_KEY_PARAM, DEFAULT_THREAD_PARAM } from './config'
 
-export type CommentsHandle = {
+export type AirsideHandle = {
   destroy(): void
 }
 
-const NOOP_HANDLE: CommentsHandle = { destroy() {} }
+const NOOP_HANDLE: AirsideHandle = { destroy() {} }
 
 /** Drop the key param from the address bar, preserving every other param and the hash. */
 function stripKeyParam(keyParam: string): void {
@@ -51,7 +51,7 @@ export function consumeThreadParam(param: string): void {
  * gate still keeps the widget inert (never mounts, renders, or fetches) when the
  * key is absent.
  */
-export async function init(options: InitOptions): Promise<CommentsHandle> {
+export async function init(options: InitOptions): Promise<AirsideHandle> {
   if (typeof window === 'undefined') return NOOP_HANDLE
   const keyParam = options.keyParam ?? DEFAULT_KEY_PARAM
   const search = window.location.search
@@ -71,4 +71,4 @@ export async function init(options: InitOptions): Promise<CommentsHandle> {
   return mount(options)
 }
 
-export const comments = { init }
+export const airside = { init }
