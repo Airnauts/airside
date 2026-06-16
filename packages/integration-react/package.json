@@ -1,0 +1,62 @@
+{
+  "name": "@airnauts/airside-integration-react",
+  "version": "0.8.1",
+  "description": "React mount (<AirsideLayer/>) for embedding the Airside commenting widget in any React host.",
+  "keywords": [
+    "comments",
+    "commenting",
+    "annotations",
+    "feedback",
+    "airnauts",
+    "react",
+    "widget"
+  ],
+  "license": "MIT",
+  "author": "Airnauts",
+  "homepage": "https://github.com/Airnauts/airside#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Airnauts/airside.git",
+    "directory": "packages/integration-react"
+  },
+  "bugs": {
+    "url": "https://github.com/Airnauts/airside/issues"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/.tsbuildinfo",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup && tsc --build --force",
+    "typecheck": "tsc --build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@airnauts/airside-client": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^26.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  }
+}
