@@ -1,3 +1,12 @@
+<p align="center">
+  <a href="https://github.com/Airnauts/airside">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-dark.svg">
+      <img src="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-light.svg" alt="Airside" height="40">
+    </picture>
+  </a>
+</p>
+
 # @airnauts/airside-extension-jira
 
 Jira Cloud thread-action extension for the [Airside](https://github.com/Airnauts/airside) server. Adds a **"Create Jira issue"** button to each comment thread; clicking it creates a Jira Cloud issue pre-filled with the thread content and stores the issue link back on the thread.

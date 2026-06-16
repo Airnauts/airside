@@ -1,3 +1,12 @@
+<p align="center">
+  <a href="https://github.com/Airnauts/airside">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-dark.svg">
+      <img src="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-light.svg" alt="Airside" height="40">
+    </picture>
+  </a>
+</p>
+
 # @airnauts/airside-integration-next
 
 Next.js App and Pages Router integration for [Airside](https://github.com/Airnauts/airside). Wraps `createAirsideServer` and the Next.js handler glue into single one-call integrations: `createAirsideAppRoute(config)` for the App Router and `createAirsidePagesRoute(config)` for the Pages Router.

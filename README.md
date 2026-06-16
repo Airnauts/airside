@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/airside-logo-dark.svg">
+    <img src="assets/airside-logo-light.svg" alt="Airside" height="72">
+  </picture>
+</p>
+
 # Airside — Embeddable Commenting Tool
 
 A self-contained, open-source commenting overlay you host yourself. Drop the widget into any web page — Next.js, plain HTML, or anything in between — and reviewers can leave threaded, DOM-anchored comments without touching your page design or sending data to a third-party service.

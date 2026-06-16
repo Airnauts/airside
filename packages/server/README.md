@@ -1,3 +1,12 @@
+<p align="center">
+  <a href="https://github.com/Airnauts/airside">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-dark.svg">
+      <img src="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-light.svg" alt="Airside" height="40">
+    </picture>
+  </a>
+</p>
+
 # @airnauts/airside-server
 
 Server runtime for [Airside](https://github.com/Airnauts/airside): Web-standard `Request → Response` HTTP handler, use cases, CORS/security, and the adapter interfaces for persistence and storage.

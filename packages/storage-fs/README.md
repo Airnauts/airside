@@ -1,3 +1,12 @@
+<p align="center">
+  <a href="https://github.com/Airnauts/airside">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-dark.svg">
+      <img src="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-light.svg" alt="Airside" height="40">
+    </picture>
+  </a>
+</p>
+
 # @airnauts/airside-storage-fs
 
 Filesystem attachment-storage adapter for the [Airside](https://github.com/Airnauts/airside) server. Writes uploaded images to a local directory and returns either `file://` URLs or browser-served paths.

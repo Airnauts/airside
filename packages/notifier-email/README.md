@@ -1,3 +1,12 @@
+<p align="center">
+  <a href="https://github.com/Airnauts/airside">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-dark.svg">
+      <img src="https://raw.githubusercontent.com/Airnauts/airside/main/assets/airside-logo-light.svg" alt="Airside" height="40">
+    </picture>
+  </a>
+</p>
+
 # @airnauts/airside-extension-email
 
 Email notification extension for the [Airside](https://github.com/Airnauts/airside) server. Emails the existing thread participants whenever someone replies — so reviewers are notified without a dedicated notification inbox.
