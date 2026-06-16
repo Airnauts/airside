@@ -19,22 +19,22 @@ describe('Button', () => {
       </Button>,
     )
     const cls = screen.getByRole('button').className
-    expect(cls).toContain('cmnt:bg-blue-600') // primary
-    expect(cls).toContain('cmnt:text-white') // primary
-    expect(cls).toContain('cmnt:rounded-full') // md
-    expect(cls).toContain('cmnt:px-4') // md
-    expect(cls).toContain('cmnt:font-semibold') // base
+    expect(cls).toContain('air:bg-blue-600') // primary
+    expect(cls).toContain('air:text-white') // primary
+    expect(cls).toContain('air:rounded-full') // md
+    expect(cls).toContain('air:px-4') // md
+    expect(cls).toContain('air:font-semibold') // base
   })
 
   it('merges className and lets it win on a conflicting utility', () => {
     render(
-      <Button variant="primary" size="sm" className="cmnt:bg-blue-800">
+      <Button variant="primary" size="sm" className="air:bg-blue-800">
         Go
       </Button>,
     )
     const cls = screen.getByRole('button').className
-    expect(cls).toContain('cmnt:bg-blue-800')
-    expect(cls).not.toContain('cmnt:bg-blue-600') // tailwind-merge drops the variant default
+    expect(cls).toContain('air:bg-blue-800')
+    expect(cls).not.toContain('air:bg-blue-600') // tailwind-merge drops the variant default
   })
 
   it('passes through onClick, disabled, aria-*, and data-*', () => {
@@ -52,8 +52,8 @@ describe('Button', () => {
     const btn = screen.getByTestId('x')
     expect(btn).toBeDisabled()
     expect(btn).toHaveAttribute('aria-label', 'Close')
-    expect(btn.className).toContain('cmnt:bg-transparent') // ghost
-    expect(btn.className).toContain('cmnt:w-7') // icon
+    expect(btn.className).toContain('air:bg-transparent') // ghost
+    expect(btn.className).toContain('air:w-7') // icon
   })
 
   it('fires onClick when clicked', () => {
@@ -69,16 +69,16 @@ describe('Button', () => {
 
   it('renders the link variant + inline size as a padding-less text affordance', () => {
     render(
-      <Button variant="link" size="inline" className="cmnt:text-gray-500">
+      <Button variant="link" size="inline" className="air:text-gray-500">
         Reply
       </Button>,
     )
     const cls = screen.getByRole('button', { name: 'Reply' }).className
-    expect(cls).toContain('cmnt:bg-transparent') // link
-    expect(cls).toContain('cmnt:hover:underline') // link
-    expect(cls).toContain('cmnt:p-0') // inline
-    expect(cls).toContain('cmnt:text-gray-500') // className colour override
-    expect(cls).not.toContain('cmnt:text-blue-600') // override drops the link default colour
+    expect(cls).toContain('air:bg-transparent') // link
+    expect(cls).toContain('air:hover:underline') // link
+    expect(cls).toContain('air:p-0') // inline
+    expect(cls).toContain('air:text-gray-500') // className colour override
+    expect(cls).not.toContain('air:text-blue-600') // override drops the link default colour
   })
 
   it('honors an explicit type override', () => {

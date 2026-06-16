@@ -73,9 +73,9 @@ describe('CommentList', () => {
     // bottom with a large gap. It must size to content while still scrolling when long.
     render(<CommentList loading={false} error={false} comments={[comment()]} variant="sidebar" />)
     const list = screen.getByTestId('comment-list-scroll')
-    expect(list.className).not.toContain('cmnt:flex-1')
-    expect(list.className).toContain('cmnt:min-h-0')
-    expect(list.className).toContain('cmnt:overflow-auto')
+    expect(list.className).not.toContain('air:flex-1')
+    expect(list.className).toContain('air:min-h-0')
+    expect(list.className).toContain('air:overflow-auto')
   })
 
   it('scrolls the list to the bottom when a new comment is added', () => {

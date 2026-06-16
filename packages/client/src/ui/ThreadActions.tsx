@@ -40,7 +40,7 @@ export function ThreadActions({
         <DropdownMenu.Content
           align="end"
           sideOffset={4}
-          className="cmnt:z-[var(--cmnt-z-surface)] cmnt:min-w-44 cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-lg cmnt:py-1 cmnt:text-[13px] cmnt:text-gray-900 cmnt:shadow-[0_8px_24px_rgba(0,0,0,0.14)]"
+          className="air:z-[var(--air-z-surface)] air:min-w-44 air:bg-white air:border air:border-gray-200 air:rounded-lg air:py-1 air:text-[13px] air:text-gray-900 air:shadow-[0_8px_24px_rgba(0,0,0,0.14)]"
         >
           {toolbar.map((action) => {
             const running = runningActionId === action.id
@@ -52,10 +52,10 @@ export function ThreadActions({
                   const ok = await controller.runAction(id, action.id)
                   if (!ok) toast(`${action.label} failed`)
                 }}
-                className="cmnt:flex cmnt:items-center cmnt:gap-2 cmnt:px-3 cmnt:py-1.5 cmnt:cursor-pointer cmnt:outline-none cmnt:hover:bg-gray-100 cmnt:data-[highlighted]:bg-gray-100 cmnt:data-[disabled]:opacity-50 cmnt:data-[disabled]:cursor-default"
+                className="air:flex air:items-center air:gap-2 air:px-3 air:py-1.5 air:cursor-pointer air:outline-none air:hover:bg-gray-100 air:data-[highlighted]:bg-gray-100 air:data-[disabled]:opacity-50 air:data-[disabled]:cursor-default"
               >
                 {running && (
-                  <span aria-hidden="true" className="cmnt:mr-0.5">
+                  <span aria-hidden="true" className="air:mr-0.5">
                     …
                   </span>
                 )}

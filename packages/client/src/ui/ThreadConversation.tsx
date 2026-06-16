@@ -57,33 +57,33 @@ export function ThreadConversation({
 
   const wrapper =
     variant === 'popover'
-      ? 'cmnt:w-80 cmnt:max-w-[calc(100vw-16px)] cmnt:bg-white cmnt:border cmnt:border-gray-200 cmnt:rounded-xl cmnt:overflow-hidden cmnt:text-[13px] cmnt:text-gray-900 cmnt:shadow-[0_12px_32px_rgba(0,0,0,0.18)]'
-      : 'cmnt:w-full cmnt:bg-white cmnt:text-[13px] cmnt:text-gray-900 cmnt:flex cmnt:flex-col cmnt:min-h-0 cmnt:flex-1'
+      ? 'air:w-80 air:max-w-[calc(100vw-16px)] air:bg-white air:border air:border-gray-200 air:rounded-xl air:overflow-hidden air:text-[13px] air:text-gray-900 air:shadow-[0_12px_32px_rgba(0,0,0,0.18)]'
+      : 'air:w-full air:bg-white air:text-[13px] air:text-gray-900 air:flex air:flex-col air:min-h-0 air:flex-1'
 
   return (
     <div className={wrapper}>
       <div
         className={cn(
-          'cmnt:flex cmnt:items-center cmnt:justify-between cmnt:px-3 cmnt:py-2.5 cmnt:border-b cmnt:border-[#f1f3f5]',
-          resolved && 'cmnt:bg-[#f7fdf9]',
+          'air:flex air:items-center air:justify-between air:px-3 air:py-2.5 air:border-b air:border-[#f1f3f5]',
+          resolved && 'air:bg-[#f7fdf9]',
         )}
       >
         <span
           className={cn(
-            'cmnt:text-[11px] cmnt:font-semibold',
-            resolved ? 'cmnt:text-green-600' : 'cmnt:text-blue-600',
+            'air:text-[11px] air:font-semibold',
+            resolved ? 'air:text-green-600' : 'air:text-blue-600',
           )}
         >
           {resolved
             ? '✓ Resolved'
             : `Open · ${commentCount} ${commentCount === 1 ? 'comment' : 'comments'}`}
         </span>
-        <div className="cmnt:flex cmnt:items-center cmnt:gap-1.5 cmnt:text-gray-500">
+        <div className="air:flex air:items-center air:gap-1.5 air:text-gray-500">
           <Button
             variant="outline"
             size="sm"
             onClick={toggleStatus}
-            className={cn(resolved ? 'cmnt:text-gray-500' : 'cmnt:text-green-600')}
+            className={cn(resolved ? 'air:text-gray-500' : 'air:text-green-600')}
           >
             {resolved ? '↺ Reopen' : '✓ Resolve'}
           </Button>
@@ -101,16 +101,16 @@ export function ThreadConversation({
         </div>
       </div>
       {externalLinks.length > 0 && (
-        <div className="cmnt:px-3 cmnt:py-2 cmnt:border-b cmnt:border-[#f1f3f5]">
+        <div className="air:px-3 air:py-2 air:border-b air:border-[#f1f3f5]">
           <ThreadMetadata links={externalLinks} />
         </div>
       )}
       {variant === 'sidebar' && (
-        <div className="cmnt:mx-3 cmnt:mt-2 cmnt:px-3 cmnt:py-2 cmnt:rounded-lg cmnt:bg-gray-50 cmnt:border cmnt:border-gray-200">
-          <div className="cmnt:text-[13px] cmnt:font-semibold cmnt:text-gray-900 cmnt:truncate">
+        <div className="air:mx-3 air:mt-2 air:px-3 air:py-2 air:rounded-lg air:bg-gray-50 air:border air:border-gray-200">
+          <div className="air:text-[13px] air:font-semibold air:text-gray-900 air:truncate">
             {item.pageTitle ?? item.pageUrl}
           </div>
-          <div className="cmnt:text-[11px] cmnt:text-gray-500 cmnt:truncate">{item.pageUrl}</div>
+          <div className="air:text-[11px] air:text-gray-500 air:truncate">{item.pageUrl}</div>
         </div>
       )}
       <CommentList

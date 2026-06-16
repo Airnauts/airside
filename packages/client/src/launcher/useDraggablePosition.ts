@@ -24,7 +24,7 @@ const EDGE_INSET = '16px'
 export type DraggablePosition = {
   position: LauncherPosition
   dragging: boolean
-  /** Inline placement style; spread onto a `cmnt:fixed` element. */
+  /** Inline placement style; spread onto a `air:fixed` element. */
   style: CSSProperties
   /** Start a drag from anywhere on the element. */
   onPointerDown: (e: ReactPointerEvent) => void

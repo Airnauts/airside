@@ -57,9 +57,9 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       }}
       // tip of the teardrop points at the anchor (-mt-[34px]); transform is computed → inline
       className={cn(
-        'cmnt:absolute cmnt:w-[34px] cmnt:h-[34px] cmnt:-ml-[17px] cmnt:-mt-[34px] cmnt:p-0 cmnt:border-none cmnt:bg-transparent cmnt:cursor-pointer cmnt:pointer-events-auto',
+        'air:absolute air:w-[34px] air:h-[34px] air:-ml-[17px] air:-mt-[34px] air:p-0 air:border-none air:bg-transparent air:cursor-pointer air:pointer-events-auto',
         // lift the active pin above its neighbours (still below the popover/panel surface)
-        active && 'cmnt:z-10',
+        active && 'air:z-10',
         className,
       )}
       // round to whole pixels so the teardrop tip renders crisp (no sub-pixel blur)
@@ -69,32 +69,32 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
         <span
           aria-hidden={true}
           data-testid="airside-pin-pulse"
-          className="cmnt:absolute cmnt:inset-0 cmnt:rounded-full cmnt:bg-blue-500/40 cmnt:animate-ping"
+          className="air:absolute air:inset-0 air:rounded-full air:bg-blue-500/40 air:animate-ping"
         />
       )}
       <span
         aria-hidden={true}
         className={cn(
-          'cmnt:absolute cmnt:inset-0 cmnt:border-2 cmnt:shadow-lg',
+          'air:absolute air:inset-0 air:border-2 air:shadow-lg',
           // resolved keeps a muted grey body; gray-500 (not 400) so the white ✓ stays legible now
           // that the inner white ring is gone. Active (open/selected) → reversed white + blue ring.
           resolved
-            ? 'cmnt:bg-gray-500 cmnt:border-white'
+            ? 'air:bg-gray-500 air:border-white'
             : active
-              ? 'cmnt:bg-white cmnt:border-blue-600'
-              : 'cmnt:bg-blue-600 cmnt:border-white',
+              ? 'air:bg-white air:border-blue-600'
+              : 'air:bg-blue-600 air:border-white',
         )}
         style={TEARDROP_STYLE}
       />
       <span
         aria-hidden={true}
         className={cn(
-          'cmnt:absolute cmnt:inset-0 cmnt:flex cmnt:items-center cmnt:justify-center cmnt:font-semibold',
+          'air:absolute air:inset-0 air:flex air:items-center air:justify-center air:font-semibold',
           resolved
-            ? 'cmnt:text-white cmnt:text-base'
+            ? 'air:text-white air:text-base'
             : active
-              ? 'cmnt:text-blue-600 cmnt:text-[13px]'
-              : 'cmnt:text-white cmnt:text-[13px]',
+              ? 'air:text-blue-600 air:text-[13px]'
+              : 'air:text-white air:text-[13px]',
         )}
       >
         {resolved ? '✓' : initials(item.createdBy)}
@@ -102,7 +102,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
       {!resolved && item.commentCount > 0 && (
         <span
           aria-hidden={true}
-          className="cmnt:absolute cmnt:-top-1 cmnt:-right-[6px] cmnt:min-w-[20px] cmnt:h-[20px] cmnt:rounded-[10px] cmnt:bg-gray-900 cmnt:text-white cmnt:text-[10px] cmnt:font-bold cmnt:flex cmnt:items-center cmnt:justify-center cmnt:px-[5px] cmnt:border-2 cmnt:border-white cmnt:leading-[0]"
+          className="air:absolute air:-top-1 air:-right-[6px] air:min-w-[20px] air:h-[20px] air:rounded-[10px] air:bg-gray-900 air:text-white air:text-[10px] air:font-bold air:flex air:items-center air:justify-center air:px-[5px] air:border-2 air:border-white air:leading-[0]"
         >
           {item.commentCount}
         </span>

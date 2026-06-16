@@ -65,7 +65,7 @@ export function ThreadPopover({ item, pin, client, focused, selected }: ThreadPo
             const target = e.detail.originalEvent.target as Element | null
             if (target?.closest('[data-airside-root]')) e.preventDefault()
           }}
-          className="cmnt:z-[var(--cmnt-z-surface)] cmnt:pointer-events-auto"
+          className="air:z-[var(--air-z-surface)] air:pointer-events-auto"
         >
           <ThreadConversation
             item={item}

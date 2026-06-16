@@ -19,8 +19,8 @@ export function LoginLauncher({ onLogIn }: LoginLauncherProps) {
       onPointerDown={onPointerDown}
       onClickCapture={onClickCapture}
       className={cn(
-        'cmnt:fixed cmnt:z-[var(--cmnt-z-launcher)] cmnt:flex cmnt:items-center cmnt:pointer-events-auto cmnt:select-none cmnt:touch-none',
-        dragging ? 'cmnt:cursor-grabbing' : 'cmnt:cursor-grab',
+        'air:fixed air:z-[var(--air-z-launcher)] air:flex air:items-center air:pointer-events-auto air:select-none air:touch-none',
+        dragging ? 'air:cursor-grabbing' : 'air:cursor-grab',
       )}
     >
       <Button
@@ -29,7 +29,7 @@ export function LoginLauncher({ onLogIn }: LoginLauncherProps) {
         aria-label="Log in"
         data-testid="comments-login"
         onClick={onLogIn}
-        className="cmnt:gap-1.5 cmnt:shadow-[0_6px_20px_rgba(0,0,0,0.18)]"
+        className="air:gap-1.5 air:shadow-[0_6px_20px_rgba(0,0,0,0.18)]"
       >
         <span aria-hidden={true}>🔑</span> Log In
       </Button>

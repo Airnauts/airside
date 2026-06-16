@@ -1,7 +1,7 @@
 /* Tailwind v4 entry for the widget.
    - Preflight (base reset) is intentionally NOT imported: we live in the host's
      light DOM and must not reset host elements.
-   - prefix(cmnt) namespaces every utility (cmnt:flex) and variable (--cmnt-*) so
+   - prefix(air) namespaces every utility (air:flex) and variable (--air-*) so
      our injected stylesheet cannot style the host page.
    - Utilities are emitted UN-LAYERED (note: no `layer(utilities)` below). We
      embed into the host's light DOM, and most hosts ship an un-layered reset or
@@ -10,15 +10,15 @@
      of specificity — so utilities placed in `@layer utilities` LOSE to a host's
      un-layered `button { … }` / `*,::before,::after { … }` reset, which strips
      our borders, radii, padding, margins, appearance, etc. (the light-DOM
-     isolation gap; see ADR-0024 amending ADR-0006). Emitting the `cmnt:`-prefixed
+     isolation gap; see ADR-0024 amending ADR-0006). Emitting the `air:`-prefixed
      utilities un-layered lets their `.cmnt\:…` selectors (specificity 0,1,0) win
      over the host's element/universal reset (≤ 0,0,1); the prefix still prevents
      any leak onto the host page. theme vars + our scoped base resets stay layered
      (and therefore below the utilities), preserving the intended ordering. */
 @layer theme, base, components;
 
-@import "tailwindcss/theme.css" layer(theme) prefix(cmnt);
-@import "tailwindcss/utilities.css" prefix(cmnt);
+@import "tailwindcss/theme.css" layer(theme) prefix(air);
+@import "tailwindcss/utilities.css" prefix(air);
 
 /* Pin the widget's scale to fixed px — independent of the host's root font-size.
    `rem` ALWAYS resolves against the document <html>, so a host that scales its root
@@ -69,9 +69,9 @@
      (e.g. Radix's `Dialog.Title` renders an <h2> with `1.5em`/`0.83em` margins).
      That UA margin made the panel's "Comments" header row taller than the detail
      view's button-only header. Strip it and let headings inherit type from the
-     `cmnt:` utilities, scoped to the widget root so host headings are untouched
+     `air:` utilities, scoped to the widget root so host headings are untouched
      (this mirrors Preflight's heading reset). Layered below the utilities, so an
-     explicit `cmnt:text-*`/`cmnt:font-*` still wins. */
+     explicit `air:text-*`/`air:font-*` still wins. */
   [data-airside-root] :is(h1, h2, h3, h4, h5, h6) {
     margin: 0;
     font-size: inherit;

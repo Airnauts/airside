@@ -9,14 +9,14 @@ export function ThreadMetadata({ links }: { links: ExternalLink[] }) {
   if (!links || links.length === 0) return null
 
   return (
-    <div className="cmnt:flex cmnt:flex-wrap cmnt:gap-2">
+    <div className="air:flex air:flex-wrap air:gap-2">
       {links.map((link) => (
         <a
           key={link.key ?? `${link.provider}:${link.externalId}`}
           href={link.url}
           target="_blank"
           rel="noreferrer"
-          className="cmnt:text-sm cmnt:text-blue-600 cmnt:hover:underline"
+          className="air:text-sm air:text-blue-600 air:hover:underline"
         >
           {link.label}
         </a>

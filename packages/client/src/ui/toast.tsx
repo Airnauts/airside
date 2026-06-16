@@ -33,7 +33,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               key={t.id}
               role="status"
               data-airside-toast
-              className="cmnt:pointer-events-auto cmnt:bg-gray-800 cmnt:text-white cmnt:px-3 cmnt:py-2 cmnt:rounded-lg cmnt:mt-2"
+              className="air:pointer-events-auto air:bg-gray-800 air:text-white air:px-3 air:py-2 air:rounded-lg air:mt-2"
             >
               {t.message}
             </div>

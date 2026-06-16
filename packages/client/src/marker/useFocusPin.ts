@@ -15,7 +15,7 @@ export type UseFocusPinArgs = {
   timeoutMs?: number
 }
 
-/** Pulse duration after a pin is focused. Pairs with the cmnt:animate-ping on the focused Pin. */
+/** Pulse duration after a pin is focused. Pairs with the air:animate-ping on the focused Pin. */
 const PULSE_MS = 1500
 
 export function useFocusPin({

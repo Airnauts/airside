@@ -23,7 +23,7 @@ export function StatusNotice({
     <div
       data-testid={testId}
       className={cn(
-        'cmnt:px-3 cmnt:py-6 cmnt:text-center cmnt:text-xs cmnt:text-gray-400',
+        'air:px-3 air:py-6 air:text-center air:text-xs air:text-gray-400',
         className,
       )}
     >
@@ -33,7 +33,7 @@ export function StatusNotice({
           variant="link"
           size="inline"
           onClick={onRetry}
-          className="cmnt:ml-1 cmnt:font-normal cmnt:underline"
+          className="air:ml-1 air:font-normal air:underline"
         >
           Retry
         </Button>

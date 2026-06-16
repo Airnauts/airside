@@ -37,8 +37,8 @@ describe('Composer', () => {
     // Without min-w-0, flex items keep min-width:auto and the input cannot shrink below its
     // intrinsic width — pushing Send past the w-80 popover edge (clipped by overflow-hidden).
     const input = screen.getByPlaceholderText(/reply/i)
-    expect(input.className).toContain('cmnt:min-w-0')
-    expect(input.className).toContain('cmnt:flex-1')
+    expect(input.className).toContain('air:min-w-0')
+    expect(input.className).toContain('air:flex-1')
   })
 
   it('disables Send when empty and enables it with text', () => {
