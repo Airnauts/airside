@@ -17,6 +17,9 @@ importers:
       '@airnauts/airside-core':
         specifier: workspace:*
         version: link:packages/core
+      '@airnauts/airside-integration-react':
+        specifier: workspace:*
+        version: link:packages/integration-react
       '@airnauts/airside-server':
         specifier: workspace:*
         version: link:packages/server

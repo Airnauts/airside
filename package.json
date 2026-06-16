@@ -26,6 +26,7 @@
     "@airnauts/airside-adapter-mongo": "workspace:*",
     "@airnauts/airside-client": "workspace:*",
     "@airnauts/airside-core": "workspace:*",
+    "@airnauts/airside-integration-react": "workspace:*",
     "@airnauts/airside-server": "workspace:*",
     "@airnauts/airside-storage-fs": "workspace:*",
     "@airnauts/airside-storage-vercel-blob": "workspace:*",
