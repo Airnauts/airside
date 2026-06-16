@@ -12,7 +12,7 @@
 | # | Decision | ADR |
 |---|---|---|
 | 1 | **Topology:** library-first, hosted-ready. Client talks HTTP to a configurable endpoint; integrator mounts the server in their app. Vercel/Next.js + Vercel Blob is the first-class v1 target. | ADR-0001 |
-| 2 | **Widget delivery:** self-contained vanilla `init()` engine with its own bundled React + a thin `<AirsideLayer/>` React wrapper. | ADR-0002 |
+| 2 | **Widget delivery:** self-contained vanilla `init()` engine with its own bundled React + a thin `<AirsideLayer/>` React wrapper (the wrapper ships as the separate `@airnauts/airside-integration-react` package). | ADR-0002, ADR-0040 |
 | 3 | **Adapter scope:** all seams designed; minimal concretes in v1 — **MongoDB** (Atlas/Vercel), **Vercel Blob + filesystem** storage, **Next.js/Web-standard** route handler. No auth adapter. PostgreSQL repository added in ADR-0035. | ADR-0003 |
 | 4 | **Anchoring:** composite fingerprint + scored re-match; element anchor with optional additive text `selection`. | ADR-0004, ADR-0008 |
 | 5 | **UI stack:** shadcn/ui (Radix + Tailwind), bundled in the widget. | ADR-0005 |
@@ -41,8 +41,10 @@ endpoint with no client change.
   and the pure scoring/threshold policy.
 - **`@airnauts/airside-client`** — the widget engine: `init()` (vanilla, light-DOM
   mount), the React UI (shadcn), the anchoring *runtime* (DOM capture / re-match
-  / overlay), and the API client. Subpath **`@airnauts/airside-client/react`** exports the
-  thin `<AirsideLayer/>` wrapper (tree-shaken away if unused).
+  / overlay), and the API client. The React host wrapper ships as a separate package
+  (`@airnauts/airside-integration-react` — see below).
+- **`@airnauts/airside-integration-react`** — the React host integration: the thin
+  `<AirsideLayer/>` wrapper that calls `init()` in an effect (ships `'use client'`).
 - **`@airnauts/airside-server`** — the Web-standard `Request → Response` core + business
   logic; depends only on adapter interfaces. Subpath **`@airnauts/airside-server/node`**
   is a generic Node↔Web bridge (`nodeRequestToWeb` / `webToNode`) for mounting on any
@@ -79,8 +81,8 @@ pointer-events: none`) and renders the widget into it in the **light DOM**, with
 the widget's own bundled React. Isolation is via `all: revert` on the root,
 Tailwind with preflight disabled, and a scoped class prefix; Radix portals/menus/
 toasts render into a single high-z-index portal container inside the host. The
-`<AirsideLayer/>` React wrapper simply calls `init()` in an effect. The widget
-never reads the host's React/runtime state — it only speaks HTTP.
+`<AirsideLayer/>` React wrapper (in `@airnauts/airside-integration-react`) simply calls
+`init()` in an effect. The widget never reads the host's React/runtime state — it only speaks HTTP.
 
 **Layers.** (1) an **overlay** layer rendering pin dots + text-range highlights,
 absolutely positioned over the host page, with `pointer-events` only on the pins

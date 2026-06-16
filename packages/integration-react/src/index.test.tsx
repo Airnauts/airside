@@ -1,8 +1,8 @@
 import { render, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { AirsideLayer, packageName } from './react'
+import { AirsideLayer, packageName } from './index'
 
-describe('@airnauts/airside-client/react', () => {
+describe('@airnauts/airside-integration-react', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     localStorage.clear()
@@ -10,8 +10,8 @@ describe('@airnauts/airside-client/react', () => {
   })
   afterEach(() => history.replaceState({}, '', '/'))
 
-  it('exposes its subpath package name', () => {
-    expect(packageName).toBe('@airnauts/airside-client/react')
+  it('exposes its package name', () => {
+    expect(packageName).toBe('@airnauts/airside-integration-react')
   })
 
   it('mounts the widget on render and removes it on unmount', async () => {

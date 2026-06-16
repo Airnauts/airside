@@ -10,7 +10,7 @@ import assert from 'node:assert/strict'
 const entries = [
   ['@airnauts/airside-core', 'normalizePageKey'],
   ['@airnauts/airside-client', 'packageName'],
-  ['@airnauts/airside-client/react', 'packageName'],
+  ['@airnauts/airside-integration-react', 'packageName'],
   ['@airnauts/airside-server', 'VERSION'],
   ['@airnauts/airside-server/dev', 'createDevServer'],
   ['@airnauts/airside-server/node', 'nodeRequestToWeb'],

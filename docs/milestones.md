@@ -65,7 +65,7 @@ bundle-size budget harness (empty target).
 **Depends on.** —
 
 **Exit criteria.** `pnpm i && pnpm build && pnpm test && pnpm lint` green on empty
-packages; subpath exports resolve (`@airnauts/airside-client/react`, `@airnauts/airside-server/next`).
+packages; subpath exports resolve (`@airnauts/airside-integration-react`, `@airnauts/airside-server/next`).
 
 **Refs.** Spec §2.
 

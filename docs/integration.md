@@ -47,7 +47,7 @@ In a client component rendered from your root layout:
 
 ```tsx
 'use client'
-import { AirsideLayer } from '@airnauts/airside-client/react'
+import { AirsideLayer } from '@airnauts/airside-integration-next/client'
 
 export function AirsideMount() {
   return <AirsideLayer airsideKey="dev-key" endpoint="/api/airside" />

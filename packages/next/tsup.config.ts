@@ -1,13 +1,26 @@
 import { defineConfig } from 'tsup'
 
-export default defineConfig({
-  entry: { index: 'src/index.ts' },
-  format: ['esm'],
-  dts: false,
-  sourcemap: true,
-  outDir: 'dist',
-  // Remove stale .js/.d.ts before the build. NOTE: tsup's clean does NOT
-  // delete the dotfile dist/.tsbuildinfo, so declaration re-emit is forced by
-  // `tsc --build --force` in package.json, not by this clean (ADR-0023).
-  clean: true,
-})
+export default defineConfig([
+  {
+    // Server route handlers (App + Pages Router). Node-side, no React.
+    entry: { index: 'src/index.ts' },
+    format: ['esm'],
+    dts: false,
+    sourcemap: true,
+    outDir: 'dist',
+    clean: false,
+  },
+  {
+    // Client mount re-export. Browser module; ships 'use client' so it can be
+    // imported from an RSC tree. React + the React package stay external.
+    entry: { client: 'src/client.ts' },
+    format: ['esm'],
+    dts: false,
+    sourcemap: true,
+    outDir: 'dist',
+    platform: 'browser',
+    external: ['react', '@airnauts/airside-integration-react'],
+    banner: { js: "'use client'" },
+    clean: false,
+  },
+])

@@ -1,15 +1,15 @@
 {
-  "name": "@airnauts/airside-integration-next",
+  "name": "@airnauts/airside-integration-react",
   "version": "0.8.2",
-  "description": "Next.js App and Pages Router integration for the Airnauts commenting tool server.",
+  "description": "React mount (<AirsideLayer/>) for embedding the Airside commenting widget in any React host.",
   "keywords": [
     "comments",
     "commenting",
     "annotations",
     "feedback",
     "airnauts",
-    "next",
-    "nextjs"
+    "react",
+    "widget"
   ],
   "license": "MIT",
   "author": "Airnauts",
@@ -17,7 +17,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Airnauts/airside.git",
-    "directory": "packages/next"
+    "directory": "packages/integration-react"
   },
   "bugs": {
     "url": "https://github.com/Airnauts/airside/issues"
@@ -27,10 +27,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    },
-    "./client": {
-      "types": "./dist/client.d.ts",
-      "import": "./dist/client.js"
     }
   },
   "files": [
@@ -43,20 +39,24 @@
     "access": "public"
   },
   "scripts": {
-    "build": "rm -rf dist && tsup && tsc --build --force",
+    "build": "tsup && tsc --build --force",
     "typecheck": "tsc --build",
     "test": "vitest run"
   },
   "dependencies": {
-    "@airnauts/airside-integration-react": "workspace:^",
-    "@airnauts/airside-server": "workspace:^"
+    "@airnauts/airside-client": "workspace:^"
   },
   "peerDependencies": {
     "react": "^19.0.0"
   },
   "devDependencies": {
-    "@airnauts/airside-adapter-memory": "workspace:*",
-    "@airnauts/airside-core": "workspace:*",
-    "@airnauts/airside-test-support": "workspace:*"
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^26.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
