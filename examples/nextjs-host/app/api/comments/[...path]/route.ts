@@ -41,9 +41,9 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
           from: process.env.RESEND_FROM ?? 'onboarding@resend.dev',
         })
       : []),
-    // Slack notifications when COMMENTS_SLACK_WEBHOOK_URL is set, else none.
-    ...(process.env.COMMENTS_SLACK_WEBHOOK_URL
-      ? slackExtension({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL })
+    // Slack notifications when AIRSIDE_SLACK_WEBHOOK_URL is set, else none.
+    ...(process.env.AIRSIDE_SLACK_WEBHOOK_URL
+      ? slackExtension({ webhookUrl: process.env.AIRSIDE_SLACK_WEBHOOK_URL })
       : []),
     // "Create Jira issue" thread action when JIRA_API_TOKEN is set, else none.
     // The other fields are required too; jiraExtension throws fast if any is blank.

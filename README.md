@@ -29,7 +29,7 @@ import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
-  secretKey: process.env.COMMENTS_SECRET!,
+  secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   repository: mongoRepository({ uri: process.env.MONGODB_URI! }),
@@ -46,7 +46,7 @@ In your root layout:
 import { CommentsLayer } from '@airnauts/comments-client/react'
 
 export function CommentsMount() {
-  return <CommentsLayer commentsKey={process.env.NEXT_PUBLIC_COMMENTS_KEY!} endpoint="/api/comments" />
+  return <CommentsLayer commentsKey={process.env.NEXT_PUBLIC_AIRSIDE_KEY!} endpoint="/api/comments" />
 }
 ```
 
@@ -102,7 +102,7 @@ import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 export const config = { api: { bodyParser: false } }
 
 export default createCommentsPagesRoute({
-  secretKey: process.env.COMMENTS_SECRET ?? 'dev-key',
+  secretKey: process.env.AIRSIDE_SECRET ?? 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
   repository: createMemoryRepository(),
@@ -133,7 +133,7 @@ export function App() {
     <>
       {/* your app */}
       <CommentsLayer
-        commentsKey={import.meta.env.VITE_COMMENTS_KEY}
+        commentsKey={import.meta.env.VITE_AIRSIDE_KEY}
         endpoint="https://api.example.com/api/comments"
       />
     </>

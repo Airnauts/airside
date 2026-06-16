@@ -26,7 +26,7 @@ import { resendTransport } from '@airnauts/comments-notifier-email/resend'
 createCommentsServer({
   repository,
   storage,
-  secretKey: process.env.COMMENTS_SECRET!,
+  secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   extensions: emailExtension({

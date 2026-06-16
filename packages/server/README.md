@@ -16,7 +16,7 @@ import { createMemoryRepository } from '@airnauts/comments-adapter-memory'
 import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 
 const server = createCommentsServer({
-  secretKey: process.env.COMMENTS_SECRET!,
+  secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   repository: createMemoryRepository(),

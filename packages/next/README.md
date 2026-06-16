@@ -20,7 +20,7 @@ import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
-  secretKey: process.env.COMMENTS_SECRET!,
+  secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   repository: mongoRepository({ uri: process.env.MONGODB_URI! }),
@@ -59,7 +59,7 @@ import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 export const config = { api: { bodyParser: false } }
 
 export default createCommentsPagesRoute({
-  secretKey: process.env.COMMENTS_SECRET!,
+  secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   repository: mongoRepository({ uri: process.env.MONGODB_URI! }),
@@ -94,7 +94,7 @@ Accepts the same options as `createCommentsAppRoute`. Returns a single Node.js A
 
 | Env var | Used by | Description |
 |---|---|---|
-| `COMMENTS_SECRET` | `secretKey` | Shared bearer token (required in production) |
+| `AIRSIDE_SECRET` | `secretKey` | Shared bearer token (required in production) |
 | `MONGODB_URI` | `mongoRepository` | MongoDB Atlas connection string |
 | `BLOB_READ_WRITE_TOKEN` | `createVercelBlobStorage` | Vercel Blob token |
 

@@ -104,7 +104,7 @@ import { createFileSystemStorage } from '@airnauts/comments-storage-fs'
 import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
-  secretKey: process.env.COMMENTS_SECRET ?? 'dev-key',
+  secretKey: process.env.AIRSIDE_SECRET ?? 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
   repository: process.env.MONGODB_URI
@@ -132,7 +132,7 @@ createCommentsServer({
   repository,
   storage,
   extensions: [
-    ...slackExtension({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! }),
+    ...slackExtension({ webhookUrl: process.env.AIRSIDE_SLACK_WEBHOOK_URL! }),
     ...jiraExtension({ siteUrl, email, apiToken, projectKey }),
   ],
 })
@@ -151,7 +151,7 @@ the comment text, and a link to the page.
 2. **Add New Webhook to Workspace**, choose the channel, and copy the
    `https://hooks.slack.com/services/…` URL. The channel is baked into the URL — there is
    no separate channel name or bot token.
-3. Set it as `COMMENTS_SLACK_WEBHOOK_URL` and wire the extension (note the spread — the
+3. Set it as `AIRSIDE_SLACK_WEBHOOK_URL` and wire the extension (note the spread — the
    factory returns an array):
 
 ```ts
@@ -160,7 +160,7 @@ import { slackExtension } from '@airnauts/comments-notifier-slack'
 createCommentsServer({
   repository,
   storage,
-  extensions: [...slackExtension({ webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL! })],
+  extensions: [...slackExtension({ webhookUrl: process.env.AIRSIDE_SLACK_WEBHOOK_URL! })],
 })
 ```
 

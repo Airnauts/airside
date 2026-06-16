@@ -21,11 +21,11 @@ import { slackExtension } from '@airnauts/comments-notifier-slack'
 createCommentsServer({
   repository,
   storage,
-  secretKey: process.env.COMMENTS_SECRET!,
+  secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
   extensions: slackExtension({
-    webhookUrl: process.env.COMMENTS_SLACK_WEBHOOK_URL!,
+    webhookUrl: process.env.AIRSIDE_SLACK_WEBHOOK_URL!,
   }),
 })
 ```
@@ -64,7 +64,7 @@ Renders a `NotificationEvent` as a Slack Block Kit message with a plain-text fal
 
 | Env var | Description |
 |---|---|
-| `COMMENTS_SLACK_WEBHOOK_URL` | Slack Incoming Webhook URL |
+| `AIRSIDE_SLACK_WEBHOOK_URL` | Slack Incoming Webhook URL |
 
 ## Requirements
 

@@ -19,10 +19,10 @@ The v1 reference deployment (architecture §2; ADR-0001, ADR-0003). It mounts
 | Var | Purpose |
 |---|---|
 | `MONGODB_URI` | Atlas connection string |
-| `COMMENTS_DB_NAME` | database name (e.g. `comments`) |
+| `AIRSIDE_DB_NAME` | database name (e.g. `comments`) |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob token (read automatically by `@vercel/blob`) |
-| `COMMENTS_SECRET_KEY` | the capability key — the value the widget sends |
-| `COMMENTS_ALLOWED_ORIGINS` | comma-separated origin allowlist |
+| `AIRSIDE_SECRET_KEY` | the capability key — the value the widget sends |
+| `AIRSIDE_ALLOWED_ORIGINS` | comma-separated origin allowlist |
 
 ## 3. Connect once, reuse across invocations
 
@@ -40,7 +40,7 @@ import { MongoClient } from 'mongodb'
 const client = new MongoClient(process.env.MONGODB_URI!)
 const dbReady = (async () => {
   await client.connect()
-  const db = client.db(process.env.COMMENTS_DB_NAME)
+  const db = client.db(process.env.AIRSIDE_DB_NAME)
   await ensureIndexes(db)
   return db
 })()
@@ -48,9 +48,9 @@ const dbReady = (async () => {
 export async function getServer() {
   const db = await dbReady
   return createCommentsServer({
-    secretKey: process.env.COMMENTS_SECRET_KEY!,
+    secretKey: process.env.AIRSIDE_SECRET_KEY!,
     projectId: 'default', // v1: one project per mount (architecture §5)
-    allowedOrigins: (process.env.COMMENTS_ALLOWED_ORIGINS ?? '')
+    allowedOrigins: (process.env.AIRSIDE_ALLOWED_ORIGINS ?? '')
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean),
@@ -69,7 +69,7 @@ import { mongoRepository } from '@airnauts/comments-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/comments-storage-vercel-blob'
 
 export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
-  secretKey: process.env.COMMENTS_SECRET!,
+  secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: [process.env.ALLOWED_ORIGIN!],
   repository: mongoRepository({ uri: process.env.MONGODB_URI! }),
@@ -81,7 +81,7 @@ export const { GET, POST, PATCH, OPTIONS } = createCommentsAppRoute({
 
 ```bash
 curl -i -X POST https://YOUR_APP/api/comments/threads \
-  -H "x-airside-key: $COMMENTS_SECRET_KEY" \
+  -H "x-airside-key: $AIRSIDE_SECRET_KEY" \
   -H "origin: https://YOUR_APP" \
   -H 'content-type: application/json' \
   -d '{
