@@ -1,6 +1,6 @@
 # @airnauts/airside-server
 
-Server runtime for the [Airnauts commenting tool](https://github.com/Airnauts/airside): Web-standard `Request → Response` HTTP handler, use cases, CORS/security, and the adapter interfaces for persistence and storage.
+Server runtime for [Airside](https://github.com/Airnauts/airside): Web-standard `Request → Response` HTTP handler, use cases, CORS/security, and the adapter interfaces for persistence and storage.
 
 ## Installation
 

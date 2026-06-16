@@ -1,6 +1,6 @@
 # @airnauts/airside-adapter-postgres
 
-PostgreSQL repository adapter for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server. Stores threads in a hybrid relational + `jsonb` schema; driver-agnostic via a host-supplied `query()` executor.
+PostgreSQL repository adapter for the [Airside](https://github.com/Airnauts/airside) server. Stores threads in a hybrid relational + `jsonb` schema; driver-agnostic via a host-supplied `query()` executor.
 
 ## Installation
 

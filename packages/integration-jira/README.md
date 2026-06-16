@@ -1,6 +1,6 @@
 # @airnauts/airside-extension-jira
 
-Jira Cloud thread-action extension for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server. Adds a **"Create Jira issue"** button to each comment thread; clicking it creates a Jira Cloud issue pre-filled with the thread content and stores the issue link back on the thread.
+Jira Cloud thread-action extension for the [Airside](https://github.com/Airnauts/airside) server. Adds a **"Create Jira issue"** button to each comment thread; clicking it creates a Jira Cloud issue pre-filled with the thread content and stores the issue link back on the thread.
 
 ## Installation
 

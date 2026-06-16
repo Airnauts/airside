@@ -1,6 +1,6 @@
 # @airnauts/airside-adapter-mongo
 
-MongoDB repository adapter for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server. Persists threads and attachments to a MongoDB Atlas (or self-hosted) database.
+MongoDB repository adapter for the [Airside](https://github.com/Airnauts/airside) server. Persists threads and attachments to a MongoDB Atlas (or self-hosted) database.
 
 ## Installation
 

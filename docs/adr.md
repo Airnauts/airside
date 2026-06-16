@@ -1312,3 +1312,20 @@ the rare single-backend case at the expense of the multi-backend pattern the doc
 `@deprecated` aliases for one release to ease migration, then are removed in the
 following minor. The mongo/postgres factory names and all `create*` server/Next names
 are unchanged. Refines the adapter-construction convention of ADR-0021.
+
+## ADR-0038 — Rebrand `comments` → `airside`
+
+**Date:** 2026-06-16
+**Status:** accepted (supersedes the package-naming portion of ADR-0020)
+
+**Context.** The product was published under the generic `comments` brand (`@airnauts/comments-*`, repo `commenting-tool`, `cmnt:` CSS prefix). "comments" is both our brand *and* the domain noun, which muddied identity and SEO and tied us to a generic name. While still pre-1.0 (one production consumer), a clean break is cheap. "Airside" plays on "aside" (a remark to the side) and the aviation term, tying to the Airnauts brand.
+
+**Decision.** Full rebrand of the brand/namespace, keeping the npm scope `@airnauts`:
+- Packages `@airnauts/comments-*` → `@airnauts/airside-*`; the three extension packages are recategorized to `@airnauts/airside-extension-{slack,email,jira}`.
+- Every brand-carrying token moves: Tailwind prefix `cmnt:` → `air:`, CSS vars `--cmnt-*` → `--air-*`, `data-comments-*` → `data-airside-*`, storage keys `comments:*`/`cmnt:focus` → `airside:*`, query params `comments-key`/`comments-thread` → `airside-*`, header `x-comments-key` → `x-airside-key`, env `COMMENTS_*` → `AIRSIDE_*`, public JS symbols (`comments.init`→`airside.init`, `<CommentsLayer>`→`<AirsideLayer>`, `CommentsHandle`→`AirsideHandle`, `commentsKey`→`airsideKey`, `createComments*Route`→`createAirside*Route`, `CommentsServer`→`AirsideServer`).
+- The **domain** is untouched: the `Comment` type/schema, `comments[]` fields, the `comments` Mongo database name, and "Add comment"/"Reply" UI copy stay.
+- GitHub repo renamed in place `Airnauts/commenting-tool` → `Airnauts/airside` (auto-redirects).
+- The old `@airnauts/comments-*` packages are **deprecated with a pointer** to their airside replacements — no shim, no republish.
+- Versioning **continues the line**: the final `comments` release was `0.7.0`; airside debuts at `0.8.0` (one breaking minor under the pre-1.0 policy), same code and maturity.
+
+**Consequences.** Existing embeds lose persisted state on upgrade (identity re-prompt, launcher position reset, one extra activation) — an accepted one-time cost vs. a permanent dual-read shim. Every internal `workspace:^` dep flips in one change, so the Changesets-only publish path is load-bearing (a hand `npm publish` would leak `workspace:^`). The one published consumer (lear-frontend) breaks and needs a cross-repo follow-up (new package names, `airsideKey`, `?airside-key`). ADR-0020's package-naming decision is superseded; its npm-scope and MIT/Changesets decisions stand.

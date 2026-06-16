@@ -1,6 +1,6 @@
 # @airnauts/airside-adapter-memory
 
-In-memory `Repository` adapter for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server — ephemeral, process-local storage for local development and tests. State is lost when the process exits; swap in a real persistence adapter for production.
+In-memory `Repository` adapter for the [Airside](https://github.com/Airnauts/airside) server — ephemeral, process-local storage for local development and tests. State is lost when the process exits; swap in a real persistence adapter for production.
 
 ## Installation
 

@@ -1,6 +1,6 @@
 # @airnauts/airside-client
 
-Embeddable commenting widget and React wrapper for the [Airnauts commenting tool](https://github.com/Airnauts/airside). Mounts a light-DOM, self-contained commenting overlay onto any web page — no iframe, no Shadow DOM.
+Embeddable commenting widget and React wrapper for [Airside](https://github.com/Airnauts/airside). Mounts a light-DOM, self-contained commenting overlay onto any web page — no iframe, no Shadow DOM.
 
 ## Installation
 

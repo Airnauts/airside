@@ -1,6 +1,6 @@
 # @airnauts/airside-extension-slack
 
-Slack Incoming Webhook notification extension for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server. Posts a Block Kit message to a Slack channel whenever a reviewer creates a thread or adds a reply.
+Slack Incoming Webhook notification extension for the [Airside](https://github.com/Airnauts/airside) server. Posts a Block Kit message to a Slack channel whenever a reviewer creates a thread or adds a reply.
 
 ## Installation
 

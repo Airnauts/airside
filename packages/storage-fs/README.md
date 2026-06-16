@@ -1,6 +1,6 @@
 # @airnauts/airside-storage-fs
 
-Filesystem attachment-storage adapter for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server. Writes uploaded images to a local directory and returns either `file://` URLs or browser-served paths.
+Filesystem attachment-storage adapter for the [Airside](https://github.com/Airnauts/airside) server. Writes uploaded images to a local directory and returns either `file://` URLs or browser-served paths.
 
 ## Installation
 

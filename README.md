@@ -1,4 +1,4 @@
-# Comments — Embeddable Commenting Tool
+# Airside — Embeddable Commenting Tool
 
 A self-contained, open-source commenting overlay you host yourself. Drop the widget into any web page — Next.js, plain HTML, or anything in between — and reviewers can leave threaded, DOM-anchored comments without touching your page design or sending data to a third-party service.
 
@@ -286,6 +286,6 @@ MIT
 
 This tool is built and maintained by [Airnauts](https://www.airnauts.com/) — a digital product studio that designs and engineers web and mobile products end to end, from early concept and UX through to production software.
 
-We built this commenting tool to solve a recurring problem in our own client work: gathering precise, in-context feedback on live web pages without bolting on a heavyweight third-party SaaS. We open-sourced it so other teams can host the same review workflow on their own infrastructure, keep their data in their own database, and adapt the widget to their own product.
+We built Airside to solve a recurring problem in our own client work: gathering precise, in-context feedback on live web pages without bolting on a heavyweight third-party SaaS. We open-sourced it so other teams can host the same review workflow on their own infrastructure, keep their data in their own database, and adapt the widget to their own product.
 
 If you'd like help integrating it, or you're looking for a partner to design and build your next product, get in touch at [airnauts.com](https://www.airnauts.com/).

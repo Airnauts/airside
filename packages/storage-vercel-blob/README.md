@@ -1,6 +1,6 @@
 # @airnauts/airside-storage-vercel-blob
 
-Vercel Blob attachment-storage adapter for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server. Uploads images to Vercel Blob and returns public CDN URLs.
+Vercel Blob attachment-storage adapter for the [Airside](https://github.com/Airnauts/airside) server. Uploads images to Vercel Blob and returns public CDN URLs.
 
 ## Installation
 

@@ -1,6 +1,6 @@
 # @airnauts/airside-core
 
-Framework-agnostic core for the [Airnauts commenting tool](https://github.com/Airnauts/airside): Zod schemas, page-key normalization, the anchor scoring/threshold policy, and the HTTP contract types shared by the client and server.
+Framework-agnostic core for [Airside](https://github.com/Airnauts/airside): Zod schemas, page-key normalization, the anchor scoring/threshold policy, and the HTTP contract types shared by the client and server.
 
 Most consumers get this transitively via `@airnauts/airside-client` or `@airnauts/airside-server`. Install it directly only when you need the shared types in code that sits outside those packages.
 

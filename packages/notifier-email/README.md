@@ -1,6 +1,6 @@
 # @airnauts/airside-extension-email
 
-Email notification extension for the [Airnauts commenting tool](https://github.com/Airnauts/airside) server. Emails the existing thread participants whenever someone replies — so reviewers are notified without a dedicated notification inbox.
+Email notification extension for the [Airside](https://github.com/Airnauts/airside) server. Emails the existing thread participants whenever someone replies — so reviewers are notified without a dedicated notification inbox.
 
 ## Installation
 
@@ -31,7 +31,7 @@ createAirsideServer({
   allowedOrigins: ['https://my-app.example.com'],
   extensions: emailExtension({
     transport: resendTransport({ apiKey: process.env.RESEND_API_KEY! }),
-    from: 'Comments <noreply@acme.com>',
+    from: 'Airside <noreply@acme.com>',
   }),
 })
 ```

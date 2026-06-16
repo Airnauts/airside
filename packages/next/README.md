@@ -1,6 +1,6 @@
 # @airnauts/airside-next
 
-Next.js App and Pages Router integration for the [Airnauts commenting tool](https://github.com/Airnauts/airside). Wraps `createAirsideServer` and the Next.js handler glue into single one-call integrations: `createAirsideAppRoute(config)` for the App Router and `createAirsidePagesRoute(config)` for the Pages Router.
+Next.js App and Pages Router integration for [Airside](https://github.com/Airnauts/airside). Wraps `createAirsideServer` and the Next.js handler glue into single one-call integrations: `createAirsideAppRoute(config)` for the App Router and `createAirsidePagesRoute(config)` for the Pages Router.
 
 ## Installation
 
