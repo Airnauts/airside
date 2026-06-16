@@ -1,11 +1,11 @@
 import { join } from 'node:path'
 import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 import { mongoRepository } from '@airnauts/airside-adapter-mongo'
-import { jiraExtension } from '@airnauts/airside-extension-jira'
-import { createAirsideAppRoute } from '@airnauts/airside-next'
 import { emailExtension } from '@airnauts/airside-extension-email'
 import { resendTransport } from '@airnauts/airside-extension-email/resend'
+import { jiraExtension } from '@airnauts/airside-extension-jira'
 import { slackExtension } from '@airnauts/airside-extension-slack'
+import { createAirsideAppRoute } from '@airnauts/airside-next'
 import { createFileSystemStorage } from '@airnauts/airside-storage-fs'
 import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 

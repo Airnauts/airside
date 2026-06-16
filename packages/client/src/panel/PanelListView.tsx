@@ -116,9 +116,7 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
           </div>
         )}
 
-        {state.loading && (
-          <StatusNotice data-testid="airside-panel-loading">Loading…</StatusNotice>
-        )}
+        {state.loading && <StatusNotice data-testid="airside-panel-loading">Loading…</StatusNotice>}
 
         {state.error && !state.loading && (
           <StatusNotice className="air:text-gray-500" onRetry={() => void panel.refresh()}>

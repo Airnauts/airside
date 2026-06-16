@@ -30,9 +30,7 @@ export function PendingAttachment({
       {previewUrl ? (
         <img src={previewUrl} alt={name} className="air:w-full air:h-full air:object-cover" />
       ) : (
-        <span className="air:text-slate-500 air:text-[11px] air:p-1 air:text-center">
-          {name}
-        </span>
+        <span className="air:text-slate-500 air:text-[11px] air:p-1 air:text-center">{name}</span>
       )}
       {status === 'uploading' && (
         <div

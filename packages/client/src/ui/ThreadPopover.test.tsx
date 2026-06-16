@@ -355,9 +355,7 @@ describe('ThreadPopover', () => {
     // Resolve from the popover.
     fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
     // WITHOUT any refresh/re-ingest: the pin is still rendered (open-exemption) and shows ✓...
-    await waitFor(() =>
-      expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i),
-    )
+    await waitFor(() => expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i))
     expect(screen.getByTestId('airside-pin')).toHaveTextContent('✓')
     // ...and the popover stays open with a Resolved header.
     expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument()

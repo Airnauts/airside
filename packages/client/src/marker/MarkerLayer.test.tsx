@@ -278,9 +278,7 @@ describe('MarkerLayer mutation wiring', () => {
     fireEvent.click(pin)
     await waitFor(() => expect(screen.getByText('the comment')).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
-    await waitFor(() =>
-      expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i),
-    )
+    await waitFor(() => expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i))
     // Now simulate what the live app does: the popover's own content change is a DOM mutation
     // under document.body → rematchAll() re-emits from the runtime's cached list. Without the
     // runtime status patch, this re-ingest carries stale 'open' and reverts the pin.
@@ -288,9 +286,7 @@ describe('MarkerLayer mutation wiring', () => {
     // Also exercise reposition (scroll/resize path), which re-emits the cached items too.
     spies.fireResize()
     // The pin must STAY resolved (✓) — no clobber back to the blue "open" avatar.
-    await waitFor(() =>
-      expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i),
-    )
+    await waitFor(() => expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i))
     expect(screen.getByTestId('airside-pin')).toHaveTextContent('✓')
     // listThreads must not have been called again (no refetch; cache patch sufficed).
     expect(c.listThreads).toHaveBeenCalledTimes(1)

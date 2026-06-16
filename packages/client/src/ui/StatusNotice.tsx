@@ -22,10 +22,7 @@ export function StatusNotice({
   return (
     <div
       data-testid={testId}
-      className={cn(
-        'air:px-3 air:py-6 air:text-center air:text-xs air:text-gray-400',
-        className,
-      )}
+      className={cn('air:px-3 air:py-6 air:text-center air:text-xs air:text-gray-400', className)}
     >
       {children}
       {onRetry && (

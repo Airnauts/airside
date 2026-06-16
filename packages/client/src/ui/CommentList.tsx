@@ -97,9 +97,7 @@ export function CommentList({
           <div className="air:min-w-0">
             <div className="air:flex air:gap-1.5 air:items-baseline">
               <b className="air:text-xs">{c.author.name ?? c.author.email}</b>
-              <span className="air:text-gray-400 air:text-[11px]">
-                {relativeTime(c.createdAt)}
-              </span>
+              <span className="air:text-gray-400 air:text-[11px]">{relativeTime(c.createdAt)}</span>
             </div>
             <div className="air:mt-0.5 air:leading-relaxed air:text-[13px] air:whitespace-pre-wrap">
               {c.text}
