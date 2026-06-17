@@ -119,7 +119,7 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # Publishes the 8 public @airnauts/airside-* packages whose version isn't yet on npm.
+      # Publishes the 13 public @airnauts/airside-* packages whose version isn't yet on npm.
       - name: Publish to npm
         run: pnpm exec changeset publish
         env:
