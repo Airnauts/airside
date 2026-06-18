@@ -13,11 +13,13 @@ import { usePanelController, usePanelState } from './PanelProvider'
 export type PanelDrawerProps = {
   resolvePageKey: (url: string) => string
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
+  /** Show the "Powered by Airside" footer in the list pane (opt-in via init). */
+  branding: boolean
 }
 
 /** The right-hand comments drawer: a non-modal Dialog shell that shows either the
  *  cross-page thread list or a single thread's detail pane. */
-export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
+export function PanelDrawer({ resolvePageKey, client, branding }: PanelDrawerProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
@@ -77,7 +79,7 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
               onBack={() => panel.back()}
             />
           ) : (
-            <PanelListView onSelect={onSelect} />
+            <PanelListView onSelect={onSelect} branding={branding} />
           )}
         </Dialog.Content>
       </Dialog.Portal>
