@@ -7,7 +7,9 @@ Publishing is **automatic on `main`**: the `publish` job in
 on npm**, so a push without a version bump is a safe no-op. Versioning is managed by
 [Changesets](https://github.com/changesets/changesets).
 
-**In short: to release, land a version bump on `main`.** No tags required.
+**In short: to release, land a version bump on `main`.** The `publish` job also cuts a
+single `vX.Y.Z` git tag for the release (see [Tagging](#tagging) below) — you don't tag by
+hand.
 
 ## Prerequisite
 
@@ -45,11 +47,25 @@ npm view @airnauts/airside-core version
    git add -A && git commit -m "chore: version packages"
    ```
 4. Once that lands on `main` and **ci + e2e** are green, the `publish` job publishes the
-   packages whose version isn't yet on the registry. No tagging step.
+   packages whose version isn't yet on the registry, then tags the release (next section).
 
 > Tip: keep the version bump (`pnpm version-packages`) as its **own** commit so the
 > publishing push is a deliberate, reviewable step rather than a side effect of unrelated
 > work.
+
+## Tagging
+
+After `changeset publish` succeeds, the `publish` job cuts a **single annotated `vX.Y.Z`
+tag** and pushes it to `origin` (ADR-0041). The 13 packages are a Changesets `fixed`
+group sharing one version, so one tag — taken from `packages/core/package.json` — names
+the whole release; we don't emit the per-package `pkg@version` tags Changesets creates by
+default. The step is idempotent: it skips when `vX.Y.Z` already exists on `origin`, so it
+tags each version exactly once even though the job runs on every push to `main`.
+
+> One-time backfill: `0.9.0` was published before this step existed, so it has no
+> `v0.9.0` tag. The next push to `main` will create `v0.9.0` against the then-current
+> `main` tip — harmless, just slightly after the fact. Every version from the next bump
+> on is tagged at publish time.
 
 > **Never run `npm publish` from a package directory.** It bypasses Changesets and
 > publishes the unresolved `workspace:^` dependency ranges, breaking installs. Release

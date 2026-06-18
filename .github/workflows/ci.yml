@@ -93,7 +93,7 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write # push the vX.Y.Z release tag
       id-token: write # npm provenance
     concurrency:
       group: npm-publish
@@ -125,3 +125,19 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # Cut a single vX.Y.Z tag for the release. The 13 packages are a Changesets `fixed`
+      # group, so they share one version — core is the canonical source. The tag-existence
+      # check is the idempotency gate: this job runs on every push to main, but a version is
+      # only tagged once (and only after the publish step above succeeded).
+      - name: Tag release
+        run: |
+          V=$(node -p "require('./packages/core/package.json').version")
+          TAG="v$V"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "$TAG already exists on origin — nothing to tag."
+          else
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
+            echo "Created and pushed $TAG."
+          fi

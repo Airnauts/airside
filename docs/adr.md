@@ -1378,3 +1378,39 @@ the only external consumer (`lear-frontend`) is under our control. Non-Next Reac
 now depend only on `@airnauts/airside-integration-react`. This refines the widget-delivery
 shape recorded in ADR-0002 (the thin `<AirsideLayer/>` wrapper moves out of the client
 subpath); ADR-0002 otherwise stands.
+
+## ADR-0041 — Tag each release with a single `vX.Y.Z`, cut in CI on publish
+
+- **Date:** 2026-06-18
+- **Status:** accepted
+
+**Context.** Through `0.6.0` the repository carried per-package git tags
+(`@airnauts/comments-core@0.6.0`, …), a side effect of running `changeset publish`
+locally and pushing its tags. When publishing moved into the CI `publish` job (ADR-0020
+machinery), `changeset publish` still creates those tags — but on the ephemeral runner,
+which never `git push`es them, so they were silently discarded. Releases `0.7.0` through
+`0.9.0` shipped to npm untagged. RELEASING.md had codified this as "No tags required."
+Losing tags means no `git`-side record of what commit each published version corresponds
+to, and nothing to anchor future release notes or `git describe` against.
+
+**Decision.** Have the `publish` job cut **one annotated `vX.Y.Z` tag per release** and
+push it, in a step that runs after `changeset publish` succeeds. The version is read from
+`packages/core/package.json`: the 13 packages are a Changesets `fixed` group sharing one
+version, so a single repo-level tag names the whole release. We deliberately do **not**
+emit Changesets' default per-package `pkg@version` tags — one tag per release, not
+thirteen. The step gates on tag existence (`git ls-remote --exit-code --tags`), so it is
+idempotent across the every-push-to-`main` cadence of the job and tags each version
+exactly once. This requires `contents: write` on the job so the default `GITHUB_TOKEN`
+can push the tag. This supersedes the "No tags / No tagging step" stance previously
+documented in RELEASING.md.
+
+**Consequences.** Every release from the next version bump onward gets a durable,
+pushed `vX.Y.Z` tag pointing at the published commit, restoring the `git`-side release
+record (now release-level rather than per-package). The change is release tooling only —
+no publishable package behavior changes, so it ships without a changeset. One-time effect:
+`0.9.0` is already on npm without a `v0.9.0` tag, so the next push to `main` backfills
+`v0.9.0` against the then-current tip. We did not add a GitHub Release step: with the
+`fixed` group, any single package's changelog section for a version is incomplete (e.g.
+`core`'s `## 0.9.0` is empty because nothing in `core` changed that release), so faithful
+release notes would require aggregating across all 13 changelogs — deferred as out of
+scope; the tag is the agreed deliverable.
