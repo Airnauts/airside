@@ -86,12 +86,12 @@ your review findings, and the user's chatter:
 }
 ```
 
-Written through Slice 3: `type`, `phase`, `branch`, `prNumber`, `updatedAt`, plus `specVersion`,
-`lastSpecInputHash` (sha256 of the issue `title+body` at spec time — a later body edit ⇒ a
-revision), and `lastSeenCommentAt` (the owner-comment watermark). `lastReviewedSha`/`reviewIterations`
-are an **informational cache only** — the review→fix loop is driven by the `airside-agent-review`
-notes (artifacts), never these fields. Likewise the approval flow is driven by the
-`airside-agent-spec` comment + the watermark, not by trusting `phase` alone. Keep all keys so the
+Written through Slice 3: `type`, `phase`, `branch`, `prNumber`, `updatedAt`, plus `specVersion` and
+`lastSpecInputHash` (sha256 of the issue `title+body` as of the latest spec — a later body edit ⇒ a
+revision). `lastReviewedSha`/`reviewIterations`/`lastSeenCommentAt` are an **informational cache
+only**: the review→fix loop is driven by the `airside-agent-review` notes, and the approval flow by
+the `airside-agent-spec` comment's timestamp (commands must be newer than it) — never by trusting
+these fields or `phase` alone. Keep all keys so the
 shape is stable.
 
 ### Phase → label
@@ -179,30 +179,38 @@ gh pr list --repo Airnauts/airside --head agent/issue-<n> --state all \
 - neither → phase `triage` (the triage op in §3 sets `type`, then routes to `building`/`speccing`).
 
 **(d2) Evaluate approval (only when phase is `awaiting-approval`).** Cheap (`gh` only); a `/revise`
-defers to the spec-reviser op in §3.
+defers to the spec-reviser op in §3. **Anchor commands on the artifact, not a mutable watermark:** a
+command only counts if it is newer than the spec it answers — the **highest-version
+`airside-agent-spec` comment**. Get that anchor and the comments:
 
 ```bash
+SPEC_AT=$(gh api repos/Airnauts/airside/issues/<n>/comments \
+  --jq '[.[]|select(.body|contains("airside-agent-spec"))]|max_by(.created_at).created_at')
 gh api repos/Airnauts/airside/issues/<n>/comments \
-  --jq '.[] | {id, createdAt, login: .user.login, body}'
+  --jq '.[] | {createdAt: .created_at, login: .user.login, body}'
 ```
 
-Consider only **owner commands**: comments where `login == OWNER`, `createdAt > lastSeenCommentAt`,
-and the body contains **no** `airside-agent-` marker. That last clause is essential — the bot posts
-as the same login as the owner, so its own state/spec/notes must be excluded. Classify each by its
-**leading line**: `/approve`, `/revise <notes>`, `/stop`; plus a bare-word approve fallback
-(trimmed + lowercased ∈ `approve|approved|lgtm|ship it|✅`). Also compute `bodyChanged =
-sha256(title+body) != lastSpecInputHash`. Over the new owner commands, chronologically:
+Consider only **owner commands**: comments where `login == OWNER`, `created_at > SPEC_AT`, and the
+body contains **no** `airside-agent-` marker. That last clause is essential — the bot posts under the
+same login as the owner, so its own state/spec/notes must be excluded. Classify each by its **leading
+line**: `/approve`, `/revise <notes>`, `/stop`; plus a bare-word approve fallback (trimmed +
+lowercased ∈ `approve|approved|lgtm|ship it|✅`). Also compute `bodyChanged = sha256(title+body) !=
+lastSpecInputHash`. Decide:
 
 - any `/stop` → phase `cancelled`; strip `agent` + `state:*`; post a note "cancelled per /stop".
-- else any `/revise` **or** `bodyChanged` → **revise** (the spec is about to change, so revision
-  wins even if an `/approve` is mixed in): needs the spec-reviser op (§3); gather the `/revise`
-  notes (or "the issue description was edited" when only `bodyChanged`).
+- else any `/revise` **or** `bodyChanged` → **revise** (the spec is about to change, so revision wins
+  even if an `/approve` is mixed in): hand the spec-reviser op (§3) the gathered `/revise` notes (or
+  "the issue description was edited" when only `bodyChanged`).
 - else any approve → phase `building`.
 - else (chatter/questions only) → no-op.
 
-**Advance `lastSeenCommentAt` to the `createdAt` of the newest owner command you examined — not
-`now`** (a slow reviser op could otherwise skip an `/approve` you posted while it ran). On a
-body-edit revision, also set `lastSpecInputHash` to the new hash.
+**Crash-safety — no watermark bookkeeping here.** Because commands are anchored to `SPEC_AT`, a
+`/revise` stays "newer than the spec" until the reviser posts `v(n+1)` (a newer comment), so the
+revision **cannot be dropped** if the reviser op dies mid-flight — the next tick simply re-detects it.
+The only state writes in this cheap pass are the crash-recoverable phase changes (`cancelled` for
+`/stop`, `building` for `/approve`). `lastSpecInputHash` is advanced **only by the §3 spec ops** when
+a new spec version is posted — never here. (`lastSeenCommentAt` is kept in the JSON for shape
+stability but is no longer load-bearing.)
 
 **(e) Repair labels + refresh state comment** to the computed phase (create the state comment if
 absent). Editing an existing state comment uses the REST numeric id from (a):
@@ -246,19 +254,22 @@ Spawn `airside-spec-author` (read-only, no worktree). Extract the spec between i
 🤖 Reply **`/approve`** to build, **`/revise <notes>`** to change it, or **`/stop`** to cancel.
 ```
 
-Then set `specVersion=1`, `lastSpecInputHash = sha256(title+body)`, and `lastSeenCommentAt` = the
-newest existing comment's `createdAt` (so prior chatter isn't read as a command), phase
-`awaiting-approval`. (If a spec comment already exists — crash recovery — adopt it instead of
+Then set `specVersion=1`, `lastSpecInputHash = sha256(title+body)`, phase `awaiting-approval`. No
+watermark is needed — (d2) anchors commands to this spec comment's timestamp, so only replies posted
+*after* it count. (If a spec comment already exists — crash recovery — adopt it instead of
 re-authoring; reconcile (c) already routes that to `awaiting-approval`.)
 
 #### `awaiting-approval` with a pending revision (author the next spec version)
 
 Only when (d2) flagged a revision. Spawn `airside-spec-reviser` with the highest-version spec as
 `CURRENT_SPEC` and the gathered notes as `REVISION_NOTES`. Post the result as a new
-`<!-- airside-agent-spec v(n+1) -->` comment (same footer), bump `specVersion`, post a short
-`airside-agent-note` "applied your revisions — please re-`/approve`", and stay `awaiting-approval`.
-(The watermark was advanced in (d2), so the same `/revise` won't re-trigger; a later `/approve`
-will.)
+`<!-- airside-agent-spec v(n+1) -->` comment (same footer), bump `specVersion`, set
+`lastSpecInputHash = sha256(title+body)`, post a short `airside-agent-note` "applied your revisions —
+please re-`/approve`", and stay `awaiting-approval`. Posting the new spec advances the command anchor
+(`SPEC_AT`), so the handled `/revise` is now *older* than the spec and won't re-trigger, while a later
+`/approve` is newer and will. This ordering is the crash-safety guarantee: if this op dies before the
+new spec is posted, the old `/revise` is still the newest command → the next tick re-revises (nothing
+dropped).
 
 #### `building`
 
