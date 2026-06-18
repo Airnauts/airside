@@ -257,3 +257,47 @@ restored with one click. Mostly a visibility flag on the overlay layer (`app/mou
 overlay + `MarkerLayer`); no anchoring or data changes. Decisions: whether the open
 detail/panel stays visible while pins are hidden, and whether the state persists across
 reloads.
+
+## Create a thread without a pin (page-level / unanchored comment)
+
+**Date:** 2026-06-18 · **Status:** idea · **Trigger:** not every comment is about a
+specific element — sometimes you want to leave general feedback about the page (or the
+review as a whole) without first clicking something to drop a pin.
+
+Starting a thread is element-anchored today: `CreateThreadBody` mandates `anchor`
+(`packages/core/src/contract/requests.ts:22`), and the create flow begins with a click
+that captures the element fingerprint. The idea: allow a thread that carries no element
+anchor — it never paints a pin on the page and lives only in the panel/sidebar.
+
+Most of the infrastructure already exists:
+
+- **Display is solved.** Threads with no live pin already render as the detached
+  `ThreadCard` in the panel (the M8 orphan path). A pinless thread is essentially one
+  that is *born* detached rather than orphaned by a DOM change.
+- **The data model anticipates it.** The documented seam is `scope: "page" | "global"`
+  with `pageKey: null` "allowed for future global threads" (`docs/architecture.md:197-198`),
+  although the live zod still hard-codes `scope: z.literal('page')`
+  (`packages/core/src/schemas/thread.ts:23`).
+
+The real gaps:
+
+1. **Make `anchor` optional** in `CreateThreadBody` and pick the model shape. Likely a
+   distinct state rather than reusing `orphaned` — `orphaned` means *lost its anchor*,
+   not *never had one*; conflating them would muddy the self-heal/re-match policy. The
+   contract is TDD-first (ADR-0010), so this lands as failing core/adapter tests before
+   code.
+2. **A create affordance that isn't an element click** — e.g. a "comment on this page"
+   button in the widget chrome that opens the composer straight into the panel.
+3. **Page vs. global scope.** The smaller first cut is page-scoped (anchor omitted but
+   `pageKey` set, so it shows in this page's panel and not others), matching today's
+   `pageKey`; truly cross-page/global threads (`scope: "global"`, `pageKey: null`) can
+   follow.
+
+Effort: medium — core schema + HTTP contract, both adapters' create/list, and a composer
+entry point in the widget. No anchoring or re-match work, since these threads opt out of
+that machinery entirely.
+
+Decision so far: deferred. Smallest cut = page-scoped, anchor-optional, reuse the
+detached card for display; promote `scope: "global"` only if cross-page general comments
+are actually wanted. Worth an ADR note when picked up, since it widens a public request
+shape and adds an anchor state.
