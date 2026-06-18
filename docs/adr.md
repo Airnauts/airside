@@ -1414,3 +1414,48 @@ no publishable package behavior changes, so it ships without a changeset. One-ti
 `core`'s `## 0.9.0` is empty because nothing in `core` changed that release), so faithful
 release notes would require aggregating across all 13 changelogs — deferred as out of
 scope; the tag is the agreed deliverable.
+
+## ADR-0042 — Autonomous issue→PR automation as a local `/loop` skill
+
+- **Date:** 2026-06-18
+- **Status:** accepted
+
+**Context.** We want labelled GitHub issues to be picked up and driven to a pull request
+with minimal human steering: simple tasks built directly, complex tasks specced for
+approval first, every task shipped as a draft PR, auto-reviewed, promoted to ready, and
+then the human's PR comments applied automatically — all without the next run redoing
+finished work. The substrate options were GitHub Actions (event-driven), a claude.ai cloud
+routine (polling), or a local Claude Code session. The official `anthropics/claude-code-action`
+covers much of the GitHub-Actions shape, but we chose the **local** path for simplicity:
+the user runs `/loop 5m /airside-agent`, re-executing a skill every five minutes in one
+session. `/loop` is **serial** (a wakeup fires only when the agent is idle after the
+interval), so ticks never overlap and correctness never depends on timing — the five
+minutes is a cadence, not a backbone.
+
+**Decision.** Build the orchestrator as the **`airside-agent` skill** (`.claude/skills/`),
+which on each tick advances each `agent`-labelled issue by one step and spawns at most one
+isolated subagent for heavy work (`.claude/agents/airside-builder` and, in later slices,
+reviewer/fixer/spec agents). **State lives in GitHub, reconciled by precedence each tick:**
+observable artifacts (issue state, the `agent/issue-<n>` branch, the PR and its draft/merge
+state, review-thread resolution) are ground truth; a single JSON **state comment** on the
+issue is a hint cache; the `state:*` **labels** are a derived, human-visible mirror, never
+authoritative. **PR-last** makes "a PR exists ⇔ the build is complete" a clean binary, so a
+tick that dies mid-build is safe to resume. Builder/fixer subagents run with the Agent tool's
+`isolation:"worktree"`, which a spike confirmed composes with this repo's `WorktreeCreate`
+hook to give a real, locally-built worktree (~1 min setup, no symlink-to-main trap). This
+introduces a **per-issue draft-PR → review → ready flow** for agent-handled tasks — a
+deliberate, scoped exception to the repo's "commit directly to `main` until beta" rule
+(that default still governs human work). Delivery is incremental: **Slice 1** ships the
+simple path (issue → draft PR) only; later slices add the reviewer/fixer loop, the complex
+spec/approval path, and the post-ready PR-comment fixer.
+
+**Consequences.** The automation needs no CI secrets or GitHub Actions and is driven from a
+machine the user already runs; the trade-off is that it only progresses while that `/loop`
+session is alive. Idempotency is structural (labels + state comment + artifact precedence),
+so re-ticks and mid-op deaths never duplicate work; the user-requested `PROGRESS.md` becomes
+a human log on the task branch rather than the lock. Anti-runaway guards are explicit: ≤ 1
+subagent spawn per tick, an auto-fix iteration cap (`REVIEW_CAP`, Slice 2) before escalating
+to `state:blocked`, and owner-only authorisation for `/approve` and PR-comment actions.
+Because the worker agents are substrate-agnostic prompts, migrating later to
+`anthropics/claude-code-action` would be a re-wiring of triggers, not a rewrite. This is
+tooling under `.claude/`/`docs/`, so it ships without a changeset.
