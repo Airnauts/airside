@@ -177,6 +177,19 @@ export function createPostgresRepository({ sql }: { sql: SqlExecutor }): Reposit
       return row.doc
     },
 
+    async deleteThread(scope: Scope, id: ThreadId): Promise<void> {
+      // Hard delete; embedded comments live inside `doc`, so they cascade with the row.
+      // RETURNING id lets us detect a no-op (missing/foreign) via rows.length — the
+      // SqlExecutor seam only exposes `rows`, matching the addComment convention.
+      const { rows } = (await sql.query(
+        `DELETE FROM airside_threads
+         WHERE id = $1 AND project_id = $2 AND env = $3
+         RETURNING id`,
+        [id, scope.projectId, scopeEnv(scope)],
+      )) as { rows: Array<{ id: string }> }
+      if (rows.length === 0) throw new Error('thread not found')
+    },
+
     async upsertExternalLink(
       scope: Scope,
       threadId: ThreadId,

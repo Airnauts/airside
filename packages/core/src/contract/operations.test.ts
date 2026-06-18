@@ -9,13 +9,14 @@ const EXPECTED_IDS = [
   'getThread',
   'addComment',
   'setThreadStatus',
+  'deleteThread',
   'refreshAnchor',
   'uploadAttachment',
   'runThreadAction',
 ]
 
 describe('operation table', () => {
-  it('contains exactly the eight frozen data operations', () => {
+  it('contains exactly the nine frozen data operations', () => {
     expect(operations.map((o) => o.operationId).sort()).toEqual([...EXPECTED_IDS].sort())
   })
   it('has a unique method+path per operation', () => {

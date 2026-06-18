@@ -28,6 +28,7 @@ describe('buildOpenApiDocument', () => {
     expect(paths['/threads']?.post).toBeDefined()
     expect(paths['/threads']?.get).toBeDefined()
     expect(paths['/threads/{id}']?.patch).toBeDefined()
+    expect(paths['/threads/{id}']?.delete).toBeDefined()
   })
 
   it('registers component schemas and the key-header security scheme', () => {
