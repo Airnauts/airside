@@ -1,4 +1,4 @@
-# PROGRESS — issue #33: Widget: place mode drops a pin on the launcher and panel chrome
+# PROGRESS for issue #33: Widget: place mode drops a pin on the launcher and panel chrome
 **Phase:** building → draft PR
 **Branch:** agent/issue-33
 
