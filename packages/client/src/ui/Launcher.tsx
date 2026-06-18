@@ -10,6 +10,10 @@ export type LauncherProps = {
   openCount: number
   panelOpen: boolean
   onTogglePanel: () => void
+  /** Whether the on-page pin/highlight overlay is currently hidden. */
+  pinsHidden: boolean
+  /** Show/hide every pin and highlight without leaving comment mode (issue #32). */
+  onTogglePins: () => void
 }
 
 /** Compact, icon-only launcher pill. Drag anywhere on it to stick it to either window edge;
@@ -20,6 +24,8 @@ export function Launcher({
   openCount,
   panelOpen,
   onTogglePanel,
+  pinsHidden,
+  onTogglePins,
 }: LauncherProps) {
   const { style, dragging, onPointerDown, onClickCapture } = useDraggablePosition()
   return (
@@ -50,6 +56,7 @@ export function Launcher({
         data-testid="airside-place"
         aria-pressed={placing}
         aria-label={placing ? 'Click on the page to comment' : 'Add comment'}
+        disabled={pinsHidden}
         onClick={onTogglePlace}
         className={cn('air:relative', placing && 'air:bg-blue-800')}
       >
@@ -62,6 +69,17 @@ export function Launcher({
             {openCount}
           </span>
         )}
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        data-testid="airside-toggle-pins"
+        aria-pressed={pinsHidden}
+        aria-label={pinsHidden ? 'Show pins' : 'Hide pins'}
+        onClick={onTogglePins}
+        className="air:hover:bg-gray-100"
+      >
+        <span aria-hidden={true}>{pinsHidden ? '⊘' : '◉'}</span>
       </Button>
     </div>
   )

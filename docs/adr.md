@@ -1494,3 +1494,46 @@ tick may pass without promoting. One fewer artifact per branch and no repo-root 
 `in-review` phase is no longer inline-only — every PR comment surface a human uses is covered. The
 deferred items remain easy to add later (each is a localized op-selection/skip change) if real need
 appears. Tooling-only under `.claude/`/`docs/`, so no changeset.
+
+## ADR-0046 — Client settings persisted through a single read-once store with typed accessors
+
+- **Date:** 2026-06-18
+- **Status:** accepted
+
+**Context.** The widget's client-side persistence had grown by accretion: each feature that
+needed `localStorage` dropped its own `<domain>/storage.ts` module with a near-identical
+`load*`/`save*` pair — `activation/storage.ts` (`airside:key`), `identity/storage.ts`
+(`airside:identity`), and `launcher/storage.ts` (`airside:launcher-position`). Every module
+re-implemented the same try/catch-guarded `getItem` → `JSON.parse` → validate → default read,
+and each consumer read `localStorage` afresh on every mount. Adding the issue #32 "hide all
+pins" flag would have meant a fourth copy of that boilerplate. The owner asked (in the #32
+spec, approved with "add adr") for a single client settings store the new flag and the existing
+sites route through, and for the pattern to be documented.
+
+**Decision.** Introduce one client-internal settings store, `packages/client/src/settings/store.ts`,
+as the sole chokepoint for `localStorage`-backed widget settings. It declares a typed schema with
+one entry per key — the on-disk key string, a default, and the per-key parse/validate guard lifted
+unchanged from the old modules. `initSettings(storage = localStorage)` performs a **single read**
+of every key into an in-memory cache (re-runnable); `getSetting(key)` returns the cached value and
+lazily hydrates on first access if init has not run (so a directly-mounted `WidgetApp` and SSR-safe
+import both work); `setSetting(key, value)` updates the cache and persists with a **try/catch-guarded
+write** (a quota/availability error must not crash a toggle or a login — a deliberate hardening over
+the old bare `setItem`); `resetSettings()` is a test seam that drops the cache so a freshly-seeded
+`localStorage` re-hydrates. The widget calls `initSettings()` once at startup in `init()`. The three
+former storage sites now read/write through the store under the **same on-disk keys** with no
+behavior change; the domain modules keep only their shared, non-storage exports (the `Identity` type,
+the launcher `LauncherPosition`/`LauncherEdge` types, `DEFAULT_LAUNCHER_POSITION`, `clampTop`). The
+store is **not** exported from the package index — it adds no public API. `sessionStorage` (the
+per-tab focus handoff) is explicitly out of scope: the store is localStorage-only.
+
+**Consequences.** New persisted client settings now cost one schema entry instead of a bespoke
+module, and validation/guarding live in one audited place. The load-bearing trade-off is the
+**read-once cache**: a consumer that seeds `localStorage` and then reads must do so against a
+fresh cache — fine in production (hydrated once per page load) but it means consumer **tests**
+that seed-then-act must call `resetSettings()` between cases, or a stale cached value leaks
+across them. This is now a standing rule for client tests touching persisted settings. Writes
+becoming best-effort means a persistence failure is silently swallowed rather than thrown; the
+in-memory value still updates, so the live session is unaffected and only the across-reload
+durability is lost in that rare case. The store is the established pattern for future client
+settings; adding sessionStorage-backed or host-configurable settings would be a deliberate
+extension, not an ad-hoc module.

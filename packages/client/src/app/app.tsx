@@ -5,10 +5,11 @@ import { DraftsProvider } from '../drafts/DraftsProvider'
 import { WidgetErrorBoundary } from '../error-boundary'
 import { IdentityModal } from '../identity/IdentityModal'
 import { IdentityProvider } from '../identity/IdentityProvider'
-import { type Identity, loadIdentity, saveIdentity } from '../identity/storage'
+import type { Identity } from '../identity/storage'
 import { MarkerLayer } from '../marker/MarkerLayer'
 import { PanelDrawer } from '../panel/PanelDrawer'
 import { PanelProvider } from '../panel/PanelProvider'
+import { getSetting, setSetting } from '../settings/store'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { LoginLauncher } from '../ui/LoginLauncher'
 import { ToastProvider } from '../ui/toast'
@@ -24,7 +25,7 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
   const [client] = useState<ApiClient>(
     () => injected ?? createApiClient({ endpoint: options.endpoint, key: options.key }),
   )
-  const [identity, setIdentity] = useState<Identity | null>(() => loadIdentity())
+  const [identity, setIdentity] = useState<Identity | null>(() => getSetting('identity'))
   const [modalOpen, setModalOpen] = useState(false)
   const resumeRef = useRef<((identity: Identity) => void) | null>(null)
 
@@ -39,7 +40,7 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
   }, [])
 
   function onSubmitIdentity(who: Identity) {
-    saveIdentity(who)
+    setSetting('identity', who)
     setIdentity(who)
     setModalOpen(false)
     const resume = resumeRef.current
