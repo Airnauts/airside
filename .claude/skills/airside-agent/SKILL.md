@@ -144,7 +144,16 @@ gh pr list --repo Airnauts/airside --head agent/issue-<n> --state all \
   --json number,isDraft,state                                       # PR exists?
 ```
 
-- An open PR exists → phase = `reviewing`; record its `prNumber`. (Build is done — PR-last.)
+- **First, honour resting states.** If the recorded phase is `in-review`, `blocked`, `done`, or
+  `cancelled`, do **not** re-derive it from artifacts — these are stable. Run the terminal check
+  in (b) only (a merge/close moves them to `done`/`cancelled`); otherwise leave the phase and
+  labels exactly as they are and do no op this tick. This is what stops a finished (ready) PR
+  from being re-promoted every tick — no label flapping, no repeated `gh pr ready`, no duplicate
+  promotion notes. (Slice 4 makes `in-review` active again for PR-review comments; Slice 5 adds a
+  `blocked` retry. Until then they wait for the human.)
+- An **open PR** exists (and the phase isn't resting) → record its `prNumber` and map by draft
+  state: PR is **draft** → phase `reviewing` (the review→fix loop owns it); PR is **ready** (not
+  draft) → phase `in-review`. (Merged/closed is the terminal check in (b).)
 - Branch exists, no PR → phase = `building` (a prior build needs to **finish + open the PR**;
   the builder is idempotent and will adopt the branch).
 - No branch, no PR → phase = `building` **fresh** (if the issue is `simple` — see (d)).
