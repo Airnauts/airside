@@ -1,6 +1,6 @@
 ---
 name: airside-agent
-description: The autonomous task orchestrator for Airnauts/airside. Run on a timer via `/loop 5m /airside-agent`. Each tick it scans GitHub issues labelled `agent`, and for the simple path drives them issue → branch → draft PR, spawning an isolated builder subagent. Idempotent: re-running never redoes finished work. Invoke directly to run one tick by hand.
+description: The autonomous task orchestrator for Airnauts/airside. Run on a timer via `/loop 5m /airside-agent`. Each tick it scans GitHub issues labelled `agent`, and for the simple path drives them issue → branch → draft PR → automated review → auto-fix high findings → ready, spawning isolated builder/reviewer/fixer subagents. Idempotent: re-running never redoes finished work. Invoke directly to run one tick by hand.
 ---
 
 # airside-agent — issue→PR orchestrator (the `/loop` target)
@@ -19,11 +19,12 @@ are the orchestrator: you read live GitHub state with `gh`, advance each labelle
 never overlap and correctness never depends on timing. You can also invoke `/airside-agent`
 once, by hand, to run a single tick (this is how you test it).
 
-> **Current scope — Slice 1.** Only the **simple path** is live: a labelled issue is built
-> straight into a **draft PR**, then parked at `state:reviewing`. The complex path (triage →
-> spec → approval) and the automated reviewer/fixer loop are later slices — this runbook says
-> exactly where they plug in and, until then, parks anything it can't yet handle with a note
-> (it never silently drops work). See `docs/adr.md` for the design rationale.
+> **Current scope — Slices 1–2.** The **simple path** is live end to end: a labelled issue is
+> built into a **draft PR**, automatically **reviewed**, its high/critical findings **auto-fixed**
+> (capped), and the PR promoted **draft → ready** at `state:in-review` for your review. The
+> complex path (triage → spec → approval) and the post-ready PR-comment fixer are later slices —
+> this runbook says exactly where they plug in and parks anything it can't yet handle with a note
+> (it never silently drops work). See `docs/adr.md` (ADR-0042) for the design rationale.
 
 ## Config
 
@@ -52,14 +53,16 @@ three tiers, in strict precedence — never trust a lower tier when a higher one
 
 This is what makes a tick that died mid-op safe: the next tick recomputes phase from artifacts.
 
-### The three issue markers
+### The issue markers
 
 One per concern, HTML-comment-wrapped so you never confuse your own structured state, your spec,
-and the user's chatter:
+your review findings, and the user's chatter:
 
 - `<!-- airside-agent-state {json} -->` — the authoritative structured state (one per issue).
+- `<!-- airside-agent-review {json} -->` — one per review round: the reviewer's findings keyed by
+  the head `sha` it reviewed. This (not a state field) is what drives the review→fix loop.
 - `<!-- airside-agent-spec v<n> -->` — the spec (complex path, Slice 3). Builder uses the highest version.
-- `<!-- airside-agent-note -->` — human-facing notes (escalations, "complex path not live yet").
+- `<!-- airside-agent-note -->` — human-facing notes (escalations, summaries, "complex path not live yet").
 
 ### State JSON
 
@@ -79,14 +82,17 @@ and the user's chatter:
 }
 ```
 
-In Slice 1 only `type`, `phase`, `branch`, `prNumber`, `updatedAt` are written; the rest are
-reserved for later slices (keep them in the JSON so the shape is stable).
+Written through Slice 2: `type`, `phase`, `branch`, `prNumber`, `updatedAt`. `lastReviewedSha`
+and `reviewIterations` are kept **only as an informational cache** — the review→fix loop is
+driven by the `airside-agent-review` notes (artifacts), never by these fields (a crash could set
+a field without the matching note). `specVersion`/`lastSpecInputHash`/`lastSeenCommentAt` are
+reserved for Slice 3+. Keep all keys so the shape is stable.
 
 ### Phase → label
 
 Mirror the computed phase to exactly one `state:*` label (mutually exclusive). Phases reachable
-in Slice 1: `building`, `reviewing`, `done`, `blocked`, `cancelled`. (`cancelled` has no label —
-it just gets the pickup + state labels stripped.)
+through Slice 2: `building`, `reviewing`, `in-review`, `done`, `blocked`, `cancelled`.
+(`cancelled` has no label — it just gets the pickup + state labels stripped.)
 
 ## Per-tick algorithm
 
@@ -166,19 +172,50 @@ Remove only the *recorded previous* phase label (avoids "label not on issue" err
 
 ### 3. Expensive op — spawn AT MOST ONE subagent
 
-Among issues whose computed phase is `building` with `type=simple`, pick the **oldest** by
-`updatedAt`, and spawn the builder **once** (see the spawn contract). Set `state:building` before
-spawning (intent), and on success record `prNumber`, set phase `reviewing` (commit-last — the
-proof is the PR artifact, never the label). If the builder fails or returns no PR → set
-`state:blocked` + an `airside-agent-note` explaining what to do.
+Collect the issues that need an op: phase `building` (needs a build) or phase `reviewing` (needs a
+review or a fix — see below). Pick the **oldest** by `updatedAt`, do **one** op, then end the tick.
 
 > **Invariant: ≤ 1 subagent spawn per tick.** Everything else is `gh`. This bounds the tick
-> (each isolated build pays ~1 min of worktree setup) and prevents N concurrent worktrees.
-> Safe because ticks are serial.
+> (each isolated worktree op pays ~1 min of setup) and prevents N concurrent worktrees. Safe
+> because ticks are serial. If nothing needs an op, end the tick.
 
-If no issue is in `building`, end the tick. (In Slice 1, reaching `reviewing` is the finish line
-— the reviewer/fixer loop is Slice 2; until then a `reviewing` issue is simply left for the
-human to review the draft PR.)
+#### `building` (simple path)
+
+Spawn the **builder** once (contract below). Set `state:building` before spawning (intent); on
+`STATUS: ok` with a `PR_NUMBER`, record it and set phase `reviewing` (commit-last — the proof is
+the PR artifact, never the label). Builder failed / no PR → `state:blocked` + an
+`airside-agent-note` explaining what to do.
+
+#### `reviewing` (the review → fix → re-review loop)
+
+The pivot is an **artifact, not a state field**: is there an `airside-agent-review` note whose
+`sha` equals the PR's current `headRefOid`? (We must key on the note, never on `lastReviewedSha` —
+a Slice-1 PR already has that field set with no review behind it, and acting on it would promote
+an unreviewed PR.)
+
+```bash
+HEAD=$(gh pr view <pr> --repo Airnauts/airside --json headRefOid -q .headRefOid)
+# all review notes, newest last; the orchestrator parses the JSON in each:
+gh api repos/Airnauts/airside/issues/<n>/comments \
+  --jq '.[] | select(.body|contains("airside-agent-review")) | .body'
+```
+
+- **No review note for `HEAD`** (code is new or unreviewed) → **review** is the op. Spawn
+  `airside-reviewer` (read-only, no worktree). Post its findings as an `airside-agent-review` note
+  (machine JSON keyed by `sha=HEAD` + a human summary). Then **end the tick** — acting on the
+  findings happens next tick (keeps it one op/tick and crash-safe).
+- **A review note for `HEAD` exists** → act on it:
+  - `highs` = its findings with severity `critical` or `high`.
+  - **`highs` empty** → promote: `gh pr ready <pr>` → phase `in-review`; post a human summary note
+    (list any medium/low for the reviewer to consider). Done.
+  - **`highs` non-empty** → check the cap. `H` = number of `airside-agent-review` notes whose
+    findings include ≥1 `critical`/`high`. If **`H > REVIEW_CAP`** → phase `blocked` + an escalation
+    note listing the unresolved highs (already auto-fixed `REVIEW_CAP` times). Otherwise → **fix**:
+    capture `HEAD` (pre-fix sha), spawn `airside-fixer` with the `highs` batch. **Verify progress by
+    head-delta, not the fixer's word**: re-read the PR head after; if it still equals the pre-fix
+    `HEAD` (no new commit) → phase `blocked` + note "fixer made no progress". Otherwise leave phase
+    `reviewing` — the new head has no review note, so the next tick re-reviews. Convergence:
+    review → fix → re-review until clean (→ `in-review`) or capped (→ `blocked`).
 
 ## Builder spawn contract
 
@@ -203,6 +240,35 @@ NOTE: <one line>     # what it did, or why it failed
 On `STATUS: ok` with a `PR_NUMBER` → record it, phase `reviewing`. On anything else →
 `state:blocked` + note.
 
+## Reviewer spawn contract
+
+Spawn with the **Agent tool**, `subagent_type: "airside-reviewer"` (**no worktree** — it's
+read-only). Fallback: `subagent_type: "general-purpose"` + the contents of
+`.claude/agents/airside-reviewer.md` as preamble. Pass: `PR_NUMBER`, `REPO`, `ISSUE`, `BRANCH`,
+and `HEAD_SHA` (the current head). It returns one fenced ```json block:
+`{headSha, summary, findings:[{severity,confidence,path,line,title,note,fix}]}` with severity in
+`critical|high|medium|low`. Save that JSON verbatim into an `airside-agent-review` note keyed by
+`sha=HEAD_SHA`. `highs` = findings where severity ∈ {critical, high}.
+
+## Fixer spawn contract
+
+Spawn with the **Agent tool**, `isolation: "worktree"`, `subagent_type: "airside-fixer"`.
+Fallback: `general-purpose` + `.claude/agents/airside-fixer.md` preamble. Pass: `PR_NUMBER`,
+`REPO`, `ISSUE`, `BRANCH`, and `FINDINGS` = the `highs` array. It returns:
+
+```
+STATUS: ok | no-changes | failed
+BRANCH: agent/issue-<n>
+NEW_HEAD: <sha>
+FIXED: <titles>
+SKIPPED: <titles + why, or none>
+NOTE: <one line>
+```
+
+Trust **head-delta**, not `STATUS`: if the PR head is unchanged after the fixer returns, escalate
+to `state:blocked` regardless of what it reported. The fixer is also reused in Slice 4 to apply
+the human's PR-review threads.
+
 ## `gh` gotchas (baked in above, collected here)
 
 - **Labels:** `gh label create "<name>" --color <hex> --force` (upsert — never errors on exists).
@@ -212,15 +278,15 @@ On `STATUS: ok` with a `PR_NUMBER` → record it, phase `reviewing`. On anything
   `gh api -X PATCH repos/Airnauts/airside/issues/comments/<id> -F body=@file`.
 - **Branch probe without 404 noise:** `git ls-remote --heads origin 'refs/heads/agent/issue-<n>'`.
 - **Draft PR guard:** `gh pr list --head agent/issue-<n> --state all --json number` before any create.
-- **Draft → ready (Slice 2):** `gh pr ready <n>`.
+- **Draft → ready:** `gh pr ready <pr>` (used when a review round comes back with no highs).
+- **Review notes are keyed by head sha**, so a re-pushed branch (new head) always re-reviews;
+  count notes-with-highs for the cap rather than trusting a mutable counter.
 - The worktree hook auto-names the build branch `worktree-<name>`; the builder pushes to the
   canonical name explicitly: `git push origin HEAD:agent/issue-<n>`.
 
 ## Roadmap (where later slices plug in)
 
-- **Slice 2** — `reviewing`: if `headOid != lastReviewedSha` spawn `airside-reviewer`; 0 high
-  findings → `gh pr ready` → `in-review`; high findings → `airside-fixer` (cap `REVIEW_CAP`,
-  then `state:blocked`).
+- **Slice 2 (done)** — the `reviewing` review→fix→ready loop documented above.
 - **Slice 3** — complex path: `triage` → `spec-author` → post `airside-agent-spec` → owner-only
   `/approve` `/revise` `/stop` grammar (revision wins over approve; a changed `sha256(title+body)`
   counts as a revision) → build.
