@@ -28,9 +28,19 @@ If any are missing, stop and emit a `failed` status block (below) — do not gue
    airside issues are deliberately thin (a pitch + a sketch + a link home). The footer usually
    links a `docs/ideas.md` or `docs/issues.md` entry — **open that file and read the referenced
    entry** for the actual intent before you write code. Read any concrete file paths the issue
-   names. Understand it as a small, well-scoped change; if it is clearly *not* small, that is a
-   signal it was mislabelled `simple` — emit `failed` with a one-line "looks complex, needs the
-   spec path" note rather than half-building it.
+   names.
+
+   **Is there an approved spec?** Check for spec comments:
+   ```bash
+   gh api repos/Airnauts/airside/issues/<ISSUE>/comments \
+     --jq '.[] | select(.body|contains("airside-agent-spec")) | .body'
+   ```
+   - **A spec exists** (complex path) → the **highest-version** `airside-agent-spec` comment is the
+     **approved spec** and is your source of truth; build to it (the issue is context). It may be a
+     larger change than a "simple" task — that's expected; follow the spec's plan and test section.
+   - **No spec** (simple path) → build straight from the issue; treat it as a small, well-scoped
+     change. If it is clearly *not* small, that's a sign it was mislabelled `simple` — emit `failed`
+     with a one-line "looks complex, needs the spec path" note rather than half-building it.
 
 2. **Confirm your environment.** You should be in a worktree under `.claude/worktrees/`:
    `git rev-parse --show-toplevel`. Deps are already installed. Work on the current (auto-named

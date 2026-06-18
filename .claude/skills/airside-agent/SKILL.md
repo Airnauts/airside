@@ -19,12 +19,13 @@ are the orchestrator: you read live GitHub state with `gh`, advance each labelle
 never overlap and correctness never depends on timing. You can also invoke `/airside-agent`
 once, by hand, to run a single tick (this is how you test it).
 
-> **Current scope — Slices 1–2.** The **simple path** is live end to end: a labelled issue is
-> built into a **draft PR**, automatically **reviewed**, its high/critical findings **auto-fixed**
-> (capped), and the PR promoted **draft → ready** at `state:in-review` for your review. The
-> complex path (triage → spec → approval) and the post-ready PR-comment fixer are later slices —
-> this runbook says exactly where they plug in and parks anything it can't yet handle with a note
-> (it never silently drops work). See `docs/adr.md` (ADR-0042) for the design rationale.
+> **Current scope — Slices 1–3.** Both paths are live. **Simple:** a labelled issue is built into a
+> **draft PR**, auto-**reviewed**, high/critical findings **auto-fixed** (capped), and promoted
+> **draft → ready** at `state:in-review`. **Complex:** the issue is **triaged**, a **spec** is
+> researched and posted for you to **`/approve` or `/revise`**, and on approval it joins the same
+> build → review → ready path. The post-ready PR-comment fixer (Slice 4) and terminal hardening
+> (Slice 5) are still to come; this runbook says where they plug in and parks anything it can't yet
+> handle with a note (it never silently drops work). See `docs/adr.md` (ADR-0042).
 
 ## Config
 
@@ -61,8 +62,11 @@ your review findings, and the user's chatter:
 - `<!-- airside-agent-state {json} -->` — the authoritative structured state (one per issue).
 - `<!-- airside-agent-review {json} -->` — one per review round: the reviewer's findings keyed by
   the head `sha` it reviewed. This (not a state field) is what drives the review→fix loop.
-- `<!-- airside-agent-spec v<n> -->` — the spec (complex path, Slice 3). Builder uses the highest version.
-- `<!-- airside-agent-note -->` — human-facing notes (escalations, summaries, "complex path not live yet").
+- `<!-- airside-agent-spec v<n> -->` — the spec (complex path). The **highest version** is current;
+  it is the `awaiting-approval` artifact and the builder's source of truth.
+- `<!-- airside-agent-note -->` — human-facing notes (escalations, review/promotion summaries,
+  "re-approve please"). **These four `airside-agent-*` markers also identify the bot's own
+  comments** — see the disambiguation rule in the approval step.
 
 ### State JSON
 
@@ -82,16 +86,18 @@ your review findings, and the user's chatter:
 }
 ```
 
-Written through Slice 2: `type`, `phase`, `branch`, `prNumber`, `updatedAt`. `lastReviewedSha`
-and `reviewIterations` are kept **only as an informational cache** — the review→fix loop is
-driven by the `airside-agent-review` notes (artifacts), never by these fields (a crash could set
-a field without the matching note). `specVersion`/`lastSpecInputHash`/`lastSeenCommentAt` are
-reserved for Slice 3+. Keep all keys so the shape is stable.
+Written through Slice 3: `type`, `phase`, `branch`, `prNumber`, `updatedAt`, plus `specVersion`,
+`lastSpecInputHash` (sha256 of the issue `title+body` at spec time — a later body edit ⇒ a
+revision), and `lastSeenCommentAt` (the owner-comment watermark). `lastReviewedSha`/`reviewIterations`
+are an **informational cache only** — the review→fix loop is driven by the `airside-agent-review`
+notes (artifacts), never these fields. Likewise the approval flow is driven by the
+`airside-agent-spec` comment + the watermark, not by trusting `phase` alone. Keep all keys so the
+shape is stable.
 
 ### Phase → label
 
-Mirror the computed phase to exactly one `state:*` label (mutually exclusive). Phases reachable
-through Slice 2: `building`, `reviewing`, `in-review`, `done`, `blocked`, `cancelled`.
+Mirror the computed phase to exactly one `state:*` label (mutually exclusive): `triage`,
+`speccing`, `awaiting-approval`, `building`, `reviewing`, `in-review`, `done`, `blocked`.
 (`cancelled` has no label — it just gets the pickup + state labels stripped.)
 
 ## Per-tick algorithm
@@ -156,16 +162,47 @@ gh pr list --repo Airnauts/airside --head agent/issue-<n> --state all \
   draft) → phase `in-review`. (Merged/closed is the terminal check in (b).)
 - Branch exists, no PR → phase = `building` (a prior build needs to **finish + open the PR**;
   the builder is idempotent and will adopt the branch).
-- No branch, no PR → phase = `building` **fresh** (if the issue is `simple` — see (d)).
+- **No branch, no PR — these phases have no artifact, so honour the state comment / spec comment;
+  never re-derive them (or you'll re-spec, or build an unapproved task):**
+  - An `airside-agent-spec` comment exists → the spec is posted. Phase = `building` **only if the
+    state comment already says `building`** (you approved it); otherwise `awaiting-approval`. This
+    also crash-collapses a `speccing` op that posted the spec but died before the state update — it
+    becomes `awaiting-approval`, never a duplicate spec.
+  - No spec comment, recorded phase is `triage` or `speccing` → honour it (mid-entry, crash-safe).
+  - No spec comment, recorded phase `building` → `building` (a fresh/approved simple task).
+  - No state comment / `phase=null` → **fresh pickup → classify in (d).**
 
-**(d) Classify (Slice 1).**
+**(d) Classify (fresh pickups only).** Set `type` and the entry phase:
 
-- Issue carries the `agent:simple` label → `type=simple`. Proceed.
-- Otherwise → **complex path, not live in Slice 1.** Post the note **once** (guard: skip if a
-  `airside-agent-note` comment already mentions the complex path):
-  > 🤖 airside-agent: the complex path (spec → approval) lands in a later slice. Add the
-  > **`agent:simple`** label and I'll build this directly.
-  Leave the issue otherwise untouched; **skip** it this tick.
+- `agent:simple` label → `type=simple`, phase `building`.
+- `agent:complex` label → `type=complex`, phase `speccing`.
+- neither → phase `triage` (the triage op in §3 sets `type`, then routes to `building`/`speccing`).
+
+**(d2) Evaluate approval (only when phase is `awaiting-approval`).** Cheap (`gh` only); a `/revise`
+defers to the spec-reviser op in §3.
+
+```bash
+gh api repos/Airnauts/airside/issues/<n>/comments \
+  --jq '.[] | {id, createdAt, login: .user.login, body}'
+```
+
+Consider only **owner commands**: comments where `login == OWNER`, `createdAt > lastSeenCommentAt`,
+and the body contains **no** `airside-agent-` marker. That last clause is essential — the bot posts
+as the same login as the owner, so its own state/spec/notes must be excluded. Classify each by its
+**leading line**: `/approve`, `/revise <notes>`, `/stop`; plus a bare-word approve fallback
+(trimmed + lowercased ∈ `approve|approved|lgtm|ship it|✅`). Also compute `bodyChanged =
+sha256(title+body) != lastSpecInputHash`. Over the new owner commands, chronologically:
+
+- any `/stop` → phase `cancelled`; strip `agent` + `state:*`; post a note "cancelled per /stop".
+- else any `/revise` **or** `bodyChanged` → **revise** (the spec is about to change, so revision
+  wins even if an `/approve` is mixed in): needs the spec-reviser op (§3); gather the `/revise`
+  notes (or "the issue description was edited" when only `bodyChanged`).
+- else any approve → phase `building`.
+- else (chatter/questions only) → no-op.
+
+**Advance `lastSeenCommentAt` to the `createdAt` of the newest owner command you examined — not
+`now`** (a slow reviser op could otherwise skip an `/approve` you posted while it ran). On a
+body-edit revision, also set `lastSpecInputHash` to the new hash.
 
 **(e) Repair labels + refresh state comment** to the computed phase (create the state comment if
 absent). Editing an existing state comment uses the REST numeric id from (a):
@@ -181,14 +218,49 @@ Remove only the *recorded previous* phase label (avoids "label not on issue" err
 
 ### 3. Expensive op — spawn AT MOST ONE subagent
 
-Collect the issues that need an op: phase `building` (needs a build) or phase `reviewing` (needs a
-review or a fix — see below). Pick the **oldest** by `updatedAt`, do **one** op, then end the tick.
+Collect the issues that need an op: phase `triage` (classify), `speccing` (author the spec),
+`building` (build), `reviewing` (review or fix), or `awaiting-approval` **with a pending revision**
+from (d2) (author the next spec version). Pick the **oldest** by `updatedAt`, do **one** op, then
+end the tick.
 
 > **Invariant: ≤ 1 subagent spawn per tick.** Everything else is `gh`. This bounds the tick
 > (each isolated worktree op pays ~1 min of setup) and prevents N concurrent worktrees. Safe
 > because ticks are serial. If nothing needs an op, end the tick.
 
-#### `building` (simple path)
+#### `triage` (classify)
+
+Spawn `airside-triage` (read-only, no worktree). Read its `TYPE:` line → set `type` and route:
+`simple` → phase `building`; `complex` → phase `speccing`. (Triage defaults to `complex` when
+unsure — the gated path is the safe one.)
+
+#### `speccing` (author the spec)
+
+Spawn `airside-spec-author` (read-only, no worktree). Extract the spec between its `<<<SPEC` /
+`SPEC>>>` sentinels and post it as a new comment:
+
+```
+<!-- airside-agent-spec v1 -->
+<spec markdown>
+
+---
+🤖 Reply **`/approve`** to build, **`/revise <notes>`** to change it, or **`/stop`** to cancel.
+```
+
+Then set `specVersion=1`, `lastSpecInputHash = sha256(title+body)`, and `lastSeenCommentAt` = the
+newest existing comment's `createdAt` (so prior chatter isn't read as a command), phase
+`awaiting-approval`. (If a spec comment already exists — crash recovery — adopt it instead of
+re-authoring; reconcile (c) already routes that to `awaiting-approval`.)
+
+#### `awaiting-approval` with a pending revision (author the next spec version)
+
+Only when (d2) flagged a revision. Spawn `airside-spec-reviser` with the highest-version spec as
+`CURRENT_SPEC` and the gathered notes as `REVISION_NOTES`. Post the result as a new
+`<!-- airside-agent-spec v(n+1) -->` comment (same footer), bump `specVersion`, post a short
+`airside-agent-note` "applied your revisions — please re-`/approve`", and stay `awaiting-approval`.
+(The watermark was advanced in (d2), so the same `/revise` won't re-trigger; a later `/approve`
+will.)
+
+#### `building`
 
 Spawn the **builder** once (contract below). Set `state:building` before spawning (intent); on
 `STATUS: ok` with a `PR_NUMBER`, record it and set phase `reviewing` (commit-last — the proof is
@@ -226,6 +298,27 @@ gh api repos/Airnauts/airside/issues/<n>/comments \
     `reviewing` — the new head has no review note, so the next tick re-reviews. Convergence:
     review → fix → re-review until clean (→ `in-review`) or capped (→ `blocked`).
 
+## Triage spawn contract
+
+Spawn with the **Agent tool**, `subagent_type: "airside-triage"` (no worktree, read-only).
+Fallback: `general-purpose` + `.claude/agents/airside-triage.md` preamble. Pass: `ISSUE`, `REPO`.
+It ends with `TYPE: simple` or `TYPE: complex`. Route accordingly; default `complex` if the line is
+missing/ambiguous (the safe, gated path).
+
+## Spec-author spawn contract
+
+Spawn with the **Agent tool**, `subagent_type: "airside-spec-author"` (no worktree). Fallback:
+`general-purpose` + `.claude/agents/airside-spec-author.md`. Pass: `ISSUE`, `REPO`. It returns the
+spec between `<<<SPEC` / `SPEC>>>` sentinels — extract that body (it may contain code fences, so
+match by the **sentinels**, not by a fenced block) and post it as the `airside-agent-spec v1` comment.
+
+## Spec-reviser spawn contract
+
+Spawn with the **Agent tool**, `subagent_type: "airside-spec-reviser"` (no worktree). Fallback:
+`general-purpose` + `.claude/agents/airside-spec-reviser.md`. Pass: `ISSUE`, `REPO`, `CURRENT_SPEC`
+(the highest-version spec body), `REVISION_NOTES`. It returns the full revised spec between `<<<SPEC`
+/ `SPEC>>>` — post it as `airside-agent-spec v(n+1)`.
+
 ## Builder spawn contract
 
 Spawn with the **Agent tool**, `isolation: "worktree"` (verified to give a real, locally-built
@@ -234,7 +327,8 @@ not yet registered in this session, fall back to `subagent_type: "general-purpos
 **full contents of `.claude/agents/airside-builder.md`** as the prompt preamble.
 
 **Pass the builder:** the issue number `<n>`, `REPO`, `OWNER`, and the canonical branch
-`agent/issue-<n>`. The builder reads the issue itself (`gh issue view`) for the body + docs link.
+`agent/issue-<n>`. The builder reads the issue itself (`gh issue view`) for the body + docs link,
+and — for a complex task — the **highest-version `airside-agent-spec` comment** as the approved spec.
 
 **The builder MUST return** these machine-parseable lines (you grep them):
 
@@ -296,9 +390,7 @@ the human's PR-review threads.
 ## Roadmap (where later slices plug in)
 
 - **Slice 2 (done)** — the `reviewing` review→fix→ready loop documented above.
-- **Slice 3** — complex path: `triage` → `spec-author` → post `airside-agent-spec` → owner-only
-  `/approve` `/revise` `/stop` grammar (revision wins over approve; a changed `sha256(title+body)`
-  counts as a revision) → build.
+- **Slice 3 (done)** — the complex path (`triage` → `speccing` → `awaiting-approval` grammar) above.
 - **Slice 4** — `in-review`: apply the owner's unresolved PR review threads (GraphQL
   `reviewThreads`; actionable = `isResolved==false` & owner-authored & last comment not the
   agent's) → fixer → reply + `resolveReviewThread`.
