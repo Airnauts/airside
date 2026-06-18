@@ -43,6 +43,23 @@ Overflow menu per comment (edit / delete / copy text). Deferred — edit and del
 new backend operations (`PATCH`/`DELETE` on a comment) with their own contract +
 optimistic UI.
 
+## Delete a thread from the thread overflow menu (···)
+
+A destructive "Delete thread" item in the thread `···` menu (`ui/ThreadActions.tsx`) —
+red label, gated by a confirmation dialog — that removes a whole thread (pin, comments,
+attachments), not a single comment. This is thread-level, distinct from the per-comment
+more-menu above (which deletes one comment).
+
+Deferred — needs a new backend operation: there is no thread delete in the repository
+contract today. Shape: a `DELETE` use-case mirroring `set-thread-status.ts` plus a
+`deleteThread(scope, id)` repository method, wired through every adapter (memory / mongo /
+postgres) and the shared adapter contract suite (TDD). Client: a
+`controller.deleteThread(id)` that optimistically drops the thread from state and closes
+any open detail/panel, plus the confirm dialog (reuse the `@radix-ui/react-dialog` modal
+pattern from `identity/IdentityModal.tsx`). The `···` menu currently renders only
+extension `thread-toolbar` actions and returns `null` when there are none, so a built-in
+delete means it must render unconditionally.
+
 ## Smooth pin positioning (Vercel-Toolbar-style document anchoring)
 
 **Date:** 2026-06-03 · **Status:** idea · **Trigger:** our pins jitter on scroll.
