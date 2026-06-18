@@ -1,5 +1,12 @@
 # @airnauts/airside-integration-react
 
+## 0.9.1
+
+### Patch Changes
+
+- 44068eb: Docs: README updated to match the current public API — added API reference, peer dependencies, requirements, and related-packages sections.
+  - @airnauts/airside-client@0.9.1
+
 ## 0.9.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-integration-next",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Next.js App and Pages Router integration for the Airnauts commenting tool server.",
   "keywords": [
     "comments",

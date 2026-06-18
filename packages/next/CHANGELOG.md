@@ -1,5 +1,13 @@
 # @airnauts/airside-integration-next
 
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies [44068eb]
+  - @airnauts/airside-integration-react@0.9.1
+  - @airnauts/airside-server@0.9.1
+
 ## 0.9.0
 
 ### Minor Changes

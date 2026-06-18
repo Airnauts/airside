@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-integration-react",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "React mount (<AirsideLayer/>) for embedding the Airside commenting widget in any React host.",
   "keywords": [
     "comments",

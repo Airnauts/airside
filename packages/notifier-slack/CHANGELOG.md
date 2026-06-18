@@ -1,5 +1,12 @@
 # @airnauts/airside-extension-slack
 
+## 0.9.1
+
+### Patch Changes
+
+- @airnauts/airside-core@0.9.1
+- @airnauts/airside-server@0.9.1
+
 ## 0.9.0
 
 ### Patch Changes
