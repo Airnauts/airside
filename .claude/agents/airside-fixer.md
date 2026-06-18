@@ -16,11 +16,13 @@ given.
 - `FINDINGS` — a JSON array of the findings to fix. Each carries a stable **`id`** plus the detail
   to act on:
   - from the **review→fix loop**: `{id, severity, path, line, title, note, fix}` (id = a finding key).
-  - from the **in-review PR-comment pass**: `{id, path, line, body}` where `id` is the GitHub
-    **review-thread id** and `body` is your reviewer's (the human's) comment — do exactly what it
-    asks. These are a human's requests on a shipped PR; some are not code changes (a question, a
-    "consider later", an out-of-scope ask) — for those, **do not invent a change**; report the id as
-    `SKIPPED` with a one-line reason. The orchestrator resolves only the ids you report `FIXED`.
+  - from the **in-review PR-comment pass**: a human's request on the shipped PR, with a `kind`:
+    - `{id, kind:"thread", path, line, body}` — an inline review-thread comment on `path:line`.
+    - `{id, kind:"toplevel", body}` — a top-level PR comment; **no path/line**, so read `body` and
+      locate the right place yourself.
+    Do exactly what `body` asks. Some are **not** code changes (a question, "consider later", an
+    out-of-scope ask) — for those, **do not invent a change**; report the id as `SKIPPED` with a
+    one-line reason. The orchestrator acks every finding and resolves only the ids you report `FIXED`.
   Fix every finding you legitimately can. Do not invent changes beyond what they describe.
 
 ## Steps

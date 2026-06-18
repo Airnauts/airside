@@ -1459,3 +1459,38 @@ to `state:blocked`, and owner-only authorisation for `/approve` and PR-comment a
 Because the worker agents are substrate-agnostic prompts, migrating later to
 `anthropics/claude-code-action` would be a re-wiring of triggers, not a rewrite. This is
 tooling under `.claude/`/`docs/`, so it ships without a changeset.
+
+## ADR-0043 — airside-agent Slice 5: CI-green gate before ready; drop PROGRESS.md
+
+- **Date:** 2026-06-18
+- **Status:** accepted (refines ADR-0042)
+
+**Context.** Two rough edges surfaced once the `airside-agent` pipeline (ADR-0042) had run
+end-to-end. (1) The automated reviewer reads the **PR diff, not CI** — so a reviewer-clean PR
+could be promoted draft → ready while its CI was red, presenting a broken PR as "ready for
+review." (2) ADR-0042 had the builder write a `PROGRESS.md` branch log as a "human-readable
+trail." In practice the durable progress already lives in the GitHub **state comment** + the
+`airside-agent-review` notes; `PROGRESS.md` added nothing the issue didn't already show, collided
+at the repo root across concurrent agent branches, and the reviewer itself flagged it as noise on
+the first real run. Separately, Slice 4 had shipped post-ready PR-comment handling for **inline
+review threads only**, leaving top-level PR conversation comments unhandled.
+
+**Decision.** (1) **Gate promotion on CI.** Before `gh pr ready`, read `statusCheckRollup`: any
+completed check failing (`FAILURE`/`ERROR`/`CANCELLED`/`TIMED_OUT`/`ACTION_REQUIRED`) → `state:blocked`
++ a note (a human decides; do **not** loop the fixer on CI red); any check still running → wait and
+re-check next tick; all passed/skipped/neutral, **or no checks at all** → promote. (2) **Drop
+`PROGRESS.md`** — remove it from the builder and the runbook; the state comment + review notes are
+the single progress record. This **supersedes the `PROGRESS.md` consequence of ADR-0042**. (3)
+**Handle top-level PR comments** in the `in-review` op (alongside inline threads), anchored on the
+newest agent-ack comment (the same artifact-anchoring as the approval grammar), since top-level
+comments have no resolve primitive. We deliberately **defer** round-robin fairness and a global
+`MAX_ACTIVE` ceiling: the `≤1 op/tick` invariant plus the user-started/stopped loop already bound
+burn, and no multi-issue contention or unattended run has been observed to justify the machinery
+(and a bad `MAX_ACTIVE` would silently strand labelled issues).
+
+**Consequences.** A PR now reaches "ready" only when CI is green (or genuinely absent), so the
+ready signal is honest; the cost is that `reviewing` gains a "wait for pending CI" sub-state, so a
+tick may pass without promoting. One fewer artifact per branch and no repo-root collisions. The
+`in-review` phase is no longer inline-only — every PR comment surface a human uses is covered. The
+deferred items remain easy to add later (each is a localized op-selection/skip change) if real need
+appears. Tooling-only under `.claude/`/`docs/`, so no changeset.

@@ -1,6 +1,6 @@
 ---
 name: airside-builder
-description: Implements a single airside-agent task end-to-end in an isolated worktree and ships it as a DRAFT pull request. Spawned by the airside-agent orchestrator with isolation:"worktree". Reads the GitHub issue, builds it the airside way (TDD where it applies, changeset when a publishable package changes, lint clean), writes PROGRESS.md, pushes the canonical branch, and opens the draft PR. Returns a machine-parseable status block.
+description: Implements a single airside-agent task end-to-end in an isolated worktree and ships it as a DRAFT pull request. Spawned by the airside-agent orchestrator with isolation:"worktree". Reads the GitHub issue, builds it the airside way (TDD where it applies, changeset when a publishable package changes, lint clean), pushes the canonical branch, and opens the draft PR. Returns a machine-parseable status block.
 ---
 
 # airside-builder
@@ -61,32 +61,9 @@ If any are missing, stop and emit a `failed` status block (below) — do not gue
 4. **Verify before you push** (don't push red):
    - `pnpm lint` (this is biome `ci` — the strict gate; wide changes have broken CI here before).
    - Run the tests/build relevant to what you changed (e.g. `pnpm --filter @airnauts/airside-core test`,
-     or `pnpm build` if you changed types/exports). Note exactly what you ran in PROGRESS.md.
+     or `pnpm build` if you changed types/exports).
 
-5. **Write `PROGRESS.md`** at the repo root (this is the human-readable log the user asked for;
-   the orchestrator's real state lives on the issue). Structure it:
-   ```md
-   # PROGRESS — issue #<ISSUE>: <title>
-
-   **Phase:** building → draft PR
-   **Branch:** agent/issue-<ISSUE>
-
-   ## What was done
-   - <bullets>
-
-   ## Decisions
-   - <anything non-obvious, and why>
-
-   ## Verification
-   - <exact commands run and their result>
-
-   ## Follow-ups / not done
-   - <known gaps, deferred items, or "none">
-
-   _Automated by airside-builder for #<ISSUE>._
-   ```
-
-6. **Commit** with a clear conventional message and the repo's footer:
+5. **Commit** with a clear conventional message and the repo's footer:
    ```
    <type>: <summary>   (e.g. "docs: tidy the ideas backlog wording")
 
@@ -96,18 +73,18 @@ If any are missing, stop and emit a `failed` status block (below) — do not gue
    ```
    If there is **nothing to change**, do not invent a change — emit `failed` with that note.
 
-7. **Publish to the canonical branch** (the worktree's own branch name is throwaway):
+6. **Publish to the canonical branch** (the worktree's own branch name is throwaway):
    ```bash
    git push origin HEAD:agent/issue-<ISSUE>
    ```
 
-8. **Open the draft PR — but guard against duplicates first** (the orchestrator may have
+7. **Open the draft PR — but guard against duplicates first** (the orchestrator may have
    re-spawned you to *finish* an existing branch):
    ```bash
    gh pr list --repo Airnauts/airside --head agent/issue-<ISSUE> --state all --json number,url,isDraft
    ```
    - If a PR already exists → adopt it (capture its number + url); push your new commits (step 7
-     already did). Do **not** create a second PR.
+     already did, step 6). Do **not** create a second PR.
    - Else create it:
      ```bash
      gh pr create --repo Airnauts/airside --draft --base main \

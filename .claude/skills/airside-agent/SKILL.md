@@ -19,18 +19,18 @@ are the orchestrator: you read live GitHub state with `gh`, advance each labelle
 never overlap and correctness never depends on timing. You can also invoke `/airside-agent`
 once, by hand, to run a single tick (this is how you test it).
 
-> **Current scope — Slices 1–4.** Both paths are live, and the loop now also applies **your
-> post-ready PR review comments**. **Simple:** a labelled issue is built into a **draft PR**,
-> auto-**reviewed**, high/critical findings **auto-fixed** (capped), and promoted **draft → ready**
-> at `state:in-review`. **Complex:** the issue is **triaged**, a **spec** is researched and posted
-> for you to **`/approve` or `/revise`**, then joins the build → review → ready path. **In review:**
-> your unresolved inline review threads are picked up, fixed, and resolved (see the `in-review` op).
-> Terminal hardening (Slice 5) is still to come; this runbook parks anything it can't yet handle with
-> a note (it never silently drops work). See `docs/adr.md` (ADR-0042).
+> **Current scope — Slices 1–5.** The full pipeline is live. **Simple:** a labelled issue is built
+> into a **draft PR**, auto-**reviewed**, high/critical findings **auto-fixed** (capped), CI-gated,
+> and promoted **draft → ready** at `state:in-review`. **Complex:** the issue is **triaged**, a
+> **spec** is researched and posted for you to **`/approve` or `/revise`**, then joins the
+> build → review → ready path. **In review:** the comments you leave — **inline review threads and
+> top-level PR comments** — are picked up, fixed, and acknowledged. **Terminal:** a merge → `done`,
+> a close → `done`/`cancelled` (kill switch). The runbook parks anything it can't handle with a note
+> (it never silently drops work). See `docs/adr.md` (ADR-0042, ADR-0043).
 >
-> **Scope boundary (Slice 4):** only **inline review threads** (comments on diff lines) are applied.
-> Top-level PR *conversation* comments (posted in the main PR thread, not on a line) are **not** yet
-> picked up — that's a Slice 5 item. If you want a change applied, leave it as a line comment.
+> **Deferred (no observed need yet):** round-robin fairness across many simultaneously-active issues,
+> and a global `MAX_ACTIVE` ceiling — the `≤1 op/tick` invariant + the user-started loop already bound
+> burn. Add them if real multi-issue contention or unattended runs show up.
 
 ## Config
 
@@ -303,8 +303,23 @@ gh api repos/Airnauts/airside/issues/<n>/comments \
   findings happens next tick (keeps it one op/tick and crash-safe).
 - **A review note for `HEAD` exists** → act on it:
   - `highs` = its findings with severity `critical` or `high`.
-  - **`highs` empty** → promote: `gh pr ready <pr>` → phase `in-review`; post a human summary note
-    (list any medium/low for the reviewer to consider). Done.
+  - **`highs` empty** → **CI-gate, then promote.** The reviewer reads the diff, not CI — so before
+    readying, check the PR's checks (CI can catch what the local build didn't):
+
+    ```bash
+    gh pr view <pr> --repo Airnauts/airside --json statusCheckRollup --jq '
+      [.statusCheckRollup[]?] as $all
+      | { failing: ([ $all[] | select(((.conclusion // "")|IN("FAILURE","ERROR","CANCELLED","TIMED_OUT","ACTION_REQUIRED")) or ((.state // "")|IN("FAILURE","ERROR"))) ]|length),
+          pending: ([ $all[] | select((has("status") and .status!="COMPLETED") or ((.state // "")|IN("PENDING","EXPECTED"))) ]|length),
+          total:   ($all|length) }'
+    ```
+    - `failing > 0` → **`state:blocked`** + a note ("CI red on a reviewer-clean PR — needs your
+      look"). Do **not** loop the fixer on CI red (rabbit hole); a human decides.
+    - else `pending > 0` → **wait**: leave phase `reviewing`, write nothing, re-check next tick
+      (don't promote a PR whose checks are still running).
+    - else (all checks passed/skipped/neutral, **or `total == 0`** — a repo with no CI must not hang)
+      → promote: `gh pr ready <pr>` → phase `in-review`; post a human summary note (list any
+      medium/low for the reviewer to consider). Done.
   - **`highs` non-empty** → check the cap. `H` = number of `airside-agent-review` notes whose
     findings include ≥1 `critical`/`high`. If **`H > REVIEW_CAP`** → phase `blocked` + an escalation
     note listing the unresolved highs (already auto-fixed `REVIEW_CAP` times). Otherwise → **fix**:
@@ -316,9 +331,11 @@ gh api repos/Airnauts/airside/issues/<n>/comments \
 
 #### `in-review` (apply your PR review comments)
 
-The ready PR is yours to review; this op applies the **inline review threads** you leave. Fetch them
-(GraphQL — REST can't see resolved state), with the comment `databaseId` (for replies) and the thread
-node `id` (for resolve):
+The ready PR is yours to review; this op applies the comments you leave — both **inline review
+threads** (on diff lines) and **top-level conversation comments** (in the main PR thread).
+
+**(i) Inline review threads** (GraphQL — REST can't see resolved state); capture each comment's
+`databaseId` (for replies) and the thread node `id` (for resolve):
 
 ```bash
 gh api graphql -f query='query($o:String!,$r:String!,$p:Int!){
@@ -328,38 +345,53 @@ gh api graphql -f query='query($o:String!,$r:String!,$p:Int!){
   -F o=Airnauts -F r=airside -F p=<pr>
 ```
 
-**Actionable thread** = `isResolved==false` **AND** the thread's **last** comment is authored by
-`OWNER` **AND** that last comment contains **no** `airside-agent` marker. The marker clause is the
-idempotency device: once you reply to a thread (your replies carry the marker — see below), its last
-comment is the agent's, so it won't be re-picked until the human comments again. (Bot == owner login,
-exactly as in the approval grammar.) `isResolved` is the other gate.
+A thread is **actionable** = `isResolved==false` **AND** its **last** comment is by `OWNER` **AND**
+that comment has **no** `airside-agent` marker. (Bot == owner login, so the marker on the agent's own
+replies is the idempotency device; `isResolved` is the other gate.)
 
-**If there are zero actionable threads → REST: write nothing** (no label, no note, no state PATCH).
-This is a read-only tick for that issue.
+**(ii) Top-level conversation comments** (a PR is an issue):
 
-Otherwise, build a finding per actionable thread: `{id: <threadId>, path, line, body: <your comment>}`
-and spawn `airside-fixer` (worktree) with that batch. Capture the PR head before; after it returns,
-re-read the head as a coarse "did anything happen" check. Then, **per thread**:
+```bash
+gh api repos/Airnauts/airside/issues/<pr>/comments \
+  --jq '.[] | {id, createdAt: .created_at, login: .user.login, body}'
+```
 
-- thread id in the fixer's `FIXED` list → post a marked reply via REST and **resolve** it:
+There is no per-comment resolve here, so anchor on the artifact (like the approval grammar): let
+`ACK_AT` = the `created_at` of the **newest top-level comment carrying an `airside-agent` marker**
+(the agent's own last ack), or the PR's `createdAt` if none. A top-level comment is **actionable** =
+`login==OWNER` **AND** `created_at > ACK_AT` **AND** body has no `airside-agent` marker.
+
+**If there are zero actionable items (threads + top-level) → REST: write nothing** (no label, note,
+or state PATCH). A read-only tick.
+
+Otherwise build one findings batch, tagging each with its `kind` so you know how to acknowledge it:
+- thread → `{id: <threadId>, kind: "thread", path, line, body, replyTo: <last comment databaseId>}`
+- top-level → `{id: "tl-<commentId>", kind: "toplevel", body}` (no path/line — a general instruction)
+
+Spawn `airside-fixer` (worktree) **once** with the whole batch. Capture the PR head before; re-read
+after as a coarse "did anything change" check. Then **acknowledge per finding, by `kind`**:
+
+- **thread + `FIXED`** → marked reply + **resolve**:
   ```bash
   gh api repos/Airnauts/airside/pulls/<pr>/comments -f body='🤖 airside-agent: addressed in <sha>.' \
-    -F in_reply_to=<last comment databaseId>
+    -F in_reply_to=<replyTo>
   gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{isResolved}}}' \
-    -F id=<thread node id>
+    -F id=<threadId>
   ```
-- thread id in `SKIPPED` (or the fixer returned `no-changes` for it) → post a marked reply
-  (`🤖 airside-agent: couldn't auto-apply — <reason>; over to you.`) and **leave it unresolved**.
-  **Never auto-resolve a thread you didn't change** — many review comments are questions, nits, or
-  "consider later"; resolving those would silently dismiss your concern. The marked reply alone makes
-  the thread non-actionable next tick (loop-free) while keeping it open for you.
+- **thread + `SKIPPED`** → marked reply (`couldn't auto-apply — <reason>; over to you.`), **leave unresolved**.
+- **top-level + `FIXED`** → marked top-level reply: `gh pr comment <pr> --repo Airnauts/airside --body '🤖 airside-agent: addressed "<comment gist>" in <sha>.'`
+- **top-level + `SKIPPED`** → marked top-level reply: `gh pr comment <pr> --repo Airnauts/airside --body '🤖 airside-agent: noted "<comment gist>" — no code change (<reason>).'`
 
-Stay `in-review` (do **not** re-run the automated reviewer — you're driving, and CI still runs on the
-push). A merge moves it to `done` via the terminal check. **Crash-safety:** if the tick dies after the
-push but before replying, the threads are still unresolved with your comment last → next tick re-runs
-the fixer, which finds the change already applied and reports `no-changes`/`SKIPPED` → those get a
-marked reply and stay **unresolved**, so nothing is dropped; you resolve the already-applied one by
-hand (a single click — the deliberate cost of never auto-resolving an unchanged thread).
+For top-level there's no resolve — the **marked reply is the idempotency**: it becomes the newest
+agent-marker comment, advancing `ACK_AT` past the item so it isn't re-processed. **Never auto-resolve
+a thread you didn't change, and never skip the ack** — many comments are questions or nits; the marked
+reply stops re-triggering while leaving your concern visible.
+
+Stay `in-review` (do **not** re-run the automated reviewer — you're driving, and CI runs on the push).
+A merge → `done` via the terminal check. **Crash-safety:** if the tick dies after the push but before
+acking, the items still look actionable next tick → the fixer re-runs (finds the change already
+applied → `no-changes`/`SKIPPED`) and the acks post then; nothing is dropped (cost is a duplicate-safe
+re-run and, for a thread, one manual resolve click).
 
 ## Triage spawn contract
 
@@ -422,7 +454,9 @@ Spawn with the **Agent tool**, `isolation: "worktree"`, `subagent_type: "airside
 Fallback: `general-purpose` + `.claude/agents/airside-fixer.md` preamble. Pass: `PR_NUMBER`,
 `REPO`, `ISSUE`, `BRANCH`, and `FINDINGS` — each finding carries a stable **`id`**:
 - review→fix loop: the `highs` array (id = a finding key).
-- in-review pass: one finding per actionable thread, `{id: <threadId>, path, line, body}`.
+- in-review pass: one finding per actionable item, tagged with `kind` — `{id:<threadId>, kind:"thread",
+  path, line, body}` for an inline thread, or `{id:"tl-<commentId>", kind:"toplevel", body}` for a
+  top-level PR comment (no path/line).
 
 It returns:
 
@@ -457,11 +491,13 @@ ground truth that *something* changed; its consequence differs by caller:
 - The worktree hook auto-names the build branch `worktree-<name>`; the builder pushes to the
   canonical name explicitly: `git push origin HEAD:agent/issue-<n>`.
 
-## Roadmap (where later slices plug in)
+## Roadmap (all slices shipped)
 
-- **Slice 2 (done)** — the `reviewing` review→fix→ready loop documented above.
-- **Slice 3 (done)** — the complex path (`triage` → `speccing` → `awaiting-approval` grammar) above.
-- **Slice 4 (done)** — the `in-review` PR-comment op (inline review threads) documented above.
-- **Slice 5** — top-level PR *conversation* comments (the inline-only gap noted in scope); terminal
-  hardening, round-robin fairness, optional CI-green gate (`statusCheckRollup`) before ready, and a
-  global "max active tasks" ceiling.
+- **Slice 1** — issue → draft PR (the `building` op).
+- **Slice 2** — the `reviewing` review→fix→ready loop.
+- **Slice 3** — the complex path (`triage` → `speccing` → `awaiting-approval` grammar).
+- **Slice 4** — the `in-review` PR-comment op for **inline** review threads.
+- **Slice 5** — the **CI-green gate** before promote, **top-level** PR-comment handling, terminal
+  hardening (merge/close → `done`/`cancelled`), and dropping the redundant PROGRESS.md (ADR-0043).
+- **Deferred** (no observed need): round-robin fairness across many concurrently-active issues, and a
+  global `MAX_ACTIVE` ceiling — see the scope note at the top.
