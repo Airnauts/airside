@@ -70,8 +70,16 @@ your review findings, and the user's chatter:
 - `<!-- airside-agent-spec v<n> -->` — the spec (complex path). The **highest version** is current;
   it is the `awaiting-approval` artifact and the builder's source of truth.
 - `<!-- airside-agent-note -->` — human-facing notes (escalations, review/promotion summaries,
-  "re-approve please"). **These four `airside-agent-*` markers also identify the bot's own
-  comments** — see the disambiguation rule in the approval step.
+  "re-approve please").
+- Replies/acks the bot posts on PR threads carry the visible prefix `🤖 airside-agent:` (no HTML
+  marker is rendered, but the prefix is the marker).
+
+> **Bot-comment rule (the disambiguation device — used everywhere the bot reads "owner" comments).**
+> The loop runs under the **owner's own login**, so login can't distinguish bot from human. A comment
+> is the **bot's own** (exclude it from every owner-command / actionability check) **iff its body
+> contains `<!-- airside-agent` (the HTML marker opener) OR `🤖 airside-agent` (the ack prefix).** A
+> human merely *mentioning* "airside-agent" in prose is **not** excluded — match the precise markers,
+> never the bare word.
 
 ### State JSON
 
@@ -196,9 +204,9 @@ gh api repos/Airnauts/airside/issues/<n>/comments \
 ```
 
 Consider only **owner commands**: comments where `login == OWNER`, `created_at > SPEC_AT`, and the
-body contains **no** `airside-agent-` marker. That last clause is essential — the bot posts under the
-same login as the owner, so its own state/spec/notes must be excluded. Classify each by its **leading
-line**: `/approve`, `/revise <notes>`, `/stop`; plus a bare-word approve fallback (trimmed +
+body is **not a bot comment** (per the bot-comment rule — no `<!-- airside-agent` / `🤖 airside-agent`;
+do **not** exclude on the bare word, or a human who mentions "airside-agent" gets dropped). Classify
+each by its **leading line**: `/approve`, `/revise <notes>`, `/stop`; plus a bare-word approve fallback (trimmed +
 lowercased ∈ `approve|approved|lgtm|ship it|✅`). Also compute `bodyChanged = sha256(title+body) !=
 lastSpecInputHash`. Decide:
 
@@ -346,8 +354,8 @@ gh api graphql -f query='query($o:String!,$r:String!,$p:Int!){
 ```
 
 A thread is **actionable** = `isResolved==false` **AND** its **last** comment is by `OWNER` **AND**
-that comment has **no** `airside-agent` marker. (Bot == owner login, so the marker on the agent's own
-replies is the idempotency device; `isResolved` is the other gate.)
+that comment is **not a bot comment** (per the bot-comment rule). The bot's marked reply on a thread
+makes its last comment the agent's → no longer actionable; `isResolved` is the other gate.
 
 **(ii) Top-level conversation comments** (a PR is an issue):
 
@@ -357,9 +365,9 @@ gh api repos/Airnauts/airside/issues/<pr>/comments \
 ```
 
 There is no per-comment resolve here, so anchor on the artifact (like the approval grammar): let
-`ACK_AT` = the `created_at` of the **newest top-level comment carrying an `airside-agent` marker**
-(the agent's own last ack), or the PR's `createdAt` if none. A top-level comment is **actionable** =
-`login==OWNER` **AND** `created_at > ACK_AT` **AND** body has no `airside-agent` marker.
+`ACK_AT` = the `created_at` of the **newest top-level comment that is a bot comment** (per the
+bot-comment rule — the agent's own last ack), or the PR's `createdAt` if none. A top-level comment is
+**actionable** = `login==OWNER` **AND** `created_at > ACK_AT` **AND** it is **not a bot comment**.
 
 **If there are zero actionable items (threads + top-level) → REST: write nothing** (no label, note,
 or state PATCH). A read-only tick.
