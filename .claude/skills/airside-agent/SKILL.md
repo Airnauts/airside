@@ -19,13 +19,18 @@ are the orchestrator: you read live GitHub state with `gh`, advance each labelle
 never overlap and correctness never depends on timing. You can also invoke `/airside-agent`
 once, by hand, to run a single tick (this is how you test it).
 
-> **Current scope — Slices 1–3.** Both paths are live. **Simple:** a labelled issue is built into a
-> **draft PR**, auto-**reviewed**, high/critical findings **auto-fixed** (capped), and promoted
-> **draft → ready** at `state:in-review`. **Complex:** the issue is **triaged**, a **spec** is
-> researched and posted for you to **`/approve` or `/revise`**, and on approval it joins the same
-> build → review → ready path. The post-ready PR-comment fixer (Slice 4) and terminal hardening
-> (Slice 5) are still to come; this runbook says where they plug in and parks anything it can't yet
-> handle with a note (it never silently drops work). See `docs/adr.md` (ADR-0042).
+> **Current scope — Slices 1–4.** Both paths are live, and the loop now also applies **your
+> post-ready PR review comments**. **Simple:** a labelled issue is built into a **draft PR**,
+> auto-**reviewed**, high/critical findings **auto-fixed** (capped), and promoted **draft → ready**
+> at `state:in-review`. **Complex:** the issue is **triaged**, a **spec** is researched and posted
+> for you to **`/approve` or `/revise`**, then joins the build → review → ready path. **In review:**
+> your unresolved inline review threads are picked up, fixed, and resolved (see the `in-review` op).
+> Terminal hardening (Slice 5) is still to come; this runbook parks anything it can't yet handle with
+> a note (it never silently drops work). See `docs/adr.md` (ADR-0042).
+>
+> **Scope boundary (Slice 4):** only **inline review threads** (comments on diff lines) are applied.
+> Top-level PR *conversation* comments (posted in the main PR thread, not on a line) are **not** yet
+> picked up — that's a Slice 5 item. If you want a change applied, leave it as a line comment.
 
 ## Config
 
@@ -150,16 +155,16 @@ gh pr list --repo Airnauts/airside --head agent/issue-<n> --state all \
   --json number,isDraft,state                                       # PR exists?
 ```
 
-- **First, honour resting states.** If the recorded phase is `in-review`, `blocked`, `done`, or
-  `cancelled`, do **not** re-derive it from artifacts — these are stable. Run the terminal check
-  in (b) only (a merge/close moves them to `done`/`cancelled`); otherwise leave the phase and
-  labels exactly as they are and do no op this tick. This is what stops a finished (ready) PR
-  from being re-promoted every tick — no label flapping, no repeated `gh pr ready`, no duplicate
-  promotion notes. (Slice 4 makes `in-review` active again for PR-review comments; Slice 5 adds a
-  `blocked` retry. Until then they wait for the human.)
-- An **open PR** exists (and the phase isn't resting) → record its `prNumber` and map by draft
-  state: PR is **draft** → phase `reviewing` (the review→fix loop owns it); PR is **ready** (not
-  draft) → phase `in-review`. (Merged/closed is the terminal check in (b).)
+- **First, honour resting states.** If the recorded phase is `blocked`, `done`, or `cancelled`, do
+  **not** re-derive it from artifacts — these are stable. Run the terminal check in (b) only (a
+  merge/close moves them to `done`/`cancelled`); otherwise leave the phase and labels exactly as
+  they are and do no op this tick. (Slice 5 adds a `blocked` retry; until then `blocked` waits for
+  the human.)
+- An **open PR** exists (phase not resting) → record its `prNumber` and map by draft state: PR is
+  **draft** → phase `reviewing` (the review→fix loop owns it); PR is **ready** (not draft) → phase
+  `in-review`. (Merged/closed is the terminal check in (b).) `in-review` is **active** — it rests
+  unless you have unresolved review threads, which the §3 `in-review` op applies. The map/label
+  write is idempotent (same phase ⇒ no churn), so a finished, comment-free PR still doesn't flap.
 - Branch exists, no PR → phase = `building` (a prior build needs to **finish + open the PR**;
   the builder is idempotent and will adopt the branch).
 - **No branch, no PR — these phases have no artifact, so honour the state comment / spec comment;
@@ -227,9 +232,9 @@ Remove only the *recorded previous* phase label (avoids "label not on issue" err
 ### 3. Expensive op — spawn AT MOST ONE subagent
 
 Collect the issues that need an op: phase `triage` (classify), `speccing` (author the spec),
-`building` (build), `reviewing` (review or fix), or `awaiting-approval` **with a pending revision**
-from (d2) (author the next spec version). Pick the **oldest** by `updatedAt`, do **one** op, then
-end the tick.
+`building` (build), `reviewing` (review or fix), `awaiting-approval` **with a pending revision** from
+(d2) (author the next spec version), or `in-review` **with ≥1 actionable review thread** (apply your
+PR comments — see below). Pick the **oldest** by `updatedAt`, do **one** op, then end the tick.
 
 > **Invariant: ≤ 1 subagent spawn per tick.** Everything else is `gh`. This bounds the tick
 > (each isolated worktree op pays ~1 min of setup) and prevents N concurrent worktrees. Safe
@@ -309,6 +314,53 @@ gh api repos/Airnauts/airside/issues/<n>/comments \
     `reviewing` — the new head has no review note, so the next tick re-reviews. Convergence:
     review → fix → re-review until clean (→ `in-review`) or capped (→ `blocked`).
 
+#### `in-review` (apply your PR review comments)
+
+The ready PR is yours to review; this op applies the **inline review threads** you leave. Fetch them
+(GraphQL — REST can't see resolved state), with the comment `databaseId` (for replies) and the thread
+node `id` (for resolve):
+
+```bash
+gh api graphql -f query='query($o:String!,$r:String!,$p:Int!){
+  repository(owner:$o,name:$r){ pullRequest(number:$p){ reviewThreads(first:100){ nodes{
+    id isResolved
+    comments(first:50){ nodes{ databaseId body author{login} path line } } } } } } }' \
+  -F o=Airnauts -F r=airside -F p=<pr>
+```
+
+**Actionable thread** = `isResolved==false` **AND** the thread's **last** comment is authored by
+`OWNER` **AND** that last comment contains **no** `airside-agent` marker. The marker clause is the
+idempotency device: once you reply to a thread (your replies carry the marker — see below), its last
+comment is the agent's, so it won't be re-picked until the human comments again. (Bot == owner login,
+exactly as in the approval grammar.) `isResolved` is the other gate.
+
+**If there are zero actionable threads → REST: write nothing** (no label, no note, no state PATCH).
+This is a read-only tick for that issue.
+
+Otherwise, build a finding per actionable thread: `{id: <threadId>, path, line, body: <your comment>}`
+and spawn `airside-fixer` (worktree) with that batch. Capture the PR head before; after it returns,
+re-read the head as a coarse "did anything happen" check. Then, **per thread**:
+
+- thread id in the fixer's `FIXED` list → post a marked reply via REST and **resolve** it:
+  ```bash
+  gh api repos/Airnauts/airside/pulls/<pr>/comments -f body='🤖 airside-agent: addressed in <sha>.' \
+    -F in_reply_to=<last comment databaseId>
+  gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{isResolved}}}' \
+    -F id=<thread node id>
+  ```
+- thread id in `SKIPPED` (or the fixer returned `no-changes` for it) → post a marked reply
+  (`🤖 airside-agent: couldn't auto-apply — <reason>; over to you.`) and **leave it unresolved**.
+  **Never auto-resolve a thread you didn't change** — many review comments are questions, nits, or
+  "consider later"; resolving those would silently dismiss your concern. The marked reply alone makes
+  the thread non-actionable next tick (loop-free) while keeping it open for you.
+
+Stay `in-review` (do **not** re-run the automated reviewer — you're driving, and CI still runs on the
+push). A merge moves it to `done` via the terminal check. **Crash-safety:** if the tick dies after the
+push but before replying, the threads are still unresolved with your comment last → next tick re-runs
+the fixer, which finds the change already applied and reports `no-changes`/`SKIPPED` → those get a
+marked reply and stay **unresolved**, so nothing is dropped; you resolve the already-applied one by
+hand (a single click — the deliberate cost of never auto-resolving an unchanged thread).
+
 ## Triage spawn contract
 
 Spawn with the **Agent tool**, `subagent_type: "airside-triage"` (no worktree, read-only).
@@ -368,20 +420,27 @@ and `HEAD_SHA` (the current head). It returns one fenced ```json block:
 
 Spawn with the **Agent tool**, `isolation: "worktree"`, `subagent_type: "airside-fixer"`.
 Fallback: `general-purpose` + `.claude/agents/airside-fixer.md` preamble. Pass: `PR_NUMBER`,
-`REPO`, `ISSUE`, `BRANCH`, and `FINDINGS` = the `highs` array. It returns:
+`REPO`, `ISSUE`, `BRANCH`, and `FINDINGS` — each finding carries a stable **`id`**:
+- review→fix loop: the `highs` array (id = a finding key).
+- in-review pass: one finding per actionable thread, `{id: <threadId>, path, line, body}`.
+
+It returns:
 
 ```
 STATUS: ok | no-changes | failed
 BRANCH: agent/issue-<n>
 NEW_HEAD: <sha>
-FIXED: <titles>
-SKIPPED: <titles + why, or none>
+FIXED: <finding ids it changed code for>
+SKIPPED: <id=reason; ... or none>
 NOTE: <one line>
 ```
 
-Trust **head-delta**, not `STATUS`: if the PR head is unchanged after the fixer returns, escalate
-to `state:blocked` regardless of what it reported. The fixer is also reused in Slice 4 to apply
-the human's PR-review threads.
+`FIXED`/`SKIPPED` are keyed by finding **id** so you can act per-finding. **Head-delta** is the
+ground truth that *something* changed; its consequence differs by caller:
+- **review→fix loop:** head unchanged → `state:blocked` ("fixer made no progress").
+- **in-review pass:** head-unchanged / `no-changes` is **not** an error — it just means those threads
+  need no code change (already applied, or a question/nit). Resolve only the ids in `FIXED`;
+  reply-and-leave-open the rest. **Never block, never auto-resolve an unchanged thread.**
 
 ## `gh` gotchas (baked in above, collected here)
 
@@ -402,8 +461,7 @@ the human's PR-review threads.
 
 - **Slice 2 (done)** — the `reviewing` review→fix→ready loop documented above.
 - **Slice 3 (done)** — the complex path (`triage` → `speccing` → `awaiting-approval` grammar) above.
-- **Slice 4** — `in-review`: apply the owner's unresolved PR review threads (GraphQL
-  `reviewThreads`; actionable = `isResolved==false` & owner-authored & last comment not the
-  agent's) → fixer → reply + `resolveReviewThread`.
-- **Slice 5** — terminal hardening, round-robin fairness, optional CI-green gate
-  (`statusCheckRollup`) before ready, and a global "max active tasks" ceiling.
+- **Slice 4 (done)** — the `in-review` PR-comment op (inline review threads) documented above.
+- **Slice 5** — top-level PR *conversation* comments (the inline-only gap noted in scope); terminal
+  hardening, round-robin fairness, optional CI-green gate (`statusCheckRollup`) before ready, and a
+  global "max active tasks" ceiling.
