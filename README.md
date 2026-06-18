@@ -223,14 +223,15 @@ None of these are committed releases — they're the directions we're considerin
 **Widget & UX**
 
 - Detail-view prev/next navigation — step through the filtered thread list from the detail header without returning to the list _(parking lot)_.
-- Re-navigate to a thread's pin from the open detail — click the page-context card to jump back to the anchor _(parking lot)_.
+- Re-navigate to a thread's pin from the open detail — click the page-context card in the sidebar to jump back to the anchor _(parking lot)_.
 - Per-comment overflow menu — edit / delete / copy a comment _(needs new `PATCH`/`DELETE` comment endpoints)_.
 - Emoji reactions on comments _(new `Comment` field + add/remove-reaction endpoints across both adapters)_.
-- Drag-and-drop and paste image upload onto the comment composer _(parking lot; UX layer over the existing upload path)_.
+- Drag-and-drop and paste image upload onto the comment composer _(parking lot; a UX layer over the existing upload path)_.
 - Smooth, document-anchored pin positioning — drop the per-scroll-frame layout work for jank-free pins _(parking lot; a positioning-basis change that would get its own ADR)_.
 - Hide-all-pins toggle — temporarily hide the marker overlay while keeping the session active _(parking lot)_.
 - "Powered by Airside" logo mark in the widget chrome with a link back to the repo _(parking lot; host-configurable)_.
 - In-widget changelog popup surfacing recent user-facing changes to reviewers _(parking lot)_.
+- Page-level / unanchored comments — start a thread without placing a pin, for general page feedback _(parking lot; schema seam already designed in the architecture)_.
 - Rich-text / Markdown comment bodies.
 - `@mentions` and thread assignment.
 - Accessibility & keyboard-navigation pass; widget UI localization (i18n).
@@ -258,7 +259,7 @@ None of these are committed releases — they're the directions we're considerin
 
 **Bug fixes & known rough edges**
 
-- Selection highlight rects drift after window resize — need to recompute Range rects on reflow _(open bug; see `docs/issues.md`)_.
+- Selection highlight rects drift after scroll and window resize — Range rects are cached at match time and not recomputed on reposition _(open bug; see `docs/issues.md`)_.
 - Opening a thread does not surface its anchored text selection visually _(missing behavior)_.
 - Thread page-context card shows the URL on both lines because `pageTitle` is never captured at create time _(cosmetic; fix is a one-liner in the client)_.
 - Place mode drops a pin on the launcher and sidebar chrome instead of ignoring those clicks _(rebrand regression; stale attribute name in the place-mode click guard)_.
