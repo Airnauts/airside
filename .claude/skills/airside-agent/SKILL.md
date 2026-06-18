@@ -71,8 +71,9 @@ your review findings, and the user's chatter:
   it is the `awaiting-approval` artifact and the builder's source of truth.
 - `<!-- airside-agent-note -->` — human-facing notes (escalations, review/promotion summaries,
   "re-approve please").
-- Replies/acks the bot posts on PR threads carry the visible prefix `🤖 airside-agent:` (no HTML
-  marker is rendered, but the prefix is the marker).
+- Replies/acks the bot posts on PR threads carry the visible prefix `🤖 airside-agent:`; **top-level**
+  PR-comment acks also embed `<!-- airside-agent-ack:tl-<commentId> -->`, marking each handled comment
+  by id (the top-level idempotency key — see the `in-review` op).
 
 > **Bot-comment rule (the disambiguation device — used everywhere the bot reads "owner" comments).**
 > The loop runs under the **owner's own login**, so login can't distinguish bot from human. A comment
@@ -364,10 +365,13 @@ gh api repos/Airnauts/airside/issues/<pr>/comments \
   --jq '.[] | {id, createdAt: .created_at, login: .user.login, body}'
 ```
 
-There is no per-comment resolve here, so anchor on the artifact (like the approval grammar): let
-`ACK_AT` = the `created_at` of the **newest top-level comment that is a bot comment** (per the
-bot-comment rule — the agent's own last ack), or the PR's `createdAt` if none. A top-level comment is
-**actionable** = `login==OWNER` **AND** `created_at > ACK_AT` **AND** it is **not a bot comment**.
+There is no per-comment resolve here, so make idempotency **per-comment by id**, not by timestamp (a
+timestamp anchor would silently drop a comment posted *while* the fixer op runs — its `created_at`
+ends up behind the ack). The bot's ack for a comment carries that comment's id:
+`<!-- airside-agent-ack:tl-<commentId> -->`. Collect the set of **acked ids** (every
+`airside-agent-ack:tl-<id>` marker found in any PR comment). A top-level comment is **actionable** =
+`login==OWNER` **AND** it is **not a bot comment** (per the rule) **AND** its `id` is not in the acked
+set. (Per-comment + artifact-based = the top-level analog of inline's `isResolved`; immune to timing.)
 
 **If there are zero actionable items (threads + top-level) → REST: write nothing** (no label, note,
 or state PATCH). A read-only tick.
@@ -387,13 +391,16 @@ after as a coarse "did anything change" check. Then **acknowledge per finding, b
     -F id=<threadId>
   ```
 - **thread + `SKIPPED`** → marked reply (`couldn't auto-apply — <reason>; over to you.`), **leave unresolved**.
-- **top-level + `FIXED`** → marked top-level reply: `gh pr comment <pr> --repo Airnauts/airside --body '🤖 airside-agent: addressed "<comment gist>" in <sha>.'`
-- **top-level + `SKIPPED`** → marked top-level reply: `gh pr comment <pr> --repo Airnauts/airside --body '🤖 airside-agent: noted "<comment gist>" — no code change (<reason>).'`
+- **top-level + `FIXED`** → marked top-level reply **tagged with the comment's id**:
+  `gh pr comment <pr> --repo Airnauts/airside --body '🤖 airside-agent: addressed "<comment gist>" in <sha>. <!-- airside-agent-ack:tl-<commentId> -->'`
+- **top-level + `SKIPPED`** → same shape, noting no change:
+  `gh pr comment <pr> --repo Airnauts/airside --body '🤖 airside-agent: noted "<comment gist>" — no code change (<reason>). <!-- airside-agent-ack:tl-<commentId> -->'`
 
-For top-level there's no resolve — the **marked reply is the idempotency**: it becomes the newest
-agent-marker comment, advancing `ACK_AT` past the item so it isn't re-processed. **Never auto-resolve
-a thread you didn't change, and never skip the ack** — many comments are questions or nits; the marked
-reply stops re-triggering while leaving your concern visible.
+For top-level there's no resolve — the **id-tagged ack is the idempotency**: posting
+`airside-agent-ack:tl-<commentId>` marks exactly that comment handled, so it isn't re-processed even
+if other comments arrive meanwhile. **Never auto-resolve a thread you didn't change, and never skip
+the ack** — many comments are questions or nits; the ack stops re-triggering while leaving your
+concern visible.
 
 Stay `in-review` (do **not** re-run the automated reviewer — you're driving, and CI runs on the push).
 A merge → `done` via the terminal check. **Crash-safety:** if the tick dies after the push but before
