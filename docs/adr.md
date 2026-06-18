@@ -1494,3 +1494,46 @@ tick may pass without promoting. One fewer artifact per branch and no repo-root 
 `in-review` phase is no longer inline-only — every PR comment surface a human uses is covered. The
 deferred items remain easy to add later (each is a localized op-selection/skip change) if real need
 appears. Tooling-only under `.claude/`/`docs/`, so no changeset.
+
+---
+
+## ADR-0045 — Amazon S3 / Cloudflare R2 storage adapter
+
+- **Date:** 2026-06-18
+- **Status:** accepted (amends ADR-0003's adapter scope; relates to ADR-0028)
+
+**Context.** Airside shipped only two `StorageAdapter` concretes — Vercel Blob and filesystem.
+Adopters on AWS (or Cloudflare R2) had no first-class attachment-storage path, and S3/R2 was the
+most-requested backend on the README roadmap. The `StorageAdapter` contract is `put(blob) → { url,
+key, size }` only; per ADR-0024 the server persists `put()`'s returned `url` and serves that exact
+string forever (`<img src=url>`) — there is no re-sign-on-read seam.
+
+**Decision.** Add a new publishable concrete, `@airnauts/airside-storage-s3`, built on
+`@aws-sdk/client-s3` (a real dependency, externalized by tsup). Four sub-decisions: (1) **One package,
+not two.** R2 is S3-API-compatible (same client, custom `endpoint`), so a thin `createR2Storage`
+convenience — which fills `region: 'auto'` and derives `https://<accountId>.r2.cloudflarestorage.com`
+— covers R2 without a second package (rule-of-three, consistent with ADR-0035). (2) **Stable public
+URL, the only mode in v1.** `put()` returns `${publicBaseUrl.replace(/\/$/,'')}/${key}`;
+`publicBaseUrl` is **required and explicit** (a CDN/custom domain, an R2 public-bucket URL, or the
+virtual-hosted S3 URL) — we deliberately do not auto-derive `https://<bucket>.s3.<region>.amazonaws.com`,
+which silently fails for private/CDN-fronted buckets. The object is uploaded **without an ACL** (modern
+buckets default to "bucket owner enforced", where `ACL: 'public-read'` errors); public readability is
+the host's bucket-policy/CDN responsibility. Presigned GET URLs are **rejected for v1**: a presigned URL
+persisted at put-time expires (SigV4 max 7 days) and becomes a dead `<img>`. Presigned-on-read remains a
+future option but requires a new contract method (e.g. `urlFor(key)`) **and** a server read-path change
+— out of scope. (3) **Optional credentials → SDK default provider chain.** When `credentials` is omitted
+the adapter lets the AWS SDK resolve them (IAM instance/task role on Lambda/ECS/EC2). This is a
+**deliberate divergence from ADR-0028** ("no ambient env read" for the single opaque Vercel token):
+role-based credentials are *the* idiomatic AWS deployment mode and have a standardized resolution chain.
+(4) **Narrow `S3ClientLike = { send(command): Promise<unknown> }` seam** (the real `S3Client` satisfies
+it) so the contract suite runs hermetically against an in-memory fake client injected via `client` — the
+same philosophy as the postgres adapter's `SqlExecutor` (ADR-0035).
+
+**Consequences.** AWS/R2 adopters get a first-class, contract-conformant storage backend. The hermetic
+fake-client layer runs the full shared `storageContract` in CI with no new devDep, but proves
+orchestration (key uniqueness/prefixing, URL construction, `PutObjectCommand` inputs) — **not** real S3
+wire behavior; true round-trip is an env-gated layer (`S3_TEST_*`), skipped in normal CI, mirroring
+vercel-blob's `BLOB_READ_WRITE_TOKEN`. The host **must** configure the bucket policy / R2 public-bucket /
+CDN to serve the key prefix publicly; misconfiguration yields a broken `<img>` (documented as a required
+assumption). The AWS SDK v3 is large but externalized (not bundled). Ships additively as a patch under
+the pre-1.0 fixed-group policy.

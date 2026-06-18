@@ -200,6 +200,7 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 | [`@airnauts/airside-adapter-postgres`](packages/adapter-postgres) | PostgreSQL repository adapter (hybrid columns + `jsonb`; driver-agnostic) |
 | [`@airnauts/airside-adapter-memory`](packages/adapter-memory) | In-memory repository for local development and tests |
 | [`@airnauts/airside-storage-vercel-blob`](packages/storage-vercel-blob) | Vercel Blob image-attachment storage |
+| [`@airnauts/airside-storage-s3`](packages/storage-s3) | Amazon S3 / Cloudflare R2 image-attachment storage |
 | [`@airnauts/airside-storage-fs`](packages/storage-fs) | Filesystem image-attachment storage |
 | [`@airnauts/airside-extension-slack`](packages/notifier-slack) | Slack Incoming Webhook notification extension |
 | [`@airnauts/airside-extension-email`](packages/notifier-email) | Email notification extension (SMTP via nodemailer or Resend HTTP API) |
@@ -250,7 +251,6 @@ None of these are committed releases — they're the directions we're considerin
 **Adapters & hosts**
 
 - More persistence adapters — SQLite, MySQL.
-- More storage adapters — Amazon S3, Cloudflare R2.
 - More host-framework glue beyond Next.js — Remix, SvelteKit, Astro, and a generic `Request`-based handler for Hono / Express.
 
 **Managed cloud**

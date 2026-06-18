@@ -8,6 +8,7 @@
     { "path": "packages/adapter-mongo" },
     { "path": "packages/adapter-postgres" },
     { "path": "packages/storage-vercel-blob" },
+    { "path": "packages/storage-s3" },
     { "path": "packages/storage-fs" },
     { "path": "packages/test-support" },
     { "path": "packages/next" },
