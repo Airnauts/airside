@@ -16,9 +16,7 @@ describe('useLiveStream', () => {
 
   it('does not open a stream when the client has no streamEvents (graceful fallback)', () => {
     // No streamEvents on the client — older host. Should be a no-op, no throw.
-    expect(() =>
-      render(<Harness client={{} as never} enabled onEvent={() => {}} />),
-    ).not.toThrow()
+    expect(() => render(<Harness client={{} as never} enabled onEvent={() => {}} />)).not.toThrow()
   })
 
   it('opens a stream with the pageKey when enabled and tears it down on unmount', () => {

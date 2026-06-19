@@ -397,7 +397,12 @@ describe('createRuntime.addItem', () => {
     document.body.innerHTML =
       '<main><p id="ex" class="lead">existing</p><p id="new" class="lead">new live thread</p></main>'
     mockRect(document.querySelector('#ex') as Element, { left: 0, top: 0, width: 100, height: 20 })
-    mockRect(document.querySelector('#new') as Element, { left: 0, top: 40, width: 100, height: 20 })
+    mockRect(document.querySelector('#new') as Element, {
+      left: 0,
+      top: 40,
+      width: 100,
+      height: 20,
+    })
     const client = fakeClient([li('th-ex', anchorFor('#ex'))])
     const onPlacements = vi.fn()
     const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
@@ -416,7 +421,12 @@ describe('createRuntime.addItem', () => {
 
   it('drops a live-created thread whose anchor does not match this page (no placement)', async () => {
     document.body.innerHTML = '<main><p id="here" class="lead">here</p></main>'
-    mockRect(document.querySelector('#here') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    mockRect(document.querySelector('#here') as Element, {
+      left: 0,
+      top: 0,
+      width: 100,
+      height: 20,
+    })
     const client = fakeClient([li('th-here', anchorFor('#here'))])
     const onPlacements = vi.fn()
     const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
@@ -428,8 +438,8 @@ describe('createRuntime.addItem', () => {
       offset: { fx: 0.5, fy: 0.5 },
     })
     rt.addItem(orphan)
-    expect(onPlacements.mock.calls.at(-1)?.[0].map((p: { item: { id: string } }) => p.item.id)).toEqual([
-      'th-here',
-    ])
+    expect(
+      onPlacements.mock.calls.at(-1)?.[0].map((p: { item: { id: string } }) => p.item.id),
+    ).toEqual(['th-here'])
   })
 })

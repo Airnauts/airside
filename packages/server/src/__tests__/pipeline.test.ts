@@ -394,12 +394,8 @@ describe('pipeline — GET /events stream', () => {
 
   it('is exempt from the read rate limit (a held stream never exhausts the budget)', async () => {
     const server = build({ rateLimit: { writesPerMin: 1000, readsPerMin: 1 } })
-    const first = await server.handle(
-      new Request('http://x/events', { headers: allowedHeaders }),
-    )
-    const second = await server.handle(
-      new Request('http://x/events', { headers: allowedHeaders }),
-    )
+    const first = await server.handle(new Request('http://x/events', { headers: allowedHeaders }))
+    const second = await server.handle(new Request('http://x/events', { headers: allowedHeaders }))
     expect(first.status).toBe(200)
     expect(second.status).toBe(200)
     await first.body?.cancel()

@@ -7,9 +7,9 @@ import { buildCaptureContext } from '../config'
 import { useIdentity } from '../identity/IdentityProvider'
 import { takeFocusHandoff } from '../panel/navigate'
 import { usePanelController, usePanelState } from '../panel/PanelProvider'
-import { useLiveStream } from '../realtime/useLiveStream'
 import { PinLayer } from '../positioning/layer'
 import { observeReposition } from '../positioning/lifecycle'
+import { useLiveStream } from '../realtime/useLiveStream'
 import {
   useController,
   useDispatch,

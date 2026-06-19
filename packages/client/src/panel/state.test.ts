@@ -1,12 +1,7 @@
 // packages/client/src/panel/state.test.ts
 import type { ThreadListItem } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
-import {
-  initialState,
-  mainListExcludingReview,
-  reducer,
-  selectVisibleList,
-} from './state'
+import { initialState, mainListExcludingReview, reducer, selectVisibleList } from './state'
 
 describe('detail view', () => {
   it('starts on the list view', () => {
