@@ -1,5 +1,5 @@
 // packages/client/src/threads/controller.ts
-import type { ThreadStatus } from '@airnauts/airside-core'
+import type { Comment, ThreadStatus } from '@airnauts/airside-core'
 import type { ApiClient } from '../api/client'
 import type { Action } from './state'
 
@@ -31,6 +31,14 @@ export type Controller = {
    * sidebar/popover header reads the live detail's comment list directly, so it needs no patch here.
    */
   bumpCommentCount(id: string, delta: number): void
+  /**
+   * Apply a comment that arrived live from another reviewer (ADR-0045): append it to the loaded
+   * detail (so an open popover shows it) and bump the pin count + runtime cache. Idempotent by
+   * comment id, and deliberately does NOT notify the panel — the panel receives remote comments
+   * via its own all-pages stream (id-idempotent), so routing them here too would double-count.
+   * The caller suppresses the local author's own echo before calling this.
+   */
+  ingestRemoteComment(id: string, comment: Comment): void
   /**
    * MarkerLayer registers the live anchor-runtime here so status/count changes also patch its cached
    * item list. Without this, the runtime re-emits stale placements on the next reposition/mutation,
@@ -65,6 +73,8 @@ export function createController(
     client: Pick<ApiClient, 'getThread' | 'setThreadStatus' | 'runThreadAction'>
     isCached: (id: string) => boolean
     isLoading: (id: string) => boolean
+    /** Whether a comment id is already in the loaded detail — used to dedupe live comments. */
+    hasComment?: (id: string, commentId: string) => boolean
   },
 ): Controller {
   let runtime: {
@@ -115,6 +125,13 @@ export function createController(
     },
     patchStatus,
     bumpCommentCount,
+    ingestRemoteComment(id, comment) {
+      // Dedupe by comment id (own-echo / double delivery) so the pin count + runtime cache bump once.
+      if (deps.hasComment?.(id, comment.id)) return
+      dispatch({ type: 'INGEST_COMMENT', id, comment })
+      runtime?.bumpCommentCount(id, 1)
+      // No commentCountListener call: the panel counts remote comments via its own all-pages stream.
+    },
     async setStatus(id, status) {
       const prev: ThreadStatus = status === 'resolved' ? 'open' : 'resolved'
       // Optimistic: update the store (instant pin/header) AND the runtime cache (so the next
