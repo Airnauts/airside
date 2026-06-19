@@ -24,6 +24,7 @@ export function Launcher({
   const { style, dragging, onPointerDown, onClickCapture } = useDraggablePosition()
   return (
     <div
+      data-airside-chrome
       style={style}
       onPointerDown={onPointerDown}
       onClickCapture={onClickCapture}
