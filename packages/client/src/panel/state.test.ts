@@ -1,7 +1,12 @@
 // packages/client/src/panel/state.test.ts
 import type { ThreadListItem } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
-import { initialState, mainListExcludingReview, reducer } from './state'
+import {
+  initialState,
+  mainListExcludingReview,
+  reducer,
+  selectVisibleList,
+} from './state'
 
 describe('detail view', () => {
   it('starts on the list view', () => {
@@ -113,5 +118,72 @@ describe('panel reducer', () => {
       needsReview: [item('b')],
     }
     expect(mainListExcludingReview(state).map((t) => t.id)).toEqual(['a'])
+  })
+})
+
+describe('live reconciliation reducer', () => {
+  it('UPSERT_THREAD prepends a new thread and replaces an existing one in place', () => {
+    let state = { ...initialState, list: [item('a'), item('b')] }
+    state = reducer(state, { type: 'UPSERT_THREAD', thread: item('c') })
+    expect(state.list.map((t) => t.id)).toEqual(['c', 'a', 'b'])
+    state = reducer(state, {
+      type: 'UPSERT_THREAD',
+      thread: { ...item('a'), commentCount: 9 } as ThreadListItem,
+    })
+    expect(state.list.map((t) => t.id)).toEqual(['c', 'a', 'b'])
+    expect(state.list.find((t) => t.id === 'a')?.commentCount).toBe(9)
+  })
+
+  it('PATCH_STATUS flips status + anchorState and recomputes unresolvedCount', () => {
+    let state = { ...initialState, list: [item('a')] }
+    state = reducer(state, {
+      type: 'PATCH_STATUS',
+      id: 'a',
+      status: 'resolved',
+      anchorState: 'anchored',
+    })
+    expect(state.list[0].status).toBe('resolved')
+    expect(state.list[0].unresolvedCount).toBe(0)
+  })
+
+  it('APPLY_COMMENT bumps a row exactly once per comment id (bridge + stream converge)', () => {
+    const withCount = (id: string, commentCount: number): ThreadListItem =>
+      ({ ...item(id), commentCount }) as ThreadListItem
+    let state = { ...initialState, list: [withCount('a', 2)] }
+    state = reducer(state, { type: 'APPLY_COMMENT', id: 'a', commentId: 'c1' })
+    expect(state.list[0].commentCount).toBe(3)
+    // Second delivery of the same comment id is a no-op (returns the same state reference).
+    const after = reducer(state, { type: 'APPLY_COMMENT', id: 'a', commentId: 'c1' })
+    expect(after).toBe(state)
+    expect(after.list[0].commentCount).toBe(3)
+    // A different comment id increments again.
+    const more = reducer(after, { type: 'APPLY_COMMENT', id: 'a', commentId: 'c2' })
+    expect(more.list[0].commentCount).toBe(4)
+  })
+
+  it('LOAD_SUCCESS resets the applied-comment ledger (authoritative counts)', () => {
+    let state = { ...initialState, list: [{ ...item('a'), commentCount: 1 } as ThreadListItem] }
+    state = reducer(state, { type: 'APPLY_COMMENT', id: 'a', commentId: 'c1' })
+    expect(state.appliedCommentIds).toEqual(['c1'])
+    state = reducer(state, {
+      type: 'LOAD_SUCCESS',
+      list: [item('a')],
+      nextCursor: null,
+      needsReview: [],
+    })
+    expect(state.appliedCommentIds).toEqual([])
+  })
+
+  it('selectVisibleList hides rows that no longer match the active filter', () => {
+    const state = {
+      ...initialState,
+      filter: 'open' as const,
+      list: [
+        { ...item('a'), status: 'open' } as ThreadListItem,
+        { ...item('b'), status: 'resolved' } as ThreadListItem,
+      ],
+    }
+    expect(selectVisibleList(state).map((t) => t.id)).toEqual(['a'])
+    expect(selectVisibleList({ ...state, filter: 'all' }).map((t) => t.id)).toEqual(['a', 'b'])
   })
 })

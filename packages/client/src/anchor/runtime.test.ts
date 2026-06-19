@@ -391,3 +391,45 @@ describe('createRuntime.bumpCommentCount', () => {
     expect(onPlacements.mock.calls.at(-1)?.[0][0].item.commentCount).toBe(0)
   })
 })
+
+describe('createRuntime.addItem', () => {
+  it('places a live-created thread and is idempotent by id', async () => {
+    document.body.innerHTML =
+      '<main><p id="ex" class="lead">existing</p><p id="new" class="lead">new live thread</p></main>'
+    mockRect(document.querySelector('#ex') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    mockRect(document.querySelector('#new') as Element, { left: 0, top: 40, width: 100, height: 20 })
+    const client = fakeClient([li('th-ex', anchorFor('#ex'))])
+    const onPlacements = vi.fn()
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
+    await rt.refresh()
+    expect(onPlacements.mock.calls.at(-1)?.[0]).toHaveLength(1)
+
+    rt.addItem(li('th-new', anchorFor('#new')))
+    const after = onPlacements.mock.calls.at(-1)?.[0]
+    expect(after.map((p: { item: { id: string } }) => p.item.id)).toEqual(['th-ex', 'th-new'])
+
+    // Re-delivering the same thread id (own-echo / duplicate) does not double-place or re-emit.
+    const callsBefore = onPlacements.mock.calls.length
+    rt.addItem(li('th-new', anchorFor('#new')))
+    expect(onPlacements.mock.calls.length).toBe(callsBefore)
+  })
+
+  it('drops a live-created thread whose anchor does not match this page (no placement)', async () => {
+    document.body.innerHTML = '<main><p id="here" class="lead">here</p></main>'
+    mockRect(document.querySelector('#here') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    const client = fakeClient([li('th-here', anchorFor('#here'))])
+    const onPlacements = vi.fn()
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
+    await rt.refresh()
+    const orphan = li('th-gone', {
+      schemaVersion: ANCHOR_SCHEMA_VERSION,
+      selectors: ['#missing', '#missing'],
+      signals: { tag: 'p', classes: [], siblingIndex: 0, ancestorTrail: ['main'] },
+      offset: { fx: 0.5, fy: 0.5 },
+    })
+    rt.addItem(orphan)
+    expect(onPlacements.mock.calls.at(-1)?.[0].map((p: { item: { id: string } }) => p.item.id)).toEqual([
+      'th-here',
+    ])
+  })
+})

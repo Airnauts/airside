@@ -142,6 +142,19 @@ export function createRuntime(opts: RuntimeOptions) {
     if (changed) emit()
   }
 
+  // Add a thread that appeared live (a remote `thread.created` for this page, ADR-0045):
+  // match + report it like a freshly-listed thread and place its pin without a refetch.
+  // Idempotent by id — a re-delivered create, or the author's own echo after the optimistic
+  // create already placed it, is ignored rather than double-placed.
+  function addItem(item: ThreadListItem) {
+    if (placed.some((p) => p.item.id === item.id)) return
+    const match = matchAndReport(item, item.anchor)
+    if (!match) return
+    placed = [...placed, match]
+    observeWinners()
+    emit()
+  }
+
   function dispose() {
     resizeObs?.disconnect()
   }
@@ -152,6 +165,7 @@ export function createRuntime(opts: RuntimeOptions) {
     rematchAll,
     setItemStatus,
     bumpCommentCount,
+    addItem,
     dispose,
     get placed() {
       return placed
