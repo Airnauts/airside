@@ -132,15 +132,28 @@ export function createAirsideServer(opts: CreateAirsideServerOptions): AirsideSe
     opts.realtime === false ? null : (opts.realtime ?? new InProcessRealtimeChannel())
   const eventChannel: RealtimeChannel = realtime ?? new InProcessRealtimeChannel()
 
+  const realtimeDep = realtime ?? undefined
+
   const useCases: UseCaseMap = {
     createThread: (input) =>
-      createThread(input as never, { repo: opts.repository, notifications, registry }),
+      createThread(input as never, {
+        repo: opts.repository,
+        notifications,
+        registry,
+        realtime: realtimeDep,
+      }),
     listThreads: (input) => listThreads(input as never, { repo: opts.repository, registry }),
     getThread: (input) => getThread(input as never, { repo: opts.repository, registry }),
-    addComment: (input) => addComment(input as never, { repo: opts.repository, notifications }),
+    addComment: (input) =>
+      addComment(input as never, {
+        repo: opts.repository,
+        notifications,
+        realtime: realtimeDep,
+      }),
     setThreadStatus: (input) =>
-      setThreadStatus(input as never, { repo: opts.repository, registry }),
-    refreshAnchor: (input) => refreshAnchor(input as never, { repo: opts.repository, registry }),
+      setThreadStatus(input as never, { repo: opts.repository, registry, realtime: realtimeDep }),
+    refreshAnchor: (input) =>
+      refreshAnchor(input as never, { repo: opts.repository, registry, realtime: realtimeDep }),
     runThreadAction: (input) =>
       runThreadAction(input as never, { repo: opts.repository, registry }),
     uploadAttachment: (input) =>
