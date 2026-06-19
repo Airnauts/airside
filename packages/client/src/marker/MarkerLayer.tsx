@@ -9,6 +9,7 @@ import { takeFocusHandoff } from '../panel/navigate'
 import { usePanelController, usePanelState } from '../panel/PanelProvider'
 import { PinLayer } from '../positioning/layer'
 import { observeReposition } from '../positioning/lifecycle'
+import { reconcilePinEvent } from '../realtime/reconcile'
 import { useLiveStream } from '../realtime/useLiveStream'
 import {
   useController,
@@ -142,18 +143,11 @@ export function MarkerLayer({
     (event: RealtimeEvent) => {
       const rt = runtime.current
       if (!rt) return
-      switch (event.type) {
-        case 'thread.created':
-          rt.addItem(event.thread)
-          break
-        case 'comment.added':
-          if (event.comment.author.email === identity?.email) break
-          controller.ingestRemoteComment(event.threadId, event.comment)
-          break
-        case 'thread.updated':
-          controller.patchStatus(event.threadId, event.status)
-          break
-      }
+      reconcilePinEvent(event, identity?.email, {
+        addItem: (thread) => rt.addItem(thread),
+        ingestComment: (threadId, comment) => controller.ingestRemoteComment(threadId, comment),
+        patchStatus: (threadId, status) => controller.patchStatus(threadId, status),
+      })
     },
     [controller, identity?.email],
   )

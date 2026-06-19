@@ -6,6 +6,7 @@ import { useCallback, useEffect } from 'react'
 import type { ApiClient } from '../api/client'
 import { usePortalContainer } from '../app/providers'
 import { useIdentity } from '../identity/IdentityProvider'
+import { reconcilePanelEvent } from '../realtime/reconcile'
 import { useLiveStream } from '../realtime/useLiveStream'
 import { useController } from '../threads/useThreads'
 import { goToThread } from './navigate'
@@ -53,18 +54,12 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
   // avoids relying on the real id reaching the ledger before the echo.
   const onPanelEvent = useCallback(
     (event: RealtimeEvent) => {
-      switch (event.type) {
-        case 'thread.created':
-          panel.upsertThread(event.thread)
-          break
-        case 'comment.added':
-          if (event.comment.author.email === identity?.email) break
-          panel.applyComment(event.threadId, event.comment.id)
-          break
-        case 'thread.updated':
-          panel.patchStatus(event.threadId, event.status, event.anchorState)
-          break
-      }
+      reconcilePanelEvent(event, identity?.email, {
+        upsertThread: (thread) => panel.upsertThread(thread),
+        applyComment: (threadId, commentId) => panel.applyComment(threadId, commentId),
+        patchStatus: (threadId, status, anchorState) =>
+          panel.patchStatus(threadId, status, anchorState),
+      })
     },
     [panel, identity?.email],
   )
