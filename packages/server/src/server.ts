@@ -7,8 +7,9 @@ import { buildExtensionRegistry } from './extensions/registry'
 import type { NotificationExtension, ServerExtension } from './extensions/types'
 import type { Notifier } from './notify/types'
 import { InMemoryRateLimiter, type RateLimitConfig, type RateLimiter } from './rate-limit'
+import { InProcessRealtimeChannel, type RealtimeChannel } from './realtime/channel'
 import type { Repository } from './repository/types'
-import { compileRoutes, dispatch, type UseCaseMap } from './router'
+import { compileRoutes, dispatch, match, type UseCaseMap } from './router'
 import { checkKey, checkOrigin } from './security'
 import type { StorageAdapter } from './storage/types'
 import { addComment } from './use-cases/add-comment'
@@ -19,6 +20,7 @@ import { listThreads } from './use-cases/list-threads'
 import { refreshAnchor } from './use-cases/refresh-anchor'
 import { runThreadAction } from './use-cases/run-thread-action'
 import { setThreadStatus } from './use-cases/set-thread-status'
+import { streamEvents } from './use-cases/stream-events'
 import { uploadAttachment } from './use-cases/upload-attachment'
 
 export type CreateAirsideServerOptions = {
@@ -38,6 +40,13 @@ export type CreateAirsideServerOptions = {
   rateLimit?: RateLimitConfig | false
   /** Override the rate limiter implementation entirely. */
   rateLimiter?: RateLimiter
+  /**
+   * Live-update channel for `GET /events` (ADR-0045). Defaults to an in-process bus, so
+   * writes push to open widgets on a single instance out of the box. Pass `false` to
+   * disable push entirely (the endpoint stays open but emits nothing; widgets fall back to
+   * refetch), or inject your own `RealtimeChannel` (e.g. a cross-instance backplane).
+   */
+  realtime?: RealtimeChannel | false
   /** Override clock for tests. */
   now?: () => Date
   /** Override id factory for tests. */
@@ -116,6 +125,13 @@ export function createAirsideServer(opts: CreateAirsideServerOptions): AirsideSe
   ])
   const notifications = [...registry.notifications]
 
+  // The realtime port: in-process by default, `false` disables push. When disabled the
+  // `/events` endpoint stays open against a private silent channel (so the contract holds
+  // and widgets degrade to refetch) but no write ever publishes to it.
+  const realtime: RealtimeChannel | null =
+    opts.realtime === false ? null : (opts.realtime ?? new InProcessRealtimeChannel())
+  const eventChannel: RealtimeChannel = realtime ?? new InProcessRealtimeChannel()
+
   const useCases: UseCaseMap = {
     createThread: (input) =>
       createThread(input as never, { repo: opts.repository, notifications, registry }),
@@ -134,6 +150,7 @@ export function createAirsideServer(opts: CreateAirsideServerOptions): AirsideSe
         ids,
         maxBytes: opts.uploads?.maxBytes,
       }),
+    streamEvents: async (input) => streamEvents(input as never, { channel: eventChannel }),
   }
 
   // Boot-time sanity: every operationId has a handler.
@@ -149,7 +166,11 @@ export function createAirsideServer(opts: CreateAirsideServerOptions): AirsideSe
       }
       checkOrigin(req, opts.allowedOrigins)
       checkKey(req, opts.secretKey)
-      if (rateLimiter) {
+      // Exempt the long-lived stream from the read budget: one `/events` connection is held
+      // open for the page's lifetime, so counting it would exhaust the per-IP read window
+      // and block real reads. Match the route up front to detect it before the limiter runs.
+      const matched = match(req, routes)
+      if (rateLimiter && !matched?.op.stream) {
         const kind = req.method === 'GET' ? 'read' : 'write'
         const ip = extractIp(req)
         const result = await rateLimiter.check(`${opts.projectId}:${ip}:${kind}`)

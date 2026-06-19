@@ -369,3 +369,40 @@ describe('pipeline — attachments (two-step upload)', () => {
     expect(res.status).toBe(400)
   })
 })
+
+describe('pipeline — GET /events stream', () => {
+  it('streams text/event-stream for an authorized request', async () => {
+    const server = build()
+    const res = await server.handle(
+      new Request('http://x/events?pageKey=/docs', { headers: allowedHeaders }),
+    )
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/event-stream')
+    // CORS still applies to the streamed response.
+    expect(res.headers.get('access-control-allow-origin')).toBe('https://app.example.com')
+    expect(res.headers.get('x-accel-buffering')).toBe('no')
+    await res.body?.cancel()
+  })
+
+  it('rejects an unauthenticated stream request with 401 (secret in header, not query)', async () => {
+    const server = build()
+    const res = await server.handle(
+      new Request('http://x/events', { headers: { origin: 'https://app.example.com' } }),
+    )
+    expect(res.status).toBe(401)
+  })
+
+  it('is exempt from the read rate limit (a held stream never exhausts the budget)', async () => {
+    const server = build({ rateLimit: { writesPerMin: 1000, readsPerMin: 1 } })
+    const first = await server.handle(
+      new Request('http://x/events', { headers: allowedHeaders }),
+    )
+    const second = await server.handle(
+      new Request('http://x/events', { headers: allowedHeaders }),
+    )
+    expect(first.status).toBe(200)
+    expect(second.status).toBe(200)
+    await first.body?.cancel()
+    await second.body?.cancel()
+  })
+})
