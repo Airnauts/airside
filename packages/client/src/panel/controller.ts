@@ -1,4 +1,5 @@
 // packages/client/src/panel/controller.ts
+import type { AnchorState, ThreadListItem, ThreadStatus } from '@airnauts/airside-core'
 import type { ApiClient } from '../api/client'
 import type { Action, PanelFilter, PanelState } from './state'
 
@@ -12,6 +13,13 @@ export type PanelController = {
   back(): void
   /** Optimistically adjust a list row's comment count (mirrors an optimistic reply in the detail). */
   bumpCommentCount(id: string, delta: number): void
+  // Live reconciliation from the all-pages stream (ADR-0045).
+  /** Insert/replace a thread row (a thread created/updated on any page appears without a refetch). */
+  upsertThread(thread: ThreadListItem): void
+  /** Patch a row's status + anchorState in place (idempotent). */
+  patchStatus(id: string, status: ThreadStatus, anchorState: AnchorState): void
+  /** Count a live comment once, deduped by comment id (converges with the optimistic bridge). */
+  applyComment(threadId: string, commentId: string): void
 }
 
 export function createPanelController(
@@ -76,6 +84,15 @@ export function createPanelController(
     },
     bumpCommentCount(id, delta) {
       dispatch({ type: 'BUMP_COMMENT_COUNT', id, delta })
+    },
+    upsertThread(thread) {
+      dispatch({ type: 'UPSERT_THREAD', thread })
+    },
+    patchStatus(id, status, anchorState) {
+      dispatch({ type: 'PATCH_STATUS', id, status, anchorState })
+    },
+    applyComment(threadId, commentId) {
+      dispatch({ type: 'APPLY_COMMENT', id: threadId, commentId })
     },
   }
 }
