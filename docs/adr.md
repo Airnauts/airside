@@ -1494,3 +1494,34 @@ tick may pass without promoting. One fewer artifact per branch and no repo-root 
 `in-review` phase is no longer inline-only — every PR comment surface a human uses is covered. The
 deferred items remain easy to add later (each is a localized op-selection/skip change) if real need
 appears. Tooling-only under `.claude/`/`docs/`, so no changeset.
+
+## ADR-0044 — GitHub Issues thread-action target: token auth + `fetch`, not Octokit
+
+**Date:** 2026-06-19. **Status:** accepted.
+
+> Note: number assigned as the next free slot after ADR-0043 at authoring time. Another in-flight
+> spec (issue #17, real-time) may also claim 0044 — whichever lands second should renumber.
+
+**Context.** ADR-0034 anticipated GitHub Issues reusing the `thread-action` shape with no server
+change, and it does (`@airnauts/airside-extension-github` is structurally identical to the Jira
+extension). Two choices are genuinely new and hard to reverse: how to authenticate against GitHub,
+and whether to depend on an SDK. Precedent: the notification seam was set in ADR-0029 yet the email
+notifier still earned ADR-0032 — same pattern here over ADR-0034.
+
+**Decision.**
+- **Auth: a configured token sent as `authorization: Bearer <token>`.** v1 recommends a
+  **fine-grained PAT** (single-repo, Issues: write — least privilege). A GitHub App is **deferred**,
+  not rejected: the same `Bearer` header also accepts a GitHub App *installation* token a host mints
+  itself, so App-based auth is a future host concern with **no config-surface change** (the config
+  field stays the generic `token`). The host env var is `AIRSIDE_GITHUB_TOKEN`, deliberately not
+  `GITHUB_TOKEN` (which GitHub Actions auto-injects scoped to the CI repo).
+- **Transport: native `fetch`, no `@octokit/*` dependency.** A single `POST /repos/{owner}/{repo}/issues`
+  is trivial; mirroring Jira's zero-dependency `fetch` client keeps the footprint at zero and avoids a
+  new transitive tree. `@octokit/rest` is rejected as unjustified weight for one endpoint.
+
+**Consequences.** Least-privilege auth out of the box, with a no-rewrite path to GitHub App tokens
+later. Zero new dependencies. Failures (non-2xx, network, abort) surface as `IntegrationError` →
+`502 INTEGRATION_ERROR`, and the token never appears in an error message. Repos with Issues disabled
+return 410, already handled by the non-2xx path. The concurrent-duplicate window documented in
+ADR-0034 still applies. Markdown body building lives locally in the package (YAGNI); hoisting it into
+a shared workspace alongside the Linear target is that issue's (#47) work, not a decision here.

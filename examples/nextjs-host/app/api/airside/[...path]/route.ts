@@ -3,6 +3,7 @@ import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 import { emailExtension } from '@airnauts/airside-extension-email'
 import { resendTransport } from '@airnauts/airside-extension-email/resend'
+import { githubExtension } from '@airnauts/airside-extension-github'
 import { jiraExtension } from '@airnauts/airside-extension-jira'
 import { slackExtension } from '@airnauts/airside-extension-slack'
 import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
@@ -53,6 +54,15 @@ export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
           email: process.env.JIRA_EMAIL ?? '',
           apiToken: process.env.JIRA_API_TOKEN,
           projectKey: process.env.JIRA_PROJECT_KEY ?? '',
+        })
+      : []),
+    // "Create GitHub issue" thread action when AIRSIDE_GITHUB_TOKEN is set, else
+    // none. The owner/repo are required too; githubExtension throws fast if blank.
+    ...(process.env.AIRSIDE_GITHUB_TOKEN
+      ? githubExtension({
+          token: process.env.AIRSIDE_GITHUB_TOKEN,
+          owner: process.env.AIRSIDE_GITHUB_OWNER ?? '',
+          repo: process.env.AIRSIDE_GITHUB_REPO ?? '',
         })
       : []),
   ],

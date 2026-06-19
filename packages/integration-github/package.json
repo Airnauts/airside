@@ -1,0 +1,53 @@
+{
+  "name": "@airnauts/airside-extension-github",
+  "version": "0.9.1",
+  "description": "Create GitHub issues from comment threads (server extension).",
+  "keywords": [
+    "comments",
+    "commenting",
+    "annotations",
+    "feedback",
+    "airnauts",
+    "integration",
+    "github"
+  ],
+  "license": "MIT",
+  "author": "Airnauts",
+  "homepage": "https://github.com/Airnauts/airside#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Airnauts/airside.git",
+    "directory": "packages/integration-github"
+  },
+  "bugs": {
+    "url": "https://github.com/Airnauts/airside/issues"
+  },
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/.tsbuildinfo",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup && tsc --build --force",
+    "typecheck": "tsc --build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@airnauts/airside-core": "workspace:^",
+    "@airnauts/airside-server": "workspace:^"
+  },
+  "devDependencies": {
+    "@airnauts/airside-test-support": "workspace:*"
+  }
+}
