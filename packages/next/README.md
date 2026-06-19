@@ -95,6 +95,29 @@ export function AirsideMount() {
 
 `AirsideLayer` is re-exported from [`@airnauts/airside-integration-react`](https://github.com/Airnauts/airside/blob/main/packages/integration-react/README.md); use that package directly in non-Next React hosts.
 
+## Live updates (real-time)
+
+Open widgets receive new threads, comments, and resolutions in real time over a long-lived
+`GET /api/airside/events` Server-Sent Events stream (ADR-0045) — both the on-page pins and the
+cross-page sidebar — falling back to refetch-on-focus when the stream is unavailable. The App
+Router catch-all already forwards `GET`, so no new route is needed, but you must opt the route
+out of static optimization so Next streams the response instead of buffering it:
+
+```ts
+// app/api/airside/[...path]/route.ts
+export const dynamic = 'force-dynamic'
+export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({ /* … */ })
+```
+
+Notes:
+
+- **App Router only.** The Pages Router cannot stream a response, so live updates require the App
+  Router handler. Pages Router hosts keep working via the focus/refetch fallback.
+- **Serverless caveat.** The default in-process channel only fans out within a single instance, so
+  on multi-instance/serverless deployments (e.g. Vercel) push is best-effort and widgets rely on
+  the refetch fallback. Inject a cross-instance `RealtimeChannel` (the designed seam) for guaranteed
+  delivery, or pass `realtime: false` to disable push entirely (the endpoint stays open but silent).
+
 ## API reference
 
 ### `createAirsideAppRoute(config)`
