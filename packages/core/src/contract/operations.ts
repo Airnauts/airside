@@ -1,10 +1,12 @@
 import type { z } from 'zod'
 import { Attachment, Comment } from '../schemas/comment'
+import { RealtimeEvent } from '../schemas/realtime'
 import { ThreadListItemView, ThreadView } from '../schemas/thread'
 import type { ErrorCode } from './errors'
 import {
   AddCommentBody,
   CreateThreadBody,
+  EventsQuery,
   ListThreadsQuery,
   RefreshAnchorBody,
   SetThreadStatusBody,
@@ -23,6 +25,12 @@ export interface Operation {
   body?: z.ZodType | 'multipart'
   success: { status: number; schema: z.ZodType }
   errors: ErrorCode[]
+  /**
+   * Long-lived streaming response (`text/event-stream`). The use-case returns a `Response`
+   * directly; the dispatcher passes it through instead of JSON-wrapping the result, and the
+   * success `schema` documents the shape of each streamed event (not a one-shot JSON body).
+   */
+  stream?: boolean
 }
 
 const AUTH_ERRORS: ErrorCode[] = ['AUTH_INVALID_KEY', 'ORIGIN_NOT_ALLOWED', 'RATE_LIMITED']
@@ -102,5 +110,15 @@ export const operations: Operation[] = [
     body: 'multipart',
     success: { status: 201, schema: Attachment },
     errors: ['VALIDATION_FAILED', 'UPLOAD_TOO_LARGE', ...AUTH_ERRORS],
+  },
+  {
+    operationId: 'streamEvents',
+    method: 'GET',
+    path: '/events',
+    summary: 'Subscribe to live updates on a page (?pageKey=) or across all pages (panel)',
+    query: EventsQuery,
+    success: { status: 200, schema: RealtimeEvent },
+    errors: AUTH_ERRORS,
+    stream: true,
   },
 ]
