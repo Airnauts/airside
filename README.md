@@ -225,6 +225,7 @@ None of these are committed releases — they're the directions we're considerin
 - Detail-view prev/next navigation — step through the filtered thread list from the detail header without returning to the list _(parking lot)_.
 - Re-navigate to a thread's pin from the open detail — click the page-context card in the sidebar to jump back to the anchor _(parking lot)_.
 - Per-comment overflow menu — edit / delete / copy a comment _(needs new `PATCH`/`DELETE` comment endpoints)_.
+- Delete-thread action in the thread `···` menu — remove a whole thread (pin, comments, attachments) behind a confirmation dialog _(needs a new `DELETE` thread endpoint and `deleteThread` in all adapters)_.
 - Emoji reactions on comments _(new `Comment` field + add/remove-reaction endpoints across both adapters)_.
 - Drag-and-drop and paste image upload onto the comment composer _(parking lot; a UX layer over the existing upload path)_.
 - Smooth, document-anchored pin positioning — drop the per-scroll-frame layout work for jank-free pins _(parking lot; a positioning-basis change that would get its own ADR)_.
