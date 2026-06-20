@@ -124,7 +124,11 @@ Accepts the same options as `createAirsideAppRoute`. Returns a single Node.js AP
 | `MONGODB_URI` | `mongoRepository` | MongoDB Atlas connection string |
 | `BLOB_READ_WRITE_TOKEN` | `createVercelBlobStorage` | Vercel Blob token |
 
-## Requirements
+## Peer dependencies & requirements
+
+| Peer | Required | Notes |
+|---|---|---|
+| `react` | `^19.0.0` | Used by the `/client` re-export (`AirsideLayer`); already present in any Next.js 15 app |
 
 - Next.js ≥ 15 (App Router and Pages Router; Next 14 is supported at runtime)
 - Node.js ≥ 18
