@@ -240,7 +240,7 @@ None of these are committed releases — they're the directions we're considerin
 **Real-time & collaboration**
 
 - Live updates — push new comments and threads to open widgets (SSE or WebSocket) instead of refetch-on-focus.
-- Authenticated reviewer identity — map commenters to real user accounts / SSO instead of a typed-in name.
+- Authenticated reviewer identity — email-with-code and Google OAuth sign-in so commenters prove who they are instead of typing a name _(parking lot; needs a pluggable auth-provider extension seam and its own ADR)_.
 
 **Integrations & extensions**
 
