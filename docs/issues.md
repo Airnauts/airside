@@ -83,7 +83,7 @@ downstream consumer — hence the adapter-side fix is preferred when we act.
 
 ## Text-selection highlight drifts off its text on scroll and window resize
 
-**Status:** open — bug.
+**Status:** resolved — fixed in `ffb3da1`.
 
 **Symptom.** The highlight rectangles drawn over a thread's selected text drift
 away from the text they belong to when the page is **scrolled** or the browser
@@ -228,7 +228,7 @@ is built test-first (ADR-0010), so this wants a failing rematch test first (bare
 
 ## Place mode drops a pin on the widget's own launcher and panel chrome
 
-**Status:** open — bug (rebrand regression).
+**Status:** resolved — fixed in `12a6fbc`.
 
 **Symptom.** With "Add comment" (place mode) active, clicking the launcher pill or
 the comments sidebar **places a pin on the widget's own chrome** instead of
