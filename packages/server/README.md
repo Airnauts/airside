@@ -107,7 +107,7 @@ import type { Repository, StorageAdapter } from '@airnauts/airside-server'
 
 **`StorageAdapter`** — file storage; implement `put(blob: PutBlob): Promise<PutResult>`.
 
-Other exported types: `NewThread`, `NewComment`, `AnchorPatch`, `ListQuery`, `ListResult`, `Scope`, `PutBlob`, `PutResult`. Utility functions: `readAllBytes`, `sanitizeName`.
+Other exported types: `NewThread`, `NewComment`, `AnchorPatch`, `ListQuery`, `ListResult`, `Scope`, `PutBlob`, `PutResult`. Utility functions: `readAllBytes`, `sanitizeName`. Constant: `ALLOWED_UPLOAD_TYPES` — tuple of accepted image MIME types (`image/png`, `image/jpeg`, `image/webp`, `image/gif`); useful for building custom upload UIs that want to replicate the server's validation.
 
 ### `lazyRepository(connect, opts?)`
 
