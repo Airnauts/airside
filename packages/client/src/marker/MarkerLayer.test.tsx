@@ -310,7 +310,11 @@ function renderLayer(client: unknown) {
                   pageUrl="https://x.test/here"
                   resolvePageKey={() => 'x.test/here'}
                 />
-                <PanelDrawer resolvePageKey={() => 'x.test/here'} client={client as never} />
+                <PanelDrawer
+                  resolvePageKey={() => 'x.test/here'}
+                  client={client as never}
+                  branding={false}
+                />
               </DraftsProvider>
             </PanelProvider>
           </ThreadsProvider>
