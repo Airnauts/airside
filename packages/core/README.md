@@ -66,6 +66,18 @@ These are consumed by `@airnauts/airside-client` to implement re-matching. Integ
 | `DEFAULT_WEIGHTS` | Default scoring weights (stable attr +0.40, text +0.25, class +0.15, role +0.10, sibling +0.05, ancestor +0.05) |
 | `DEFAULT_THRESHOLDS` | `{ accept: 0.60, margin: 0.10 }` |
 
+**Anchor types:**
+
+| Export | Description |
+|---|---|
+| `type Decision<T>` | `{ kind: 'anchored'; winner: T; score: ScoreResult }` or `{ kind: 'orphaned'; reason: 'noCandidates' \| 'belowAccept' \| 'ambiguous' }` |
+| `type ScoreResult` | `{ total: number; components: ScoreComponents; excluded: false \| 'tagMismatch' }` |
+| `type ScoreComponents` | `Record<WeightKey, number>` — per-signal score breakdown |
+| `type Thresholds` | `{ accept: number; margin: number }` — opts accepted by `decide` |
+| `type WeightKey` | `'stableAttrs' \| 'text' \| 'classes' \| 'role' \| 'sibling' \| 'ancestor'` |
+| `type QuoteContext` | Input to `locateQuote`: `{ quote, prefix?, suffix? }` |
+| `type QuoteOffsets` | Return type of `locateQuote`: `{ start: number; end: number }` |
+
 ### HTTP contract
 
 These types describe the wire API served by `@airnauts/airside-server` and consumed by the client. They are defined as Zod schemas and exported both as schemas and as TypeScript types.

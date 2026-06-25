@@ -100,6 +100,9 @@ import { captureElement, extractSignals, buildSelectors } from '@airnauts/airsid
 | `extractSignals(el)` | Extract the signals bag (tag, role, textSnippet, classes, siblingIndex, ancestorTrail) |
 | `buildSelectors(el)` | Build the dual `[structuralPath, classPath]` selector tuple |
 | `resolveUnique(selector, root?)` | Resolve a structural selector to a single element, or null if ambiguous |
+| `offsetWithin(coord, extent)` | Fractional offset of a coordinate within a 1-D extent `{ start, size }`; returns 0.5 when the extent is zero |
+| `clamp01(n)` | Clamp a number to [0, 1] |
+| `type Point` | `{ x: number; y: number }` — 2-D coordinate passed to `captureElement` |
 
 ## Requirements
 
