@@ -99,7 +99,7 @@ import { captureElement, extractSignals, buildSelectors } from '@airnauts/airsid
 | `captureElement(el, point)` | Build a fingerprint `{ selectors, signals, offset }` from a DOM element and click point |
 | `extractSignals(el)` | Extract the signals bag (tag, role, textSnippet, classes, siblingIndex, ancestorTrail) |
 | `buildSelectors(el)` | Build the dual `[structuralPath, classPath]` selector tuple |
-| `resolveUnique(selector, root?)` | Resolve a structural selector to a single element, or null if ambiguous |
+| `resolveUnique(selector, root)` | Resolve a structural selector to a single element, or null if ambiguous |
 
 ## Requirements
 
