@@ -116,6 +116,30 @@ Accepts the same options as `createAirsideAppRoute`. Returns a single Node.js AP
 
 **`export const config = { api: { bodyParser: false } }` is required** in the route module — Next reads it statically and the helper cannot set it for you. The comments API parses `application/json` and `multipart/form-data` bodies itself, so the raw body must reach it unparsed.
 
+### Lower-level handlers
+
+When you need to construct the server yourself first (e.g., to share an `AirsideServer` across route groups, or in integration tests), use the lower-level handlers directly:
+
+```ts
+import { createAirsideServer } from '@airnauts/airside-server'
+import { createNextHandler, createNextPagesHandler } from '@airnauts/airside-integration-next'
+
+const server = createAirsideServer({ ... })
+
+// App Router — spread into route.ts exports:
+const { GET, POST, PATCH, OPTIONS } = createNextHandler(server)
+
+// Pages Router — return as the default export:
+export default createNextPagesHandler(server)
+```
+
+| Export | Description |
+|---|---|
+| `createNextHandler(server)` | Wraps an `AirsideServer` into App Router handlers `{ GET, POST, PATCH, OPTIONS }` |
+| `createNextPagesHandler(server)` | Wraps an `AirsideServer` into a Pages Router handler `(req, res) => Promise<void>` |
+| `NodePagesHandler` | Type for the Pages Router handler |
+| `NodePagesRequest` | Type for the Pages Router request (Next's `NextApiRequest` shape) |
+
 ## Configuration / env vars
 
 | Env var | Used by | Description |
@@ -124,7 +148,11 @@ Accepts the same options as `createAirsideAppRoute`. Returns a single Node.js AP
 | `MONGODB_URI` | `mongoRepository` | MongoDB Atlas connection string |
 | `BLOB_READ_WRITE_TOKEN` | `createVercelBlobStorage` | Vercel Blob token |
 
-## Requirements
+## Peer dependencies & requirements
+
+| Peer | Required | Notes |
+|---|---|---|
+| `react` | `^19.0.0` | Required by the `/client` subpath (`AirsideLayer`); already present in any Next.js app |
 
 - Next.js ≥ 15 (App Router and Pages Router; Next 14 is supported at runtime)
 - Node.js ≥ 18
