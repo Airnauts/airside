@@ -62,6 +62,14 @@ export type Controller = {
   registerStatusListener(fn: ((id: string, status: ThreadStatus) => void) | null): void
   /** The panel registers here to keep its list rows' counts in sync with an optimistic reply. */
   registerCommentCountListener(fn: ((id: string, delta: number) => void) | null): void
+  /** The panel registers here to refetch its list when a new thread is created while it's open. */
+  registerThreadCreatedListener(fn: (() => void) | null): void
+  /**
+   * Notify the registered thread-created listener (the open panel) that a thread was just created.
+   * MarkerLayer fires this after a successful `client.createThread`. The panel's list store is
+   * separate from the on-page placements, so without this its rows stay stale until reopen.
+   */
+  notifyThreadCreated(): void
 }
 
 /**
@@ -85,6 +93,7 @@ export function createController(
   } | null = null
   let statusListener: ((id: string, status: ThreadStatus) => void) | null = null
   let commentCountListener: ((id: string, delta: number) => void) | null = null
+  let threadCreatedListener: (() => void) | null = null
 
   const lazyFetchDetail = (id: string) => {
     if (deps.isCached(id) || deps.isLoading(id)) return
@@ -181,6 +190,12 @@ export function createController(
     },
     registerCommentCountListener(fn) {
       commentCountListener = fn
+    },
+    notifyThreadCreated() {
+      threadCreatedListener?.()
+    },
+    registerThreadCreatedListener(fn) {
+      threadCreatedListener = fn
     },
   }
 }

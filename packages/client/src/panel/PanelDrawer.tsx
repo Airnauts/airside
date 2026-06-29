@@ -37,6 +37,14 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
     return () => threads.registerCommentCountListener(null)
   }, [state.open, threads, panel])
 
+  // Drawer-open reconciliation: when a new thread is created (e.g. a pin placed while the panel is
+  // open), refetch the current filter so the new thread appears in the list without a reopen.
+  useEffect(() => {
+    if (!state.open) return
+    threads.registerThreadCreatedListener(() => void panel.refresh())
+    return () => threads.registerThreadCreatedListener(null)
+  }, [state.open, threads, panel])
+
   function onSelect(row: { id: string; pageKey: string | null; pageUrl: string }) {
     const here = resolvePageKey(window.location.href)
     if (row.pageKey === here) {
