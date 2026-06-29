@@ -293,6 +293,48 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
       })
     })
 
+    describe('deleteThread', () => {
+      it('hard-deletes a thread so a later getThread returns null', async () => {
+        const input = makeNewThread()
+        await repo.createThread(input)
+        await repo.deleteThread({ projectId: input.projectId }, input.id)
+        const fetched = await repo.getThread({ projectId: input.projectId }, input.id)
+        expect(fetched).toBeNull()
+      })
+
+      it('does not affect other threads', async () => {
+        const a = makeNewThread({ id: 't_keep' as ThreadId })
+        const b = makeNewThread({ id: 't_drop' as ThreadId })
+        await repo.createThread(a)
+        await repo.createThread(b)
+        await repo.deleteThread({ projectId: a.projectId }, b.id)
+        expect(await repo.getThread({ projectId: a.projectId }, a.id)).not.toBeNull()
+      })
+
+      it('rejects when projectId scope does not match', async () => {
+        const input = makeNewThread({ projectId: 'proj_a' })
+        await repo.createThread(input)
+        await expect(repo.deleteThread({ projectId: 'proj_b' }, input.id)).rejects.toThrow()
+        // the thread is untouched in its own scope
+        expect(await repo.getThread({ projectId: 'proj_a' }, input.id)).not.toBeNull()
+      })
+
+      it('rejects when env scope does not match', async () => {
+        const input = makeNewThread({ projectId: 'proj_a', env: 'prod' })
+        await repo.createThread(input)
+        await expect(
+          repo.deleteThread({ projectId: 'proj_a', env: 'staging' }, input.id),
+        ).rejects.toThrow()
+        expect(await repo.getThread({ projectId: 'proj_a', env: 'prod' }, input.id)).not.toBeNull()
+      })
+
+      it('rejects deleting a thread that does not exist', async () => {
+        await expect(
+          repo.deleteThread({ projectId: 'proj_test' }, 't_nope' as ThreadId),
+        ).rejects.toThrow()
+      })
+    })
+
     describe('updateAnchor', () => {
       it('flips anchorState and persists a new fingerprint', async () => {
         const input = makeNewThread()
