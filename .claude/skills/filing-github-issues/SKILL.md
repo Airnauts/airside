@@ -22,6 +22,25 @@ committed to.
 
 Use the authenticated `gh` CLI. Default repo: `Airnauts/airside`.
 
+## Interview first
+
+**Always run a quick interview with the user before filing — every time.** You file on
+their behalf, so confirm intent and shape *with them* instead of guessing from the request.
+The interview's depth scales with how thin the request is; its floor never drops to zero.
+
+1. **Clarify intent and scope right away** — before any code research. Where the ask is
+   ambiguous (what the user gets, where it lives, what's in vs out of scope, enhancement vs
+   bug), ask. Use `AskUserQuestion` for discrete choices (the label, the `Area:`, scope
+   cuts, which shape to take) and free-form for open-ended questions. A thin one-liner earns
+   more questions; a detailed ask earns fewer.
+2. **Then ground and propose your own ideas.** Once intent is clear, grep/read the code (the
+   gather in *Before filing* below) and bring back suggestions — the seam to reuse, a
+   sharper scope, a gotcha to resolve first, or a related item worth its own issue. Pitch
+   them for the user to weigh in on; don't bake them in silently.
+3. **Confirm the shape before creating.** Even when little needed clarifying, close with the
+   floor: *"Here's the title + pitch + shape I'd file — anything to add or change?"* Run
+   `gh issue create` only after the user has seen that.
+
 ## Before filing
 
 1. **Check for duplicates:**
@@ -107,6 +126,7 @@ extras unasked.
 
 | Mistake | Reality |
 |---|---|
+| Filing straight from the request without checking in | Interview first — confirm intent + proposed shape with the user before `gh issue create`. |
 | Filing a thin stub that points at a doc for the "real" rationale | Issues are self-contained now — put the rationale in the body. |
 | No `Area:` prefix | Titles are `Area: lowercase summary` (see the in-use areas above). |
 | Footer links without the `../` | Repo-relative links are `../blob/main/...`, not bare `blob/main/...`. |
