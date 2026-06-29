@@ -8,6 +8,7 @@ import { useController, useThreadActions, useThreadDetail } from '../threads/use
 import { Button } from './Button'
 import { CommentList } from './CommentList'
 import { Composer } from './Composer'
+import { PageContextCard } from './PageContextCard'
 import { ThreadActions } from './ThreadActions'
 import { ThreadMetadata } from './ThreadMetadata'
 import { useToast } from './toast'
@@ -109,34 +110,13 @@ export function ThreadConversation({
           <ThreadMetadata links={externalLinks} />
         </div>
       )}
-      {variant === 'sidebar' &&
-        (() => {
-          // The page-context card. When wired with onReturnToPin it doubles as a "take me back to
-          // the pin" affordance (re-fires the focus/navigate split); otherwise it's a plain label.
-          const body = (
-            <>
-              <div className="air:text-[13px] air:font-semibold air:text-gray-900 air:truncate">
-                {item.pageTitle ?? item.pageUrl}
-              </div>
-              <div className="air:text-[11px] air:text-gray-500 air:truncate">{item.pageUrl}</div>
-            </>
-          )
-          return onReturnToPin ? (
-            <button
-              type="button"
-              onClick={onReturnToPin}
-              aria-label="Scroll to this thread's pin"
-              data-testid="airside-detail-page-context"
-              className="air:block air:mx-3 air:mt-2 air:px-3 air:py-2 air:rounded-lg air:bg-gray-50 air:border air:border-gray-200 air:text-left air:cursor-pointer air:hover:bg-gray-100"
-            >
-              {body}
-            </button>
-          ) : (
-            <div className="air:mx-3 air:mt-2 air:px-3 air:py-2 air:rounded-lg air:bg-gray-50 air:border air:border-gray-200">
-              {body}
-            </div>
-          )
-        })()}
+      {variant === 'sidebar' && (
+        <PageContextCard
+          pageTitle={item.pageTitle}
+          pageUrl={item.pageUrl}
+          onReturnToPin={onReturnToPin}
+        />
+      )}
       <CommentList
         comments={detail?.comments ?? []}
         loading={loading}
