@@ -1,13 +1,15 @@
 // packages/client/src/ui/ThreadConversation.tsx
 
 import type { Attachment, Thread, ThreadListItem } from '@airnauts/airside-core'
+import { useRef } from 'react'
 import type { ApiClient } from '../api/client'
 import { cn } from '../lib/cn'
 import { useSubmitReply } from '../threads/useSubmitReply'
 import { useController, useThreadActions, useThreadDetail } from '../threads/useThreads'
 import { Button } from './Button'
 import { CommentList } from './CommentList'
-import { Composer } from './Composer'
+import { Composer, type ComposerHandle } from './Composer'
+import { DropOverlay, useImageDrop } from './imageDrop'
 import { ThreadActions } from './ThreadActions'
 import { ThreadMetadata } from './ThreadMetadata'
 import { useToast } from './toast'
@@ -46,6 +48,13 @@ export function ThreadConversation({
   // (the panel list, or an id-loaded detached thread). Falls back to the list item while loading.
   const commentCount = detail ? detail.comments.length : item.commentCount
   const submitReply = useSubmitReply(id, client, resolved)
+  // The whole conversation panel is the drop target (header, comment list, composer) — not just
+  // the bottom composer strip. A drop anywhere routes into the composer's upload pipeline via
+  // its imperative handle, so paste + file-validation behaviour stay owned by the composer.
+  const composerRef = useRef<ComposerHandle>(null)
+  const { dragActive, dropHandlers } = useImageDrop((files) =>
+    composerRef.current?.acceptFiles(files),
+  )
 
   async function toggleStatus() {
     const next = resolved ? 'open' : 'resolved'
@@ -57,11 +66,12 @@ export function ThreadConversation({
 
   const wrapper =
     variant === 'popover'
-      ? 'air:w-80 air:max-w-[calc(100vw-16px)] air:bg-white air:border air:border-gray-200 air:rounded-xl air:overflow-hidden air:text-[13px] air:text-gray-900 air:shadow-[0_12px_32px_rgba(0,0,0,0.18)]'
-      : 'air:w-full air:bg-white air:text-[13px] air:text-gray-900 air:flex air:flex-col air:min-h-0 air:flex-1'
+      ? 'air:relative air:w-80 air:max-w-[calc(100vw-16px)] air:bg-white air:border air:border-gray-200 air:rounded-xl air:overflow-hidden air:text-[13px] air:text-gray-900 air:shadow-[0_12px_32px_rgba(0,0,0,0.18)]'
+      : 'air:relative air:w-full air:bg-white air:text-[13px] air:text-gray-900 air:flex air:flex-col air:min-h-0 air:flex-1'
 
   return (
-    <div className={wrapper}>
+    <div className={wrapper} {...dropHandlers}>
+      {dragActive && <DropOverlay testId="panel-dropzone" />}
       <div
         className={cn(
           'air:flex air:items-center air:justify-between air:px-3 air:py-2.5 air:border-b air:border-[#f1f3f5]',
@@ -122,7 +132,12 @@ export function ThreadConversation({
       />
       {!loading && (
         <Composer
+          ref={composerRef}
           mode="reply"
+          // The panel owns the (whole-area) drop region and forwards drops via composerRef, so
+          // tell the composer not to also wire its own — otherwise a drop on the composer strip
+          // would fire twice (panel + composer) and upload twice.
+          externalDrop
           // autoFocus defaults to true — both the sidebar detail (mounts fresh on every entry:
           // Reply click, row select, cross-page handoff) and the pin popover focus the reply
           // input on open so the user can type immediately.

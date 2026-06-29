@@ -1,11 +1,19 @@
 // packages/client/src/ui/Composer.tsx
 import type { Attachment } from '@airnauts/airside-core'
-import { type ClipboardEvent, type DragEvent, useEffect, useRef, useState } from 'react'
+import {
+  type ClipboardEvent,
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
 import { useIdentity } from '../identity/IdentityProvider'
 import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
 import { PendingAttachment } from './Attachment'
 import { Button } from './Button'
+import { DropOverlay, useImageDrop } from './imageDrop'
 import {
   CLIENT_ALLOWED_IMAGE_TYPES,
   type ClientAllowedImageType,
@@ -16,6 +24,10 @@ import { useToast } from './toast'
 import { useAttachmentUpload } from './useAttachmentUpload'
 
 export type ComposerSubmit = { text: string; attachmentIds: string[]; who: Identity }
+
+/** Imperative handle so a host that owns a larger drop region (the conversation
+ *  panel) can route a dropped file back into this composer's upload pipeline. */
+export type ComposerHandle = { acceptFiles: (files: File[]) => void }
 
 export type ComposerProps = {
   mode: 'newThread' | 'reply'
@@ -34,19 +46,28 @@ export type ComposerProps = {
    *  a completed upload is lifted to the parent and rendered from `attachment.url`. */
   attachment?: Attachment | null
   onAttachmentChange?: (attachment: Attachment | null) => void
+  /** When a host owns a larger drop region (the conversation panel) and forwards
+   *  drops via the imperative handle, set this so the composer doesn't also wire its
+   *  own drop handlers/overlay — that would double-fire the drop. Paste and the file
+   *  picker stay active either way. */
+  externalDrop?: boolean
 }
 
-export function Composer({
-  mode,
-  onSubmit,
-  upload,
-  onCancel,
-  autoFocus = true,
-  value,
-  onValueChange,
-  attachment,
-  onAttachmentChange,
-}: ComposerProps) {
+export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Composer(
+  {
+    mode,
+    onSubmit,
+    upload,
+    onCancel,
+    autoFocus = true,
+    value,
+    onValueChange,
+    attachment,
+    onAttachmentChange,
+    externalDrop = false,
+  },
+  ref,
+) {
   const { identity, requestIdentity } = useIdentity()
   const [internalText, setInternalText] = useState('')
   const textControlled = value !== undefined
@@ -58,12 +79,8 @@ export function Composer({
   const att = useAttachmentUpload({ upload, attachment, onAttachmentChange })
   const toast = useToast()
   const [sending, setSending] = useState(false)
-  const [dragActive, setDragActive] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  // Enter/leave counter (not a bare boolean) so moving the drag over child elements doesn't
-  // flicker the overlay off: child-enter bumps it before parent-leave drops it back.
-  const dragDepth = useRef(0)
 
   useEffect(() => {
     if (!autoFocus) return
@@ -104,39 +121,20 @@ export function Composer({
     else toast('Unsupported image type')
   }
 
-  // A drag carrying files (not selected text / host-page elements) is what we react to.
-  function dragHasFiles(e: DragEvent) {
-    return e.dataTransfer?.types?.includes('Files') ?? false
-  }
-
-  function onDragEnter(e: DragEvent) {
-    if (!dragHasFiles(e)) return
-    e.preventDefault()
-    dragDepth.current += 1
-    setDragActive(true)
-  }
-
-  function onDragOver(e: DragEvent) {
-    // preventDefault is required for the element to be a valid drop target.
-    if (dragHasFiles(e)) e.preventDefault()
-  }
-
-  function onDragLeave() {
-    if (dragDepth.current === 0) return
-    dragDepth.current -= 1
-    if (dragDepth.current === 0) setDragActive(false)
-  }
-
-  function onDrop(e: DragEvent) {
-    if (!dragHasFiles(e)) return
-    e.preventDefault()
-    dragDepth.current = 0
-    setDragActive(false)
-    // Single-image v1: take the first image-typed file, ignore the rest.
-    const image = Array.from(e.dataTransfer.files).find((f) => f.type.startsWith('image/'))
+  // From a dropped/forwarded file list: take the first image (single-image v1), ignore the
+  // rest, toast if none are images.
+  function acceptFiles(files: File[]) {
+    const image = files.find((f) => f.type.startsWith('image/'))
     if (image) acceptImage(image)
     else toast('Unsupported image type')
   }
+
+  // No deps array on purpose: `acceptFiles` closes over `att.startUpload`, which is recreated
+  // each render, so the handle must be too — a frozen one would upload through a stale closure.
+  useImperativeHandle(ref, () => ({ acceptFiles }))
+
+  // The composer wires its own drop region unless a host owns a larger one (see `externalDrop`).
+  const { dragActive, dropHandlers } = useImageDrop(acceptFiles)
 
   function onPaste(e: ClipboardEvent) {
     const items = e.clipboardData?.items
@@ -159,24 +157,12 @@ export function Composer({
   const placeholder = mode === 'newThread' ? 'Add a comment…' : 'Reply…'
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: drag/paste are progressive enhancements over the keyboard-accessible 📎 file-picker button; no ARIA role models a composer drop region.
     <div
       className="air:relative air:border-t air:first:border-t-0 air:border-[#f1f3f5] air:px-3 air:py-[9px]"
-      onDragEnter={onDragEnter}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
+      {...(externalDrop ? {} : dropHandlers)}
       onPaste={onPaste}
     >
-      {dragActive && (
-        <div
-          aria-hidden
-          data-testid="composer-dropzone"
-          className="air:absolute air:inset-0 air:z-10 air:flex air:items-center air:justify-center air:rounded-lg air:border-2 air:border-dashed air:border-blue-500 air:bg-blue-50/90 air:text-[13px] air:font-medium air:text-blue-700 air:pointer-events-none"
-        >
-          Drop image to attach
-        </div>
-      )}
+      {!externalDrop && dragActive && <DropOverlay testId="composer-dropzone" />}
       {att.pending && (
         <PendingAttachment
           name={att.pending.name}
@@ -247,4 +233,4 @@ export function Composer({
       </div>
     </div>
   )
-}
+})
