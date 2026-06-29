@@ -78,7 +78,8 @@ const ENTRIES: { [K in SettingKey]: SettingEntry<SettingsSchema[K]> } = {
 }
 
 /** Read + validate a single key from `storage`, falling back on absent/malformed/wrong-type. */
-function readEntry<T>(entry: SettingEntry<T>, storage: Storage): T {
+function readEntry<K extends SettingKey>(key: K, storage: Storage): SettingsSchema[K] {
+  const entry = ENTRIES[key]
   try {
     const raw = storage.getItem(entry.storageKey)
     if (!raw) return entry.fallback
@@ -101,12 +102,11 @@ let boundStorage: Storage | undefined
  */
 export function initSettings(storage: Storage = localStorage): void {
   boundStorage = storage
-  cache = {
-    activationKey: readEntry(ENTRIES.activationKey, storage),
-    identity: readEntry(ENTRIES.identity, storage),
-    launcherPosition: readEntry(ENTRIES.launcherPosition, storage),
-    pinsHidden: readEntry(ENTRIES.pinsHidden, storage),
-  }
+  // Hydrate every entry by looping over ENTRIES, so adding a key here needs no
+  // second edit and the cache stays in sync with the schema automatically.
+  cache = Object.fromEntries(
+    (Object.keys(ENTRIES) as SettingKey[]).map((key) => [key, readEntry(key, storage)] as const),
+  ) as SettingsSchema
 }
 
 /** The cached value for `key`, lazily hydrating from `localStorage` if {@link initSettings}
