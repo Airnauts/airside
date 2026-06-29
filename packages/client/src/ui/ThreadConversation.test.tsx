@@ -2,7 +2,7 @@
 import type { Thread, ThreadListItem } from '@airnauts/airside-core'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { type ReactElement, useEffect } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { DraftsProvider, useDraft } from '../drafts/DraftsProvider'
 import { IdentityProvider } from '../identity/IdentityProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
@@ -57,6 +57,12 @@ function Seeder({ thread }: { thread: Thread }) {
   }, [dispatch, thread])
   return null
 }
+
+// jsdom doesn't implement object URLs; the composer's upload pipeline creates a preview URL.
+beforeAll(() => {
+  URL.createObjectURL = vi.fn(() => 'blob:preview') as never
+  URL.revokeObjectURL = vi.fn() as never
+})
 
 describe('ThreadConversation detail source', () => {
   it('renders its own thread comments by item id, even when openId is null', async () => {
@@ -198,6 +204,40 @@ describe('ThreadConversation reply focus', () => {
     const input = await screen.findByPlaceholderText(/reply/i)
     // Focus is deferred to the next frame (so it wins against Radix focus scopes).
     await waitFor(() => expect(document.activeElement).toBe(input))
+  })
+})
+
+describe('ThreadConversation image drop', () => {
+  it('accepts a drop anywhere on the panel (not just the composer strip)', async () => {
+    // The drop target is the whole conversation panel: dropping on the header — well above the
+    // bottom composer — must still route the image into the composer's upload pipeline.
+    const thread = {
+      id: 't1',
+      status: 'open',
+      comments: [
+        { id: 'c1', author: { email: 'a@b.c' }, text: 'root', attachments: [], createdAt: 'x' },
+      ],
+    } as unknown as Thread
+    const upload = vi.fn().mockResolvedValue({ id: 'at1', url: 'blob:x', name: 'shot.png' })
+    const client = { ...(mockClient as object), upload } as never
+
+    renderWithIdentity(
+      <ThreadsProvider client={client}>
+        <DraftsProvider>
+          <Seeder thread={thread} />
+          <ThreadConversation item={item()} client={client} variant="sidebar" />
+        </DraftsProvider>
+      </ThreadsProvider>,
+    )
+
+    // Wait for the composer to mount (detail loaded) so the panel can forward the drop into it.
+    await screen.findByPlaceholderText(/reply/i)
+    const png = new File(['x'], 'shot.png', { type: 'image/png' })
+    fireEvent.drop(screen.getByText(/Open ·/), {
+      dataTransfer: { types: ['Files'], files: [png] },
+    })
+    await waitFor(() => expect(upload).toHaveBeenCalledTimes(1))
+    expect(upload).toHaveBeenCalledWith(png)
   })
 })
 
