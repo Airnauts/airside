@@ -100,8 +100,8 @@ export function ThreadActions({
 
       <Dialog.Root open={confirmOpen} onOpenChange={setConfirmOpen}>
         <Dialog.Portal container={container ?? undefined}>
-          <Dialog.Overlay className="air:fixed air:inset-0 air:bg-black/40 air:pointer-events-auto" />
-          <Dialog.Content className="air:fixed air:top-1/2 air:left-1/2 air:-translate-x-1/2 air:-translate-y-1/2 air:bg-white air:p-6 air:rounded-xl air:min-w-80 air:max-w-[calc(100vw-16px)] air:pointer-events-auto air:shadow-[0_12px_32px_rgba(0,0,0,0.18)]">
+          <Dialog.Overlay className="air:fixed air:inset-0 air:z-[var(--air-z-modal)] air:bg-black/40 air:pointer-events-auto" />
+          <Dialog.Content className="air:fixed air:top-1/2 air:left-1/2 air:z-[var(--air-z-modal)] air:-translate-x-1/2 air:-translate-y-1/2 air:bg-white air:p-6 air:rounded-xl air:min-w-80 air:max-w-[calc(100vw-16px)] air:pointer-events-auto air:shadow-[0_12px_32px_rgba(0,0,0,0.18)]">
             <Dialog.Title className="air:mt-0 air:text-[16px] air:font-semibold air:text-gray-900">
               Delete this thread?
             </Dialog.Title>
