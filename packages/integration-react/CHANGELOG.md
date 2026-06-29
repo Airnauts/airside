@@ -1,5 +1,19 @@
 # @airnauts/airside-integration-react
 
+## 0.10.0
+
+### Patch Changes
+
+- Updated dependencies [052135c]
+- Updated dependencies [2535eb8]
+- Updated dependencies [b14367e]
+- Updated dependencies [a708f0f]
+- Updated dependencies [12a6fbc]
+- Updated dependencies [525bcdb]
+- Updated dependencies [ffb3da1]
+- Updated dependencies [afb3860]
+  - @airnauts/airside-client@0.10.0
+
 ## 0.9.1
 
 ### Patch Changes

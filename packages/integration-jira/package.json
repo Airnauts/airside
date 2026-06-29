@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-extension-jira",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "description": "Create Jira issues from comment threads (server extension).",
   "keywords": [
     "comments",

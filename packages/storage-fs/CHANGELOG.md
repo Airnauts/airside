@@ -1,5 +1,13 @@
 # @airnauts/airside-storage-fs
 
+## 0.10.0
+
+### Patch Changes
+
+- Updated dependencies [2535eb8]
+  - @airnauts/airside-server@0.10.0
+  - @airnauts/airside-core@0.10.0
+
 ## 0.9.1
 
 ### Patch Changes

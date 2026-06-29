@@ -1,5 +1,23 @@
 # @airnauts/airside-client
 
+## 0.10.0
+
+### Minor Changes
+
+- b14367e: Composer now accepts drag-and-drop and clipboard-paste of images, not just the file picker. Dropped or pasted images get the same preview/upload flow, with an instant client-side type/size check (png/jpeg/webp/gif, max 5 MB) and a clear toast when a file is the wrong type or too large.
+- 525bcdb: Widget: add a launcher toggle that hides and shows every pin and highlight without leaving comment mode — handy for reading the page unobstructed. The sidebar stays open while pins are hidden, and the choice persists across reloads.
+
+### Patch Changes
+
+- 052135c: Comments on text selections that span an element boundary (for example a selection that starts inside a `<code>` and ends in the text after it) now anchor to the nearest distinctive container instead of a generic bare block, so they survive a host re-render rather than silently jumping to another paragraph or showing the "anchor lost" card.
+- 2535eb8: Reviewers can now delete a whole thread — its pin, comments, and attachment metadata — from the thread overflow (`···`) menu, behind a confirmation dialog. This adds a `DELETE /threads/:id` operation and a new `Repository.deleteThread(scope, id)` method that every adapter implements; the delete is a hard delete (embedded comments cascade) and attachment blobs are intentionally left in place. Custom `Repository` implementations must add `deleteThread`.
+- a708f0f: Docs: fix `captureElement` and `extractSignals` descriptions to match the current `Anchor` and `Signals` types (added `schemaVersion`, `selection?`, and `stableAttrs` fields that were omitted).
+- 12a6fbc: Fixed place mode dropping a draft pin on the widget's own chrome: clicking the launcher (open/close panel, exit place mode) or inside the comments sidebar while "Add comment" is active now operates those controls instead of placing a pin.
+- ffb3da1: Text-selection highlight now stays glued to its text on scroll and window resize, instead of drifting off it.
+- afb3860: The open thread detail's page-context card is now clickable to return to the thread's pin: on the same page it scrolls to and pulses the pin, and when the pin lives on another page it navigates there and re-focuses it on arrival.
+- Updated dependencies [2535eb8]
+  - @airnauts/airside-core@0.10.0
+
 ## 0.9.1
 
 ### Patch Changes
