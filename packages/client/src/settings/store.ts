@@ -1,85 +1,41 @@
 // packages/client/src/settings/store.ts
 
-import type { Identity } from '../identity/storage'
-import { clampTop, DEFAULT_LAUNCHER_POSITION, type LauncherPosition } from '../launcher/storage'
+import { activationKeySetting } from '../activation/storage'
+import { identitySetting } from '../identity/storage'
+import { launcherPositionSetting } from '../launcher/storage'
+import { pinsHiddenSetting } from '../marker/storage'
+import type { SettingEntry } from './entry'
 
 /**
- * The single client-side settings store (ADR-0046). All `localStorage`-backed widget
- * settings live behind this module: it reads every known key **once** into an in-memory
- * cache (at startup via {@link initSettings}, or lazily on first access) and persists
- * writes through typed accessors. The per-key try/catch-guarded parsers are lifted
- * verbatim from the former per-domain `storage.ts` modules, so on-disk keys and
- * fallback behaviour are unchanged.
+ * The single client-side settings store (ADR-0046, ADR-0047). All `localStorage`-backed widget
+ * settings live behind this module: it reads every registered key **once** into an in-memory cache
+ * (at startup via {@link initSettings}, or lazily on first access) and persists writes through
+ * typed accessors.
+ *
+ * Each setting's wiring — its on-disk key, default, and parse guard — lives in its own domain
+ * module's `storage.ts` next to the feature that owns it. This store only imports those configs
+ * into {@link ENTRIES} and drives init/read/persist **generically** over the list, so adding a
+ * setting means writing its `SettingEntry` in the domain module and adding one line below — never
+ * a second per-key edit here. On-disk keys and fallback behaviour match the former per-domain
+ * modules exactly.
  */
-export type SettingsSchema = {
-  /** Activation key persisted after a successful URL-param activation. */
-  activationKey: string | null
-  /** The logged-in reviewer's identity. */
-  identity: Identity | null
-  /** Where the launcher pill is stuck. */
-  launcherPosition: LauncherPosition
-  /** Whether the on-page pin/highlight overlay is hidden (issue #32). */
-  pinsHidden: boolean
-}
+const ENTRIES = {
+  activationKey: activationKeySetting,
+  identity: identitySetting,
+  launcherPosition: launcherPositionSetting,
+  pinsHidden: pinsHiddenSetting,
+} satisfies Record<string, SettingEntry<unknown>>
 
-export type SettingKey = keyof SettingsSchema
+/** A known setting's name — the keys of {@link ENTRIES}, the single registration point. */
+export type SettingKey = keyof typeof ENTRIES
 
-/** One key's wiring: the on-disk key, its default, and a guard that turns a parsed
- *  (already `JSON.parse`d) value into a valid value or the default. */
-type SettingEntry<T> = {
-  storageKey: string
-  fallback: T
-  validate: (parsed: unknown) => T
-}
+/** The settings shape: each key mapped to its value type, derived from its registered entry. */
+export type SettingsSchema = { [K in SettingKey]: (typeof ENTRIES)[K]['fallback'] }
 
-const ENTRIES: { [K in SettingKey]: SettingEntry<SettingsSchema[K]> } = {
-  activationKey: {
-    storageKey: 'airside:key',
-    fallback: null,
-    validate: (parsed) => (typeof parsed === 'string' ? parsed : null),
-  },
-  identity: {
-    storageKey: 'airside:identity',
-    fallback: null,
-    validate: (parsed) => {
-      if (
-        parsed &&
-        typeof parsed === 'object' &&
-        typeof (parsed as { email?: unknown }).email === 'string'
-      ) {
-        const { email, name } = parsed as { email: string; name?: unknown }
-        return { email, name: typeof name === 'string' ? name : undefined }
-      }
-      return null
-    },
-  },
-  launcherPosition: {
-    storageKey: 'airside:launcher-position',
-    fallback: DEFAULT_LAUNCHER_POSITION,
-    validate: (parsed) => {
-      if (parsed && typeof parsed === 'object') {
-        const { edge, top } = parsed as { edge?: unknown; top?: unknown }
-        if (
-          (edge === 'left' || edge === 'right') &&
-          typeof top === 'number' &&
-          Number.isFinite(top)
-        ) {
-          return { edge, top: clampTop(top) }
-        }
-      }
-      return DEFAULT_LAUNCHER_POSITION
-    },
-  },
-  pinsHidden: {
-    storageKey: 'airside:pins-hidden',
-    fallback: false,
-    validate: (parsed) => (typeof parsed === 'boolean' ? parsed : false),
-  },
-}
-
-/** Read + validate a single key from `storage`, falling back on absent/malformed/wrong-type. */
-function readEntry<K extends SettingKey>(key: K, storage: Storage): SettingsSchema[K] {
-  const entry = ENTRIES[key]
+/** Read + validate one entry from `storage`, falling back on absent/malformed/wrong-type. Typed
+ *  over `unknown` so it can run uniformly across every {@link ENTRIES} value; each entry's own
+ *  `validate` guarantees the concrete type the schema records. */
+function readEntry(entry: SettingEntry<unknown>, storage: Storage): unknown {
   try {
     const raw = storage.getItem(entry.storageKey)
     if (!raw) return entry.fallback
@@ -96,16 +52,18 @@ let cache: SettingsSchema | null = null
 let boundStorage: Storage | undefined
 
 /**
- * Read every known key from `storage` once into the in-memory cache, binding `storage`
+ * Read every registered key from `storage` once into the in-memory cache, binding `storage`
  * for subsequent writes. Re-runnable: each call re-hydrates, so the widget calls it once
  * at startup and tests can re-init after seeding `localStorage`.
  */
 export function initSettings(storage: Storage = localStorage): void {
   boundStorage = storage
-  // Hydrate every entry by looping over ENTRIES, so adding a key here needs no
-  // second edit and the cache stays in sync with the schema automatically.
+  // Hydrate every entry by looping over ENTRIES, so adding a key needs no second edit and the
+  // cache stays in sync with the registered settings automatically.
   cache = Object.fromEntries(
-    (Object.keys(ENTRIES) as SettingKey[]).map((key) => [key, readEntry(key, storage)] as const),
+    (Object.keys(ENTRIES) as SettingKey[]).map(
+      (key) => [key, readEntry(ENTRIES[key], storage)] as const,
+    ),
   ) as SettingsSchema
 }
 

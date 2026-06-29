@@ -1537,3 +1537,36 @@ in-memory value still updates, so the live session is unaffected and only the ac
 durability is lost in that rare case. The store is the established pattern for future client
 settings; adding sessionStorage-backed or host-configurable settings would be a deliberate
 extension, not an ad-hoc module.
+
+## ADR-0047 — Colocate each setting's config with its domain module; the store is a generic registry
+
+- **Date:** 2026-06-29
+- **Status:** accepted (refines ADR-0046)
+
+**Context.** ADR-0046 introduced the single read-once settings store but kept every key's wiring
+(its on-disk key, default, and parse guard) inlined in `settings/store.ts`, while the domain
+modules (`identity/storage.ts`, `launcher/storage.ts`) were slimmed to just their shared types.
+In review the owner observed that the store already *imports* those domain modules, so splitting a
+setting across two files — its type in the domain module, its storage logic in the store — is the
+wrong seam: a setting's whole definition should live next to the feature that owns it, and adding a
+setting should mean editing one list, not two.
+
+**Decision.** Move each setting's `SettingEntry` config (on-disk key, default, validate guard) into
+its own domain module's `storage.ts`: `activation/storage.ts` (`activationKeySetting`, the module
+re-created for this), `identity/storage.ts` (`identitySetting`), `launcher/storage.ts`
+(`launcherPositionSetting`, whose guard reuses the colocated `clampTop`), and a new
+`marker/storage.ts` (`pinsHiddenSetting`). The `SettingEntry<T>` contract type moves to a leaf
+`settings/entry.ts` that the domain modules and the store both import (no import cycle).
+`settings/store.ts` now only imports those configs into a single `ENTRIES` object and derives
+`SettingKey`/`SettingsSchema` from it, so the type registry and the runtime registry are the same
+list; `initSettings`/`getSetting`/`setSetting` already drove everything generically over `ENTRIES`
+and are unchanged in behaviour. On-disk keys, defaults, and validation are byte-for-byte the same —
+this is a relocation, not a behaviour change (the existing store tests pass unmodified).
+
+**Consequences.** Adding a persisted client setting is now a single registration: write its
+`SettingEntry` in the owning domain module and add one line to `ENTRIES` — the schema type follows
+automatically, with no second per-key edit in the store. Validation/guarding is no longer
+centralized in `store.ts` (the one trade-off vs. ADR-0046), but it lives next to the type and
+feature it belongs to and is still funnelled through the one store at runtime. The store keeps its
+role as the sole `localStorage` chokepoint, the read-once cache, and the best-effort write; only the
+*location* of per-key config changes.
