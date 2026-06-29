@@ -7,7 +7,7 @@ import { WidgetProvider } from '../app/providers'
 import { DraftsProvider } from '../drafts/DraftsProvider'
 import { IdentityProvider } from '../identity/IdentityProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
-import { useController, useDispatch } from '../threads/useThreads'
+import { useController, useDispatch, useThreadsState } from '../threads/useThreads'
 import { FOCUS_STORAGE_KEY } from './navigate'
 import { PanelDrawer } from './PanelDrawer'
 import { PanelProvider, usePanelController } from './PanelProvider'
@@ -91,11 +91,28 @@ function GhostOpener() {
   )
 }
 
+// Opens a thread's detail directly (no row click, so no requestFocus on this path) — lets a test
+// reach the open detail with a clean pendingFocusId, then exercise the page-context card alone.
+function DetailOpener({ id }: { id: string }) {
+  const panel = usePanelController()
+  return (
+    <button type="button" onClick={() => panel.openDetail(id)}>
+      open detail {id}
+    </button>
+  )
+}
+
+function FocusProbe() {
+  const state = useThreadsState()
+  return <span data-testid="pending-focus">{state.pendingFocusId ?? 'none'}</span>
+}
+
 function setup(opts: {
   threads: ThreadListItem[]
   review?: ThreadListItem[]
   resolvePageKey?: (url: string) => string
   withProbes?: boolean
+  detailOpenerId?: string
 }) {
   // The main fetch carries `sort: 'updatedAt'`; the review fetch sends only `status`.
   // Distinguish the two by the presence of `sort`.
@@ -128,6 +145,12 @@ function setup(opts: {
               <CloseProbe />
               <GhostOpener />
               {opts.withProbes && <StatusProbe />}
+              {opts.detailOpenerId && (
+                <>
+                  <DetailOpener id={opts.detailOpenerId} />
+                  <FocusProbe />
+                </>
+              )}
               <PanelDrawer resolvePageKey={resolvePageKey} client={client as never} />
             </DraftsProvider>
           </PanelProvider>
@@ -183,6 +206,43 @@ describe('PanelDrawer', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument())
     expect(screen.queryByTestId('airside-panel')).toBeInTheDocument()
     expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBeNull()
+  })
+
+  it('open detail page-context card re-focuses the pin when the thread is on this page', async () => {
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/here' })],
+      resolvePageKey: () => 'x.test/here',
+      detailOpenerId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    // Open the detail directly (this path does not requestFocus) so pendingFocus starts clean,
+    // isolating the card's own re-trigger.
+    act(() => screen.getByText('open detail a').click())
+    await waitFor(() => screen.getByTestId('airside-detail-page-context'))
+    expect(screen.getByTestId('pending-focus')).toHaveTextContent('none')
+    act(() => screen.getByTestId('airside-detail-page-context').click())
+    // Same page → requestFocus (pulse/scroll the pin), no cross-page handoff.
+    expect(screen.getByTestId('pending-focus')).toHaveTextContent('a')
+    expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBeNull()
+  })
+
+  it('open detail page-context card navigates to the thread page when the pin is elsewhere', async () => {
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/pricing', pageUrl: 'https://x.test/pricing' })],
+      resolvePageKey: () => 'x.test/other',
+      detailOpenerId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    act(() => screen.getByText('open detail a').click())
+    await waitFor(() => screen.getByTestId('airside-detail-page-context'))
+    act(() => screen.getByTestId('airside-detail-page-context').click())
+    // Different page → stash the focus handoff and navigate; no in-place focus.
+    expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBe(
+      JSON.stringify({ id: 'a', openDetail: true }),
+    )
+    expect(screen.getByTestId('pending-focus')).toHaveTextContent('none')
   })
 
   it('detail view hides the list filters', async () => {

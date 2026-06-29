@@ -74,6 +74,7 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
             <PanelDetailView
               threadId={state.detailThreadId}
               listItem={detailItem}
+              resolvePageKey={resolvePageKey}
               client={client}
               onBack={() => panel.back()}
             />
