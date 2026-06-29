@@ -87,6 +87,9 @@ export function MarkerLayer({
     controller.registerRuntime({
       setStatus: (id, status) => rt.setItemStatus(id, status),
       bumpCommentCount: (id, delta) => rt.bumpCommentCount(id, delta),
+      // Optimistic delete drops the pin from the retained set; rollback re-fetches the list.
+      removeItem: (id) => rt.removeItem(id),
+      refresh: () => rt.refresh(),
     })
     void rt
       .refresh()

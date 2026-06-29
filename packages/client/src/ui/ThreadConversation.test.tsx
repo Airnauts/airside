@@ -241,6 +241,37 @@ describe('ThreadConversation image drop', () => {
   })
 })
 
+describe('ThreadConversation return-to-pin affordance', () => {
+  it('fires onReturnToPin when the sidebar page-context card is clicked', () => {
+    const onReturnToPin = vi.fn()
+    renderWithIdentity(
+      <ThreadsProvider client={mockClient}>
+        <DraftsProvider>
+          <ThreadConversation
+            item={item()}
+            client={mockClient}
+            variant="sidebar"
+            onReturnToPin={onReturnToPin}
+          />
+        </DraftsProvider>
+      </ThreadsProvider>,
+    )
+    fireEvent.click(screen.getByRole('button', { name: /pin/i }))
+    expect(onReturnToPin).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders the page-context card as a plain label when onReturnToPin is omitted', () => {
+    renderWithIdentity(
+      <ThreadsProvider client={mockClient}>
+        <DraftsProvider>
+          <ThreadConversation item={item()} client={mockClient} variant="sidebar" />
+        </DraftsProvider>
+      </ThreadsProvider>,
+    )
+    expect(screen.queryByRole('button', { name: /pin/i })).not.toBeInTheDocument()
+  })
+})
+
 describe('ThreadConversation shared draft', () => {
   it('mirrors composer text between popover and sidebar for the same thread', () => {
     renderWithIdentity(

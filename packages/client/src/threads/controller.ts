@@ -32,6 +32,14 @@ export type Controller = {
    */
   bumpCommentCount(id: string, delta: number): void
   /**
+   * Optimistically delete a thread: drop it from the store (REMOVE_THREAD — closes its popover and
+   * clears any focus/lost-open ref) AND the runtime cache (so the next reposition emit can't resurrect
+   * its pin), then persist via the API. On failure, calls `runtime.refresh()` to re-fetch the list (the
+   * thread still exists server-side) — restoring the store — and returns `false` so the UI can toast.
+   * Returns `true` on success. Never throws.
+   */
+  deleteThread(id: string): Promise<boolean>
+  /**
    * MarkerLayer registers the live anchor-runtime here so status/count changes also patch its cached
    * item list. Without this, the runtime re-emits stale placements on the next reposition/mutation,
    * clobbering the optimistic update (the pin would revert until a full reload).
@@ -40,6 +48,8 @@ export type Controller = {
     patch: {
       setStatus: (id: string, status: ThreadStatus) => void
       bumpCommentCount: (id: string, delta: number) => void
+      removeItem: (id: string) => void
+      refresh: () => Promise<void>
     } | null,
   ): void
   /** Focus a pin: arm the focus effect (scroll + pulse) and lazy-fetch its detail — WITHOUT opening
@@ -62,7 +72,7 @@ export type Controller = {
 export function createController(
   dispatch: (a: Action) => void,
   deps: {
-    client: Pick<ApiClient, 'getThread' | 'setThreadStatus' | 'runThreadAction'>
+    client: Pick<ApiClient, 'getThread' | 'setThreadStatus' | 'runThreadAction' | 'deleteThread'>
     isCached: (id: string) => boolean
     isLoading: (id: string) => boolean
   },
@@ -70,6 +80,8 @@ export function createController(
   let runtime: {
     setStatus: (id: string, status: ThreadStatus) => void
     bumpCommentCount: (id: string, delta: number) => void
+    removeItem: (id: string) => void
+    refresh: () => Promise<void>
   } | null = null
   let statusListener: ((id: string, status: ThreadStatus) => void) | null = null
   let commentCountListener: ((id: string, delta: number) => void) | null = null
@@ -126,6 +138,21 @@ export function createController(
         return true
       } catch {
         patchStatus(id, prev)
+        return false
+      }
+    },
+    async deleteThread(id) {
+      // Optimistic teardown up front: store (closes the popover, clears focus refs) + runtime cache
+      // (so the next reposition emit can't resurrect the pin). Then persist.
+      dispatch({ type: 'REMOVE_THREAD', id })
+      runtime?.removeItem(id)
+      try {
+        await deps.client.deleteThread(id)
+        return true
+      } catch {
+        // Rollback: the thread still exists server-side, so re-fetch the list and re-place. We
+        // deliberately don't snapshot/re-insert a placement (it's DOM-bound and fragile).
+        await runtime?.refresh().catch(() => {})
         return false
       }
     },

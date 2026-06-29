@@ -10,6 +10,7 @@ import { Button } from './Button'
 import { CommentList } from './CommentList'
 import { Composer, type ComposerHandle } from './Composer'
 import { DropOverlay, useImageDrop } from './imageDrop'
+import { PageContextCard } from './PageContextCard'
 import { ThreadActions } from './ThreadActions'
 import { ThreadMetadata } from './ThreadMetadata'
 import { useToast } from './toast'
@@ -23,6 +24,9 @@ export type ThreadConversationProps = {
   onDraftTextChange?: (text: string) => void
   draftAttachment?: Attachment | null
   onDraftAttachmentChange?: (a: Attachment | null) => void
+  /** Sidebar only: click the page-context card to re-navigate to the thread's pin. When omitted
+   *  the card stays a non-interactive label. */
+  onReturnToPin?: () => void
 }
 
 export function ThreadConversation({
@@ -33,6 +37,7 @@ export function ThreadConversation({
   onDraftTextChange,
   draftAttachment,
   onDraftAttachmentChange,
+  onReturnToPin,
 }: ThreadConversationProps) {
   const id = item.id
   const controller = useController()
@@ -116,12 +121,11 @@ export function ThreadConversation({
         </div>
       )}
       {variant === 'sidebar' && (
-        <div className="air:mx-3 air:mt-2 air:px-3 air:py-2 air:rounded-lg air:bg-gray-50 air:border air:border-gray-200">
-          <div className="air:text-[13px] air:font-semibold air:text-gray-900 air:truncate">
-            {item.pageTitle ?? item.pageUrl}
-          </div>
-          <div className="air:text-[11px] air:text-gray-500 air:truncate">{item.pageUrl}</div>
-        </div>
+        <PageContextCard
+          pageTitle={item.pageTitle}
+          pageUrl={item.pageUrl}
+          onReturnToPin={onReturnToPin}
+        />
       )}
       <CommentList
         comments={detail?.comments ?? []}

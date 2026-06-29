@@ -1,5 +1,6 @@
 import { ANCHOR_SCHEMA_VERSION, type Anchor } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
+import { captureSelection } from './capture'
 import { extractSignals } from './extract'
 import { rematch } from './rematch'
 import { buildSelectors } from './selectors'
@@ -117,5 +118,52 @@ describe('rematch selection', () => {
     const after = parse('<article id="a"><p>Entirely different content now.</p></article>')
     const res = rematch(anchor, after)
     expect(res.kind).toBe('selectionLost')
+  })
+})
+
+// End-to-end #35: capture a real cross-</code> selection (NOT a hand-faked anchor), then rematch
+// against the host DOM after a re-render. Pre-fix these anchored to the bare <p> and were lost.
+describe('rematch — cross-element selection survives a re-render (#35)', () => {
+  const captureCrossCode = (html: string): Anchor => {
+    document.body.innerHTML = html
+    const code = document.querySelector('code') as Element
+    const codeText = code.firstChild as Text
+    const trailing = code.nextSibling as Text
+    const range = document.createRange()
+    range.setStart(codeText, (codeText.textContent ?? '').indexOf('dev-key'))
+    const tail = trailing.textContent ?? ''
+    range.setEnd(trailing, tail.indexOf('activate') + 'activate'.length)
+    return captureSelection(range)
+  }
+
+  it('tier-2 single-article host survives an intra-article paragraph shift', () => {
+    const anchor = captureCrossCode(
+      '<article><p>intro paragraph one</p><p>filler paragraph two</p><p>Open this page with <code>?airside-key=dev-key</code> to activate the widget.</p></article>',
+    )
+    expect(anchor.signals.tag).toBe('article')
+    const after = parse(
+      '<article><p>intro paragraph one</p><p>filler paragraph two</p><p>freshly inserted paragraph</p><p>Open this page with <code>?airside-key=dev-key</code> to activate the widget.</p></article>',
+    )
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('anchored')
+    if (res.kind === 'anchored') {
+      expect(res.range?.toString()).toBe(anchor.selection?.quote)
+    }
+  })
+
+  it('tier-3 multi-article host survives an intra-article paragraph insertion', () => {
+    const anchor = captureCrossCode(
+      '<main><article><p>first article para</p></article><article><p>filler para two</p><p>Open this page with <code>?airside-key=dev-key</code> to activate the widget.</p></article><article><p>third article para</p></article></main>',
+    )
+    expect(anchor.signals.tag).toBe('article')
+    expect(anchor.selectors[0]).toBe('main > article:nth-of-type(2)')
+    const after = parse(
+      '<main><article><p>first article para</p></article><article><p>filler para two</p><p>freshly inserted paragraph</p><p>Open this page with <code>?airside-key=dev-key</code> to activate the widget.</p></article><article><p>third article para</p></article></main>',
+    )
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('anchored')
+    if (res.kind === 'anchored') {
+      expect(res.range?.toString()).toBe(anchor.selection?.quote)
+    }
   })
 })
