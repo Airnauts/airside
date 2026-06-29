@@ -79,6 +79,54 @@ describe('MarkerLayer place mode', () => {
     expect(document.querySelector('[data-airside-toast]')).toBeNull()
   })
 
+  it('captures the trimmed document.title as pageTitle when creating a thread (#56)', async () => {
+    document.body.innerHTML =
+      '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
+    mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 80, height: 16 })
+    const prevTitle = document.title
+    document.title = '  My Page  '
+    try {
+      const c = client()
+      renderMarker(props(c))
+      fireEvent.click(screen.getByTestId('airside-place'))
+      fireEvent.click(document.querySelector('#t') as Element, { clientX: 40, clientY: 8 })
+      expect(await screen.findByTestId('airside-draft')).toBeInTheDocument()
+      fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
+        target: { value: 'Looks off here' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: /send/i }))
+      await waitFor(() => expect(c.createThread).toHaveBeenCalled())
+      // The page-context card needs a real title so it stops falling back to the URL twice.
+      expect(c.createThread.mock.calls[0][0].pageTitle).toBe('My Page')
+    } finally {
+      document.title = prevTitle
+    }
+  })
+
+  it('omits pageTitle when document.title is blank, so the card never renders an empty title (#56)', async () => {
+    document.body.innerHTML =
+      '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
+    mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 80, height: 16 })
+    const prevTitle = document.title
+    document.title = '   '
+    try {
+      const c = client()
+      renderMarker(props(c))
+      fireEvent.click(screen.getByTestId('airside-place'))
+      fireEvent.click(document.querySelector('#t') as Element, { clientX: 40, clientY: 8 })
+      expect(await screen.findByTestId('airside-draft')).toBeInTheDocument()
+      fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
+        target: { value: 'No title here' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: /send/i }))
+      await waitFor(() => expect(c.createThread).toHaveBeenCalled())
+      // Sending '' would make the bold line render blank instead of falling back to the URL.
+      expect(c.createThread.mock.calls[0][0]).not.toHaveProperty('pageTitle')
+    } finally {
+      document.title = prevTitle
+    }
+  })
+
   it('shows the just-posted comment in the popover immediately, with no extra getThread (BUG A)', async () => {
     document.body.innerHTML =
       '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
