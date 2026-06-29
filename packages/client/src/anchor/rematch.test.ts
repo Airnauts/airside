@@ -2,7 +2,7 @@ import { ANCHOR_SCHEMA_VERSION, type Anchor } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
 import { captureSelection } from './capture'
 import { extractSignals } from './extract'
-import { rematch } from './rematch'
+import { findCandidates, rematch } from './rematch'
 import { buildSelectors } from './selectors'
 
 const parse = (html: string): HTMLElement =>
@@ -89,6 +89,52 @@ describe('rematch fast path', () => {
       expect(res.diagnostics.candidateCount).toBe(0)
       expect(res.diagnostics.top).toEqual([])
     }
+  })
+})
+
+// The Lear bug: our widget root is a <body>-level sibling of the page content, so a naive
+// nth-of-type counts it and the stored structural path resolves to the wrong element (or nothing)
+// after the widget mounts. The engine must treat all [data-airside-root] DOM as absent.
+describe('rematch — airside widget DOM excluded from anchoring', () => {
+  it('still anchors to the right element when our root shifts body-level nth-of-type', () => {
+    const before = parse(
+      '<div class="card"><span class="label">A</span></div><div class="card"><span class="label">B</span></div>',
+    )
+    const anchor = anchorFor(before, '.card:nth-of-type(2) span') // the "B" span
+    expect(anchor.selectors[0]).toBe('div:nth-of-type(2) > span')
+    // Re-render with our widget root prepended as the first <body> div (as it appears live).
+    const after = parse(
+      '<div data-airside-root><button><span class="label">widget</span></button></div><div class="card"><span class="label">A</span></div><div class="card"><span class="label">B</span></div>',
+    )
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('anchored')
+    // Crucially the RIGHT card: a native nth-of-type(2) would have counted the airside div and
+    // pinned to "A".
+    if (res.kind === 'anchored') expect(res.el.textContent).toBe('B')
+  })
+
+  it('survives a host portal (Floating UI) prepended at body level', () => {
+    const before = parse(
+      '<div class="card"><span class="label">A</span></div><div class="card"><span class="label">B</span></div>',
+    )
+    const anchor = anchorFor(before, '.card:nth-of-type(2) span') // the "B" span
+    // A host SPA renders a floating-ui portal as the first body child (open dropdown/tooltip).
+    const after = parse(
+      '<div data-floating-ui-portal><div>menu</div></div><div class="card"><span class="label">A</span></div><div class="card"><span class="label">B</span></div>',
+    )
+    const res = rematch(anchor, after)
+    expect(res.kind).toBe('anchored')
+    if (res.kind === 'anchored') expect(res.el.textContent).toBe('B')
+  })
+
+  it('findCandidates skips ignored DOM (the empty-first-div noCandidates/wrong-scope trap)', () => {
+    const root = parse(
+      '<div data-airside-root><span>widget</span></div><section><span class="t">target</span></section>',
+    )
+    // Nearest trail entry "div" would otherwise match our root first and scope the search into it.
+    const candidates = findCandidates(root, { tag: 'span', ancestorTrail: ['div', 'section'] })
+    expect(candidates.length).toBe(1)
+    expect(candidates[0]?.textContent).toBe('target')
   })
 })
 
