@@ -68,6 +68,9 @@ importers:
       '@airnauts/airside-extension-email':
         specifier: workspace:*
         version: link:../../packages/notifier-email
+      '@airnauts/airside-extension-github':
+        specifier: workspace:*
+        version: link:../../packages/integration-github
       '@airnauts/airside-extension-jira':
         specifier: workspace:*
         version: link:../../packages/integration-jira
@@ -261,6 +264,19 @@ importers:
       tsx:
         specifier: ^4.22.3
         version: 4.22.3
+
+  packages/integration-github:
+    dependencies:
+      '@airnauts/airside-core':
+        specifier: workspace:^
+        version: link:../core
+      '@airnauts/airside-server':
+        specifier: workspace:^
+        version: link:../server
+    devDependencies:
+      '@airnauts/airside-test-support':
+        specifier: workspace:*
+        version: link:../test-support
 
   packages/integration-jira:
     dependencies:
