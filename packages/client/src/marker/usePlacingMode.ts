@@ -17,8 +17,8 @@ export function usePlacingMode(dispatch: (a: Action) => void) {
       const target = e.target as Element | null
       if (
         !target ||
-        (target as HTMLElement).dataset?.commentsPlace !== undefined ||
-        target.closest('[data-airside-overlay]')
+        (target as HTMLElement).dataset?.airsidePlace !== undefined ||
+        target.closest('[data-airside-overlay], [data-airside-chrome]')
       )
         return
       e.preventDefault()

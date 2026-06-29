@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mockRect } from '../../test/test-helpers/dom'
 import type { ApiClient } from '../api/client'
+import { resetSettings } from '../settings/store'
 import { WidgetApp } from './app'
 
 const IDENTITY_KEY = 'airside:identity'
@@ -49,7 +50,12 @@ function seedPage() {
 }
 
 describe('login gate', () => {
-  beforeEach(() => localStorage.clear())
+  // Drop the settings-store cache between cases so a seeded identity re-hydrates per test
+  // (issue #32 read-once store).
+  beforeEach(() => {
+    localStorage.clear()
+    resetSettings()
+  })
 
   it('shows only Log In when logged out — no pins, place, panel, or fetch', async () => {
     seedPage()

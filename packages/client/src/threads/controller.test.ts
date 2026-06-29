@@ -25,12 +25,13 @@ function make(over: { isCached?: boolean } = {}) {
       },
     ],
   })
+  const deleteThread = vi.fn().mockResolvedValue({ id: 't1' })
   const controller = createController(dispatch, {
-    client: { getThread, setThreadStatus, runThreadAction } as never,
+    client: { getThread, setThreadStatus, runThreadAction, deleteThread } as never,
     isCached: () => over.isCached ?? false,
     isLoading: () => false,
   })
-  return { actions, controller, getThread, setThreadStatus, runThreadAction }
+  return { actions, controller, getThread, setThreadStatus, runThreadAction, deleteThread }
 }
 
 describe('controller.requestFocus', () => {
@@ -118,7 +119,12 @@ describe('controller.runAction', () => {
 describe('controller.bumpCommentCount', () => {
   it('fans out to the store, the runtime cache, and the panel listener', () => {
     const { actions, controller } = make()
-    const rt = { setStatus: vi.fn(), bumpCommentCount: vi.fn() }
+    const rt = {
+      setStatus: vi.fn(),
+      bumpCommentCount: vi.fn(),
+      removeItem: vi.fn(),
+      refresh: vi.fn().mockResolvedValue(undefined),
+    }
     const listener = vi.fn()
     controller.registerRuntime(rt)
     controller.registerCommentCountListener(listener)
@@ -132,5 +138,61 @@ describe('controller.bumpCommentCount', () => {
     const { actions, controller } = make()
     controller.bumpCommentCount('t1', -1)
     expect(actions).toContainEqual({ type: 'BUMP_COMMENT_COUNT', id: 't1', delta: -1 })
+  })
+})
+
+describe('controller.deleteThread', () => {
+  const rt = () => ({
+    setStatus: vi.fn(),
+    bumpCommentCount: vi.fn(),
+    removeItem: vi.fn(),
+    refresh: vi.fn().mockResolvedValue(undefined),
+  })
+
+  it('optimistically removes from store + runtime, persists, and returns true', async () => {
+    const { actions, controller, deleteThread } = make()
+    const runtime = rt()
+    controller.registerRuntime(runtime)
+    const ok = await controller.deleteThread('t1')
+    expect(ok).toBe(true)
+    expect(actions).toContainEqual({ type: 'REMOVE_THREAD', id: 't1' })
+    expect(runtime.removeItem).toHaveBeenCalledWith('t1')
+    expect(deleteThread).toHaveBeenCalledWith('t1')
+    // success path does not re-fetch
+    expect(runtime.refresh).not.toHaveBeenCalled()
+  })
+
+  it('on API failure rolls back via runtime.refresh and returns false', async () => {
+    const actions: Action[] = []
+    const deleteThread = vi.fn().mockRejectedValue(new Error('net'))
+    const controller = createController((a) => actions.push(a), {
+      client: { getThread: vi.fn(), deleteThread } as never,
+      isCached: () => true,
+      isLoading: () => false,
+    })
+    const runtime = rt()
+    controller.registerRuntime(runtime)
+    const ok = await controller.deleteThread('t1')
+    expect(ok).toBe(false)
+    // still optimistically removed up front…
+    expect(actions).toContainEqual({ type: 'REMOVE_THREAD', id: 't1' })
+    expect(runtime.removeItem).toHaveBeenCalledWith('t1')
+    // …then the rollback re-fetches the list (thread still exists server-side)
+    expect(runtime.refresh).toHaveBeenCalled()
+  })
+
+  it('does not throw when no runtime is registered (success and failure)', async () => {
+    const { controller } = make()
+    await expect(controller.deleteThread('t1')).resolves.toBe(true)
+
+    const failing = createController(() => {}, {
+      client: {
+        getThread: vi.fn(),
+        deleteThread: vi.fn().mockRejectedValue(new Error('x')),
+      } as never,
+      isCached: () => true,
+      isLoading: () => false,
+    })
+    await expect(failing.deleteThread('t1')).resolves.toBe(false)
   })
 })

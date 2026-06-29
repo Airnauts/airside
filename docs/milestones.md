@@ -312,8 +312,9 @@ selection, and cross-page panel navigation (driving `examples/nextjs-host`, Chro
 hermetic in-memory + local uploads); **e2e wired into CI** (headless `e2e` job);
 **bundle-size budget confirmed** (300 kB, confirm-only); **publish-on-green-`main`**
 (`changeset publish`, gated on `ci + e2e`) + `RELEASING.md`. The e2e surfaced three product
-findings (one fixed: attachmentIds persistence ADR-0024; two documented in
-[`issues.md`](issues.md)).
+findings (one fixed: attachmentIds persistence ADR-0024; two filed as GitHub issues —
+[#57](https://github.com/Airnauts/airside/issues/57) and
+[#58](https://github.com/Airnauts/airside/issues/58)).
 
 **Deferred to M11.** The live **Vercel + Atlas + Blob** dogfood deployment and
 **real-project adoption** (PRD §7's adoption bar) — they depend on external infra and
