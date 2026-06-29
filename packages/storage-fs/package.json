@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-storage-fs",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Filesystem attachment-storage adapter for the Airnauts commenting tool server.",
   "keywords": [
     "comments",

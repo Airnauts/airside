@@ -1,5 +1,13 @@
 # @airnauts/airside-storage-vercel-blob
 
+## 0.10.1
+
+### Patch Changes
+
+- Updated dependencies [29c37c2]
+  - @airnauts/airside-server@0.10.1
+  - @airnauts/airside-core@0.10.1
+
 ## 0.10.0
 
 ### Patch Changes

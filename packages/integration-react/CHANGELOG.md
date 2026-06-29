@@ -1,5 +1,12 @@
 # @airnauts/airside-integration-react
 
+## 0.10.1
+
+### Patch Changes
+
+- Updated dependencies [bdb6067]
+  - @airnauts/airside-client@0.10.1
+
 ## 0.10.0
 
 ### Patch Changes

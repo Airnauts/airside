@@ -1,5 +1,12 @@
 # @airnauts/airside-server
 
+## 0.10.1
+
+### Patch Changes
+
+- 29c37c2: Docs: README updated to reflect the `DELETE /threads/:id` handler and `deleteThread` Repository method shipped in 0.10.0.
+  - @airnauts/airside-core@0.10.1
+
 ## 0.10.0
 
 ### Minor Changes
