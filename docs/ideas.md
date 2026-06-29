@@ -318,3 +318,47 @@ Decision so far: deferred. Smallest cut = page-scoped, anchor-optional, reuse th
 detached card for display; promote `scope: "global"` only if cross-page general comments
 are actually wanted. Worth an ADR note when picked up, since it widens a public request
 shape and adds an anchor state.
+
+## MCP server — let an agent read and resolve comments directly via the API
+
+**Date:** 2026-06-29 · **Status:** idea · **Trigger:** today a reviewer's comment lives
+only in the widget; acting on it is a human's job. Expose the comment API as an MCP server
+so an AI agent can connect, pick up open threads, address them, and resolve them in place
+— closing the loop from "comment left" to "comment solved" without a human relay.
+
+The airside-agent automation we already ship works *around* GitHub: issue → branch →
+draft PR → review (see the `airside-agent` skill). This idea is the complementary inner
+loop — the agent talks straight to the **comment** API and operates on review threads
+themselves, so feedback dropped on a live page becomes actionable by an agent directly.
+
+The surface already exists to wrap. The widget speaks to the host over the HTTP contract
+mounted at `/api/airside` (`core`'s request/response schemas; the `server` use-cases incl.
+`set-thread-status.ts`). An MCP server is a thin tool layer over that same contract — no
+new persistence, no new domain logic. Candidate package: `@airnauts/airside-mcp` (or an
+`airside-integration-mcp` following the integration-naming convention).
+
+Tools to expose (each maps to an existing use-case/route):
+
+- **`list_threads`** — open/unresolved threads for a page (or all), with their comments
+  and anchor context, so the agent knows what's pending.
+- **`get_thread`** — full conversation + the anchored element/page context for one thread.
+- **`reply_to_thread`** — post a comment as the agent (needs a bot/agent identity — see
+  the auth-providers idea; minimally a configured service author).
+- **`set_thread_status`** — resolve / reopen, mapping to `set-thread-status.ts`.
+
+The real decisions:
+
+1. **Transport & deployment.** Standalone MCP process that holds the host's base URL +
+   credential, vs. an in-process server the host mounts beside its route. Standalone is
+   the cleaner first cut (one config: API base + token).
+2. **Auth & identity.** The agent needs to authenticate to the API *and* carry an author
+   identity for anything it writes — depends on the auth-provider seam not yet built, so
+   the first cut likely uses a static service token + a configured "agent" author.
+3. **Read-only vs. write.** Ship `list`/`get` first (zero risk), gate `reply`/`resolve`
+   behind explicit config so an agent can't silently close human threads.
+4. **Scope guard.** How the agent decides a thread is "solved" is out of scope here — this
+   idea only provides the hands (the tools); the judgement lives in whatever agent connects.
+
+Effort: small–medium — mostly an MCP adapter over the existing contract, plus the
+identity/auth question (which it shares with the auth-providers idea). Worth an ADR note
+when picked up: it opens a new automated write path into the comment store.
