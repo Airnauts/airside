@@ -115,5 +115,13 @@ export async function dispatch(
     query: parsedQuery,
     body: parsedBody,
   })
+  // Streaming ops (e.g. GET /events) return a `Response` with a long-lived body; pass it
+  // through unwrapped so the SSE frames stream to the client instead of being JSON-buffered.
+  if (op.stream) {
+    if (!(out instanceof Response)) {
+      throw new Error(`streaming use-case '${op.operationId}' must return a Response`)
+    }
+    return out
+  }
   return json(op.success.status, out)
 }

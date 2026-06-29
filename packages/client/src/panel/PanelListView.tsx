@@ -7,7 +7,7 @@ import { Button } from '../ui/Button'
 import { StatusNotice } from '../ui/StatusNotice'
 import { usePanelController, usePanelState } from './PanelProvider'
 import { PanelRow } from './PanelRow'
-import { mainListExcludingReview, type PanelFilter } from './state'
+import { type PanelFilter, selectVisibleList } from './state'
 
 const FILTERS: { value: PanelFilter; label: string }[] = [
   { value: 'open', label: 'Open' },
@@ -25,7 +25,8 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
   const panel = usePanelController()
   const threads = useController()
   const showResolved = useShowResolved()
-  const mainList = mainListExcludingReview(state)
+  // Filter-aware so a live resolve (PATCH_STATUS) drops a row out of the open list without a refetch.
+  const mainList = selectVisibleList(state)
 
   const toggleResolve = (t: { id: string; status: string }) =>
     void threads.setStatus(t.id, t.status === 'resolved' ? 'open' : 'resolved')

@@ -1,13 +1,16 @@
-import type { Anchor, AttachmentId, Provenance } from '@airnauts/airside-core'
+import type { Anchor, AttachmentId, Provenance, RealtimeEvent } from '@airnauts/airside-core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createRuntime } from '../anchor/runtime'
 import type { ApiClient } from '../api/client'
 import { ApiError } from '../api/errors'
 import { buildCaptureContext } from '../config'
+import { useIdentity } from '../identity/IdentityProvider'
 import { takeFocusHandoff } from '../panel/navigate'
 import { usePanelController, usePanelState } from '../panel/PanelProvider'
 import { PinLayer } from '../positioning/layer'
 import { observeReposition } from '../positioning/lifecycle'
+import { reconcilePinEvent } from '../realtime/reconcile'
+import { useLiveStream } from '../realtime/useLiveStream'
 import {
   useController,
   useDispatch,
@@ -45,6 +48,7 @@ export function MarkerLayer({
   const { placing, setPlacing } = usePlacingMode(dispatch)
   const [activeKey, setActiveKey] = useState(pageKey)
   const toast = useToast()
+  const { identity } = useIdentity()
   const runtime = useRef<ReturnType<typeof createRuntime> | null>(null)
   const openCount = Object.values(state.itemsById).filter((i) => i.status === 'open').length
 
@@ -130,6 +134,45 @@ export function MarkerLayer({
       dispatch({ type: 'CLEAR_LOST_OPEN' })
     }
   }, [state.lostOpenId, toast, dispatch])
+
+  // Live updates for this page's pins (ADR-0045): a remote thread.created places its pin, a
+  // comment.added appends to the open detail + bumps the count, a thread.updated flips status.
+  // The author's own comment echo is suppressed (the optimistic reply path already applied it);
+  // thread.created/updated are idempotent so their own-echoes are harmless.
+  const onPinEvent = useCallback(
+    (event: RealtimeEvent) => {
+      const rt = runtime.current
+      if (!rt) return
+      reconcilePinEvent(event, identity?.email, {
+        addItem: (thread) => rt.addItem(thread),
+        ingestComment: (threadId, comment) => controller.ingestRemoteComment(threadId, comment),
+        patchStatus: (threadId, status) => controller.patchStatus(threadId, status),
+      })
+    },
+    [controller, identity?.email],
+  )
+  useLiveStream({
+    client,
+    enabled: true,
+    pageKey: activeKey,
+    onEvent: onPinEvent,
+    // On every (re)connect, reconcile anything missed while disconnected.
+    onConnect: () => void runtime.current?.refresh(),
+  })
+
+  // Fallback / freshness: refetch when the tab regains focus or becomes visible. Closes the gap
+  // when the live stream is unavailable (older host, stream down) and reconciles after a sleep.
+  useEffect(() => {
+    const refetch = () => {
+      if (document.visibilityState !== 'hidden') void runtime.current?.refresh()
+    }
+    window.addEventListener('focus', refetch)
+    document.addEventListener('visibilitychange', refetch)
+    return () => {
+      window.removeEventListener('focus', refetch)
+      document.removeEventListener('visibilitychange', refetch)
+    }
+  }, [])
 
   const createThread = useCallback(
     async ({ text, attachmentIds, who }: ComposerSubmit, anchor: Anchor) => {

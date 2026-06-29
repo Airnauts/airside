@@ -66,6 +66,9 @@ export type Action =
   | { type: 'ADD_OPTIMISTIC_COMMENT'; id: string; comment: Comment }
   | { type: 'REPLACE_OPTIMISTIC_COMMENT'; id: string; tempId: string; comment: Comment }
   | { type: 'REMOVE_OPTIMISTIC_COMMENT'; id: string; tempId: string }
+  // A comment that arrived live from another reviewer (ADR-0045). Appends to the loaded
+  // detail and bumps the pin count; deduped by comment id so a double delivery is a no-op.
+  | { type: 'INGEST_COMMENT'; id: string; comment: Comment }
   | { type: 'SET_STATUS'; id: string; status: ThreadStatus }
   | { type: 'BUMP_COMMENT_COUNT'; id: string; delta: number }
   | { type: 'REQUEST_FOCUS'; id: string }
@@ -174,6 +177,25 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
         ...t,
         comments: t.comments.filter((c) => c.id !== action.tempId),
       }))
+    case 'INGEST_COMMENT': {
+      const detail = state.detailById[action.id]
+      // Already present in the loaded detail → duplicate/own-echo; do not double-count.
+      if (detail?.comments.some((c) => c.id === action.comment.id)) return state
+      const item = state.itemsById[action.id]
+      const itemsById = item
+        ? {
+            ...state.itemsById,
+            [action.id]: { ...item, commentCount: item.commentCount + 1 },
+          }
+        : state.itemsById
+      const detailById = detail
+        ? {
+            ...state.detailById,
+            [action.id]: { ...detail, comments: [...detail.comments, action.comment] },
+          }
+        : state.detailById
+      return { ...state, itemsById, detailById }
+    }
     case 'SET_STATUS': {
       const item = state.itemsById[action.id]
       // Keep the list item in sync so the pin (status/count) reacts immediately, not

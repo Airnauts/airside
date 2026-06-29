@@ -4,6 +4,7 @@ import {
   type Comment,
   type CreateThreadBody,
   KEY_HEADER_NAME,
+  type RealtimeEvent,
   type RefreshAnchorBody,
   type SetThreadStatusBody,
   type ThreadListItem,
@@ -11,6 +12,7 @@ import {
   type ThreadStatus,
   type ThreadView,
 } from '@airnauts/airside-core'
+import { createSseParser } from '../realtime/parse'
 import { ApiError } from './errors'
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
@@ -28,6 +30,17 @@ export type ListParams = {
   cursor?: string
 }
 
+/** Scope of a live-update stream: a page (pins) or, with no `pageKey`, the whole project/env (panel). */
+export type StreamParams = { pageKey?: string }
+
+export type StreamHandlers = {
+  onEvent: (event: RealtimeEvent) => void
+  /** Fired once the stream connects (response headers received). */
+  onOpen?: () => void
+  /** Fired when the stream ends or errors — but NOT when the caller unsubscribes. */
+  onClose?: () => void
+}
+
 export interface ApiClient {
   createThread(body: CreateThreadBody): Promise<ThreadView>
   listThreads(params?: ListParams): Promise<ThreadListResponse>
@@ -37,6 +50,12 @@ export interface ApiClient {
   refreshAnchor(id: string, body: RefreshAnchorBody): Promise<ThreadListItem>
   upload(file: File): Promise<Attachment>
   runThreadAction(id: string, actionId: string): Promise<ThreadView>
+  /**
+   * Open a single fetch-streamed SSE connection to `GET /events` (key in the header, so
+   * not `EventSource`). Calls `handlers` as frames arrive; returns an unsubscribe that
+   * aborts the connection. Does NOT reconnect — that is the subscriber's job.
+   */
+  streamEvents(params: StreamParams, handlers: StreamHandlers): () => void
 }
 
 export function createApiClient(opts: ApiClientOptions): ApiClient {
@@ -92,6 +111,42 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
 
   const id = (raw: string) => encodeURIComponent(raw)
 
+  function streamEvents(params: StreamParams, handlers: StreamHandlers): () => void {
+    const ac = new AbortController()
+    const sp = new URLSearchParams()
+    if (params.pageKey) sp.set('pageKey', params.pageKey)
+    const query = sp.toString()
+    const url = `${base}/events${query ? `?${query}` : ''}`
+    void (async () => {
+      try {
+        const res = await doFetch(url, {
+          method: 'GET',
+          headers: { [KEY_HEADER_NAME]: opts.key, accept: 'text/event-stream' },
+          signal: ac.signal,
+        })
+        if (!res.ok || !res.body) {
+          handlers.onClose?.()
+          return
+        }
+        handlers.onOpen?.()
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        const feed = createSseParser(handlers.onEvent)
+        while (true) {
+          const { value, done } = await reader.read()
+          if (done) break
+          if (value) feed(decoder.decode(value, { stream: true }))
+        }
+        // Stream ended (server closed / max-lifetime): let the subscriber reconnect.
+        handlers.onClose?.()
+      } catch {
+        // An intentional unsubscribe aborts the fetch; that is not a close to reconnect from.
+        if (!ac.signal.aborted) handlers.onClose?.()
+      }
+    })()
+    return () => ac.abort()
+  }
+
   return {
     createThread: (body) => request<ThreadView>('POST', '/threads', body),
     listThreads: (params) => request<ThreadListResponse>('GET', `/threads${qs(params)}`),
@@ -109,5 +164,6 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
     },
     runThreadAction: (threadId, actionId) =>
       request<ThreadView>('POST', `/threads/${id(threadId)}/actions/${id(actionId)}`),
+    streamEvents,
   }
 }

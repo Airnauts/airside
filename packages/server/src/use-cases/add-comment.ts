@@ -4,10 +4,16 @@ import { NotFoundError } from '../errors'
 import type { NotificationExtension } from '../extensions/types'
 import { buildNotificationEvent } from '../notify/build-event'
 import { dispatchNotifications } from '../notify/dispatch'
+import type { RealtimeChannel } from '../realtime/channel'
+import { publishRealtime } from '../realtime/publish'
 import type { Repository } from '../repository/types'
 import { resolveAttachments } from './resolve-attachments'
 
-export type AddCommentDeps = { repo: Repository; notifications?: NotificationExtension[] }
+export type AddCommentDeps = {
+  repo: Repository
+  notifications?: NotificationExtension[]
+  realtime?: RealtimeChannel
+}
 
 export async function addComment(
   input: { ctx: Ctx; params: ThreadIdParam; query: undefined; body: AddCommentBody },
@@ -33,5 +39,11 @@ export async function addComment(
     deps.notifications,
     buildNotificationEvent('comment.added', scope, existing, saved, ctx.threadParam),
   )
+  publishRealtime(deps.realtime, scope, {
+    type: 'comment.added',
+    pageKey: existing.pageKey,
+    threadId: existing.id,
+    comment: saved,
+  })
   return saved
 }
