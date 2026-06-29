@@ -16,6 +16,7 @@ const entries = [
   ['@airnauts/airside-server/node', 'nodeRequestToWeb'],
   ['@airnauts/airside-adapter-mongo', 'createMongoRepository'],
   ['@airnauts/airside-storage-vercel-blob', 'packageName'],
+  ['@airnauts/airside-storage-s3', 'packageName'],
   ['@airnauts/airside-storage-fs', 'packageName'],
 ]
 
