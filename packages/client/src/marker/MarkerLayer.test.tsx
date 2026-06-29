@@ -343,6 +343,29 @@ describe('MarkerLayer panel integration', () => {
     await waitFor(() => expect(screen.getByTestId('airside-panel')).toBeInTheDocument())
   })
 
+  it('does not drop a draft when operating the launcher/panel chrome in place mode (#33)', async () => {
+    const client = {
+      listThreads: vi.fn(async () => ({ threads: [], nextCursor: null })),
+      refreshAnchor: vi.fn(),
+      getThread: vi.fn(),
+    }
+    renderLayer(client)
+    // Enter place mode via the real place button.
+    fireEvent.click(screen.getByTestId('airside-place'))
+    expect(screen.getByTestId('airside-place')).toHaveAttribute('aria-pressed', 'true')
+    // Clicking the ☰ button opens the sidebar instead of placing a pin.
+    fireEvent.click(screen.getByTestId('airside-panel-open'))
+    await waitFor(() => expect(screen.getByTestId('airside-panel')).toBeInTheDocument())
+    expect(screen.queryByTestId('airside-draft')).toBeNull()
+    // Clicking inside the open sidebar interacts with it, doesn't drop a pin.
+    fireEvent.click(screen.getByTestId('airside-panel'), { clientX: 5, clientY: 5 })
+    expect(screen.queryByTestId('airside-draft')).toBeNull()
+    // Clicking the active place button again exits place mode (no pin dropped).
+    fireEvent.click(screen.getByTestId('airside-place'))
+    expect(screen.getByTestId('airside-place')).toHaveAttribute('aria-pressed', 'false')
+    expect(screen.queryByTestId('airside-draft')).toBeNull()
+  })
+
   it('consumes a boot focus handoff after the first refresh', async () => {
     window.sessionStorage.setItem(FOCUS_STORAGE_KEY, 't1')
     const getThread = vi.fn().mockResolvedValue({ id: 't1', status: 'open', comments: [] })

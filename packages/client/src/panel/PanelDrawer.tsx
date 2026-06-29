@@ -63,6 +63,7 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
       <Dialog.Portal container={container ?? undefined}>
         <Dialog.Content
           data-testid="airside-panel"
+          data-airside-chrome
           onInteractOutside={(e) => e.preventDefault()}
           // Don't let the dialog grab focus on open (e.g. onto the close button). The detail
           // view's reply composer focuses itself; on the list view nothing should be focused.
@@ -73,6 +74,7 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
             <PanelDetailView
               threadId={state.detailThreadId}
               listItem={detailItem}
+              resolvePageKey={resolvePageKey}
               client={client}
               onBack={() => panel.back()}
             />

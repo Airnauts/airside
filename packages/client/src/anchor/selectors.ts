@@ -1,5 +1,5 @@
 /** Structural nth-of-type path from the nearest stable ancestor down to el. */
-function structuralSelector(el: Element): string {
+export function structuralSelector(el: Element): string {
   const parts: string[] = []
   let cursor: Element | null = el
   const root = el.ownerDocument?.documentElement
@@ -26,7 +26,7 @@ function structuralSelector(el: Element): string {
 }
 
 /** Stable, preferentially-unique selector: #id, then [data-testid], then tag.class.class. */
-function stableSelector(el: Element): string {
+export function stableSelector(el: Element): string {
   if (el.id) return `#${CSS.escape(el.id)}`
   const testid = el.getAttribute('data-testid')
   if (testid) return `[data-testid="${CSS.escape(testid)}"]`

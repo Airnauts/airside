@@ -1495,6 +1495,60 @@ tick may pass without promoting. One fewer artifact per branch and no repo-root 
 deferred items remain easy to add later (each is a localized op-selection/skip change) if real need
 appears. Tooling-only under `.claude/`/`docs/`, so no changeset.
 
+## ADR-0044 — `deleteThread` on the repository contract: hard delete, no blob cleanup, key-holder authz
+
+- **Date:** 2026-06-18
+- **Status:** accepted
+
+**Context.** The widget had no way to remove a whole thread (its pin, comments, and attachments) —
+the thread `···` overflow menu only surfaced extension-provided `thread-toolbar` actions. Adding a
+**Delete thread** affordance needs one new backend operation that spans the repository contract, all
+three adapters (memory/mongo/postgres), the shared adapter-contract suite, the server, and the
+client. Three design forces had to be settled: how to delete (hard vs soft), whether to clean up
+attachment blobs, and who is allowed to delete.
+
+**Decision.** Add `deleteThread(scope: Scope, id: ThreadId): Promise<void>` to the `Repository`
+interface, a `DELETE /threads/:id` operation (200 + `DeleteThreadResponse = { id }`, since the
+operation table requires a success schema and `dispatch` always `json()`s — the client ignores the
+body), and a `delete-thread` use-case mirroring `set-thread-status` (`getThread` → 404 if absent,
+then `repo.deleteThread`). Three sub-decisions:
+
+1. **Hard delete, embedded-comment cascade.** Remove the thread document/row outright. Comments are
+   *embedded* in the thread (architecture §5), so replies cascade with no separate logic. Rejected:
+   a soft-delete tombstone (`deletedAt`), which would add a "not deleted" filter to every
+   `getThread`/`listThreads`/mutation across the contract and all three adapters — far more surface
+   for a v1 affordance whose safety net is the confirm dialog. Trade-off: no server-side undo.
+
+2. **No attachment-blob/metadata cleanup in v1.** Delete removes the thread document only.
+   `StorageAdapter` (`packages/server/src/storage/types.ts`) exposes only `put()` — there is no
+   delete seam, and nothing in the system deletes blobs today; preserving that invariant is
+   principled. Orphaned blobs (and `airside_attachments` metadata) are a known consequence; GC is a
+   separate follow-up needing a `StorageAdapter.delete` method, both storage adapters, and a
+   thread→attachment-id enumeration.
+
+3. **Key-holder authorization.** Any activation-key holder can delete, consistent with every
+   existing mutation (`setStatus`/`addComment`/`runThreadAction` enforce no per-author check). The v1
+   security model is a shared **bearer capability token, not user auth** (architecture §4);
+   `createdBy` is unauthenticated client-supplied identity, so the server cannot meaningfully enforce
+   "author only." The red confirm dialog is the client-side guard; a per-author guard is post-v1 auth
+   work.
+
+The client teardown is optimistic: a `REMOVE_THREAD` reducer drops the id from the store (closing
+its popover and clearing dangling focus refs) and `runtime.removeItem(id)` drops the retained pin, so
+the next reposition emit can't resurrect it; on API failure the controller calls `runtime.refresh()`
+to re-fetch the list (the thread still exists server-side), restoring state without a fragile,
+DOM-bound placement snapshot.
+
+**Consequences.** A new public `Repository` method is **breaking for external implementors** — every
+adapter (including third-party ones) must add `deleteThread` — so the change ships as a pre-1.0
+`minor`. `DELETE` is added to the operation method union, the CORS `ALLOWED_METHODS`, and the
+integration-next App Router export tuple. The operation is **non-idempotent**: throw-on-missing is
+the in-house convention (matches `setStatus`) and the use-case 404s via `getThread` first, so a
+second delete returns 404 rather than the REST idempotency norm — acceptable for v1. Deleting from
+the cross-page panel's detail view tears down the threads store but not the panel's own
+`detailThreadId` (separate reducer, no cross-controller handle); the popover path — the common case —
+closes cleanly. Wiring panel teardown and blob GC are deferred follow-ups.
+
 ## ADR-0046 — Client settings persisted through a single read-once store with typed accessors
 
 - **Date:** 2026-06-18

@@ -9,7 +9,7 @@ import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
 import { createFileSystemStorage } from '@airnauts/airside-storage-fs'
 import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
+export const { GET, POST, PATCH, DELETE, OPTIONS } = createAirsideAppRoute({
   secretKey: 'dev-key', // demo only — replace with a real secret in production
   projectId: 'nextjs-host',
   allowedOrigins: [

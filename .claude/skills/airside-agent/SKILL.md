@@ -22,11 +22,13 @@ once, by hand, to run a single tick (this is how you test it).
 > **Current scope — Slices 1–5.** The full pipeline is live. **Simple:** a labelled issue is built
 > into a **draft PR**, auto-**reviewed**, high/critical findings **auto-fixed** (capped), CI-gated,
 > and promoted **draft → ready** at `state:in-review`. **Complex:** the issue is **triaged**, a
-> **spec** is researched and posted for you to **`/approve` or `/revise`**, then joins the
-> build → review → ready path. **In review:** the comments you leave — **inline review threads and
-> top-level PR comments** — are picked up, fixed, and acknowledged. **Terminal:** a merge → `done`,
-> a close → `done`/`cancelled` (kill switch). The runbook parks anything it can't handle with a note
-> (it never silently drops work). See `docs/adr.md` (ADR-0042, ADR-0043).
+> **spec** is researched and posted for you to **`/approve`** (optionally `/approve <notes>` to fold
+> small adjustments straight into the build), **`/revise <notes>`** (→ a visible `revising` state
+> while the spec is re-authored), or **`/stop`**, then joins the build → review → ready path.
+> **In review:** the comments you leave — **inline review threads and top-level PR comments** — are
+> picked up, fixed, and acknowledged. **Terminal:** a merge → `done`, a close → `done`/`cancelled`
+> (kill switch). The runbook parks anything it can't handle with a note (it never silently drops
+> work). See `docs/adr.md` (ADR-0042, ADR-0043).
 >
 > **Deferred (no observed need yet):** round-robin fairness across many simultaneously-active issues,
 > and a global `MAX_ACTIVE` ceiling — the `≤1 op/tick` invariant + the user-started loop already bound
@@ -88,7 +90,7 @@ your review findings, and the user's chatter:
 {
   "schema": 1,
   "type": "simple|complex|null",
-  "phase": "triage|speccing|awaiting-approval|building|reviewing|in-review|done|blocked|cancelled",
+  "phase": "triage|speccing|awaiting-approval|revising|building|reviewing|in-review|done|blocked|cancelled",
   "branch": "agent/issue-<n>",
   "prNumber": null,
   "specVersion": 0,
@@ -111,7 +113,7 @@ shape is stable.
 ### Phase → label
 
 Mirror the computed phase to exactly one `state:*` label (mutually exclusive): `triage`,
-`speccing`, `awaiting-approval`, `building`, `reviewing`, `in-review`, `done`, `blocked`.
+`speccing`, `awaiting-approval`, `revising`, `building`, `reviewing`, `in-review`, `done`, `blocked`.
 (`cancelled` has no label — it just gets the pickup + state labels stripped.)
 
 ## Per-tick algorithm
@@ -179,8 +181,9 @@ gh pr list --repo Airnauts/airside --head agent/issue-<n> --state all \
 - **No branch, no PR — these phases have no artifact, so honour the state comment / spec comment;
   never re-derive them (or you'll re-spec, or build an unapproved task):**
   - An `airside-agent-spec` comment exists → the spec is posted. Phase = `building` **only if the
-    state comment already says `building`** (you approved it); otherwise `awaiting-approval`. This
-    also crash-collapses a `speccing` op that posted the spec but died before the state update — it
+    state comment already says `building`** (you approved it); `revising` **only if the state comment
+    already says `revising`** (a `/revise` is pending re-spec — see (d2)); otherwise `awaiting-approval`.
+    This also crash-collapses a `speccing` op that posted the spec but died before the state update — it
     becomes `awaiting-approval`, never a duplicate spec.
   - No spec comment, recorded phase is `triage` or `speccing` → honour it (mid-entry, crash-safe).
   - No spec comment, recorded phase `building` → `building` (a fresh/approved simple task).
@@ -213,16 +216,27 @@ lastSpecInputHash`. Decide:
 
 - any `/stop` → phase `cancelled`; strip `agent` + `state:*`; post a note "cancelled per /stop".
 - else any `/revise` **or** `bodyChanged` → **revise** (the spec is about to change, so revision wins
-  even if an `/approve` is mixed in): hand the spec-reviser op (§3) the gathered `/revise` notes (or
-  "the issue description was edited" when only `bodyChanged`).
-- else any approve → phase `building`.
+  even if an `/approve` is mixed in). **Immediately, in this cheap pass, set phase `revising`** (flip
+  label `state:awaiting-approval` → `state:revising`, refresh the state comment) and post a one-line
+  `airside-agent-note` ack — `🤖 airside-agent: 🔧 revision queued — re-speccing; a new spec version
+  will follow.` This gives instant, correct status instead of a silent `awaiting-approval`. Then hand
+  the spec-reviser op (§3) the gathered `/revise` notes (or "the issue description was edited" when only
+  `bodyChanged`). **The `revising` phase is the indicator only** — the real trigger stays the
+  `SPEC_AT`-anchored `/revise`, so this is crash-safe (see below).
+- else any approve → phase `building`. **Approve-with-amendments:** capture any **trailing text after
+  the `/approve` token** (e.g. `/approve also rename the prop to X and drop the toast`) as
+  **approval amendments** — small, build-time adjustments the builder folds into the approved spec
+  **without** a full re-spec round-trip. A **bare** `/approve` (or the `approve|approved|lgtm|ship it|✅`
+  fallback) carries no amendments — build the spec as-is. (The amendments are re-read from the
+  `/approve` comment by the §3 `building` op, not stored here — GitHub stays the source of truth.)
 - else (chatter/questions only) → no-op.
 
 **Crash-safety — no watermark bookkeeping here.** Because commands are anchored to `SPEC_AT`, a
 `/revise` stays "newer than the spec" until the reviser posts `v(n+1)` (a newer comment), so the
-revision **cannot be dropped** if the reviser op dies mid-flight — the next tick simply re-detects it.
-The only state writes in this cheap pass are the crash-recoverable phase changes (`cancelled` for
-`/stop`, `building` for `/approve`). `lastSpecInputHash` is advanced **only by the §3 spec ops** when
+revision **cannot be dropped** if the reviser op dies mid-flight — the next tick simply re-detects it
+(the issue is in `revising`, the `/revise` is still newest, the reviser re-runs). The only state writes
+in this cheap pass are the crash-recoverable phase changes (`cancelled` for `/stop`, `revising` for
+`/revise`, `building` for `/approve`). `lastSpecInputHash` is advanced **only by the §3 spec ops** when
 a new spec version is posted — never here. (`lastSeenCommentAt` is kept in the JSON for shape
 stability but is no longer load-bearing.)
 
@@ -241,8 +255,8 @@ Remove only the *recorded previous* phase label (avoids "label not on issue" err
 ### 3. Expensive op — spawn AT MOST ONE subagent
 
 Collect the issues that need an op: phase `triage` (classify), `speccing` (author the spec),
-`building` (build), `reviewing` (review or fix), `awaiting-approval` **with a pending revision** from
-(d2) (author the next spec version), or `in-review` **with ≥1 actionable review thread** (apply your
+`revising` (author the next spec version — set by (d2) on a `/revise`), `building` (build),
+`reviewing` (review or fix), or `in-review` **with ≥1 actionable review thread** (apply your
 PR comments — see below). Pick the **oldest** by `updatedAt`, do **one** op, then end the tick.
 
 > **Invariant: ≤ 1 subagent spawn per tick.** Everything else is `gh`. This bounds the tick
@@ -273,17 +287,18 @@ watermark is needed — (d2) anchors commands to this spec comment's timestamp, 
 *after* it count. (If a spec comment already exists — crash recovery — adopt it instead of
 re-authoring; reconcile (c) already routes that to `awaiting-approval`.)
 
-#### `awaiting-approval` with a pending revision (author the next spec version)
+#### `revising` (author the next spec version)
 
-Only when (d2) flagged a revision. Spawn `airside-spec-reviser` with the highest-version spec as
+The phase set by (d2) on a `/revise`. Spawn `airside-spec-reviser` with the highest-version spec as
 `CURRENT_SPEC` and the gathered notes as `REVISION_NOTES`. Post the result as a new
 `<!-- airside-agent-spec v(n+1) -->` comment (same footer), bump `specVersion`, set
 `lastSpecInputHash = sha256(title+body)`, post a short `airside-agent-note` "applied your revisions —
-please re-`/approve`", and stay `awaiting-approval`. Posting the new spec advances the command anchor
+please re-`/approve`", and **set phase back to `awaiting-approval`** (flip label
+`state:revising` → `state:awaiting-approval`). Posting the new spec advances the command anchor
 (`SPEC_AT`), so the handled `/revise` is now *older* than the spec and won't re-trigger, while a later
 `/approve` is newer and will. This ordering is the crash-safety guarantee: if this op dies before the
-new spec is posted, the old `/revise` is still the newest command → the next tick re-revises (nothing
-dropped).
+new spec is posted, the issue stays in `revising` and the old `/revise` is still the newest command →
+the next tick re-revises (nothing dropped).
 
 #### `building`
 
@@ -291,6 +306,13 @@ Spawn the **builder** once (contract below). Set `state:building` before spawnin
 `STATUS: ok` with a `PR_NUMBER`, record it and set phase `reviewing` (commit-last — the proof is
 the PR artifact, never the label). Builder failed / no PR → `state:blocked` + an
 `airside-agent-note` explaining what to do.
+
+**Approval amendments (complex path).** Before spawning, gather any **approve-with-amendments** notes:
+fetch the owner's `/approve` comment that is newer than the highest-version spec (the one (d2) acted on)
+and take the text **after** the `/approve` token. If non-empty, pass it to the builder as
+`APPROVAL_NOTES` — small adjustments to fold into the approved spec without a re-spec. Bare `/approve`
+(or a simple task) → no `APPROVAL_NOTES`. (Re-reading from the comment keeps it GitHub-sourced and
+crash-safe; the builder is idempotent and will adopt the branch on a re-run.)
 
 #### `reviewing` (the review → fix → re-review loop)
 
@@ -436,9 +458,13 @@ worktree — see `docs/adr.md`), and `subagent_type: "airside-builder"`. If that
 not yet registered in this session, fall back to `subagent_type: "general-purpose"` and pass the
 **full contents of `.claude/agents/airside-builder.md`** as the prompt preamble.
 
-**Pass the builder:** the issue number `<n>`, `REPO`, `OWNER`, and the canonical branch
-`agent/issue-<n>`. The builder reads the issue itself (`gh issue view`) for the body + docs link,
-and — for a complex task — the **highest-version `airside-agent-spec` comment** as the approved spec.
+**Pass the builder:** the issue number `<n>`, `REPO`, `OWNER`, the canonical branch
+`agent/issue-<n>`, and — when the `building` op gathered them — `APPROVAL_NOTES` (the owner's
+approve-with-amendments text). The builder reads the issue itself (`gh issue view`) for the body + docs
+link, and — for a complex task — the **highest-version `airside-agent-spec` comment** as the approved
+spec; it then folds any `APPROVAL_NOTES` into that spec as small, owner-requested adjustments before
+implementing (they refine the spec, they don't replace it). Absent/empty `APPROVAL_NOTES` ⇒ build the
+spec as-is.
 
 **The builder MUST return** these machine-parseable lines (you grep them):
 
