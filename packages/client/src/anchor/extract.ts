@@ -1,4 +1,5 @@
 import type { Signals } from '@airnauts/airside-core'
+import { isIgnoredForAnchoring } from './selectors'
 
 const MAX_TEXT_SNIPPET = 120
 const MAX_ANCESTOR_TRAIL = 8
@@ -42,7 +43,13 @@ export function extractSignals(el: Element): Signals {
   const rawText = (el.textContent ?? '').replace(/\s+/g, ' ').trim()
   const textSnippet = rawText.length > 0 ? rawText.slice(0, MAX_TEXT_SNIPPET) : undefined
   const classes = Array.from(el.classList)
-  const siblingIndex = el.parentElement ? Array.from(el.parentElement.children).indexOf(el) : 0
+  // Count only non-airside siblings so the index matches what `structuralSelector` records and is
+  // unaffected by our widget root (or host portals) sitting among the element's siblings.
+  const siblingIndex = el.parentElement
+    ? Array.from(el.parentElement.children)
+        .filter((c) => !isIgnoredForAnchoring(c))
+        .indexOf(el)
+    : 0
   const ancestorTrail = buildAncestorTrail(el)
   const stableAttrs = buildStableAttrs(el)
   const signals: Signals = { tag, classes, siblingIndex, ancestorTrail }

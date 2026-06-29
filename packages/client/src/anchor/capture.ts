@@ -1,6 +1,12 @@
 import { ANCHOR_SCHEMA_VERSION, type Anchor } from '@airnauts/airside-core'
 import { extractSignals } from './extract'
-import { buildSelectors, resolveUnique, stableSelector, structuralSelector } from './selectors'
+import {
+  buildSelectors,
+  resolveStructural,
+  resolveUnique,
+  stableSelector,
+  structuralSelector,
+} from './selectors'
 
 export const clamp01 = (n: number): number => Math.max(0, Math.min(1, n))
 
@@ -87,11 +93,12 @@ function anchorHostFor(range: Range): Element {
     if (doc && resolveUnique(stableSelector(el), doc)) return el
     // Tier 2: the only element of its tag under its parent.
     if (isSoleOfType(el)) return el
-    // Tier 3: a sectioning/landmark container narrowed by its nth-of-type path.
+    // Tier 3: a sectioning/landmark container narrowed by its nth-of-type path. Resolved with the
+    // ignore-aware walker so this uniqueness check matches how rematch will resolve it later.
     if (
       LANDMARK_TAGS.has(el.tagName.toLowerCase()) &&
       doc &&
-      resolveUnique(structuralSelector(el), doc)
+      resolveStructural(structuralSelector(el), doc)
     ) {
       return el
     }
