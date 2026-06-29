@@ -7,9 +7,18 @@ import { IdentityProvider } from '../identity/IdentityProvider'
 import { FOCUS_STORAGE_KEY, goToThread } from '../panel/navigate'
 import { PanelDrawer } from '../panel/PanelDrawer'
 import { PanelProvider } from '../panel/PanelProvider'
+import { initSettings, resetSettings } from '../settings/store'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { ToastProvider } from '../ui/toast'
 import { MarkerLayer } from './MarkerLayer'
+
+// MarkerLayer now seeds its pins-hidden state from the shared settings store, which caches its
+// first localStorage read. Drop both between cases so the pin-visibility toggle (which writes the
+// flag) and the persistence test (which seeds it) can't leak across tests (issue #32).
+beforeEach(() => {
+  localStorage.clear()
+  resetSettings()
+})
 
 function client() {
   return {
@@ -378,5 +387,95 @@ describe('MarkerLayer panel integration', () => {
     )
     renderLayer(client())
     expect(await screen.findByRole('button', { name: /back/i })).toBeInTheDocument()
+  })
+})
+
+// One open thread anchored to #t (the "pin target text" paragraph below) so the runtime places it
+// and a pin renders — the fixture the visibility toggle acts on.
+function clientWithPin() {
+  const c = client()
+  c.listThreads = vi.fn().mockResolvedValue({
+    threads: [
+      {
+        id: 'th1',
+        status: 'open',
+        anchorState: 'anchored',
+        unresolvedCount: 1,
+        commentCount: 1,
+        createdBy: { email: 'a@b.c', name: 'Ann' },
+        anchor: {
+          schemaVersion: 1,
+          selectors: ['#t', '#t'],
+          signals: {
+            tag: 'p',
+            classes: ['lead'],
+            siblingIndex: 0,
+            ancestorTrail: ['main'],
+            textSnippet: 'pin target text',
+          },
+          offset: { fx: 0.5, fy: 0.5 },
+        },
+      },
+    ],
+    nextCursor: null,
+  })
+  return c
+}
+
+function seedPinPage() {
+  document.body.innerHTML = '<main><p id="t" class="lead">pin target text</p></main>'
+  mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 100, height: 20 })
+}
+
+describe('MarkerLayer pin-visibility toggle (#32)', () => {
+  it('hides the pin on toggle and restores it on a second toggle', async () => {
+    seedPinPage()
+    renderMarker(props(clientWithPin()))
+    expect(await screen.findByTestId('airside-pin')).toBeInTheDocument()
+    // Hide: the overlay unmounts, so the pin is gone.
+    fireEvent.click(screen.getByTestId('airside-toggle-pins'))
+    expect(screen.queryByTestId('airside-pin')).toBeNull()
+    // Show: the still-computed placement re-mounts the pin.
+    fireEvent.click(screen.getByTestId('airside-toggle-pins'))
+    expect(await screen.findByTestId('airside-pin')).toBeInTheDocument()
+  })
+
+  it('keeps the sidebar openable while pins are hidden', async () => {
+    const c = {
+      listThreads: vi.fn(async () => ({ threads: [], nextCursor: null })),
+      refreshAnchor: vi.fn(),
+      getThread: vi.fn(),
+    }
+    renderLayer(c)
+    fireEvent.click(screen.getByTestId('airside-toggle-pins'))
+    // The sidebar is a sibling, never gated by the overlay toggle — it still opens.
+    screen.getByTestId('airside-panel-open').click()
+    await waitFor(() => expect(screen.getByTestId('airside-panel')).toBeInTheDocument())
+  })
+
+  it('mounts with pins hidden when the persisted flag is true, then reveals them on toggle', async () => {
+    seedPinPage()
+    // Persisted hidden state from a prior session.
+    localStorage.setItem('airside:pins-hidden', JSON.stringify(true))
+    resetSettings()
+    initSettings()
+    const c = clientWithPin()
+    renderMarker(props(c))
+    await waitFor(() => expect(c.listThreads).toHaveBeenCalled())
+    // No pin despite a placement existing, because the persisted flag hides the overlay.
+    expect(screen.queryByTestId('airside-pin')).toBeNull()
+    expect(screen.getByTestId('airside-toggle-pins')).toHaveAttribute('aria-pressed', 'true')
+    // Showing pins reveals the placed pin — proving the flag, not the data, hid it.
+    fireEvent.click(screen.getByTestId('airside-toggle-pins'))
+    expect(await screen.findByTestId('airside-pin')).toBeInTheDocument()
+  })
+
+  it('disables placing while hidden so a page click opens no draft', async () => {
+    document.body.innerHTML = '<main><p id="t">place target</p></main>'
+    renderMarker(props(client()))
+    fireEvent.click(screen.getByTestId('airside-toggle-pins'))
+    expect(screen.getByTestId('airside-place')).toBeDisabled()
+    fireEvent.click(document.querySelector('#t') as Element, { clientX: 1, clientY: 1 })
+    expect(screen.queryByTestId('airside-draft')).toBeNull()
   })
 })

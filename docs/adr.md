@@ -1548,3 +1548,79 @@ second delete returns 404 rather than the REST idempotency norm — acceptable f
 the cross-page panel's detail view tears down the threads store but not the panel's own
 `detailThreadId` (separate reducer, no cross-controller handle); the popover path — the common case —
 closes cleanly. Wiring panel teardown and blob GC are deferred follow-ups.
+
+## ADR-0046 — Client settings persisted through a single read-once store with typed accessors
+
+- **Date:** 2026-06-18
+- **Status:** accepted
+
+**Context.** The widget's client-side persistence had grown by accretion: each feature that
+needed `localStorage` dropped its own `<domain>/storage.ts` module with a near-identical
+`load*`/`save*` pair — `activation/storage.ts` (`airside:key`), `identity/storage.ts`
+(`airside:identity`), and `launcher/storage.ts` (`airside:launcher-position`). Every module
+re-implemented the same try/catch-guarded `getItem` → `JSON.parse` → validate → default read,
+and each consumer read `localStorage` afresh on every mount. Adding the issue #32 "hide all
+pins" flag would have meant a fourth copy of that boilerplate. The owner asked (in the #32
+spec, approved with "add adr") for a single client settings store the new flag and the existing
+sites route through, and for the pattern to be documented.
+
+**Decision.** Introduce one client-internal settings store, `packages/client/src/settings/store.ts`,
+as the sole chokepoint for `localStorage`-backed widget settings. It declares a typed schema with
+one entry per key — the on-disk key string, a default, and the per-key parse/validate guard lifted
+unchanged from the old modules. `initSettings(storage = localStorage)` performs a **single read**
+of every key into an in-memory cache (re-runnable); `getSetting(key)` returns the cached value and
+lazily hydrates on first access if init has not run (so a directly-mounted `WidgetApp` and SSR-safe
+import both work); `setSetting(key, value)` updates the cache and persists with a **try/catch-guarded
+write** (a quota/availability error must not crash a toggle or a login — a deliberate hardening over
+the old bare `setItem`); `resetSettings()` is a test seam that drops the cache so a freshly-seeded
+`localStorage` re-hydrates. The widget calls `initSettings()` once at startup in `init()`. The three
+former storage sites now read/write through the store under the **same on-disk keys** with no
+behavior change; the domain modules keep only their shared, non-storage exports (the `Identity` type,
+the launcher `LauncherPosition`/`LauncherEdge` types, `DEFAULT_LAUNCHER_POSITION`, `clampTop`). The
+store is **not** exported from the package index — it adds no public API. `sessionStorage` (the
+per-tab focus handoff) is explicitly out of scope: the store is localStorage-only.
+
+**Consequences.** New persisted client settings now cost one schema entry instead of a bespoke
+module, and validation/guarding live in one audited place. The load-bearing trade-off is the
+**read-once cache**: a consumer that seeds `localStorage` and then reads must do so against a
+fresh cache — fine in production (hydrated once per page load) but it means consumer **tests**
+that seed-then-act must call `resetSettings()` between cases, or a stale cached value leaks
+across them. This is now a standing rule for client tests touching persisted settings. Writes
+becoming best-effort means a persistence failure is silently swallowed rather than thrown; the
+in-memory value still updates, so the live session is unaffected and only the across-reload
+durability is lost in that rare case. The store is the established pattern for future client
+settings; adding sessionStorage-backed or host-configurable settings would be a deliberate
+extension, not an ad-hoc module.
+
+## ADR-0047 — Colocate each setting's config with its domain module; the store is a generic registry
+
+- **Date:** 2026-06-29
+- **Status:** accepted (refines ADR-0046)
+
+**Context.** ADR-0046 introduced the single read-once settings store but kept every key's wiring
+(its on-disk key, default, and parse guard) inlined in `settings/store.ts`, while the domain
+modules (`identity/storage.ts`, `launcher/storage.ts`) were slimmed to just their shared types.
+In review the owner observed that the store already *imports* those domain modules, so splitting a
+setting across two files — its type in the domain module, its storage logic in the store — is the
+wrong seam: a setting's whole definition should live next to the feature that owns it, and adding a
+setting should mean editing one list, not two.
+
+**Decision.** Move each setting's `SettingEntry` config (on-disk key, default, validate guard) into
+its own domain module's `storage.ts`: `activation/storage.ts` (`activationKeySetting`, the module
+re-created for this), `identity/storage.ts` (`identitySetting`), `launcher/storage.ts`
+(`launcherPositionSetting`, whose guard reuses the colocated `clampTop`), and a new
+`marker/storage.ts` (`pinsHiddenSetting`). The `SettingEntry<T>` contract type moves to a leaf
+`settings/entry.ts` that the domain modules and the store both import (no import cycle).
+`settings/store.ts` now only imports those configs into a single `ENTRIES` object and derives
+`SettingKey`/`SettingsSchema` from it, so the type registry and the runtime registry are the same
+list; `initSettings`/`getSetting`/`setSetting` already drove everything generically over `ENTRIES`
+and are unchanged in behaviour. On-disk keys, defaults, and validation are byte-for-byte the same —
+this is a relocation, not a behaviour change (the existing store tests pass unmodified).
+
+**Consequences.** Adding a persisted client setting is now a single registration: write its
+`SettingEntry` in the owning domain module and add one line to `ENTRIES` — the schema type follows
+automatically, with no second per-key edit in the store. Validation/guarding is no longer
+centralized in `store.ts` (the one trade-off vs. ADR-0046), but it lives next to the type and
+feature it belongs to and is still funnelled through the one store at runtime. The store keeps its
+role as the sole `localStorage` chokepoint, the read-once cache, and the best-effort write; only the
+*location* of per-key config changes.

@@ -8,6 +8,7 @@ import { takeFocusHandoff } from '../panel/navigate'
 import { usePanelController, usePanelState } from '../panel/PanelProvider'
 import { PinLayer } from '../positioning/layer'
 import { observeReposition } from '../positioning/lifecycle'
+import { getSetting, setSetting } from '../settings/store'
 import {
   useController,
   useDispatch,
@@ -43,6 +44,9 @@ export function MarkerLayer({
   const state = useThreadsState()
   const placements = useVisiblePlacements()
   const { placing, setPlacing } = usePlacingMode(dispatch)
+  // Whether the on-page pin/highlight overlay is hidden — seeded from and persisted to the
+  // shared settings store so the choice survives reloads (issue #32).
+  const [pinsHidden, setPinsHidden] = useState(() => getSetting('pinsHidden'))
   const [activeKey, setActiveKey] = useState(pageKey)
   const toast = useToast()
   const runtime = useRef<ReturnType<typeof createRuntime> | null>(null)
@@ -160,17 +164,35 @@ export function MarkerLayer({
     [client, activeKey, provenance, toast, dispatch],
   )
 
+  const togglePins = useCallback(() => {
+    const next = !pinsHidden
+    setPinsHidden(next)
+    setSetting('pinsHidden', next)
+    // Placing an invisible pin is incoherent, so leave place mode when hiding.
+    if (next) setPlacing(false)
+  }, [pinsHidden, setPlacing])
+
   return (
     <>
-      <PinLayer placements={placements} client={client} />
-      <DetachedThread client={client} />
-      <DraftPopover client={client} onCreate={createThread} />
+      {/* While pins are hidden, unmount the on-page overlay (pins/highlights, the pin-anchored
+          popover, the detached-thread card, and the in-progress draft) rather than CSS-hiding it,
+          so no stale popover state lingers. The sidebar (PanelDrawer, a sibling in app.tsx) and
+          the Launcher are never gated. */}
+      {!pinsHidden && (
+        <>
+          <PinLayer placements={placements} client={client} />
+          <DetachedThread client={client} />
+          <DraftPopover client={client} onCreate={createThread} />
+        </>
+      )}
       <Launcher
         placing={placing}
         onTogglePlace={() => setPlacing((p) => !p)}
         openCount={openCount}
         panelOpen={panelOpen}
         onTogglePanel={() => void (panelOpen ? panel.closePanel() : panel.openPanel())}
+        pinsHidden={pinsHidden}
+        onTogglePins={togglePins}
       />
     </>
   )

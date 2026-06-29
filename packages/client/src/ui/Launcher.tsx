@@ -10,6 +10,10 @@ export type LauncherProps = {
   openCount: number
   panelOpen: boolean
   onTogglePanel: () => void
+  /** Whether the on-page pin/highlight overlay is currently hidden. */
+  pinsHidden: boolean
+  /** Show/hide every pin and highlight without leaving comment mode (issue #32). */
+  onTogglePins: () => void
 }
 
 /** Compact, icon-only launcher pill. Drag anywhere on it to stick it to either window edge;
@@ -20,6 +24,8 @@ export function Launcher({
   openCount,
   panelOpen,
   onTogglePanel,
+  pinsHidden,
+  onTogglePins,
 }: LauncherProps) {
   const { style, dragging, onPointerDown, onClickCapture } = useDraggablePosition()
   return (
@@ -51,6 +57,7 @@ export function Launcher({
         data-testid="airside-place"
         aria-pressed={placing}
         aria-label={placing ? 'Click on the page to comment' : 'Add comment'}
+        disabled={pinsHidden}
         onClick={onTogglePlace}
         className={cn('air:relative', placing && 'air:bg-blue-800')}
       >
@@ -63,6 +70,41 @@ export function Launcher({
             {openCount}
           </span>
         )}
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        data-testid="airside-toggle-pins"
+        aria-pressed={pinsHidden}
+        aria-label={pinsHidden ? 'Show pins' : 'Hide pins'}
+        onClick={onTogglePins}
+        className="air:hover:bg-gray-100"
+      >
+        <span aria-hidden={true}>
+          <svg
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <title>Pin visibility</title>
+            {pinsHidden ? (
+              <>
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </>
+            ) : (
+              <>
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </>
+            )}
+          </svg>
+        </span>
       </Button>
     </div>
   )
