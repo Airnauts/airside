@@ -1,34 +1,34 @@
 ---
 name: filing-github-issues
-description: Use when filing a GitHub issue for the airside project (repo `Airnauts/airside`) — asked to "create a GitHub issue", "open an enhancement/bug issue", "file an issue", or to promote a `docs/ideas.md` / `docs/issues.md` entry into a tracked issue. Covers the repo's title, label, and body conventions and the `gh` command.
+description: Use when filing a GitHub issue for the airside project (repo `Airnauts/airside`) — asked to "create a GitHub issue", "open an enhancement/bug issue", or "file an issue" for a new feature idea or a known rough edge in shipped behavior. Covers the repo's title, label, and body conventions and the `gh` command.
 ---
 
 # Filing GitHub Issues
 
 ## Overview
 
-GitHub issues in `Airnauts/airside` are **lightweight trackers that mirror the two
-in-repo backlogs** — the rationale lives in the docs, the issue points back to it:
+**GitHub issues in `Airnauts/airside` are the single source of truth for the backlog.**
+The in-repo `docs/ideas.md` / `docs/issues.md` backlogs were retired (June 2026) — file
+ideas and known rough edges as GitHub issues directly, and write each one to **stand on its
+own**: the full rationale lives in the issue body, not in a doc it links back to.
 
-- `docs/ideas.md` (forward-looking features) → **`enhancement`** issues.
-- `docs/issues.md` (rough edges in shipped behavior) → **`bug`** issues.
+- **Forward-looking feature / capability** → an **`enhancement`** issue.
+- **Rough edge in already-shipped behavior** → a **`bug`** issue.
 
-So an issue is a short pitch + an implementation sketch + a link home — **not** a full
-design. Issues #9–#28 were created this way (e.g. the "Detail-view prev/next navigation"
-idea → #9, "Smooth pin positioning" → #12, "Re-navigate to a thread's pin" → #28). Keep
-new ones consistent with that shape.
+An issue is a pitch + an implementation sketch + (for bugs) a root cause + the load-bearing
+detail someone would need to pick it up later. Keep it concrete but not a full design doc —
+deeper design still graduates to `docs/adr.md` + a milestone if and when the item is
+committed to.
 
 Use the authenticated `gh` CLI. Default repo: `Airnauts/airside`.
 
 ## Before filing
 
-1. **Make sure the rationale exists in the docs.** The issue links back to a docs entry
-   as the source of truth. If the item isn't yet in `docs/ideas.md` (a feature) or
-   `docs/issues.md` (a shipped rough edge), add it there first, then file the issue. Each
-   file's header explains its own scope — `ideas.md` is forward-looking, `issues.md` logs
-   shipped rough edges; pick by which the item is.
-2. **Check for duplicates:**
+1. **Check for duplicates:**
    `gh issue list --repo Airnauts/airside --state all --search "<keywords>"`.
+2. **Pick the label** by kind: `enhancement` (new capability) vs `bug` (shipped rough edge).
+3. **Gather the load-bearing detail** — concrete file paths, the seam to reuse, the gotcha
+   to resolve first — so the issue is self-contained. Grep/read the code to ground it.
 
 ## Title — `Area: short lowercase description`
 
@@ -41,32 +41,30 @@ Prefix with the subsystem, a colon, then a concise lowercase summary. Areas in u
 
 ## Label
 
-- `enhancement` — new feature / capability (the `docs/ideas.md` case). The default.
-- `bug` — incorrect or rough behavior in shipped code (the `docs/issues.md` case).
+- `enhancement` — new feature / capability. The default.
+- `bug` — incorrect or rough behavior in shipped code.
 - Others exist (`documentation`, `question`, …) but the backlog is almost all
   `enhancement`. One label is the norm.
 
-## Body
+## Body — self-contained
 
-### Enhancement (mirrors a `docs/ideas.md` entry)
+Write the body to a temp file (avoids shell-escaping backticks/quotes in the body), then
+pass it with `--body-file`. There is **no** "rationale lives in docs" footer — the issue
+carries its own rationale. Link the README roadmap (`../blob/main/README.md#roadmap`,
+repo-relative so it resolves on github.com) **only if** the item actually appears there.
+
+### Enhancement
 
 ````md
 <One-line pitch: what the user gets, and the gap today.>
 
 **Status:** parking lot — <one clause: scope / why deferred>.
 
-**Shape:** <implementation sketch with concrete file refs — what to reuse and where.
-Keep it to the load-bearing detail, not a full design.>
-
-_Rationale in [`docs/ideas.md`](../blob/main/docs/ideas.md) ("<Entry heading>")._
+**Shape:** <implementation sketch with concrete file refs — what to reuse and where, the
+real gaps to resolve, rough effort. Enough that an engineer could pick it up cold.>
 ````
 
-The footer uses **repo-relative `../blob/main/...` links** (relative to the issue URL) so
-they resolve on github.com. Link the README roadmap too (`../blob/main/README.md#roadmap`)
-**only if** the item is actually in `README.md`'s roadmap — the #9–#26 batch was; ad-hoc
-additions are not, so don't claim it for them.
-
-Worked example — issue #28:
+Worked example — issue #28 (self-contained, no doc link):
 
 > Return to a thread's pin from the open detail after you've scrolled away. Today opening
 > a thread scrolls to its pin once; if you then scroll elsewhere there's no way back — you
@@ -77,12 +75,8 @@ Worked example — issue #28:
 > **Shape:** the scroll machinery already exists — `requestFocus(id)` … (`marker/useFocusPin.ts`).
 > Make the page-context card clickable (`ui/ThreadConversation.tsx`) and re-run the
 > same-page-vs-cross-page split in `PanelDrawer.onSelect`.
->
-> _Rationale in [`docs/ideas.md`](../blob/main/docs/ideas.md) ("Re-navigate to a thread's pin …")._
 
-### Bug (mirrors a `docs/issues.md` entry)
-
-Reuse the `issues.md` structure so the issue and the doc stay parallel:
+### Bug
 
 ````md
 **Symptom.** <what the user sees>
@@ -91,14 +85,10 @@ Reuse the `issues.md` structure so the issue and the doc stay parallel:
 
 **Impact.** <severity / blast radius>
 
-**Proposed fix.** <the validated fix, or "see docs/issues.md">
-
-_Logged in [`docs/issues.md`](../blob/main/docs/issues.md) ("<Entry heading>")._
+**Proposed fix.** <the validated fix, or note it's not yet investigated>
 ````
 
 ## Create
-
-Write the body to a temp file (avoids shell-escaping backticks/quotes in the body), then:
 
 ```bash
 gh issue create \
@@ -117,9 +107,8 @@ extras unasked.
 
 | Mistake | Reality |
 |---|---|
-| Pasting the full design into the issue | Issue = pitch + sketch + link; the rationale lives in `docs/`. |
+| Filing a thin stub that points at a doc for the "real" rationale | Issues are self-contained now — put the rationale in the body. |
 | No `Area:` prefix | Titles are `Area: lowercase summary` (see the in-use areas above). |
-| Footer links without the `../` | Footer links are repo-relative `../blob/main/...`, not bare `blob/main/...`. |
-| Claiming "From the README roadmap" for an ad-hoc item | Only the #9–#26 batch came from the roadmap. |
-| Filing with no docs entry to link | Add the `ideas.md` / `issues.md` entry first; the issue links to it. |
-| `bug` label on a new feature (or vice-versa) | `enhancement` = `ideas.md`; `bug` = `issues.md`. |
+| Footer links without the `../` | Repo-relative links are `../blob/main/...`, not bare `blob/main/...`. |
+| Claiming "From the README roadmap" for an item that isn't there | Only link the roadmap if the item actually appears in it. |
+| `bug` label on a new feature (or vice-versa) | `enhancement` = new capability; `bug` = shipped rough edge. |

@@ -218,7 +218,7 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 
 ## Roadmap
 
-None of these are committed releases — they're the directions we're considering. The full rationale for the parking-lot items lives in [`docs/ideas.md`](docs/ideas.md); known rough edges in already-shipped behavior are tracked in [`docs/issues.md`](docs/issues.md).
+None of these are committed releases — they're the directions we're considering. Every parking-lot item and known rough edge is tracked, with its full rationale, in [GitHub issues](https://github.com/Airnauts/airside/issues) (`enhancement` for features, `bug` for rough edges in shipped behavior).
 
 **Widget & UX**
 
