@@ -257,8 +257,6 @@ None of these are committed releases — they're the directions we're considerin
 
 **Bug fixes & known rough edges**
 
-- Opening a thread does not surface its anchored text selection visually _(missing behavior)_.
-- Thread page-context card shows the URL on both lines because `pageTitle` is never captured at create time _(cosmetic; fix is a one-liner in the client)_.
 - Cross-element text selections (spanning a tag boundary) anchor to a signal-less parent and are easily lost on re-render _(correctness bug; pairs with the two issues below)_.
 - A pin on a plain structural element can silently migrate to the wrong surviving sibling after the original is removed _(correctness bug; TDD fix deferred)_.
 - Signal-less elements (no `id`, class, or `data-*` attribute) cannot clear the re-anchor score threshold under structural mutations and always orphan _(known v1 scoring limitation)_.
