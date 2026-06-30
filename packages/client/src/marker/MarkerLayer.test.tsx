@@ -479,3 +479,81 @@ describe('MarkerLayer pin-visibility toggle (#32)', () => {
     expect(screen.queryByTestId('airside-draft')).toBeNull()
   })
 })
+
+// Renders MarkerLayer + PanelDrawer together with a resolved identity (so the composer can submit
+// and create) — the harness needed to observe the open sidebar reacting to a fresh create.
+function renderMarkerWithPanel(c: ReturnType<typeof client>) {
+  return render(
+    <WidgetProvider>
+      <ToastProvider>
+        <IdentityProvider
+          identity={{ email: 'a@b.c', name: 'A' }}
+          requestIdentity={(resume) => resume({ email: 'a@b.c', name: 'A' })}
+        >
+          <ThreadsProvider client={c as never}>
+            <PanelProvider client={c as never}>
+              <DraftsProvider>
+                <MarkerLayer client={c as never} pageKey="k" pageUrl="https://x.test/p" />
+                <PanelDrawer resolvePageKey={() => 'k'} client={c as never} />
+              </DraftsProvider>
+            </PanelProvider>
+          </ThreadsProvider>
+        </IdentityProvider>
+      </ToastProvider>
+    </WidgetProvider>,
+  )
+}
+
+describe('MarkerLayer → open panel list sync (#59)', () => {
+  it('adds a freshly created thread to the already-open sidebar list without a reopen', async () => {
+    document.body.innerHTML =
+      '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
+    mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 80, height: 16 })
+    const c = client()
+    // The panel list is empty until a thread exists; once createThread has run, listThreads returns
+    // the new thread (mirrors the server now holding it). Re-uses the captured anchor so the on-page
+    // runtime can also match it — same fixture shape as the BUG A test above.
+    c.listThreads = vi.fn().mockImplementation(async () => {
+      const created = c.createThread.mock.calls[0]?.[0]
+      if (!created) return { threads: [], nextCursor: null }
+      return {
+        threads: [
+          {
+            id: 'new1',
+            status: 'open',
+            anchorState: 'anchored',
+            unresolvedCount: 1,
+            commentCount: 1,
+            createdBy: { email: 'a@b.c', name: 'A' },
+            rootComment: { text: 'My new note', createdAt: new Date().toISOString() },
+            updatedAt: new Date().toISOString(),
+            pageUrl: 'https://x.test/p',
+            pageKey: 'k',
+            anchor: created.anchor,
+          },
+        ],
+        nextCursor: null,
+      }
+    })
+    renderMarkerWithPanel(c)
+
+    // Open the sidebar first — it lists nothing yet (no thread exists).
+    fireEvent.click(screen.getByTestId('airside-panel-open'))
+    await waitFor(() => expect(screen.getByTestId('airside-panel')).toBeInTheDocument())
+    expect(screen.queryByTestId('airside-panel-row')).toBeNull()
+
+    // With the sidebar still open, place a pin and submit the composer.
+    fireEvent.click(screen.getByTestId('airside-place'))
+    fireEvent.click(document.querySelector('#t') as Element, { clientX: 40, clientY: 8 })
+    expect(await screen.findByTestId('airside-draft')).toBeInTheDocument()
+    fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
+      target: { value: 'My new note' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(c.createThread).toHaveBeenCalled())
+
+    // The new thread must appear in the open list immediately — the create notification triggers
+    // panel.refresh(). Before the fix, the list stayed empty until a close/reopen.
+    await waitFor(() => expect(screen.getByTestId('airside-panel-row')).toBeInTheDocument())
+  })
+})

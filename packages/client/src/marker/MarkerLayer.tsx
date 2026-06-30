@@ -157,11 +157,15 @@ export function MarkerLayer({
         // openId and would leave detail null → "No comments yet" until a manual refetch.
         dispatch({ type: 'DETAIL_LOADED', id: created.id, thread: created })
         dispatch({ type: 'OPEN', id: created.id })
+        // Bridge the create into the open sidebar list: the panel's list store is separate from
+        // the on-page placements refreshed above, so it observes this to refetch its current
+        // filter and surface the new thread without a close/reopen.
+        controller.notifyThreadCreated()
       } catch (err) {
         toast(err instanceof ApiError ? err.message : 'Failed to create comment')
       }
     },
-    [client, activeKey, provenance, toast, dispatch],
+    [client, activeKey, provenance, toast, dispatch, controller],
   )
 
   const togglePins = useCallback(() => {

@@ -141,6 +141,26 @@ describe('controller.bumpCommentCount', () => {
   })
 })
 
+describe('controller thread-created listener', () => {
+  it('notifies the registered listener on notifyThreadCreated', () => {
+    const { controller } = make()
+    const listener = vi.fn()
+    controller.registerThreadCreatedListener(listener)
+    controller.notifyThreadCreated()
+    expect(listener).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not throw and calls nothing when no listener is registered, or after deregistering', () => {
+    const { controller } = make()
+    expect(() => controller.notifyThreadCreated()).not.toThrow()
+    const listener = vi.fn()
+    controller.registerThreadCreatedListener(listener)
+    controller.registerThreadCreatedListener(null)
+    controller.notifyThreadCreated()
+    expect(listener).not.toHaveBeenCalled()
+  })
+})
+
 describe('controller.deleteThread', () => {
   const rt = () => ({
     setStatus: vi.fn(),

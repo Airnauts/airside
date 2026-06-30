@@ -54,6 +54,16 @@ function StatusProbe() {
   )
 }
 
+// Stands in for MarkerLayer.createThread firing the thread-created notification after a save.
+function CreateProbe() {
+  const threads = useController()
+  return (
+    <button type="button" onClick={() => threads.notifyThreadCreated()}>
+      created
+    </button>
+  )
+}
+
 // Simulates a cross-page / deep-link open: the thread is NOT in the loaded list, its detail is
 // seeded under its own id, and openId stays null. The detail view must fall back to the id-keyed
 // detail (not openId) or it renders blank.
@@ -145,6 +155,7 @@ function setup(opts: {
               <CloseProbe />
               <GhostOpener />
               {opts.withProbes && <StatusProbe />}
+              {opts.withProbes && <CreateProbe />}
               {opts.detailOpenerId && (
                 <>
                   <DetailOpener id={opts.detailOpenerId} />
@@ -308,6 +319,43 @@ describe('PanelDrawer', () => {
     client.listThreads.mockClear()
     act(() => {
       screen.getByText('resolve').click()
+    })
+    // Give any potential async cascade time to resolve before asserting.
+    await new Promise((r) => setTimeout(r, 50))
+    expect(client.listThreads).not.toHaveBeenCalled()
+  })
+
+  it('thread creation while panel is open triggers a refetch; closing removes the listener', async () => {
+    const { client } = setup({
+      threads: [item({ id: 'a' })],
+      withProbes: true,
+    })
+
+    // Open the panel and wait for the initial rows to render.
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(1))
+
+    // Clear the mock so only calls AFTER this point are counted.
+    client.listThreads.mockClear()
+
+    // Fire a thread-created notification (what MarkerLayer.createThread does after a save) — the
+    // registered listener calls panel.refresh() → listThreads again.
+    act(() => {
+      screen.getByText('created').click()
+    })
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled())
+
+    // Close the panel — the useEffect cleanup deregisters the listener.
+    client.listThreads.mockClear()
+    act(() => {
+      screen.getByText('close').click()
+    })
+    await waitFor(() => expect(screen.queryByTestId('airside-panel')).not.toBeInTheDocument())
+
+    // Another create notification must NOT trigger a refetch since the listener was removed.
+    client.listThreads.mockClear()
+    act(() => {
+      screen.getByText('created').click()
     })
     // Give any potential async cascade time to resolve before asserting.
     await new Promise((r) => setTimeout(r, 50))
