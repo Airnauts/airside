@@ -130,3 +130,27 @@ export function mainListExcludingReview(state: PanelState): ThreadListItem[] {
   const review = new Set(state.needsReview.map((t) => t.id))
   return state.list.filter((t) => !review.has(t.id))
 }
+
+/** The threads the detail header steps through with prev/next, in the same order the list pane shows
+ *  them: the Needs-review rows first, then the de-duplicated main list. (Only loaded rows — the next
+ *  page behind `nextCursor` isn't navigable until it's fetched.) */
+export function navigableList(state: PanelState): ThreadListItem[] {
+  return [...state.needsReview, ...mainListExcludingReview(state)]
+}
+
+/** Prev/next thread ids around the open detail within {@link navigableList}; either is null at the
+ *  matching end of the list, or both when the open thread isn't in the loaded list (cross-page
+ *  deep-link). */
+export function detailNeighbors(state: PanelState): {
+  prevId: string | null
+  nextId: string | null
+} {
+  if (state.detailThreadId == null) return { prevId: null, nextId: null }
+  const list = navigableList(state)
+  const i = list.findIndex((t) => t.id === state.detailThreadId)
+  if (i === -1) return { prevId: null, nextId: null }
+  return {
+    prevId: i > 0 ? (list[i - 1]?.id ?? null) : null,
+    nextId: i < list.length - 1 ? (list[i + 1]?.id ?? null) : null,
+  }
+}

@@ -9,6 +9,7 @@ import { goToThread } from './navigate'
 import { PanelDetailView } from './PanelDetailView'
 import { PanelListView } from './PanelListView'
 import { usePanelController, usePanelState } from './PanelProvider'
+import { detailNeighbors } from './state'
 
 export type PanelDrawerProps = {
   resolvePageKey: (url: string) => string
@@ -73,6 +74,16 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
         null)
       : null
 
+  // Step to a neighbouring thread from the detail header: same surface as a same-page row click
+  // (open its detail + pulse/lazy-load the pin) — but unconditional, so an off-page neighbour
+  // previews in place via the id-keyed detail rather than navigating away.
+  function navigateDetail(id: string) {
+    panel.openDetail(id)
+    threads.requestFocus(id)
+  }
+
+  const { prevId, nextId } = detailNeighbors(state)
+
   return (
     <Dialog.Root open={state.open} modal={false} onOpenChange={(o) => !o && panel.closePanel()}>
       <Dialog.Portal container={container ?? undefined}>
@@ -92,6 +103,8 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
               resolvePageKey={resolvePageKey}
               client={client}
               onBack={() => panel.back()}
+              onPrev={prevId ? () => navigateDetail(prevId) : undefined}
+              onNext={nextId ? () => navigateDetail(nextId) : undefined}
             />
           ) : (
             <PanelListView onSelect={onSelect} />

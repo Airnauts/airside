@@ -18,6 +18,10 @@ export type PanelDetailViewProps = {
   resolvePageKey: (url: string) => string
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
   onBack: () => void
+  /** Step to the previous thread in the filtered list; absent (disabled) at the top of the list. */
+  onPrev?: () => void
+  /** Step to the next thread in the filtered list; absent (disabled) at the bottom of the list. */
+  onNext?: () => void
 }
 
 /** The drawer's thread-detail pane: back/close header + the sidebar conversation. */
@@ -27,6 +31,8 @@ export function PanelDetailView({
   resolvePageKey,
   client,
   onBack,
+  onPrev,
+  onNext,
 }: PanelDetailViewProps) {
   const { detail } = useThreadDetail(threadId)
   const controller = useController()
@@ -61,11 +67,33 @@ export function PanelDetailView({
         </button>
         <Dialog.Title className="air:sr-only">Thread</Dialog.Title>
         <Dialog.Description className="air:sr-only">Thread detail</Dialog.Description>
-        <Dialog.Close asChild>
-          <Button variant="ghost" size="icon" aria-label="Close panel">
-            ✕
+        <div className="air:flex air:items-center air:gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Previous thread"
+            disabled={!onPrev}
+            onClick={onPrev}
+            className="air:disabled:text-gray-300"
+          >
+            <span aria-hidden={true}>⌃</span>
           </Button>
-        </Dialog.Close>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Next thread"
+            disabled={!onNext}
+            onClick={onNext}
+            className="air:disabled:text-gray-300"
+          >
+            <span aria-hidden={true}>⌄</span>
+          </Button>
+          <Dialog.Close asChild>
+            <Button variant="ghost" size="icon" aria-label="Close panel">
+              ✕
+            </Button>
+          </Dialog.Close>
+        </div>
       </div>
       <div className="air:flex-1 air:overflow-y-auto air:flex air:flex-col air:min-h-0">
         {item && (
