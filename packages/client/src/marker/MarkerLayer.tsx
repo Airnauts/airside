@@ -141,9 +141,14 @@ export function MarkerLayer({
   const createThread = useCallback(
     async ({ text, attachmentIds, who }: ComposerSubmit, anchor: Anchor) => {
       try {
+        // Capture the page title for the thread's page-context card. Trim and omit when empty
+        // so the card never renders a blank title — it falls back to the URL (pageTitle ?? pageUrl)
+        // instead of showing an empty bold line.
+        const pageTitle = document.title.trim()
         const created = await client.createThread({
           pageUrl: window.location.href,
           pageKey: activeKey,
+          ...(pageTitle ? { pageTitle } : {}),
           anchor,
           comment: { text, attachmentIds: attachmentIds as AttachmentId[] },
           author: { email: who.email, name: who.name },
