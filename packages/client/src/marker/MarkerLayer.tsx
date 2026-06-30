@@ -165,7 +165,7 @@ export function MarkerLayer({
         // Bridge the create into the open sidebar list: the panel's list store is separate from
         // the on-page placements refreshed above, so it observes this to refetch its current
         // filter and surface the new thread without a close/reopen.
-        controller.notifyThreadCreated()
+        controller.emit({ type: 'created' })
       } catch (err) {
         toast(err instanceof ApiError ? err.message : 'Failed to create comment')
       }

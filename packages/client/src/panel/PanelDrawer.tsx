@@ -23,33 +23,26 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
   const threads = useController()
   const container = usePortalContainer()
 
-  // Drawer-open reconciliation: when a status change persists, refetch the current filter.
+  // Drawer-open reconciliation: subscribe to controller thread events while the panel is open.
+  // status/created refetch the current filter; count keeps list rows in sync with an optimistic
+  // reply; deleted drops the row (and falls back to the list if its detail is the open pane). The
+  // returned unsubscribe runs on close, so events stop reaching the closed panel.
   useEffect(() => {
     if (!state.open) return
-    threads.registerStatusListener(() => void panel.refresh())
-    return () => threads.registerStatusListener(null)
-  }, [state.open, threads, panel])
-
-  // Keep the list rows' counts in sync with an optimistic reply posted from the open detail.
-  useEffect(() => {
-    if (!state.open) return
-    threads.registerCommentCountListener((id, delta) => panel.bumpCommentCount(id, delta))
-    return () => threads.registerCommentCountListener(null)
-  }, [state.open, threads, panel])
-
-  // Drawer-open reconciliation: when a new thread is created (e.g. a pin placed while the panel is
-  // open), refetch the current filter so the new thread appears in the list without a reopen.
-  useEffect(() => {
-    if (!state.open) return
-    threads.registerThreadCreatedListener(() => void panel.refresh())
-    return () => threads.registerThreadCreatedListener(null)
-  }, [state.open, threads, panel])
-
-  // Drop a deleted thread from the list and, if its detail is the open pane, fall back to the list.
-  useEffect(() => {
-    if (!state.open) return
-    threads.registerDeleteListener((id) => panel.removeThread(id))
-    return () => threads.registerDeleteListener(null)
+    return threads.subscribe((e) => {
+      switch (e.type) {
+        case 'status':
+        case 'created':
+          void panel.refresh()
+          break
+        case 'count':
+          panel.bumpCommentCount(e.id, e.delta)
+          break
+        case 'deleted':
+          panel.removeThread(e.id)
+          break
+      }
+    })
   }, [state.open, threads, panel])
 
   function onSelect(row: { id: string; pageKey: string | null; pageUrl: string }) {
