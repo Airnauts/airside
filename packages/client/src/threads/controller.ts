@@ -70,6 +70,8 @@ export type Controller = {
    * separate from the on-page placements, so without this its rows stay stale until reopen.
    */
   notifyThreadCreated(): void
+  /** The panel registers here to drop a deleted thread from its list and, if it was the open detail, leave it. */
+  registerDeleteListener(fn: ((id: string) => void) | null): void
 }
 
 /**
@@ -94,6 +96,7 @@ export function createController(
   let statusListener: ((id: string, status: ThreadStatus) => void) | null = null
   let commentCountListener: ((id: string, delta: number) => void) | null = null
   let threadCreatedListener: (() => void) | null = null
+  let deleteListener: ((id: string) => void) | null = null
 
   const lazyFetchDetail = (id: string) => {
     if (deps.isCached(id) || deps.isLoading(id)) return
@@ -157,6 +160,9 @@ export function createController(
       runtime?.removeItem(id)
       try {
         await deps.client.deleteThread(id)
+        // Notify the panel so its own list/detail state drops the gone thread (the panel keeps an
+        // independent store the REMOVE_THREAD above doesn't touch).
+        deleteListener?.(id)
         return true
       } catch {
         // Rollback: the thread still exists server-side, so re-fetch the list and re-place. We
@@ -196,6 +202,9 @@ export function createController(
     },
     registerThreadCreatedListener(fn) {
       threadCreatedListener = fn
+    },
+    registerDeleteListener(fn) {
+      deleteListener = fn
     },
   }
 }
