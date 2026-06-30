@@ -64,6 +64,15 @@ function CreateProbe() {
   )
 }
 
+function DeleteProbe({ id }: { id: string }) {
+  const threads = useController()
+  return (
+    <button type="button" onClick={() => void threads.deleteThread(id)}>
+      delete {id}
+    </button>
+  )
+}
+
 // Simulates a cross-page / deep-link open: the thread is NOT in the loaded list, its detail is
 // seeded under its own id, and openId stays null. The detail view must fall back to the id-keyed
 // detail (not openId) or it renders blank.
@@ -123,6 +132,7 @@ function setup(opts: {
   resolvePageKey?: (url: string) => string
   withProbes?: boolean
   detailOpenerId?: string
+  deleteProbeId?: string
 }) {
   // The main fetch carries `sort: 'updatedAt'`; the review fetch sends only `status`.
   // Distinguish the two by the presence of `sort`.
@@ -141,6 +151,7 @@ function setup(opts: {
       attachments: [],
       createdAt: new Date().toISOString(),
     }),
+    deleteThread: vi.fn().mockResolvedValue({ id: 'x' }),
     upload: vi.fn(),
   }
   const resolvePageKey = opts.resolvePageKey ?? (() => 'x.test/other')
@@ -162,6 +173,7 @@ function setup(opts: {
                   <FocusProbe />
                 </>
               )}
+              {opts.deleteProbeId && <DeleteProbe id={opts.deleteProbeId} />}
               <PanelDrawer resolvePageKey={resolvePageKey} client={client as never} />
             </DraftsProvider>
           </PanelProvider>
@@ -360,5 +372,46 @@ describe('PanelDrawer', () => {
     // Give any potential async cascade time to resolve before asserting.
     await new Promise((r) => setTimeout(r, 50))
     expect(client.listThreads).not.toHaveBeenCalled()
+  })
+
+  it('deleting a thread drops its row from the open list without a refetch', async () => {
+    const { client } = setup({
+      threads: [item({ id: 'a' }), item({ id: 'b' })],
+      deleteProbeId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(2))
+
+    // Count only calls AFTER the initial load — the drop must be reducer-driven, not a refetch.
+    client.listThreads.mockClear()
+    act(() => {
+      screen.getByText('delete a').click()
+    })
+    // The deleted row disappears (was stale-until-refresh before this fix).
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(1))
+    expect(client.listThreads).not.toHaveBeenCalled()
+  })
+
+  it('deleting the thread whose detail is open returns to the list', async () => {
+    setup({
+      threads: [item({ id: 'a' }), item({ id: 'b' })],
+      detailOpenerId: 'a',
+      deleteProbeId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(2))
+
+    // Open the deleted thread's detail pane, then delete it.
+    act(() => screen.getByText('open detail a').click())
+    await waitFor(() => screen.getByRole('button', { name: /back/i }))
+    act(() => {
+      screen.getByText('delete a').click()
+    })
+
+    // The drawer falls back to the list (no dead-end detail pane) and the 'a' row is gone.
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /back/i })).not.toBeInTheDocument(),
+    )
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(1))
   })
 })

@@ -45,6 +45,13 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
     return () => threads.registerThreadCreatedListener(null)
   }, [state.open, threads, panel])
 
+  // Drop a deleted thread from the list and, if its detail is the open pane, fall back to the list.
+  useEffect(() => {
+    if (!state.open) return
+    threads.registerDeleteListener((id) => panel.removeThread(id))
+    return () => threads.registerDeleteListener(null)
+  }, [state.open, threads, panel])
+
   function onSelect(row: { id: string; pageKey: string | null; pageUrl: string }) {
     const here = resolvePageKey(window.location.href)
     if (row.pageKey === here) {

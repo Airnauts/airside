@@ -215,4 +215,30 @@ describe('controller.deleteThread', () => {
     })
     await expect(failing.deleteThread('t1')).resolves.toBe(false)
   })
+
+  it('notifies the registered delete listener after the delete persists', async () => {
+    const { controller, deleteThread } = make()
+    const listener = vi.fn()
+    controller.registerDeleteListener(listener)
+    const ok = await controller.deleteThread('t1')
+    expect(ok).toBe(true)
+    expect(deleteThread).toHaveBeenCalledWith('t1')
+    expect(listener).toHaveBeenCalledWith('t1')
+  })
+
+  it('does not notify the delete listener when the delete fails', async () => {
+    const failing = createController(() => {}, {
+      client: {
+        getThread: vi.fn(),
+        deleteThread: vi.fn().mockRejectedValue(new Error('net')),
+      } as never,
+      isCached: () => true,
+      isLoading: () => false,
+    })
+    const listener = vi.fn()
+    failing.registerDeleteListener(listener)
+    const ok = await failing.deleteThread('t1')
+    expect(ok).toBe(false)
+    expect(listener).not.toHaveBeenCalled()
+  })
 })

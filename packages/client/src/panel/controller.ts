@@ -12,6 +12,8 @@ export type PanelController = {
   back(): void
   /** Optimistically adjust a list row's comment count (mirrors an optimistic reply in the detail). */
   bumpCommentCount(id: string, delta: number): void
+  /** Drop a deleted thread from the list/needsReview and, if its detail is open, fall back to the list. */
+  removeThread(id: string): void
 }
 
 export function createPanelController(
@@ -76,6 +78,9 @@ export function createPanelController(
     },
     bumpCommentCount(id, delta) {
       dispatch({ type: 'BUMP_COMMENT_COUNT', id, delta })
+    },
+    removeThread(id) {
+      dispatch({ type: 'REMOVE_THREAD', id })
     },
   }
 }
