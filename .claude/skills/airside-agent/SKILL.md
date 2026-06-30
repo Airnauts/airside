@@ -430,32 +430,31 @@ acking, the items still look actionable next tick → the fixer re-runs (finds t
 applied → `no-changes`/`SKIPPED`) and the acks post then; nothing is dropped (cost is a duplicate-safe
 re-run and, for a thread, one manual resolve click).
 
-### 4. End-of-tick owner digest (always — append-only reporting)
+### 4. End-of-tick status table (always — compact, append-only)
 
-**Every tick — after the op, or after a no-op — end your tick message with a `⏳ Waiting on you`
-digest**: the issues/PRs currently parked on **owner** action, so the user never has to dig for what
-needs them. Recompute it from the phases you just reconciled in §2 — **no extra subagents, no extra
-`gh` reads beyond what you already ran** (you already know each issue's phase, number, and PR). For
-each waiting item emit **one line**: the real **title**, a terse **action needed**, and a **direct
-GitHub link**.
+**End every tick — after the op, or after a no-op — with ONE compact markdown table** covering
+**all active** (open, non-terminal) agent issues: both the ones the **agent is working** and the ones
+**waiting on you**. No prose paragraphs, no per-item bullet list — the table is the whole report.
+Recompute it from the phases you reconciled in §2 — **no extra subagents, no extra `gh` reads beyond
+what you already ran**.
 
-Which phases are "waiting on you" (everything else — `triage`/`speccing`/`building`/`reviewing` — is
-the agent's own work, so omit it):
+Precede the table with a single header line: **`Tick — <op this tick, or "no-op">`** (≤12 words).
+Then the table, exactly these columns:
 
-- **`blocked`** (most urgent, list first) →
-  `🔴 #<n> <title> — <one-line reason> — needs your decision → https://github.com/Airnauts/airside/issues/<n>`
-  (append the PR link too if one exists).
-- **`awaiting-approval`** →
-  `📋 #<n> <title> — review the spec, then reply \`/approve\`, \`/revise <notes>\`, or \`/stop\` → https://github.com/Airnauts/airside/issues/<n>`
-- **`revising`** (informational — no action yet) →
-  `🔧 #<n> <title> — re-speccing; a new spec version will follow → https://github.com/Airnauts/airside/issues/<n>`
-- **`in-review`** →
-  `👀 PR #<pr> (issue #<n>) <title> — review the ready PR; leave inline/top-level comments or merge → https://github.com/Airnauts/airside/pull/<pr>`
+```
+| Task | Phase | Ball | Next |
+|------|-------|------|------|
+```
 
-Order: `blocked` → `awaiting-approval` → `revising` → `in-review`. If **nothing** is waiting on the
-owner, emit a single line: `⏳ Waiting on you: nothing — all tasks are in flight or done.` Keep it
-terse (one line per item, clickable links). **This digest is reporting only — it must never spawn a
-subagent, mutate GitHub, or count as the tick's one op.**
+- **Task** — markdown-linked, short: `[#<n> <≤4-word title>](https://github.com/Airnauts/airside/issues/<n>)`.
+  For `reviewing`/`in-review` link the **PR** instead: `[#<n> PR#<pr> <≤4-word title>](https://github.com/Airnauts/airside/pull/<pr>)`.
+- **Phase** — the computed phase verbatim.
+- **Ball** — who it's on right now: `🤖` (agent working it: `triage`/`speccing`/`revising`/`building`/`reviewing`)
+  or `👤` (you: `awaiting-approval`/`in-review`/`blocked`).
+- **Next** — terse next step: `awaiting-approval` → `/approve·/revise·/stop`; `in-review` → `review / merge`;
+  `blocked` → `<reason> — decide`; agent phases → what the agent does next (`spec` / `build` / `review` / `fix` / `promote`).
+
+Order rows **👤 first** (blocked → awaiting-approval → in-review), then **🤖** (revising → building → reviewing → speccing → triage). Drop `done`/`cancelled` rows (terminal). If there are **no active issues**, emit the single line `No active agent tasks.` instead of a table. **This table is reporting only — it must never spawn a subagent, mutate GitHub, or count as the tick's one op.**
 
 ## Triage spawn contract
 
