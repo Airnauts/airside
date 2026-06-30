@@ -392,6 +392,34 @@ describe('PanelDrawer', () => {
     expect(client.listThreads).not.toHaveBeenCalled()
   })
 
+  it('detail header steps to the next/previous thread and pulses its pin', async () => {
+    setup({
+      threads: [item({ id: 'a' }), item({ id: 'b' }), item({ id: 'c' })],
+      detailOpenerId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(3))
+
+    // Open the first thread's detail; at the top of the list, Previous is disabled.
+    act(() => screen.getByText('open detail a').click())
+    await waitFor(() => screen.getByRole('button', { name: 'Next thread' }))
+    expect(screen.getByRole('button', { name: 'Previous thread' })).toBeDisabled()
+
+    // Next → thread 'b'; its pin is focus-requested.
+    act(() => screen.getByRole('button', { name: 'Next thread' }).click())
+    await waitFor(() => expect(screen.getByTestId('pending-focus')).toHaveTextContent('b'))
+    expect(screen.getByRole('button', { name: 'Previous thread' })).not.toBeDisabled()
+
+    // Next → 'c', the last thread; Next is now disabled.
+    act(() => screen.getByRole('button', { name: 'Next thread' }).click())
+    await waitFor(() => expect(screen.getByTestId('pending-focus')).toHaveTextContent('c'))
+    expect(screen.getByRole('button', { name: 'Next thread' })).toBeDisabled()
+
+    // Previous → back to 'b'.
+    act(() => screen.getByRole('button', { name: 'Previous thread' }).click())
+    await waitFor(() => expect(screen.getByTestId('pending-focus')).toHaveTextContent('b'))
+  })
+
   it('deleting the thread whose detail is open returns to the list', async () => {
     setup({
       threads: [item({ id: 'a' }), item({ id: 'b' })],
