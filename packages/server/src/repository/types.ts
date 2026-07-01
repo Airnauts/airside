@@ -37,9 +37,12 @@ export type NewThread = Scope & {
   pageKey: string | null
   pageUrl: string
   pageTitle?: string
-  anchor: Anchor
+  // Absent for a page-level comment created without a pin (see `anchorState: 'unanchored'`).
+  anchor?: Anchor
   status: 'open'
-  anchorState: 'anchored'
+  // A new thread is either pin-anchored or born pinless; 'orphaned' is only ever reached
+  // later via `updateAnchor`, never at creation.
+  anchorState: 'anchored' | 'unanchored'
   selectionLost?: boolean
   captureContext: CaptureContext
   provenance?: Provenance

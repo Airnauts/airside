@@ -1,6 +1,6 @@
 // packages/client/src/panel/PanelDrawer.test.tsx
 import type { ThreadListItem } from '@airnauts/airside-core'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { act } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { WidgetProvider } from '../app/providers'
@@ -153,6 +153,20 @@ function setup(opts: {
     }),
     deleteThread: vi.fn().mockResolvedValue({ id: 'x' }),
     upload: vi.fn(),
+    createThread: vi.fn(async (body: { comment: { text: string } }) => ({
+      id: 'page-new',
+      status: 'open',
+      anchorState: 'unanchored',
+      comments: [
+        {
+          id: 'pc1',
+          author: { email: 'a@b.c', name: 'Ann' },
+          text: body.comment.text,
+          attachments: [],
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    })),
   }
   const resolvePageKey = opts.resolvePageKey ?? (() => 'x.test/other')
   const identity = { email: 'a@b.c', name: 'Ann' }
@@ -413,5 +427,41 @@ describe('PanelDrawer', () => {
       expect(screen.queryByRole('button', { name: /back/i })).not.toBeInTheDocument(),
     )
     await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(1))
+  })
+
+  it('creates a page-level comment (no anchor) from the list and opens its detail', async () => {
+    const { client } = setup({ threads: [], resolvePageKey: () => 'x.test/here' })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getByTestId('airside-panel')).toBeInTheDocument())
+
+    // Reveal the inline composer, type, and send.
+    fireEvent.click(screen.getByTestId('airside-page-comment'))
+    const input = await screen.findByPlaceholderText(/add a comment/i)
+    fireEvent.change(input, { target: { value: 'Feedback about this whole page' } })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+
+    await waitFor(() => expect(client.createThread).toHaveBeenCalled())
+    const body = client.createThread.mock.calls[0][0]
+    expect(body.comment.text).toBe('Feedback about this whole page')
+    // The defining trait: a page comment carries no anchor.
+    expect(body).not.toHaveProperty('anchor')
+    expect(body.pageKey).toBe('x.test/here')
+
+    // On success the new thread's detail opens in the panel (its only surface — no on-page pin).
+    await waitFor(() => expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument())
+    expect(screen.getByText('Feedback about this whole page')).toBeInTheDocument()
+    // A pinless thread must not offer "return to pin" — that would arm the lost-anchor path for a
+    // pin the runtime never places.
+    expect(
+      screen.queryByRole('button', { name: /scroll to this thread's pin/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not badge a page-level (unanchored) thread as "anchor lost"', async () => {
+    setup({ threads: [item({ id: 'pg', anchorState: 'unanchored', anchor: undefined })] })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getByTestId('airside-panel-row')).toBeInTheDocument())
+    // The amber "anchor lost" badge is reserved for 'orphaned'; a page comment never shows it.
+    expect(screen.queryByText(/anchor lost/i)).not.toBeInTheDocument()
   })
 })

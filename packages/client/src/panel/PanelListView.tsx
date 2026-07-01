@@ -1,9 +1,14 @@
 // packages/client/src/panel/PanelListView.tsx
 
+import type { Provenance } from '@airnauts/airside-core'
 import * as Dialog from '@radix-ui/react-dialog'
+import { useState } from 'react'
+import type { ApiClient } from '../api/client'
 import { cn } from '../lib/cn'
+import { useCreateThread } from '../threads/useCreateThread'
 import { useController, useShowResolved } from '../threads/useThreads'
 import { Button } from '../ui/Button'
+import { Composer } from '../ui/Composer'
 import { StatusNotice } from '../ui/StatusNotice'
 import { usePanelController, usePanelState } from './PanelProvider'
 import { PanelRow } from './PanelRow'
@@ -17,15 +22,40 @@ const FILTERS: { value: PanelFilter; label: string }[] = [
 
 export type PanelListViewProps = {
   onSelect: (row: { id: string; pageKey: string | null; pageUrl: string }) => void
+  /** Create a page-level comment straight from the list (no pin) + upload for its composer. */
+  client: Pick<ApiClient, 'createThread' | 'upload'>
+  /** Resolve the current URL to its page key so a page comment is scoped to this page. */
+  resolvePageKey: (url: string) => string
+  provenance?: Provenance
 }
 
 /** The drawer's list pane: header, filter chips, resolved-pins toggle and thread rows. */
-export function PanelListView({ onSelect }: PanelListViewProps) {
+export function PanelListView({
+  onSelect,
+  client,
+  resolvePageKey,
+  provenance,
+}: PanelListViewProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
   const showResolved = useShowResolved()
   const mainList = mainListExcludingReview(state)
+
+  const [composing, setComposing] = useState(false)
+  const createPageComment = useCreateThread({
+    client,
+    pageKey: resolvePageKey(window.location.href),
+    provenance,
+  })
+  // A page-level comment carries no anchor; on success open its detail in the panel (it has no
+  // on-page pin, so the panel is its only surface).
+  const submitPageComment = async (payload: Parameters<typeof createPageComment>[0]) => {
+    const created = await createPageComment(payload)
+    if (!created) return
+    setComposing(false)
+    panel.openDetail(created.id)
+  }
 
   const toggleResolve = (t: { id: string; status: string }) =>
     void threads.setStatus(t.id, t.status === 'resolved' ? 'open' : 'resolved')
@@ -77,6 +107,33 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
           ))}
         </div>
       </fieldset>
+
+      <div className="air:px-3 air:py-2 air:border-b air:border-gray-200">
+        {composing ? (
+          <div
+            data-testid="airside-page-composer"
+            className="air:border air:border-gray-200 air:rounded-lg air:overflow-hidden"
+          >
+            <Composer
+              mode="newThread"
+              upload={client.upload}
+              autoFocus
+              onCancel={() => setComposing(false)}
+              onSubmit={submitPageComment}
+            />
+          </div>
+        ) : (
+          <Button
+            variant="outline"
+            size="sm"
+            data-testid="airside-page-comment"
+            onClick={() => setComposing(true)}
+            className="air:w-full air:justify-center"
+          >
+            ＋ Comment on this page
+          </Button>
+        )}
+      </div>
 
       <div className="air:flex air:items-center air:justify-between air:px-3 air:py-2 air:border-b air:border-gray-200">
         <span className="air:text-xs air:text-gray-500">Show resolved pins on page</span>

@@ -1,5 +1,6 @@
 // packages/client/src/panel/PanelDrawer.tsx
 
+import type { Provenance } from '@airnauts/airside-core'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useEffect } from 'react'
 import type { ApiClient } from '../api/client'
@@ -12,12 +13,17 @@ import { usePanelController, usePanelState } from './PanelProvider'
 
 export type PanelDrawerProps = {
   resolvePageKey: (url: string) => string
-  client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
+  client: Pick<
+    ApiClient,
+    'getThread' | 'addComment' | 'setThreadStatus' | 'upload' | 'createThread'
+  >
+  /** Threaded through to the page-comment composer so page-level threads carry provenance too. */
+  provenance?: Provenance
 }
 
 /** The right-hand comments drawer: a non-modal Dialog shell that shows either the
  *  cross-page thread list or a single thread's detail pane. */
-export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
+export function PanelDrawer({ resolvePageKey, client, provenance }: PanelDrawerProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
@@ -94,7 +100,12 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
               onBack={() => panel.back()}
             />
           ) : (
-            <PanelListView onSelect={onSelect} />
+            <PanelListView
+              onSelect={onSelect}
+              client={client}
+              resolvePageKey={resolvePageKey}
+              provenance={provenance}
+            />
           )}
         </Dialog.Content>
       </Dialog.Portal>

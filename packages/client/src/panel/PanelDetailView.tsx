@@ -73,7 +73,9 @@ export function PanelDetailView({
             item={item}
             client={client}
             variant="sidebar"
-            onReturnToPin={returnToPin}
+            // A page-level (unanchored) thread has no pin to return to; offering it would arm the
+            // focus/lost-anchor path for a pin the runtime never places. Omit it → plain page label.
+            onReturnToPin={item.anchorState === 'unanchored' ? undefined : returnToPin}
             draftText={draft.draft.text}
             onDraftTextChange={draft.setText}
             draftAttachment={draft.draft.attachment}

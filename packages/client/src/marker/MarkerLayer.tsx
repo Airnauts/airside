@@ -1,14 +1,13 @@
-import type { Anchor, AttachmentId, Provenance } from '@airnauts/airside-core'
+import type { Anchor, Provenance } from '@airnauts/airside-core'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createRuntime } from '../anchor/runtime'
 import type { ApiClient } from '../api/client'
-import { ApiError } from '../api/errors'
-import { buildCaptureContext } from '../config'
 import { takeFocusHandoff } from '../panel/navigate'
 import { usePanelController, usePanelState } from '../panel/PanelProvider'
 import { PinLayer } from '../positioning/layer'
 import { observeReposition } from '../positioning/lifecycle'
 import { getSetting, setSetting } from '../settings/store'
+import { useCreateThread } from '../threads/useCreateThread'
 import {
   useController,
   useDispatch,
@@ -138,39 +137,20 @@ export function MarkerLayer({
     }
   }, [state.lostOpenId, toast, dispatch])
 
+  // The shared create path (POST + seed detail cache + notify the open panel) lives in the hook;
+  // MarkerLayer supplies the captured anchor and the pin-specific follow-up below.
+  const create = useCreateThread({ client, pageKey: activeKey, provenance })
+
   const createThread = useCallback(
-    async ({ text, attachmentIds, who }: ComposerSubmit, anchor: Anchor) => {
-      try {
-        // Capture the page title for the thread's page-context card. Trim and omit when empty
-        // so the card never renders a blank title — it falls back to the URL (pageTitle ?? pageUrl)
-        // instead of showing an empty bold line.
-        const pageTitle = document.title.trim()
-        const created = await client.createThread({
-          pageUrl: window.location.href,
-          pageKey: activeKey,
-          ...(pageTitle ? { pageTitle } : {}),
-          anchor,
-          comment: { text, attachmentIds: attachmentIds as AttachmentId[] },
-          author: { email: who.email, name: who.name },
-          captureContext: buildCaptureContext(),
-          provenance,
-        })
-        dispatch({ type: 'CLEAR_DRAFT' })
-        await runtime.current?.refresh()
-        // Seed the detail cache from the create response (a full Thread with its first
-        // comment) so the popover renders comments immediately. Plain OPEN only sets
-        // openId and would leave detail null → "No comments yet" until a manual refetch.
-        dispatch({ type: 'DETAIL_LOADED', id: created.id, thread: created })
-        dispatch({ type: 'OPEN', id: created.id })
-        // Bridge the create into the open sidebar list: the panel's list store is separate from
-        // the on-page placements refreshed above, so it observes this to refetch its current
-        // filter and surface the new thread without a close/reopen.
-        controller.notifyThreadCreated()
-      } catch (err) {
-        toast(err instanceof ApiError ? err.message : 'Failed to create comment')
-      }
+    async (submit: ComposerSubmit, anchor: Anchor) => {
+      const created = await create(submit, anchor)
+      if (!created) return
+      dispatch({ type: 'CLEAR_DRAFT' })
+      // Re-list so the runtime places the new pin; then OPEN its popover over that placement.
+      await runtime.current?.refresh()
+      dispatch({ type: 'OPEN', id: created.id })
     },
-    [client, activeKey, provenance, toast, dispatch, controller],
+    [create, dispatch],
   )
 
   const togglePins = useCallback(() => {

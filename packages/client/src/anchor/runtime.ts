@@ -94,7 +94,10 @@ export function createRuntime(opts: RuntimeOptions) {
   async function refresh() {
     const { threads } = await opts.client.listThreads({ pageKey: opts.pageKey })
     placed = threads
-      .map((t) => matchAndReport(t, t.anchor))
+      // Page-level (unanchored) threads carry no anchor and opt out of matching entirely — never
+      // placed, never rematched, never orphan-reported. Skip them before matchAndReport so it can't
+      // receive an undefined anchor (which would crash rematch) or POST a spurious refreshAnchor.
+      .flatMap((t) => (t.anchor ? [matchAndReport(t, t.anchor)] : []))
       .filter((p): p is RetainedMatch => p !== null)
     observeWinners()
     emit()
