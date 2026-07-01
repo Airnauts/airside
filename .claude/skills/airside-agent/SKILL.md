@@ -434,7 +434,11 @@ re-run and, for a thread, one manual resolve click).
 
 **End every tick — after the op, or after a no-op — with ONE compact markdown table** covering
 **all active** (open, non-terminal) agent issues: both the ones the **agent is working** and the ones
-**waiting on you**. No prose paragraphs, no per-item bullet list — the table is the whole report.
+**waiting on you**. **The header line + the table are the ENTIRE tick output — nothing else.** No
+lead-in sentence, no trailing narration, no summary ("N items waiting on you", "once the builder
+finishes…"), no per-item bullets, no prose paragraphs. The only exception is a genuinely exceptional
+event the table can't convey (a `blocked` reason needing detail, an error, or a `needs input:` /
+`failed:` line) — otherwise emit the header + table and stop.
 Recompute it from the phases you reconciled in §2 — **no extra subagents, no extra `gh` reads beyond
 what you already ran**.
 
