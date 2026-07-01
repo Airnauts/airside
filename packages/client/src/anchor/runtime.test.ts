@@ -72,6 +72,27 @@ describe('createRuntime.refresh', () => {
     expect(onPlacements.mock.calls.at(-1)?.[0]).toHaveLength(0)
   })
 
+  it('skips a page-level (unanchored) thread: never placed, never refreshAnchor', async () => {
+    document.body.innerHTML = '<main><p id="t">hello</p></main>'
+    const pageItem = {
+      id: 'page1',
+      status: 'open',
+      anchorState: 'unanchored',
+      unresolvedCount: 1,
+      commentCount: 1,
+      createdBy: { email: 'a@b.c' },
+      // no `anchor` — a page comment opts out of the anchoring machinery entirely
+    } as unknown as ThreadListItem
+    const client = fakeClient([pageItem])
+    const onPlacements = vi.fn()
+    const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
+    await rt.refresh()
+    // Not placed, and — crucially — matchAndReport never ran, so no rematch crash and no orphan POST.
+    expect(onPlacements.mock.calls.at(-1)?.[0]).toHaveLength(0)
+    expect(client.refreshAnchor).not.toHaveBeenCalled()
+    expect(rt.placed).toHaveLength(0)
+  })
+
   it('self-heals a drifted match via refreshAnchor(anchored, fresh fingerprint)', async () => {
     // Build the stored anchor from the BEFORE dom, then mutate document to AFTER: a wrapper div + class
     // rename make BOTH fast-path selectors miss, while data-foo survives so scoring re-finds it -> heal.

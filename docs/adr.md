@@ -1665,3 +1665,38 @@ centralized in `store.ts` (the one trade-off vs. ADR-0046), but it lives next to
 feature it belongs to and is still funnelled through the one store at runtime. The store keeps its
 role as the sole `localStorage` chokepoint, the read-once cache, and the best-effort write; only the
 *location* of per-key config changes.
+
+## ADR-0048 — Page-level comments: optional `anchor` + a distinct `unanchored` anchor state
+
+- **Date:** 2026-07-01
+- **Status:** accepted
+
+**Context.** Starting a thread was always element-anchored: `CreateThreadBody` mandated `anchor` and
+the create flow began with a page click that captured an element fingerprint. Reviewers had no way to
+leave general feedback about a page (or the review as a whole) without first picking an element. The
+data model already anticipated this — `scope: "page" | "global"` with `pageKey` nullable — but the
+live schema hard-required `anchor`, and the anchoring runtime assumed every thread carried one.
+
+**Decision.** Make `anchor` **optional** on the public `CreateThreadBody` and the persisted thread
+model, and introduce a **distinct** `anchorState` value `"unanchored"` for threads *born* without a
+pin. We deliberately do **not** reuse `"orphaned"` (which means *lost its anchor* and drives the
+self-heal / "anchor lost" warning); conflating the two would mis-trigger re-match and the panel
+badge. The server derives the state from the request (`anchor` present → `"anchored"`, absent →
+`"unanchored"`; `"orphaned"` is still only ever reached later via `updateAnchor`). Adapters omit the
+absent `anchor` on write (memory keeps an `undefined` value, mongo/postgres drop the key), so it
+round-trips absent. The client's anchor runtime skips `unanchored` items at list ingestion — they are
+never matched, re-matched, or orphan-reported — so page comments opt out of the anchoring machinery
+entirely and need zero new anchoring code. The create affordance is a "Comment on this page" button
+in the panel-list header that reveals an inline composer; on submit the thread is created with no
+anchor and its detail opens in the panel (its only surface — a page comment has no on-page pin). Both
+create paths (pin and page) now flow through one shared `useCreateThread` hook. Scope stays
+page-scoped (`scope: z.literal('page')`, `pageKey` still set); truly global / cross-page threads
+(`scope: "global"`, `pageKey: null`) remain a deferred follow-up.
+
+**Consequences.** This widens a public request shape (`CreateThreadBody.anchor` becomes optional) and
+adds a third `anchorState` value — additive, non-breaking changes, but consumers switching on
+`anchorState` must now handle `"unanchored"`. The `anchor`-present-iff-`anchorState ∈ {anchored,
+orphaned}` invariant is documented, not `refine`-enforced (pre-1.0 simplicity). A page comment is
+reachable only through the panel, never as an on-page marker — an intended v1 limitation. A server
+guard rejecting `refresh-anchor` on an `unanchored` thread is out of scope (the client never calls it
+for page threads).

@@ -19,7 +19,8 @@ export const CreateThreadBody = z
     pageKey: z.string().optional(),
     pageUrl: HttpUrl,
     pageTitle: z.string().optional(),
-    anchor: Anchor,
+    // Optional: omitted for a page-level comment created without placing a pin.
+    anchor: Anchor.optional(),
     comment: z
       .object({ text: z.string(), attachmentIds: z.array(AttachmentId).optional() })
       .refine(hasContent, CONTENT_REQUIRED),

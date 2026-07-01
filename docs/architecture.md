@@ -197,9 +197,9 @@ secret key. v1 = one project per mount.
   scope: "page",            // seam: "page" | "global" (v1 always "page")
   pageKey,                  // null allowed for future global threads
   pageUrl, pageTitle?,
-  anchor: { … see below },
+  anchor?: { … see below },           // absent for a page-level (unanchored) comment
   status: "open" | "resolved",        // independent axis
-  anchorState: "anchored" | "orphaned",
+  anchorState: "anchored" | "orphaned" | "unanchored",  // "unanchored" = born without a pin
   selectionLost?: boolean,            // text quote gone, pin retained
   captureContext: { viewportW, viewportH, devicePixelRatio, userAgent },
   provenance?: { commitSha, branch, deploymentId },   // supplied via init()

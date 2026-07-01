@@ -68,6 +68,7 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
                       <PanelDrawer
                         resolvePageKey={(url) => resolvePageKey(options, url)}
                         client={client}
+                        provenance={options.provenance}
                       />
                     </>
                   ) : (
