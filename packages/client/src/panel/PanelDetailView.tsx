@@ -6,6 +6,7 @@ import type { ApiClient } from '../api/client'
 import { useDraft } from '../drafts/DraftsProvider'
 import { useController, useThreadDetail } from '../threads/useThreads'
 import { Button } from '../ui/Button'
+import { CloseIcon } from '../ui/icons'
 import { ThreadConversation } from '../ui/ThreadConversation'
 import { goToThread } from './navigate'
 
@@ -90,7 +91,7 @@ export function PanelDetailView({
           </Button>
           <Dialog.Close asChild>
             <Button variant="ghost" size="icon" aria-label="Close panel">
-              ✕
+              <CloseIcon />
             </Button>
           </Dialog.Close>
         </div>

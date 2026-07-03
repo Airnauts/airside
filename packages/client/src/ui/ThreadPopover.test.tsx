@@ -154,7 +154,7 @@ describe('ThreadPopover', () => {
     )
     fireEvent.click(screen.getByText('open-a'))
     await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Resolve/ }))
     await waitFor(() =>
       expect(
         (c as never as { setThreadStatus: ReturnType<typeof vi.fn> }).setThreadStatus,
@@ -261,7 +261,7 @@ describe('ThreadPopover', () => {
     await waitFor(() => expect(screen.queryByText('oops')).not.toBeInTheDocument())
     // The failed reply must not leave a reopen persisted server-side, and the header stays Resolved.
     expect(setThreadStatus).not.toHaveBeenCalled()
-    expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument()
+    expect(screen.getByText(/Resolved/)).toBeInTheDocument()
   })
 
   it('tells the user (and reverts the pin) when the reply posts but reopening fails', async () => {
@@ -287,7 +287,7 @@ describe('ThreadPopover', () => {
     await waitFor(() =>
       expect(screen.getByText(/reopening the thread failed/i)).toBeInTheDocument(),
     )
-    await waitFor(() => expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/Resolved/)).toBeInTheDocument())
   })
 
   it('rolls back status when resolve fails', async () => {
@@ -300,7 +300,7 @@ describe('ThreadPopover', () => {
     )
     fireEvent.click(screen.getByText('open-a'))
     await waitFor(() => expect(screen.getByText('first')).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Resolve/ }))
     await waitFor(() => expect(setThreadStatus).toHaveBeenCalled())
     await waitFor(() => expect(screen.getByText(/Open ·/)).toBeInTheDocument())
   })
@@ -353,12 +353,13 @@ describe('ThreadPopover', () => {
     // Pin starts unresolved.
     expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/^Comment thread by/i)
     // Resolve from the popover.
-    fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Resolve/ }))
     // WITHOUT any refresh/re-ingest: the pin is still rendered (open-exemption) and shows ✓...
     await waitFor(() => expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i))
-    expect(screen.getByTestId('airside-pin')).toHaveTextContent('✓')
+    // the resolved pin now shows the CheckIcon svg in place of the ✓ glyph
+    expect(screen.getByTestId('airside-pin').querySelector('svg')).toBeInTheDocument()
     // ...and the popover stays open with a Resolved header.
-    expect(screen.getByText(/✓ Resolved/)).toBeInTheDocument()
+    expect(screen.getByText(/Resolved/)).toBeInTheDocument()
   })
 
   it('renders a thread-toolbar action, runs it, and shows the resulting external link', async () => {

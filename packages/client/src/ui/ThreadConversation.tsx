@@ -9,6 +9,7 @@ import { useController, useThreadActions, useThreadDetail } from '../threads/use
 import { Button } from './Button'
 import { CommentList } from './CommentList'
 import { Composer, type ComposerHandle } from './Composer'
+import { CheckIcon, CloseIcon, ReopenIcon } from './icons'
 import { DropOverlay, useImageDrop } from './imageDrop'
 import { PageContextCard } from './PageContextCard'
 import { ThreadActions } from './ThreadActions'
@@ -85,22 +86,34 @@ export function ThreadConversation({
       >
         <span
           className={cn(
-            'air:text-[11px] air:font-semibold',
+            'air:inline-flex air:items-center air:gap-1 air:text-[11px] air:font-semibold',
             resolved ? 'air:text-green-600' : 'air:text-blue-600',
           )}
         >
-          {resolved
-            ? '✓ Resolved'
-            : `Open · ${commentCount} ${commentCount === 1 ? 'comment' : 'comments'}`}
+          {resolved ? (
+            <>
+              <CheckIcon size={13} /> Resolved
+            </>
+          ) : (
+            `Open · ${commentCount} ${commentCount === 1 ? 'comment' : 'comments'}`
+          )}
         </span>
         <div className="air:flex air:items-center air:gap-1.5 air:text-gray-500">
           <Button
             variant="outline"
             size="sm"
             onClick={toggleStatus}
-            className={cn(resolved ? 'air:text-gray-500' : 'air:text-green-600')}
+            className={cn('air:gap-1', resolved ? 'air:text-gray-500' : 'air:text-green-600')}
           >
-            {resolved ? '↺ Reopen' : '✓ Resolve'}
+            {resolved ? (
+              <>
+                <ReopenIcon size={14} /> Reopen
+              </>
+            ) : (
+              <>
+                <CheckIcon size={14} /> Resolve
+              </>
+            )}
           </Button>
           <ThreadActions id={id} actions={actions} controller={controller} />
           {variant === 'popover' && (
@@ -110,7 +123,7 @@ export function ThreadConversation({
               aria-label="Close"
               onClick={() => controller.close()}
             >
-              ✕
+              <CloseIcon />
             </Button>
           )}
         </div>
