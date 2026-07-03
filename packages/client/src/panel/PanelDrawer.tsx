@@ -14,11 +14,13 @@ import { detailNeighbors } from './state'
 export type PanelDrawerProps = {
   resolvePageKey: (url: string) => string
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
+  /** Show the "Powered by Airside" footer in the list pane (opt-in via init). Defaults to off. */
+  branding?: boolean
 }
 
 /** The right-hand comments drawer: a non-modal Dialog shell that shows either the
  *  cross-page thread list or a single thread's detail pane. */
-export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
+export function PanelDrawer({ resolvePageKey, client, branding = false }: PanelDrawerProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
@@ -100,7 +102,7 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
               onNext={nextId ? () => showInSidebar(nextId) : undefined}
             />
           ) : (
-            <PanelListView onSelect={onSelect} />
+            <PanelListView onSelect={onSelect} branding={branding} />
           )}
         </Dialog.Content>
       </Dialog.Portal>

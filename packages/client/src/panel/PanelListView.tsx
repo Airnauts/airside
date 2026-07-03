@@ -4,6 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { cn } from '../lib/cn'
 import { useController, useShowResolved } from '../threads/useThreads'
 import { Button } from '../ui/Button'
+import { PoweredBy } from '../ui/PoweredBy'
 import { CloseIcon } from '../ui/icons'
 import { StatusNotice } from '../ui/StatusNotice'
 import { usePanelController, usePanelState } from './PanelProvider'
@@ -18,10 +19,12 @@ const FILTERS: { value: PanelFilter; label: string }[] = [
 
 export type PanelListViewProps = {
   onSelect: (row: { id: string; pageKey: string | null; pageUrl: string }) => void
+  /** Show the "Powered by Airside" footer pinned to the bottom of the list pane. Defaults to off. */
+  branding?: boolean
 }
 
 /** The drawer's list pane: header, filter chips, resolved-pins toggle and thread rows. */
-export function PanelListView({ onSelect }: PanelListViewProps) {
+export function PanelListView({ onSelect, branding = false }: PanelListViewProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
@@ -147,6 +150,8 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
           </Button>
         )}
       </div>
+
+      {branding && <PoweredBy />}
     </>
   )
 }

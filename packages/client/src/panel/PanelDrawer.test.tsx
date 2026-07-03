@@ -131,6 +131,7 @@ function setup(opts: {
   review?: ThreadListItem[]
   resolvePageKey?: (url: string) => string
   withProbes?: boolean
+  branding?: boolean
   detailOpenerId?: string
   deleteProbeId?: string
 }) {
@@ -174,7 +175,11 @@ function setup(opts: {
                 </>
               )}
               {opts.deleteProbeId && <DeleteProbe id={opts.deleteProbeId} />}
-              <PanelDrawer resolvePageKey={resolvePageKey} client={client as never} />
+              <PanelDrawer
+                resolvePageKey={resolvePageKey}
+                client={client as never}
+                branding={opts.branding ?? false}
+              />
             </DraftsProvider>
           </PanelProvider>
         </ThreadsProvider>
@@ -335,6 +340,33 @@ describe('PanelDrawer', () => {
     // Give any potential async cascade time to resolve before asserting.
     await new Promise((r) => setTimeout(r, 50))
     expect(client.listThreads).not.toHaveBeenCalled()
+  })
+
+  it('hides the "Powered by Airside" footer by default (opt-in branding)', async () => {
+    setup({ threads: [item({ id: 'a' })] })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getByTestId('airside-panel-row')).toBeInTheDocument())
+    expect(screen.queryByTestId('airside-powered-by')).not.toBeInTheDocument()
+  })
+
+  it('shows the "Powered by Airside" footer in the list pane when branding is enabled', async () => {
+    setup({ threads: [item({ id: 'a' })], branding: true })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getByTestId('airside-panel-row')).toBeInTheDocument())
+    expect(screen.getByTestId('airside-powered-by')).toBeInTheDocument()
+  })
+
+  it('hides the footer on the detail view even when branding is enabled', async () => {
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/here' })],
+      resolvePageKey: () => 'x.test/here',
+      branding: true,
+    })
+    screen.getByText('open').click()
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    act(() => screen.getByTestId('airside-panel-row').click())
+    await waitFor(() => expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument())
+    expect(screen.queryByTestId('airside-powered-by')).not.toBeInTheDocument()
   })
 
   it('thread creation while panel is open triggers a refetch; closing removes the listener', async () => {
