@@ -11,7 +11,7 @@ type NextHandler = (req: Request, ctx: NextRouteContext) => Promise<Response>
 
 /**
  * App Router glue for `app/api/airside/[...path]/route.ts`:
- *   export const { GET, POST, PATCH, OPTIONS } = createNextHandler(server)
+ *   export const { GET, POST, PATCH, DELETE, OPTIONS } = createNextHandler(server)
  *
  * Next strips the mount prefix and hands us the remaining segments in
  * `params.path`; we rebuild the operation-relative URL the dispatcher expects,
@@ -21,6 +21,7 @@ export function createNextHandler(server: AirsideServer): {
   GET: NextHandler
   POST: NextHandler
   PATCH: NextHandler
+  DELETE: NextHandler
   OPTIONS: NextHandler
 } {
   const handler: NextHandler = async (req, ctx) => {
@@ -29,5 +30,5 @@ export function createNextHandler(server: AirsideServer): {
     const mapped = operationUrl(path, url.search, url.origin)
     return server.handle(new Request(mapped, req)) // copies method/headers/body
   }
-  return { GET: handler, POST: handler, PATCH: handler, OPTIONS: handler }
+  return { GET: handler, POST: handler, PATCH: handler, DELETE: handler, OPTIONS: handler }
 }

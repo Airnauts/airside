@@ -1,5 +1,23 @@
 # @airnauts/airside-server
 
+## 0.10.1
+
+### Patch Changes
+
+- 29c37c2: Docs: README updated to reflect the `DELETE /threads/:id` handler and `deleteThread` Repository method shipped in 0.10.0.
+  - @airnauts/airside-core@0.10.1
+
+## 0.10.0
+
+### Minor Changes
+
+- 2535eb8: Reviewers can now delete a whole thread — its pin, comments, and attachment metadata — from the thread overflow (`···`) menu, behind a confirmation dialog. This adds a `DELETE /threads/:id` operation and a new `Repository.deleteThread(scope, id)` method that every adapter implements; the delete is a hard delete (embedded comments cascade) and attachment blobs are intentionally left in place. Custom `Repository` implementations must add `deleteThread`.
+
+### Patch Changes
+
+- Updated dependencies [2535eb8]
+  - @airnauts/airside-core@0.10.0
+
 ## 0.9.1
 
 ### Patch Changes

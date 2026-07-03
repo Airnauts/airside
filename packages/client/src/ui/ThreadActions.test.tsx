@@ -26,7 +26,11 @@ const metadataAction = (over: Partial<ThreadActionDescriptor> = {}): ThreadActio
 })
 
 const stubController = (over: Partial<Controller> = {}) =>
-  ({ runAction: vi.fn().mockResolvedValue(true), ...over }) as unknown as Controller
+  ({
+    runAction: vi.fn().mockResolvedValue(true),
+    deleteThread: vi.fn().mockResolvedValue(true),
+    ...over,
+  }) as unknown as Controller
 
 const stubClient = () => ({ getThread: vi.fn() }) as never
 
@@ -62,14 +66,52 @@ describe('ThreadActions', () => {
     expect(screen.queryByRole('menuitem', { name: /open in jira/i })).not.toBeInTheDocument()
   })
 
-  it('renders nothing when there are no toolbar actions', () => {
-    const { container } = render(
+  it('renders the ⋯ with a built-in Delete item even when there are no toolbar actions', () => {
+    render(
       <ThreadsProvider client={stubClient()}>
         <ThreadActions id="a" actions={[metadataAction()]} controller={stubController()} />
       </ThreadsProvider>,
     )
-    expect(screen.queryByRole('button', { name: /more actions/i })).not.toBeInTheDocument()
-    expect(container).toBeEmptyDOMElement()
+    // Delete is always available, so the trigger renders unconditionally now.
+    expect(screen.getByRole('button', { name: /more actions/i })).toBeInTheDocument()
+    openMenu()
+    expect(screen.getByRole('menuitem', { name: /delete thread/i })).toBeInTheDocument()
+    // thread-metadata actions still never appear in the toolbar overflow.
+    expect(screen.queryByRole('menuitem', { name: /open in jira/i })).not.toBeInTheDocument()
+  })
+
+  it('Delete thread opens a confirm dialog; confirming calls controller.deleteThread', async () => {
+    const controller = stubController()
+    render(
+      <ThreadsProvider client={stubClient()}>
+        <ThreadActions id="a" actions={[]} controller={controller} />
+      </ThreadsProvider>,
+    )
+    openMenu()
+    // Selecting the item opens the dialog rather than deleting immediately.
+    fireEvent.click(screen.getByRole('menuitem', { name: /delete thread/i }))
+    expect(controller.deleteThread).not.toHaveBeenCalled()
+    expect(await screen.findByText(/delete this thread\?/i)).toBeInTheDocument()
+    // Confirm via the red button in the dialog.
+    fireEvent.click(screen.getByRole('button', { name: /^delete thread$/i }))
+    expect(controller.deleteThread).toHaveBeenCalledWith('a')
+  })
+
+  it('shows a toast when deleteThread resolves false', async () => {
+    const controller = stubController({ deleteThread: vi.fn().mockResolvedValue(false) })
+    render(
+      <WidgetProvider>
+        <ToastProvider>
+          <ThreadsProvider client={stubClient()}>
+            <ThreadActions id="a" actions={[]} controller={controller} />
+          </ThreadsProvider>
+        </ToastProvider>
+      </WidgetProvider>,
+    )
+    openMenu()
+    fireEvent.click(screen.getByRole('menuitem', { name: /delete thread/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /^delete thread$/i }))
+    expect(await screen.findByText(/failed to delete thread/i)).toBeInTheDocument()
   })
 
   it('selecting an item calls controller.runAction with the thread id and action id', () => {

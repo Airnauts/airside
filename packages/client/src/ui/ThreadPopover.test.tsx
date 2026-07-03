@@ -425,11 +425,11 @@ describe('ThreadPopover', () => {
     const runBtn = await screen.findByRole('menuitem', { name: /create jira issue/i })
     fireEvent.click(runBtn)
     await waitFor(() => expect(runThreadAction).toHaveBeenCalledWith('a', 'jira.createIssue'))
-    // After the action resolves: the overflow menu trigger is gone (actions: []) and the new external link shows.
-    await waitFor(() =>
-      expect(screen.queryByRole('button', { name: /more actions/i })).not.toBeInTheDocument(),
-    )
+    // Running the item closes the menu; the action (actions: []) moves into externalLinks.
     const link = await screen.findByRole('link', { name: /jira web-123/i })
     expect(link).toHaveAttribute('href', 'https://co.atlassian.net/browse/WEB-123')
+    // The ⋯ trigger still renders (the built-in Delete item lives there unconditionally now),
+    // but it no longer carries the spent toolbar action.
+    expect(screen.getByRole('button', { name: /more actions/i })).toBeInTheDocument()
   })
 })

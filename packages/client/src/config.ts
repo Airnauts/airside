@@ -3,6 +3,11 @@ import { type CaptureContext, normalizePageKey, type Provenance } from '@airnaut
 export type Features = {
   screenshots?: boolean
   textAnchors?: boolean
+  /**
+   * Show the "Powered by Airside" footer in the comments panel. Defaults to
+   * hidden; set `true` to opt in. Production hosts see no mark unless enabled.
+   */
+  branding?: boolean
 }
 
 export type InitOptions = {
@@ -13,11 +18,6 @@ export type InitOptions = {
   threadParam?: string
   features?: Features
   provenance?: Provenance
-  /**
-   * Show the "Powered by Airside" footer in the comments panel. Defaults to
-   * hidden; set `true` to opt in. Production hosts see no mark unless enabled.
-   */
-  branding?: boolean
 }
 
 export const DEFAULT_KEY_PARAM = 'airside-key'

@@ -66,6 +66,13 @@ export interface Repository {
   listThreads(query: ListQuery): Promise<ListResult>
   addComment(scope: Scope, threadId: ThreadId, comment: NewComment): Promise<Comment>
   setStatus(scope: Scope, threadId: ThreadId, status: ThreadStatus, now: string): Promise<Thread>
+  /**
+   * Hard-delete a thread and its embedded comments (architecture §5 — comments are
+   * embedded, so they cascade). Scope-gated: rejects a thread outside `scope` and
+   * throws `'thread not found'` when absent (matching `setStatus`). Attachment blobs
+   * are intentionally NOT removed (no `StorageAdapter.delete` seam in v1; ADR-0044).
+   */
+  deleteThread(scope: Scope, id: ThreadId): Promise<void>
   updateAnchor(
     scope: Scope,
     threadId: ThreadId,

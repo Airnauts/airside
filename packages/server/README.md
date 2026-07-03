@@ -103,7 +103,7 @@ The types below are what custom adapters must implement:
 import type { Repository, StorageAdapter } from '@airnauts/airside-server'
 ```
 
-**`Repository`** — persistence; implement `createThread`, `getThread`, `listThreads`, `addComment`, `setStatus`, `updateAnchor`, `upsertExternalLink`, `putAttachment`, `getAttachments`.
+**`Repository`** — persistence; implement `createThread`, `getThread`, `listThreads`, `addComment`, `setStatus`, `deleteThread`, `updateAnchor`, `upsertExternalLink`, `putAttachment`, `getAttachments`.
 
 **`StorageAdapter`** — file storage; implement `put(blob: PutBlob): Promise<PutResult>`.
 

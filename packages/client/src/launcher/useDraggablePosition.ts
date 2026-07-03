@@ -7,12 +7,8 @@ import {
   useRef,
   useState,
 } from 'react'
-import {
-  clampTop,
-  type LauncherPosition,
-  loadLauncherPosition,
-  saveLauncherPosition,
-} from './storage'
+import { getSetting, setSetting } from '../settings/store'
+import { clampTop, type LauncherPosition } from './storage'
 
 /** Pointer travel (px) before a press becomes a drag rather than a click. */
 const DRAG_THRESHOLD = 4
@@ -36,7 +32,7 @@ export type DraggablePosition = {
  *  is the drag surface; a press that doesn't move past the threshold still passes through as a
  *  click to whatever child was pressed. */
 export function useDraggablePosition(): DraggablePosition {
-  const [position, setPosition] = useState<LauncherPosition>(() => loadLauncherPosition())
+  const [position, setPosition] = useState<LauncherPosition>(() => getSetting('launcherPosition'))
   const [dragging, setDragging] = useState(false)
   // True for the span between a drag's pointerup and the synthetic click it spawns; gates suppression.
   const movedRef = useRef(false)
@@ -69,7 +65,7 @@ export function useDraggablePosition(): DraggablePosition {
       window.removeEventListener('pointerup', onUp)
       if (moved && next) {
         setDragging(false)
-        saveLauncherPosition(next)
+        setSetting('launcherPosition', next)
       }
     }
     window.addEventListener('pointermove', onMove)

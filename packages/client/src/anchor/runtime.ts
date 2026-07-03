@@ -1,7 +1,7 @@
 // packages/client/src/anchor/runtime.ts
 import type { Anchor, ThreadListItem, ThreadStatus } from '@airnauts/airside-core'
 import type { ApiClient } from '../api/client'
-import { type Box, mapRects, pinXY } from '../positioning/coords'
+import { mapRects, pinXY } from '../positioning/coords'
 import type { PlacedThread } from '../threads/state'
 import { rematch } from './rematch'
 
@@ -19,11 +19,15 @@ export type RuntimeOptions = {
   currentPageKey?: () => string
 }
 
-type RetainedMatch = { item: ThreadListItem; el: Element; anchor: Anchor; highlight: Box[] }
+type RetainedMatch = { item: ThreadListItem; el: Element; anchor: Anchor; range?: Range }
 
 function toPlacedThread(p: RetainedMatch): PlacedThread {
   const rect = p.el.getBoundingClientRect()
-  return { item: p.item, pin: pinXY(rect, p.anchor.offset), highlight: p.highlight }
+  // Recompute the selection highlight from the live range on every emit — mirroring the live
+  // getBoundingClientRect() used for the pin — so the rects track the text under scroll/resize
+  // instead of replaying the geometry captured once at match time.
+  const highlight = p.range ? mapRects(Array.from(p.range.getClientRects())) : []
+  return { item: p.item, pin: pinXY(rect, p.anchor.offset), highlight }
 }
 
 export function createRuntime(opts: RuntimeOptions) {
@@ -72,11 +76,12 @@ export function createRuntime(opts: RuntimeOptions) {
       // below so repeated rematches don't re-POST.
       void opts.client.refreshAnchor(item.id, { anchorState: 'anchored' }).catch(() => {})
     }
-    const highlight =
-      res.kind === 'anchored' && res.range ? mapRects(Array.from(res.range.getClientRects())) : []
+    // Retain the matched Range (not the rects it currently yields): toPlacedThread recomputes
+    // the highlight from it on each emit so it tracks live geometry like the pin does.
+    const range = res.kind === 'anchored' ? res.range : undefined
     const nextItem: ThreadListItem =
       item.anchorState === 'orphaned' ? { ...item, anchorState: 'anchored' } : item
-    return { item: nextItem, el: res.el, anchor: nextAnchor, highlight }
+    return { item: nextItem, el: res.el, anchor: nextAnchor, range }
   }
 
   const resizeObs = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => emit()) : null
@@ -137,6 +142,16 @@ export function createRuntime(opts: RuntimeOptions) {
     if (changed) emit()
   }
 
+  // Drop a thread from the retained set so the next reposition/rematch emit can't resurrect
+  // a pin for a thread the controller has optimistically deleted (before the server round-trip).
+  function removeItem(id: string) {
+    const next = placed.filter((p) => p.item.id !== id)
+    if (next.length === placed.length) return
+    placed = next
+    observeWinners()
+    emit()
+  }
+
   function dispose() {
     resizeObs?.disconnect()
   }
@@ -147,6 +162,7 @@ export function createRuntime(opts: RuntimeOptions) {
     rematchAll,
     setItemStatus,
     bumpCommentCount,
+    removeItem,
     dispose,
     get placed() {
       return placed

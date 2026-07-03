@@ -16,6 +16,7 @@
       "@airnauts/airside-extension-slack",
       "@airnauts/airside-server",
       "@airnauts/airside-storage-fs",
+      "@airnauts/airside-storage-s3",
       "@airnauts/airside-storage-vercel-blob"
     ]
   ],

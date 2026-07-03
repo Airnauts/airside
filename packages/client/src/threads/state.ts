@@ -72,6 +72,7 @@ export type Action =
   | { type: 'FOCUS_PLACED'; id: string }
   | { type: 'CLEAR_FOCUS' }
   | { type: 'CLEAR_PENDING_FOCUS' }
+  | { type: 'REMOVE_THREAD'; id: string }
 
 function mapDetail(
   state: ThreadsState,
@@ -223,6 +224,31 @@ export function reducer(state: ThreadsState, action: Action): ThreadsState {
       return { ...state, focusedId: null }
     case 'CLEAR_PENDING_FOCUS':
       return { ...state, pendingFocusId: null }
+    case 'REMOVE_THREAD': {
+      // Optimistic hard-remove: drop the id from every by-id map + order, and clear any
+      // dangling reference (open popover, pending/active focus, lost-open flag) that points
+      // at the now-gone thread so no surface tries to render or focus it.
+      const { id } = action
+      const drop = <T>(map: Record<string, T>): Record<string, T> => {
+        if (!(id in map)) return map
+        const { [id]: _gone, ...rest } = map
+        return rest
+      }
+      return {
+        ...state,
+        itemsById: drop(state.itemsById),
+        placementsById: drop(state.placementsById),
+        order: state.order.includes(id) ? state.order.filter((x) => x !== id) : state.order,
+        detailById: drop(state.detailById),
+        loadingDetail: drop(state.loadingDetail),
+        detailError: drop(state.detailError),
+        runningActionById: drop(state.runningActionById),
+        openId: state.openId === id ? null : state.openId,
+        pendingFocusId: state.pendingFocusId === id ? null : state.pendingFocusId,
+        focusedId: state.focusedId === id ? null : state.focusedId,
+        lostOpenId: state.lostOpenId === id ? null : state.lostOpenId,
+      }
+    }
     default:
       return state
   }

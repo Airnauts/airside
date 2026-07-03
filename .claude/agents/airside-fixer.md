@@ -13,8 +13,17 @@ given.
 ## Inputs (passed in your prompt)
 
 - `PR_NUMBER`, `REPO` = `Airnauts/airside`, `ISSUE`, `BRANCH` = `agent/issue-<ISSUE>`.
-- `FINDINGS` — a JSON array of the findings to fix (each: `severity`, `path`, `line`, `title`,
-  `note`, `fix`). Fix **all** of them. Do not invent extra changes beyond what they describe.
+- `FINDINGS` — a JSON array of the findings to fix. Each carries a stable **`id`** plus the detail
+  to act on:
+  - from the **review→fix loop**: `{id, severity, path, line, title, note, fix}` (id = a finding key).
+  - from the **in-review PR-comment pass**: a human's request on the shipped PR, with a `kind`:
+    - `{id, kind:"thread", path, line, body}` — an inline review-thread comment on `path:line`.
+    - `{id, kind:"toplevel", body}` — a top-level PR comment; **no path/line**, so read `body` and
+      locate the right place yourself.
+    Do exactly what `body` asks. Some are **not** code changes (a question, "consider later", an
+    out-of-scope ask) — for those, **do not invent a change**; report the id as `SKIPPED` with a
+    one-line reason. The orchestrator acks every finding and resolves only the ids you report `FIXED`.
+  Fix every finding you legitimately can. Do not invent changes beyond what they describe.
 
 ## Steps
 
@@ -53,10 +62,13 @@ given.
 STATUS: ok | no-changes | failed
 BRANCH: agent/issue-<ISSUE>
 NEW_HEAD: <new head sha after push>     # omit on no-changes/failed
-FIXED: <comma-separated finding titles you resolved>
-SKIPPED: <titles you intentionally did not change + why, or "none">
+FIXED: <comma-separated finding ids you actually changed code for>
+SKIPPED: <id=reason; id=reason ... for findings you did not change, or "none">
 NOTE: <one line>
 ```
 
-Never claim `ok` if lint/tests failed or the push failed. `ok` means new commits are pushed to
-`agent/issue-<ISSUE>`.
+Report `FIXED`/`SKIPPED` by each finding's **`id`** (the review-thread id in the in-review pass) —
+the orchestrator keys off these to resolve only the threads you fixed, so every finding's id must
+appear in exactly one of the two lists. Never claim `ok` if lint/tests failed or the push failed.
+`ok` means new commits are pushed to `agent/issue-<ISSUE>`. Use `no-changes` only when **every**
+finding was SKIPPED (nothing to push).

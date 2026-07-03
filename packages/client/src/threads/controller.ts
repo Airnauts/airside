@@ -32,6 +32,14 @@ export type Controller = {
    */
   bumpCommentCount(id: string, delta: number): void
   /**
+   * Optimistically delete a thread: drop it from the store (REMOVE_THREAD — closes its popover and
+   * clears any focus/lost-open ref) AND the runtime cache (so the next reposition emit can't resurrect
+   * its pin), then persist via the API. On failure, calls `runtime.refresh()` to re-fetch the list (the
+   * thread still exists server-side) — restoring the store — and returns `false` so the UI can toast.
+   * Returns `true` on success. Never throws.
+   */
+  deleteThread(id: string): Promise<boolean>
+  /**
    * MarkerLayer registers the live anchor-runtime here so status/count changes also patch its cached
    * item list. Without this, the runtime re-emits stale placements on the next reposition/mutation,
    * clobbering the optimistic update (the pin would revert until a full reload).
@@ -40,6 +48,8 @@ export type Controller = {
     patch: {
       setStatus: (id: string, status: ThreadStatus) => void
       bumpCommentCount: (id: string, delta: number) => void
+      removeItem: (id: string) => void
+      refresh: () => Promise<void>
     } | null,
   ): void
   /** Focus a pin: arm the focus effect (scroll + pulse) and lazy-fetch its detail — WITHOUT opening
@@ -52,6 +62,16 @@ export type Controller = {
   registerStatusListener(fn: ((id: string, status: ThreadStatus) => void) | null): void
   /** The panel registers here to keep its list rows' counts in sync with an optimistic reply. */
   registerCommentCountListener(fn: ((id: string, delta: number) => void) | null): void
+  /** The panel registers here to refetch its list when a new thread is created while it's open. */
+  registerThreadCreatedListener(fn: (() => void) | null): void
+  /**
+   * Notify the registered thread-created listener (the open panel) that a thread was just created.
+   * MarkerLayer fires this after a successful `client.createThread`. The panel's list store is
+   * separate from the on-page placements, so without this its rows stay stale until reopen.
+   */
+  notifyThreadCreated(): void
+  /** The panel registers here to drop a deleted thread from its list and, if it was the open detail, leave it. */
+  registerDeleteListener(fn: ((id: string) => void) | null): void
 }
 
 /**
@@ -62,7 +82,7 @@ export type Controller = {
 export function createController(
   dispatch: (a: Action) => void,
   deps: {
-    client: Pick<ApiClient, 'getThread' | 'setThreadStatus' | 'runThreadAction'>
+    client: Pick<ApiClient, 'getThread' | 'setThreadStatus' | 'runThreadAction' | 'deleteThread'>
     isCached: (id: string) => boolean
     isLoading: (id: string) => boolean
   },
@@ -70,9 +90,13 @@ export function createController(
   let runtime: {
     setStatus: (id: string, status: ThreadStatus) => void
     bumpCommentCount: (id: string, delta: number) => void
+    removeItem: (id: string) => void
+    refresh: () => Promise<void>
   } | null = null
   let statusListener: ((id: string, status: ThreadStatus) => void) | null = null
   let commentCountListener: ((id: string, delta: number) => void) | null = null
+  let threadCreatedListener: (() => void) | null = null
+  let deleteListener: ((id: string) => void) | null = null
 
   const lazyFetchDetail = (id: string) => {
     if (deps.isCached(id) || deps.isLoading(id)) return
@@ -129,6 +153,24 @@ export function createController(
         return false
       }
     },
+    async deleteThread(id) {
+      // Optimistic teardown up front: store (closes the popover, clears focus refs) + runtime cache
+      // (so the next reposition emit can't resurrect the pin). Then persist.
+      dispatch({ type: 'REMOVE_THREAD', id })
+      runtime?.removeItem(id)
+      try {
+        await deps.client.deleteThread(id)
+        // Notify the panel so its own list/detail state drops the gone thread (the panel keeps an
+        // independent store the REMOVE_THREAD above doesn't touch).
+        deleteListener?.(id)
+        return true
+      } catch {
+        // Rollback: the thread still exists server-side, so re-fetch the list and re-place. We
+        // deliberately don't snapshot/re-insert a placement (it's DOM-bound and fragile).
+        await runtime?.refresh().catch(() => {})
+        return false
+      }
+    },
     async runAction(id, actionId) {
       dispatch({ type: 'ACTION_RUNNING', id, actionId })
       try {
@@ -154,6 +196,15 @@ export function createController(
     },
     registerCommentCountListener(fn) {
       commentCountListener = fn
+    },
+    notifyThreadCreated() {
+      threadCreatedListener?.()
+    },
+    registerThreadCreatedListener(fn) {
+      threadCreatedListener = fn
+    },
+    registerDeleteListener(fn) {
+      deleteListener = fn
     },
   }
 }

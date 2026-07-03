@@ -177,6 +177,11 @@ export function createMongoRepository({ db }: { db: Db }): Repository {
       return toThread(doc)
     },
 
+    async deleteThread(scope: Scope, id: ThreadId): Promise<void> {
+      const res = await col.deleteOne({ _id: id, ...scopeFilter(scope) })
+      if (res.deletedCount === 0) throw new Error('thread not found')
+    },
+
     async updateAnchor(
       scope: Scope,
       threadId: ThreadId,

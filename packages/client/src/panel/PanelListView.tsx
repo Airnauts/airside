@@ -18,12 +18,12 @@ const FILTERS: { value: PanelFilter; label: string }[] = [
 
 export type PanelListViewProps = {
   onSelect: (row: { id: string; pageKey: string | null; pageUrl: string }) => void
-  /** Show the "Powered by Airside" footer pinned to the bottom of the list pane. */
-  branding: boolean
+  /** Show the "Powered by Airside" footer pinned to the bottom of the list pane. Defaults to off. */
+  branding?: boolean
 }
 
 /** The drawer's list pane: header, filter chips, resolved-pins toggle and thread rows. */
-export function PanelListView({ onSelect, branding }: PanelListViewProps) {
+export function PanelListView({ onSelect, branding = false }: PanelListViewProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()

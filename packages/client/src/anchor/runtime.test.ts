@@ -312,6 +312,55 @@ describe('createRuntime.rematchAll', () => {
   })
 })
 
+describe('createRuntime.reposition', () => {
+  it('recomputes selection highlight rects from the live range on each reposition emit', async () => {
+    document.body.innerHTML = '<main><p id="hl">unique alpha beta gamma delta</p></main>'
+    mockRect(document.querySelector('#hl') as Element, { left: 0, top: 0, width: 100, height: 20 })
+    const anchor = anchorFor('#hl')
+    anchor.selection = {
+      start: { selectors: ['p', 'p'], textNodeIndex: 0, offset: 0 },
+      end: { selectors: ['p', 'p'], textNodeIndex: 0, offset: 0 },
+      quote: 'alpha beta',
+      prefix: '',
+      suffix: '',
+    }
+    // Drive the matched Range's getClientRects() from a mutable rect so a "scroll" moves the
+    // highlighted text in the viewport. The pin already tracks live geometry; the highlight must too.
+    let rangeRect = { left: 10, top: 10, width: 40, height: 16 }
+    const origGetClientRects = Range.prototype.getClientRects
+    Range.prototype.getClientRects = () =>
+      [
+        {
+          ...rangeRect,
+          x: rangeRect.left,
+          y: rangeRect.top,
+          right: rangeRect.left + rangeRect.width,
+          bottom: rangeRect.top + rangeRect.height,
+          toJSON: () => ({}),
+        },
+      ] as unknown as DOMRectList
+    try {
+      const client = fakeClient([li('thhl', anchor)])
+      const onPlacements = vi.fn()
+      const rt = createRuntime({ client: client as never, pageKey: 'k', onPlacements })
+      await rt.refresh()
+      // A range was matched, so the initial highlight reflects the matched rect (not []).
+      expect(onPlacements.mock.calls.at(-1)?.[0][0].highlight).toEqual([
+        { x: 10, y: 10, width: 40, height: 16 },
+      ])
+      // Simulate a scroll: the text moves up 30px in viewport coords. A bare reposition emit
+      // (no rematch) must re-read the live range, not replay the rect captured at match time.
+      rangeRect = { left: 10, top: -20, width: 40, height: 16 }
+      rt.reposition()
+      expect(onPlacements.mock.calls.at(-1)?.[0][0].highlight).toEqual([
+        { x: 10, y: -20, width: 40, height: 16 },
+      ])
+    } finally {
+      Range.prototype.getClientRects = origGetClientRects
+    }
+  })
+})
+
 describe('createRuntime.bumpCommentCount', () => {
   it('patches the cached item count so the next emit carries the optimistic reply', async () => {
     document.body.innerHTML = '<main><p id="bc" class="lead">bump count target</p></main>'

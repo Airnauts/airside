@@ -1,17 +1,15 @@
-const STORAGE_KEY = 'airside:key'
+// packages/client/src/activation/storage.ts
 
-/** The activation key persisted after a successful URL-param activation, or null. */
-export function loadActivationKey(store: Storage = localStorage): string | null {
-  try {
-    const raw = store.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const parsed: unknown = JSON.parse(raw)
-    return typeof parsed === 'string' ? parsed : null
-  } catch {
-    return null
-  }
-}
+import type { SettingEntry } from '../settings/entry'
 
-export function saveActivationKey(key: string, store: Storage = localStorage): void {
-  store.setItem(STORAGE_KEY, JSON.stringify(key))
+/**
+ * Settings-store entry for the activation key (`airside:key`), persisted after a successful
+ * URL-param activation so later visits stay activated without the param. Owns this setting's
+ * full storage wiring — on-disk key, absent default, and parse guard — which the settings store
+ * registers in its `ENTRIES` list.
+ */
+export const activationKeySetting: SettingEntry<string | null> = {
+  storageKey: 'airside:key',
+  fallback: null,
+  validate: (parsed) => (typeof parsed === 'string' ? parsed : null),
 }

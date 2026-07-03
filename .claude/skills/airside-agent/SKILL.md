@@ -19,12 +19,20 @@ are the orchestrator: you read live GitHub state with `gh`, advance each labelle
 never overlap and correctness never depends on timing. You can also invoke `/airside-agent`
 once, by hand, to run a single tick (this is how you test it).
 
-> **Current scope — Slices 1–2.** The **simple path** is live end to end: a labelled issue is
-> built into a **draft PR**, automatically **reviewed**, its high/critical findings **auto-fixed**
-> (capped), and the PR promoted **draft → ready** at `state:in-review` for your review. The
-> complex path (triage → spec → approval) and the post-ready PR-comment fixer are later slices —
-> this runbook says exactly where they plug in and parks anything it can't yet handle with a note
-> (it never silently drops work). See `docs/adr.md` (ADR-0042) for the design rationale.
+> **Current scope — Slices 1–5.** The full pipeline is live. **Simple:** a labelled issue is built
+> into a **draft PR**, auto-**reviewed**, high/critical findings **auto-fixed** (capped), CI-gated,
+> and promoted **draft → ready** at `state:in-review`. **Complex:** the issue is **triaged**, a
+> **spec** is researched and posted for you to **`/approve`** (optionally `/approve <notes>` to fold
+> small adjustments straight into the build), **`/revise <notes>`** (→ a visible `revising` state
+> while the spec is re-authored), or **`/stop`**, then joins the build → review → ready path.
+> **In review:** the comments you leave — **inline review threads and top-level PR comments** — are
+> picked up, fixed, and acknowledged. **Terminal:** a merge → `done`, a close → `done`/`cancelled`
+> (kill switch). The runbook parks anything it can't handle with a note (it never silently drops
+> work). See `docs/adr.md` (ADR-0042, ADR-0043).
+>
+> **Deferred (no observed need yet):** round-robin fairness across many simultaneously-active issues,
+> and a global `MAX_ACTIVE` ceiling — the `≤1 op/tick` invariant + the user-started loop already bound
+> burn. Add them if real multi-issue contention or unattended runs show up.
 
 ## Config
 
@@ -61,8 +69,20 @@ your review findings, and the user's chatter:
 - `<!-- airside-agent-state {json} -->` — the authoritative structured state (one per issue).
 - `<!-- airside-agent-review {json} -->` — one per review round: the reviewer's findings keyed by
   the head `sha` it reviewed. This (not a state field) is what drives the review→fix loop.
-- `<!-- airside-agent-spec v<n> -->` — the spec (complex path, Slice 3). Builder uses the highest version.
-- `<!-- airside-agent-note -->` — human-facing notes (escalations, summaries, "complex path not live yet").
+- `<!-- airside-agent-spec v<n> -->` — the spec (complex path). The **highest version** is current;
+  it is the `awaiting-approval` artifact and the builder's source of truth.
+- `<!-- airside-agent-note -->` — human-facing notes (escalations, review/promotion summaries,
+  "re-approve please").
+- Replies/acks the bot posts on PR threads carry the visible prefix `🤖 airside-agent:`; **top-level**
+  PR-comment acks also embed `<!-- airside-agent-ack:tl-<commentId> -->`, marking each handled comment
+  by id (the top-level idempotency key — see the `in-review` op).
+
+> **Bot-comment rule (the disambiguation device — used everywhere the bot reads "owner" comments).**
+> The loop runs under the **owner's own login**, so login can't distinguish bot from human. A comment
+> is the **bot's own** (exclude it from every owner-command / actionability check) **iff its body
+> contains `<!-- airside-agent` (the HTML marker opener) OR `🤖 airside-agent` (the ack prefix).** A
+> human merely *mentioning* "airside-agent" in prose is **not** excluded — match the precise markers,
+> never the bare word.
 
 ### State JSON
 
@@ -70,7 +90,7 @@ your review findings, and the user's chatter:
 {
   "schema": 1,
   "type": "simple|complex|null",
-  "phase": "triage|speccing|awaiting-approval|building|reviewing|in-review|done|blocked|cancelled",
+  "phase": "triage|speccing|awaiting-approval|revising|building|reviewing|in-review|done|blocked|cancelled",
   "branch": "agent/issue-<n>",
   "prNumber": null,
   "specVersion": 0,
@@ -82,16 +102,18 @@ your review findings, and the user's chatter:
 }
 ```
 
-Written through Slice 2: `type`, `phase`, `branch`, `prNumber`, `updatedAt`. `lastReviewedSha`
-and `reviewIterations` are kept **only as an informational cache** — the review→fix loop is
-driven by the `airside-agent-review` notes (artifacts), never by these fields (a crash could set
-a field without the matching note). `specVersion`/`lastSpecInputHash`/`lastSeenCommentAt` are
-reserved for Slice 3+. Keep all keys so the shape is stable.
+Written through Slice 3: `type`, `phase`, `branch`, `prNumber`, `updatedAt`, plus `specVersion` and
+`lastSpecInputHash` (sha256 of the issue `title+body` as of the latest spec — a later body edit ⇒ a
+revision). `lastReviewedSha`/`reviewIterations`/`lastSeenCommentAt` are an **informational cache
+only**: the review→fix loop is driven by the `airside-agent-review` notes, and the approval flow by
+the `airside-agent-spec` comment's timestamp (commands must be newer than it) — never by trusting
+these fields or `phase` alone. Keep all keys so the
+shape is stable.
 
 ### Phase → label
 
-Mirror the computed phase to exactly one `state:*` label (mutually exclusive). Phases reachable
-through Slice 2: `building`, `reviewing`, `in-review`, `done`, `blocked`, `cancelled`.
+Mirror the computed phase to exactly one `state:*` label (mutually exclusive): `triage`,
+`speccing`, `awaiting-approval`, `revising`, `building`, `reviewing`, `in-review`, `done`, `blocked`.
 (`cancelled` has no label — it just gets the pickup + state labels stripped.)
 
 ## Per-tick algorithm
@@ -144,28 +166,79 @@ gh pr list --repo Airnauts/airside --head agent/issue-<n> --state all \
   --json number,isDraft,state                                       # PR exists?
 ```
 
-- **First, honour resting states.** If the recorded phase is `in-review`, `blocked`, `done`, or
-  `cancelled`, do **not** re-derive it from artifacts — these are stable. Run the terminal check
-  in (b) only (a merge/close moves them to `done`/`cancelled`); otherwise leave the phase and
-  labels exactly as they are and do no op this tick. This is what stops a finished (ready) PR
-  from being re-promoted every tick — no label flapping, no repeated `gh pr ready`, no duplicate
-  promotion notes. (Slice 4 makes `in-review` active again for PR-review comments; Slice 5 adds a
-  `blocked` retry. Until then they wait for the human.)
-- An **open PR** exists (and the phase isn't resting) → record its `prNumber` and map by draft
-  state: PR is **draft** → phase `reviewing` (the review→fix loop owns it); PR is **ready** (not
-  draft) → phase `in-review`. (Merged/closed is the terminal check in (b).)
+- **First, honour resting states.** If the recorded phase is `blocked`, `done`, or `cancelled`, do
+  **not** re-derive it from artifacts — these are stable. Run the terminal check in (b) only (a
+  merge/close moves them to `done`/`cancelled`); otherwise leave the phase and labels exactly as
+  they are and do no op this tick. (Slice 5 adds a `blocked` retry; until then `blocked` waits for
+  the human.)
+- An **open PR** exists (phase not resting) → record its `prNumber` and map by draft state: PR is
+  **draft** → phase `reviewing` (the review→fix loop owns it); PR is **ready** (not draft) → phase
+  `in-review`. (Merged/closed is the terminal check in (b).) `in-review` is **active** — it rests
+  unless you have unresolved review threads, which the §3 `in-review` op applies. The map/label
+  write is idempotent (same phase ⇒ no churn), so a finished, comment-free PR still doesn't flap.
 - Branch exists, no PR → phase = `building` (a prior build needs to **finish + open the PR**;
   the builder is idempotent and will adopt the branch).
-- No branch, no PR → phase = `building` **fresh** (if the issue is `simple` — see (d)).
+- **No branch, no PR — these phases have no artifact, so honour the state comment / spec comment;
+  never re-derive them (or you'll re-spec, or build an unapproved task):**
+  - An `airside-agent-spec` comment exists → the spec is posted. Phase = `building` **only if the
+    state comment already says `building`** (you approved it); `revising` **only if the state comment
+    already says `revising`** (a `/revise` is pending re-spec — see (d2)); otherwise `awaiting-approval`.
+    This also crash-collapses a `speccing` op that posted the spec but died before the state update — it
+    becomes `awaiting-approval`, never a duplicate spec.
+  - No spec comment, recorded phase is `triage` or `speccing` → honour it (mid-entry, crash-safe).
+  - No spec comment, recorded phase `building` → `building` (a fresh/approved simple task).
+  - No state comment / `phase=null` → **fresh pickup → classify in (d).**
 
-**(d) Classify (Slice 1).**
+**(d) Classify (fresh pickups only).** Set `type` and the entry phase:
 
-- Issue carries the `agent:simple` label → `type=simple`. Proceed.
-- Otherwise → **complex path, not live in Slice 1.** Post the note **once** (guard: skip if a
-  `airside-agent-note` comment already mentions the complex path):
-  > 🤖 airside-agent: the complex path (spec → approval) lands in a later slice. Add the
-  > **`agent:simple`** label and I'll build this directly.
-  Leave the issue otherwise untouched; **skip** it this tick.
+- `agent:simple` label → `type=simple`, phase `building`.
+- `agent:complex` label → `type=complex`, phase `speccing`.
+- neither → phase `triage` (the triage op in §3 sets `type`, then routes to `building`/`speccing`).
+
+**(d2) Evaluate approval (only when phase is `awaiting-approval`).** Cheap (`gh` only); a `/revise`
+defers to the spec-reviser op in §3. **Anchor commands on the artifact, not a mutable watermark:** a
+command only counts if it is newer than the spec it answers — the **highest-version
+`airside-agent-spec` comment**. Get that anchor and the comments:
+
+```bash
+SPEC_AT=$(gh api repos/Airnauts/airside/issues/<n>/comments \
+  --jq '[.[]|select(.body|contains("airside-agent-spec"))]|max_by(.created_at).created_at')
+gh api repos/Airnauts/airside/issues/<n>/comments \
+  --jq '.[] | {createdAt: .created_at, login: .user.login, body}'
+```
+
+Consider only **owner commands**: comments where `login == OWNER`, `created_at > SPEC_AT`, and the
+body is **not a bot comment** (per the bot-comment rule — no `<!-- airside-agent` / `🤖 airside-agent`;
+do **not** exclude on the bare word, or a human who mentions "airside-agent" gets dropped). Classify
+each by its **leading line**: `/approve`, `/revise <notes>`, `/stop`; plus a bare-word approve fallback (trimmed +
+lowercased ∈ `approve|approved|lgtm|ship it|✅`). Also compute `bodyChanged = sha256(title+body) !=
+lastSpecInputHash`. Decide:
+
+- any `/stop` → phase `cancelled`; strip `agent` + `state:*`; post a note "cancelled per /stop".
+- else any `/revise` **or** `bodyChanged` → **revise** (the spec is about to change, so revision wins
+  even if an `/approve` is mixed in). **Immediately, in this cheap pass, set phase `revising`** (flip
+  label `state:awaiting-approval` → `state:revising`, refresh the state comment) and post a one-line
+  `airside-agent-note` ack — `🤖 airside-agent: 🔧 revision queued — re-speccing; a new spec version
+  will follow.` This gives instant, correct status instead of a silent `awaiting-approval`. Then hand
+  the spec-reviser op (§3) the gathered `/revise` notes (or "the issue description was edited" when only
+  `bodyChanged`). **The `revising` phase is the indicator only** — the real trigger stays the
+  `SPEC_AT`-anchored `/revise`, so this is crash-safe (see below).
+- else any approve → phase `building`. **Approve-with-amendments:** capture any **trailing text after
+  the `/approve` token** (e.g. `/approve also rename the prop to X and drop the toast`) as
+  **approval amendments** — small, build-time adjustments the builder folds into the approved spec
+  **without** a full re-spec round-trip. A **bare** `/approve` (or the `approve|approved|lgtm|ship it|✅`
+  fallback) carries no amendments — build the spec as-is. (The amendments are re-read from the
+  `/approve` comment by the §3 `building` op, not stored here — GitHub stays the source of truth.)
+- else (chatter/questions only) → no-op.
+
+**Crash-safety — no watermark bookkeeping here.** Because commands are anchored to `SPEC_AT`, a
+`/revise` stays "newer than the spec" until the reviser posts `v(n+1)` (a newer comment), so the
+revision **cannot be dropped** if the reviser op dies mid-flight — the next tick simply re-detects it
+(the issue is in `revising`, the `/revise` is still newest, the reviser re-runs). The only state writes
+in this cheap pass are the crash-recoverable phase changes (`cancelled` for `/stop`, `revising` for
+`/revise`, `building` for `/approve`). `lastSpecInputHash` is advanced **only by the §3 spec ops** when
+a new spec version is posted — never here. (`lastSeenCommentAt` is kept in the JSON for shape
+stability but is no longer load-bearing.)
 
 **(e) Repair labels + refresh state comment** to the computed phase (create the state comment if
 absent). Editing an existing state comment uses the REST numeric id from (a):
@@ -181,19 +254,65 @@ Remove only the *recorded previous* phase label (avoids "label not on issue" err
 
 ### 3. Expensive op — spawn AT MOST ONE subagent
 
-Collect the issues that need an op: phase `building` (needs a build) or phase `reviewing` (needs a
-review or a fix — see below). Pick the **oldest** by `updatedAt`, do **one** op, then end the tick.
+Collect the issues that need an op: phase `triage` (classify), `speccing` (author the spec),
+`revising` (author the next spec version — set by (d2) on a `/revise`), `building` (build),
+`reviewing` (review or fix), or `in-review` **with ≥1 actionable review thread** (apply your
+PR comments — see below). Pick the **oldest** by `updatedAt`, do **one** op, then end the tick.
 
 > **Invariant: ≤ 1 subagent spawn per tick.** Everything else is `gh`. This bounds the tick
 > (each isolated worktree op pays ~1 min of setup) and prevents N concurrent worktrees. Safe
 > because ticks are serial. If nothing needs an op, end the tick.
 
-#### `building` (simple path)
+#### `triage` (classify)
+
+Spawn `airside-triage` (read-only, no worktree). Read its `TYPE:` line → set `type` and route:
+`simple` → phase `building`; `complex` → phase `speccing`. (Triage defaults to `complex` when
+unsure — the gated path is the safe one.)
+
+#### `speccing` (author the spec)
+
+Spawn `airside-spec-author` (read-only, no worktree). Extract the spec between its `<<<SPEC` /
+`SPEC>>>` sentinels and post it as a new comment:
+
+```
+<!-- airside-agent-spec v1 -->
+<spec markdown>
+
+---
+🤖 Reply **`/approve`** to build, **`/revise <notes>`** to change it, or **`/stop`** to cancel.
+```
+
+Then set `specVersion=1`, `lastSpecInputHash = sha256(title+body)`, phase `awaiting-approval`. No
+watermark is needed — (d2) anchors commands to this spec comment's timestamp, so only replies posted
+*after* it count. (If a spec comment already exists — crash recovery — adopt it instead of
+re-authoring; reconcile (c) already routes that to `awaiting-approval`.)
+
+#### `revising` (author the next spec version)
+
+The phase set by (d2) on a `/revise`. Spawn `airside-spec-reviser` with the highest-version spec as
+`CURRENT_SPEC` and the gathered notes as `REVISION_NOTES`. Post the result as a new
+`<!-- airside-agent-spec v(n+1) -->` comment (same footer), bump `specVersion`, set
+`lastSpecInputHash = sha256(title+body)`, post a short `airside-agent-note` "applied your revisions —
+please re-`/approve`", and **set phase back to `awaiting-approval`** (flip label
+`state:revising` → `state:awaiting-approval`). Posting the new spec advances the command anchor
+(`SPEC_AT`), so the handled `/revise` is now *older* than the spec and won't re-trigger, while a later
+`/approve` is newer and will. This ordering is the crash-safety guarantee: if this op dies before the
+new spec is posted, the issue stays in `revising` and the old `/revise` is still the newest command →
+the next tick re-revises (nothing dropped).
+
+#### `building`
 
 Spawn the **builder** once (contract below). Set `state:building` before spawning (intent); on
 `STATUS: ok` with a `PR_NUMBER`, record it and set phase `reviewing` (commit-last — the proof is
 the PR artifact, never the label). Builder failed / no PR → `state:blocked` + an
 `airside-agent-note` explaining what to do.
+
+**Approval amendments (complex path).** Before spawning, gather any **approve-with-amendments** notes:
+fetch the owner's `/approve` comment that is newer than the highest-version spec (the one (d2) acted on)
+and take the text **after** the `/approve` token. If non-empty, pass it to the builder as
+`APPROVAL_NOTES` — small adjustments to fold into the approved spec without a re-spec. Bare `/approve`
+(or a simple task) → no `APPROVAL_NOTES`. (Re-reading from the comment keeps it GitHub-sourced and
+crash-safe; the builder is idempotent and will adopt the branch on a re-run.)
 
 #### `reviewing` (the review → fix → re-review loop)
 
@@ -215,8 +334,23 @@ gh api repos/Airnauts/airside/issues/<n>/comments \
   findings happens next tick (keeps it one op/tick and crash-safe).
 - **A review note for `HEAD` exists** → act on it:
   - `highs` = its findings with severity `critical` or `high`.
-  - **`highs` empty** → promote: `gh pr ready <pr>` → phase `in-review`; post a human summary note
-    (list any medium/low for the reviewer to consider). Done.
+  - **`highs` empty** → **CI-gate, then promote.** The reviewer reads the diff, not CI — so before
+    readying, check the PR's checks (CI can catch what the local build didn't):
+
+    ```bash
+    gh pr view <pr> --repo Airnauts/airside --json statusCheckRollup --jq '
+      [.statusCheckRollup[]?] as $all
+      | { failing: ([ $all[] | select(((.conclusion // "")|IN("FAILURE","ERROR","CANCELLED","TIMED_OUT","ACTION_REQUIRED")) or ((.state // "")|IN("FAILURE","ERROR"))) ]|length),
+          pending: ([ $all[] | select((has("status") and .status!="COMPLETED") or ((.state // "")|IN("PENDING","EXPECTED"))) ]|length),
+          total:   ($all|length) }'
+    ```
+    - `failing > 0` → **`state:blocked`** + a note ("CI red on a reviewer-clean PR — needs your
+      look"). Do **not** loop the fixer on CI red (rabbit hole); a human decides.
+    - else `pending > 0` → **wait**: leave phase `reviewing`, write nothing, re-check next tick
+      (don't promote a PR whose checks are still running).
+    - else (all checks passed/skipped/neutral, **or `total == 0`** — a repo with no CI must not hang)
+      → promote: `gh pr ready <pr>` → phase `in-review`; post a human summary note (list any
+      medium/low for the reviewer to consider). Done.
   - **`highs` non-empty** → check the cap. `H` = number of `airside-agent-review` notes whose
     findings include ≥1 `critical`/`high`. If **`H > REVIEW_CAP`** → phase `blocked` + an escalation
     note listing the unresolved highs (already auto-fixed `REVIEW_CAP` times). Otherwise → **fix**:
@@ -226,6 +360,123 @@ gh api repos/Airnauts/airside/issues/<n>/comments \
     `reviewing` — the new head has no review note, so the next tick re-reviews. Convergence:
     review → fix → re-review until clean (→ `in-review`) or capped (→ `blocked`).
 
+#### `in-review` (apply your PR review comments)
+
+The ready PR is yours to review; this op applies the comments you leave — both **inline review
+threads** (on diff lines) and **top-level conversation comments** (in the main PR thread).
+
+**(i) Inline review threads** (GraphQL — REST can't see resolved state); capture each comment's
+`databaseId` (for replies) and the thread node `id` (for resolve):
+
+```bash
+gh api graphql -f query='query($o:String!,$r:String!,$p:Int!){
+  repository(owner:$o,name:$r){ pullRequest(number:$p){ reviewThreads(first:100){ nodes{
+    id isResolved
+    comments(first:50){ nodes{ databaseId body author{login} path line } } } } } } }' \
+  -F o=Airnauts -F r=airside -F p=<pr>
+```
+
+A thread is **actionable** = `isResolved==false` **AND** its **last** comment is by `OWNER` **AND**
+that comment is **not a bot comment** (per the bot-comment rule). The bot's marked reply on a thread
+makes its last comment the agent's → no longer actionable; `isResolved` is the other gate.
+
+**(ii) Top-level conversation comments** (a PR is an issue):
+
+```bash
+gh api repos/Airnauts/airside/issues/<pr>/comments \
+  --jq '.[] | {id, createdAt: .created_at, login: .user.login, body}'
+```
+
+There is no per-comment resolve here, so make idempotency **per-comment by id**, not by timestamp (a
+timestamp anchor would silently drop a comment posted *while* the fixer op runs — its `created_at`
+ends up behind the ack). The bot's ack for a comment carries that comment's id:
+`<!-- airside-agent-ack:tl-<commentId> -->`. Collect the set of **acked ids** (every
+`airside-agent-ack:tl-<id>` marker found in any PR comment). A top-level comment is **actionable** =
+`login==OWNER` **AND** it is **not a bot comment** (per the rule) **AND** its `id` is not in the acked
+set. (Per-comment + artifact-based = the top-level analog of inline's `isResolved`; immune to timing.)
+
+**If there are zero actionable items (threads + top-level) → REST: write nothing** (no label, note,
+or state PATCH). A read-only tick.
+
+Otherwise build one findings batch, tagging each with its `kind` so you know how to acknowledge it:
+- thread → `{id: <threadId>, kind: "thread", path, line, body, replyTo: <last comment databaseId>}`
+- top-level → `{id: "tl-<commentId>", kind: "toplevel", body}` (no path/line — a general instruction)
+
+Spawn `airside-fixer` (worktree) **once** with the whole batch. Capture the PR head before; re-read
+after as a coarse "did anything change" check. Then **acknowledge per finding, by `kind`**:
+
+- **thread + `FIXED`** → marked reply + **resolve**:
+  ```bash
+  gh api repos/Airnauts/airside/pulls/<pr>/comments -f body='🤖 airside-agent: addressed in <sha>.' \
+    -F in_reply_to=<replyTo>
+  gh api graphql -f query='mutation($id:ID!){resolveReviewThread(input:{threadId:$id}){thread{isResolved}}}' \
+    -F id=<threadId>
+  ```
+- **thread + `SKIPPED`** → marked reply (`couldn't auto-apply — <reason>; over to you.`), **leave unresolved**.
+- **top-level + `FIXED`** → marked top-level reply **tagged with the comment's id**:
+  `gh pr comment <pr> --repo Airnauts/airside --body '🤖 airside-agent: addressed "<comment gist>" in <sha>. <!-- airside-agent-ack:tl-<commentId> -->'`
+- **top-level + `SKIPPED`** → same shape, noting no change:
+  `gh pr comment <pr> --repo Airnauts/airside --body '🤖 airside-agent: noted "<comment gist>" — no code change (<reason>). <!-- airside-agent-ack:tl-<commentId> -->'`
+
+For top-level there's no resolve — the **id-tagged ack is the idempotency**: posting
+`airside-agent-ack:tl-<commentId>` marks exactly that comment handled, so it isn't re-processed even
+if other comments arrive meanwhile. **Never auto-resolve a thread you didn't change, and never skip
+the ack** — many comments are questions or nits; the ack stops re-triggering while leaving your
+concern visible.
+
+Stay `in-review` (do **not** re-run the automated reviewer — you're driving, and CI runs on the push).
+A merge → `done` via the terminal check. **Crash-safety:** if the tick dies after the push but before
+acking, the items still look actionable next tick → the fixer re-runs (finds the change already
+applied → `no-changes`/`SKIPPED`) and the acks post then; nothing is dropped (cost is a duplicate-safe
+re-run and, for a thread, one manual resolve click).
+
+### 4. End-of-tick status table (always — compact, append-only)
+
+**End every tick — after the op, or after a no-op — with ONE compact markdown table** covering
+**all active** (open, non-terminal) agent issues: both the ones the **agent is working** and the ones
+**waiting on you**. No prose paragraphs, no per-item bullet list — the table is the whole report.
+Recompute it from the phases you reconciled in §2 — **no extra subagents, no extra `gh` reads beyond
+what you already ran**.
+
+Precede the table with a single header line: **`Tick — <op this tick, or "no-op">`** (≤12 words).
+Then the table, exactly these columns:
+
+```
+| Task | Phase | Ball | Next |
+|------|-------|------|------|
+```
+
+- **Task** — markdown-linked, short: `[#<n> <≤4-word title>](https://github.com/Airnauts/airside/issues/<n>)`.
+  For `reviewing`/`in-review` link the **PR** instead: `[#<n> PR#<pr> <≤4-word title>](https://github.com/Airnauts/airside/pull/<pr>)`.
+- **Phase** — the computed phase verbatim.
+- **Ball** — who it's on right now: `🤖` (agent working it: `triage`/`speccing`/`revising`/`building`/`reviewing`)
+  or `👤` (you: `awaiting-approval`/`in-review`/`blocked`).
+- **Next** — terse next step: `awaiting-approval` → `/approve·/revise·/stop`; `in-review` → `review / merge`;
+  `blocked` → `<reason> — decide`; agent phases → what the agent does next (`spec` / `build` / `review` / `fix` / `promote`).
+
+Order rows **👤 first** (blocked → awaiting-approval → in-review), then **🤖** (revising → building → reviewing → speccing → triage). Drop `done`/`cancelled` rows (terminal). If there are **no active issues**, emit the single line `No active agent tasks.` instead of a table. **This table is reporting only — it must never spawn a subagent, mutate GitHub, or count as the tick's one op.**
+
+## Triage spawn contract
+
+Spawn with the **Agent tool**, `subagent_type: "airside-triage"` (no worktree, read-only).
+Fallback: `general-purpose` + `.claude/agents/airside-triage.md` preamble. Pass: `ISSUE`, `REPO`.
+It ends with `TYPE: simple` or `TYPE: complex`. Route accordingly; default `complex` if the line is
+missing/ambiguous (the safe, gated path).
+
+## Spec-author spawn contract
+
+Spawn with the **Agent tool**, `subagent_type: "airside-spec-author"` (no worktree). Fallback:
+`general-purpose` + `.claude/agents/airside-spec-author.md`. Pass: `ISSUE`, `REPO`. It returns the
+spec between `<<<SPEC` / `SPEC>>>` sentinels — extract that body (it may contain code fences, so
+match by the **sentinels**, not by a fenced block) and post it as the `airside-agent-spec v1` comment.
+
+## Spec-reviser spawn contract
+
+Spawn with the **Agent tool**, `subagent_type: "airside-spec-reviser"` (no worktree). Fallback:
+`general-purpose` + `.claude/agents/airside-spec-reviser.md`. Pass: `ISSUE`, `REPO`, `CURRENT_SPEC`
+(the highest-version spec body), `REVISION_NOTES`. It returns the full revised spec between `<<<SPEC`
+/ `SPEC>>>` — post it as `airside-agent-spec v(n+1)`.
+
 ## Builder spawn contract
 
 Spawn with the **Agent tool**, `isolation: "worktree"` (verified to give a real, locally-built
@@ -233,8 +484,13 @@ worktree — see `docs/adr.md`), and `subagent_type: "airside-builder"`. If that
 not yet registered in this session, fall back to `subagent_type: "general-purpose"` and pass the
 **full contents of `.claude/agents/airside-builder.md`** as the prompt preamble.
 
-**Pass the builder:** the issue number `<n>`, `REPO`, `OWNER`, and the canonical branch
-`agent/issue-<n>`. The builder reads the issue itself (`gh issue view`) for the body + docs link.
+**Pass the builder:** the issue number `<n>`, `REPO`, `OWNER`, the canonical branch
+`agent/issue-<n>`, and — when the `building` op gathered them — `APPROVAL_NOTES` (the owner's
+approve-with-amendments text). The builder reads the issue itself (`gh issue view`) for the body + docs
+link, and — for a complex task — the **highest-version `airside-agent-spec` comment** as the approved
+spec; it then folds any `APPROVAL_NOTES` into that spec as small, owner-requested adjustments before
+implementing (they refine the spec, they don't replace it). Absent/empty `APPROVAL_NOTES` ⇒ build the
+spec as-is.
 
 **The builder MUST return** these machine-parseable lines (you grep them):
 
@@ -263,20 +519,29 @@ and `HEAD_SHA` (the current head). It returns one fenced ```json block:
 
 Spawn with the **Agent tool**, `isolation: "worktree"`, `subagent_type: "airside-fixer"`.
 Fallback: `general-purpose` + `.claude/agents/airside-fixer.md` preamble. Pass: `PR_NUMBER`,
-`REPO`, `ISSUE`, `BRANCH`, and `FINDINGS` = the `highs` array. It returns:
+`REPO`, `ISSUE`, `BRANCH`, and `FINDINGS` — each finding carries a stable **`id`**:
+- review→fix loop: the `highs` array (id = a finding key).
+- in-review pass: one finding per actionable item, tagged with `kind` — `{id:<threadId>, kind:"thread",
+  path, line, body}` for an inline thread, or `{id:"tl-<commentId>", kind:"toplevel", body}` for a
+  top-level PR comment (no path/line).
+
+It returns:
 
 ```
 STATUS: ok | no-changes | failed
 BRANCH: agent/issue-<n>
 NEW_HEAD: <sha>
-FIXED: <titles>
-SKIPPED: <titles + why, or none>
+FIXED: <finding ids it changed code for>
+SKIPPED: <id=reason; ... or none>
 NOTE: <one line>
 ```
 
-Trust **head-delta**, not `STATUS`: if the PR head is unchanged after the fixer returns, escalate
-to `state:blocked` regardless of what it reported. The fixer is also reused in Slice 4 to apply
-the human's PR-review threads.
+`FIXED`/`SKIPPED` are keyed by finding **id** so you can act per-finding. **Head-delta** is the
+ground truth that *something* changed; its consequence differs by caller:
+- **review→fix loop:** head unchanged → `state:blocked` ("fixer made no progress").
+- **in-review pass:** head-unchanged / `no-changes` is **not** an error — it just means those threads
+  need no code change (already applied, or a question/nit). Resolve only the ids in `FIXED`;
+  reply-and-leave-open the rest. **Never block, never auto-resolve an unchanged thread.**
 
 ## `gh` gotchas (baked in above, collected here)
 
@@ -293,14 +558,13 @@ the human's PR-review threads.
 - The worktree hook auto-names the build branch `worktree-<name>`; the builder pushes to the
   canonical name explicitly: `git push origin HEAD:agent/issue-<n>`.
 
-## Roadmap (where later slices plug in)
+## Roadmap (all slices shipped)
 
-- **Slice 2 (done)** — the `reviewing` review→fix→ready loop documented above.
-- **Slice 3** — complex path: `triage` → `spec-author` → post `airside-agent-spec` → owner-only
-  `/approve` `/revise` `/stop` grammar (revision wins over approve; a changed `sha256(title+body)`
-  counts as a revision) → build.
-- **Slice 4** — `in-review`: apply the owner's unresolved PR review threads (GraphQL
-  `reviewThreads`; actionable = `isResolved==false` & owner-authored & last comment not the
-  agent's) → fixer → reply + `resolveReviewThread`.
-- **Slice 5** — terminal hardening, round-robin fairness, optional CI-green gate
-  (`statusCheckRollup`) before ready, and a global "max active tasks" ceiling.
+- **Slice 1** — issue → draft PR (the `building` op).
+- **Slice 2** — the `reviewing` review→fix→ready loop.
+- **Slice 3** — the complex path (`triage` → `speccing` → `awaiting-approval` grammar).
+- **Slice 4** — the `in-review` PR-comment op for **inline** review threads.
+- **Slice 5** — the **CI-green gate** before promote, **top-level** PR-comment handling, terminal
+  hardening (merge/close → `done`/`cancelled`), and dropping the redundant PROGRESS.md (ADR-0043).
+- **Deferred** (no observed need): round-robin fairness across many concurrently-active issues, and a
+  global `MAX_ACTIVE` ceiling — see the scope note at the top.

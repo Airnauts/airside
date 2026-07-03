@@ -13,13 +13,13 @@ import { usePanelController, usePanelState } from './PanelProvider'
 export type PanelDrawerProps = {
   resolvePageKey: (url: string) => string
   client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
-  /** Show the "Powered by Airside" footer in the list pane (opt-in via init). */
-  branding: boolean
+  /** Show the "Powered by Airside" footer in the list pane (opt-in via init). Defaults to off. */
+  branding?: boolean
 }
 
 /** The right-hand comments drawer: a non-modal Dialog shell that shows either the
  *  cross-page thread list or a single thread's detail pane. */
-export function PanelDrawer({ resolvePageKey, client, branding }: PanelDrawerProps) {
+export function PanelDrawer({ resolvePageKey, client, branding = false }: PanelDrawerProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
@@ -37,6 +37,21 @@ export function PanelDrawer({ resolvePageKey, client, branding }: PanelDrawerPro
     if (!state.open) return
     threads.registerCommentCountListener((id, delta) => panel.bumpCommentCount(id, delta))
     return () => threads.registerCommentCountListener(null)
+  }, [state.open, threads, panel])
+
+  // Drawer-open reconciliation: when a new thread is created (e.g. a pin placed while the panel is
+  // open), refetch the current filter so the new thread appears in the list without a reopen.
+  useEffect(() => {
+    if (!state.open) return
+    threads.registerThreadCreatedListener(() => void panel.refresh())
+    return () => threads.registerThreadCreatedListener(null)
+  }, [state.open, threads, panel])
+
+  // Drop a deleted thread from the list and, if its detail is the open pane, fall back to the list.
+  useEffect(() => {
+    if (!state.open) return
+    threads.registerDeleteListener((id) => panel.removeThread(id))
+    return () => threads.registerDeleteListener(null)
   }, [state.open, threads, panel])
 
   function onSelect(row: { id: string; pageKey: string | null; pageUrl: string }) {
@@ -65,6 +80,7 @@ export function PanelDrawer({ resolvePageKey, client, branding }: PanelDrawerPro
       <Dialog.Portal container={container ?? undefined}>
         <Dialog.Content
           data-testid="airside-panel"
+          data-airside-chrome
           onInteractOutside={(e) => e.preventDefault()}
           // Don't let the dialog grab focus on open (e.g. onto the close button). The detail
           // view's reply composer focuses itself; on the list view nothing should be focused.
@@ -75,6 +91,7 @@ export function PanelDrawer({ resolvePageKey, client, branding }: PanelDrawerPro
             <PanelDetailView
               threadId={state.detailThreadId}
               listItem={detailItem}
+              resolvePageKey={resolvePageKey}
               client={client}
               onBack={() => panel.back()}
             />
