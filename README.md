@@ -223,7 +223,6 @@ None of these are committed releases — they're the directions we're considerin
 
 **Widget & UX**
 
-- Detail-view prev/next navigation — step through the filtered thread list from the detail header without returning to the list _(parking lot)_.
 - Per-comment overflow menu — edit / delete / copy a comment _(needs new `PATCH`/`DELETE` comment endpoints)_.
 - Emoji reactions on comments _(new `Comment` field + add/remove-reaction endpoints across both adapters)_.
 - Smooth, document-anchored pin positioning — drop the per-scroll-frame layout work for jank-free pins _(parking lot; a positioning-basis change that would get its own ADR)_.

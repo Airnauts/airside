@@ -4,6 +4,8 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { cn } from '../lib/cn'
 import { useController, useShowResolved } from '../threads/useThreads'
 import { Button } from '../ui/Button'
+import { PoweredBy } from '../ui/PoweredBy'
+import { CloseIcon, SparkleIcon } from '../ui/icons'
 import { StatusNotice } from '../ui/StatusNotice'
 import { useWhatsNew } from '../whatsnew/WhatsNewProvider'
 import { usePanelController, usePanelState } from './PanelProvider'
@@ -18,10 +20,12 @@ const FILTERS: { value: PanelFilter; label: string }[] = [
 
 export type PanelListViewProps = {
   onSelect: (row: { id: string; pageKey: string | null; pageUrl: string }) => void
+  /** Show the "Powered by Airside" footer pinned to the bottom of the list pane. Defaults to off. */
+  branding?: boolean
 }
 
 /** The drawer's list pane: header, filter chips, resolved-pins toggle and thread rows. */
-export function PanelListView({ onSelect }: PanelListViewProps) {
+export function PanelListView({ onSelect, branding = false }: PanelListViewProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
@@ -53,11 +57,11 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
         </Dialog.Description>
         <div className="air:flex air:items-center air:gap-1">
           <Button variant="ghost" size="icon" aria-label="What's new" onClick={openWhatsNew}>
-            ✦
+            <SparkleIcon />
           </Button>
           <Dialog.Close asChild>
             <Button variant="ghost" size="icon" aria-label="Close panel">
-              ✕
+              <CloseIcon />
             </Button>
           </Dialog.Close>
         </div>
@@ -153,6 +157,8 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
           </Button>
         )}
       </div>
+
+      {branding && <PoweredBy />}
     </>
   )
 }

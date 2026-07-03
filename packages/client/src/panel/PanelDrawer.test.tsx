@@ -59,7 +59,7 @@ function StatusProbe() {
 function CreateProbe() {
   const threads = useController()
   return (
-    <button type="button" onClick={() => threads.notifyThreadCreated()}>
+    <button type="button" onClick={() => threads.emit({ type: 'created' })}>
       created
     </button>
   )
@@ -132,6 +132,7 @@ function setup(opts: {
   review?: ThreadListItem[]
   resolvePageKey?: (url: string) => string
   withProbes?: boolean
+  branding?: boolean
   detailOpenerId?: string
   deleteProbeId?: string
 }) {
@@ -176,7 +177,11 @@ function setup(opts: {
                   </>
                 )}
                 {opts.deleteProbeId && <DeleteProbe id={opts.deleteProbeId} />}
-                <PanelDrawer resolvePageKey={resolvePageKey} client={client as never} />
+                <PanelDrawer
+                  resolvePageKey={resolvePageKey}
+                  client={client as never}
+                  branding={opts.branding ?? false}
+                />
               </DraftsProvider>
             </PanelProvider>
           </ThreadsProvider>
@@ -340,6 +345,33 @@ describe('PanelDrawer', () => {
     expect(client.listThreads).not.toHaveBeenCalled()
   })
 
+  it('hides the "Powered by Airside" footer by default (opt-in branding)', async () => {
+    setup({ threads: [item({ id: 'a' })] })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getByTestId('airside-panel-row')).toBeInTheDocument())
+    expect(screen.queryByTestId('airside-powered-by')).not.toBeInTheDocument()
+  })
+
+  it('shows the "Powered by Airside" footer in the list pane when branding is enabled', async () => {
+    setup({ threads: [item({ id: 'a' })], branding: true })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getByTestId('airside-panel-row')).toBeInTheDocument())
+    expect(screen.getByTestId('airside-powered-by')).toBeInTheDocument()
+  })
+
+  it('hides the footer on the detail view even when branding is enabled', async () => {
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/here' })],
+      resolvePageKey: () => 'x.test/here',
+      branding: true,
+    })
+    screen.getByText('open').click()
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    act(() => screen.getByTestId('airside-panel-row').click())
+    await waitFor(() => expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument())
+    expect(screen.queryByTestId('airside-powered-by')).not.toBeInTheDocument()
+  })
+
   it('thread creation while panel is open triggers a refetch; closing removes the listener', async () => {
     const { client } = setup({
       threads: [item({ id: 'a' })],
@@ -393,6 +425,34 @@ describe('PanelDrawer', () => {
     // The deleted row disappears (was stale-until-refresh before this fix).
     await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(1))
     expect(client.listThreads).not.toHaveBeenCalled()
+  })
+
+  it('detail header steps to the next/previous thread and pulses its pin', async () => {
+    setup({
+      threads: [item({ id: 'a' }), item({ id: 'b' }), item({ id: 'c' })],
+      detailOpenerId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(3))
+
+    // Open the first thread's detail; at the top of the list, Previous is disabled.
+    act(() => screen.getByText('open detail a').click())
+    await waitFor(() => screen.getByRole('button', { name: 'Next thread' }))
+    expect(screen.getByRole('button', { name: 'Previous thread' })).toBeDisabled()
+
+    // Next → thread 'b'; its pin is focus-requested.
+    act(() => screen.getByRole('button', { name: 'Next thread' }).click())
+    await waitFor(() => expect(screen.getByTestId('pending-focus')).toHaveTextContent('b'))
+    expect(screen.getByRole('button', { name: 'Previous thread' })).not.toBeDisabled()
+
+    // Next → 'c', the last thread; Next is now disabled.
+    act(() => screen.getByRole('button', { name: 'Next thread' }).click())
+    await waitFor(() => expect(screen.getByTestId('pending-focus')).toHaveTextContent('c'))
+    expect(screen.getByRole('button', { name: 'Next thread' })).toBeDisabled()
+
+    // Previous → back to 'b'.
+    act(() => screen.getByRole('button', { name: 'Previous thread' }).click())
+    await waitFor(() => expect(screen.getByTestId('pending-focus')).toHaveTextContent('b'))
   })
 
   it('deleting the thread whose detail is open returns to the list', async () => {

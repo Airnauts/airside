@@ -97,6 +97,11 @@ describe('settings store', () => {
     expect(getSetting('whatsNewSeen')).toBeNull()
   })
 
+  it('rejects a non-version whatsNewSeen string (would compare as NaN)', () => {
+    initSettings(fakeStorage({ 'airside:whats-new-seen': JSON.stringify('garbage') }))
+    expect(getSetting('whatsNewSeen')).toBeNull()
+  })
+
   it('clamps an out-of-range launcher top to the on-screen band', () => {
     initSettings(
       fakeStorage({ 'airside:launcher-position': JSON.stringify({ edge: 'right', top: 999 }) }),

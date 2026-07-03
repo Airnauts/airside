@@ -11,5 +11,8 @@ import type { SettingEntry } from '../settings/entry'
 export const whatsNewSeenSetting: SettingEntry<string | null> = {
   storageKey: 'airside:whats-new-seen',
   fallback: null,
-  validate: (parsed) => (typeof parsed === 'string' ? parsed : null),
+  // Dot-separated numeric segments only — a tampered value (`"garbage"`) would otherwise
+  // compare as NaN in `compareVersions` and suppress the popup forever.
+  validate: (parsed) =>
+    typeof parsed === 'string' && /^\d+(\.\d+)*$/.test(parsed) ? parsed : null,
 }

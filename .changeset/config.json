@@ -9,6 +9,7 @@
       "@airnauts/airside-adapter-postgres",
       "@airnauts/airside-client",
       "@airnauts/airside-core",
+      "@airnauts/airside-extension-github",
       "@airnauts/airside-extension-jira",
       "@airnauts/airside-integration-next",
       "@airnauts/airside-integration-react",
