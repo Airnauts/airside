@@ -58,7 +58,7 @@ function StatusProbe() {
 function CreateProbe() {
   const threads = useController()
   return (
-    <button type="button" onClick={() => threads.notifyThreadCreated()}>
+    <button type="button" onClick={() => threads.emit({ type: 'created' })}>
       created
     </button>
   )
