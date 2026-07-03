@@ -91,6 +91,14 @@ describe('panel reducer', () => {
     expect(next.loadingMore).toBe(false)
   })
 
+  it('LOAD_MORE_SUCCESS drops ids already loaded so an overlapping cursor page does not duplicate rows', () => {
+    const next = reducer(
+      { ...initialState, list: [item('a'), item('b')], loadingMore: true },
+      { type: 'LOAD_MORE_SUCCESS', list: [item('b'), item('c'), item('c')], nextCursor: null },
+    )
+    expect(next.list.map((t) => t.id)).toEqual(['a', 'b', 'c'])
+  })
+
   it('BUMP_COMMENT_COUNT adjusts the matching row in list and needsReview, clamped at zero', () => {
     const withCount = (id: string, commentCount: number): ThreadListItem =>
       ({ ...item(id), commentCount }) as ThreadListItem

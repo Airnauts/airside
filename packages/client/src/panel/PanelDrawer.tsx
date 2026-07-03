@@ -53,15 +53,20 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
     return () => threads.registerDeleteListener(null)
   }, [state.open, threads, panel])
 
+  // Show a thread's detail in the sidebar and focus (pulse) its pin. Do NOT open the pin's popover
+  // (the sidebar is the surface) and do NOT close one that's already open — a pin thread the user
+  // opened stays open while they browse the sidebar. requestFocus pulses the pin and lazy-loads the
+  // detail (read by id); it leaves openId untouched. Shared by same-page row clicks and detail
+  // stepping so both stay in lockstep.
+  function showInSidebar(id: string) {
+    panel.openDetail(id)
+    threads.requestFocus(id)
+  }
+
   function onSelect(row: { id: string; pageKey: string | null; pageUrl: string }) {
     const here = resolvePageKey(window.location.href)
     if (row.pageKey === here) {
-      // Same page: show the in-sidebar detail and focus (pulse) the pin. Do NOT open the pin's
-      // popover (the sidebar is the surface) and do NOT close one that's already open — a pin thread
-      // the user opened stays open while they browse the sidebar. requestFocus pulses the pin and
-      // lazy-loads the detail (read by id below); it leaves openId untouched.
-      panel.openDetail(row.id)
-      threads.requestFocus(row.id)
+      showInSidebar(row.id)
     } else {
       goToThread({ id: row.id, pageUrl: row.pageUrl, openDetail: true })
     }
@@ -74,14 +79,9 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
         null)
       : null
 
-  // Step to a neighbouring thread from the detail header: same surface as a same-page row click
-  // (open its detail + pulse/lazy-load the pin) — but unconditional, so an off-page neighbour
-  // previews in place via the id-keyed detail rather than navigating away.
-  function navigateDetail(id: string) {
-    panel.openDetail(id)
-    threads.requestFocus(id)
-  }
-
+  // Step to a neighbouring thread from the detail header via the same in-sidebar surface as a
+  // same-page row click — but unconditional, so an off-page neighbour previews in place via the
+  // id-keyed detail rather than navigating away.
   const { prevId, nextId } = detailNeighbors(state)
 
   return (
@@ -103,8 +103,8 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
               resolvePageKey={resolvePageKey}
               client={client}
               onBack={() => panel.back()}
-              onPrev={prevId ? () => navigateDetail(prevId) : undefined}
-              onNext={nextId ? () => navigateDetail(nextId) : undefined}
+              onPrev={prevId ? () => showInSidebar(prevId) : undefined}
+              onNext={nextId ? () => showInSidebar(nextId) : undefined}
             />
           ) : (
             <PanelListView onSelect={onSelect} />

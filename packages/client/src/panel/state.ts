@@ -89,13 +89,24 @@ export function reducer(state: PanelState, action: Action): PanelState {
       return { ...state, loading: false, error: true }
     case 'LOAD_MORE_START':
       return { ...state, loadingMore: true }
-    case 'LOAD_MORE_SUCCESS':
+    case 'LOAD_MORE_SUCCESS': {
+      // Append the next page, dropping any ids already loaded (keep first occurrence). Guards
+      // against an overlapping cursor page seeding duplicate rows, which would make findIndex in
+      // detailNeighbors resolve to the wrong position and step prev/next around it.
+      const seen = new Set(state.list.map((t) => t.id))
+      const appended: ThreadListItem[] = []
+      for (const t of action.list) {
+        if (seen.has(t.id)) continue
+        seen.add(t.id)
+        appended.push(t)
+      }
       return {
         ...state,
         loadingMore: false,
-        list: [...state.list, ...action.list],
+        list: [...state.list, ...appended],
         nextCursor: action.nextCursor,
       }
+    }
     case 'LOAD_MORE_ERROR':
       return { ...state, loadingMore: false }
     case 'BUMP_COMMENT_COUNT':
@@ -149,8 +160,9 @@ export function detailNeighbors(state: PanelState): {
   const list = navigableList(state)
   const i = list.findIndex((t) => t.id === state.detailThreadId)
   if (i === -1) return { prevId: null, nextId: null }
+  // `list[i ± 1]?.id ?? null` already yields null at either boundary, so no range guard is needed.
   return {
-    prevId: i > 0 ? (list[i - 1]?.id ?? null) : null,
-    nextId: i < list.length - 1 ? (list[i + 1]?.id ?? null) : null,
+    prevId: list[i - 1]?.id ?? null,
+    nextId: list[i + 1]?.id ?? null,
   }
 }
