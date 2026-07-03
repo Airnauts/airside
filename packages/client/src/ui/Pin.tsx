@@ -4,6 +4,7 @@ import { type ComponentPropsWithoutRef, forwardRef } from 'react'
 import { cn } from '../lib/cn'
 import type { XY } from '../positioning/coords'
 import { initials } from './avatar'
+import { CheckIcon } from './icons'
 
 /** The pin's one-off teardrop shape (no Tailwind utility) — shared with the draft preview pin. */
 export const TEARDROP_STYLE = {
@@ -97,7 +98,7 @@ export const Pin = forwardRef<HTMLButtonElement, PinProps>(function Pin(
               : 'air:text-white air:text-[13px]',
         )}
       >
-        {resolved ? '✓' : initials(item.createdBy)}
+        {resolved ? <CheckIcon size={16} /> : initials(item.createdBy)}
       </span>
       {!resolved && item.commentCount > 0 && (
         <span

@@ -49,17 +49,17 @@ describe('controller.requestFocus', () => {
   })
 })
 
-describe('controller status listener', () => {
-  it('notifies the registered listener after setStatus persists', async () => {
+describe('controller status events', () => {
+  it('emits a status event after setStatus persists', async () => {
     const { controller, setThreadStatus } = make()
-    const listener = vi.fn()
-    controller.registerStatusListener(listener)
+    const subscriber = vi.fn()
+    controller.subscribe(subscriber)
     await controller.setStatus('t1', 'resolved')
     expect(setThreadStatus).toHaveBeenCalledWith('t1', { status: 'resolved' })
-    expect(listener).toHaveBeenCalledWith('t1', 'resolved')
+    expect(subscriber).toHaveBeenCalledWith({ type: 'status', id: 't1', status: 'resolved' })
   })
 
-  it('does not notify when setStatus fails', async () => {
+  it('does not emit a status event when setStatus fails', async () => {
     const actions: Action[] = []
     const setThreadStatus = vi.fn().mockRejectedValue(new Error('net'))
     const controller = createController((a) => actions.push(a), {
@@ -67,10 +67,37 @@ describe('controller status listener', () => {
       isCached: () => true,
       isLoading: () => false,
     })
-    const listener = vi.fn()
-    controller.registerStatusListener(listener)
+    const subscriber = vi.fn()
+    controller.subscribe(subscriber)
     await controller.setStatus('t1', 'resolved')
-    expect(listener).not.toHaveBeenCalled()
+    expect(subscriber).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'status' }))
+  })
+})
+
+describe('controller.subscribe', () => {
+  it('fans an event out to every subscriber (Set, not last-writer-wins)', () => {
+    const { controller } = make()
+    const a = vi.fn()
+    const b = vi.fn()
+    controller.subscribe(a)
+    controller.subscribe(b)
+    controller.emit({ type: 'created' })
+    expect(a).toHaveBeenCalledWith({ type: 'created' })
+    expect(b).toHaveBeenCalledWith({ type: 'created' })
+  })
+
+  it('stops delivering to a subscriber after its unsubscribe is called', () => {
+    const { controller } = make()
+    const subscriber = vi.fn()
+    const unsubscribe = controller.subscribe(subscriber)
+    unsubscribe()
+    controller.emit({ type: 'created' })
+    expect(subscriber).not.toHaveBeenCalled()
+  })
+
+  it('does not throw when emitting with no subscribers', () => {
+    const { controller } = make()
+    expect(() => controller.emit({ type: 'created' })).not.toThrow()
   })
 })
 
@@ -82,10 +109,10 @@ describe('controller.runAction', () => {
     expect(runThreadAction).toHaveBeenCalledWith('t1', 'jira.createIssue')
   })
 
-  it('on success replaces the detail with the returned view, clears the flag, notifies the listener, returns true', async () => {
+  it('on success replaces the detail with the returned view, clears the flag, emits a status event, returns true', async () => {
     const { actions, controller, runThreadAction } = make()
-    const listener = vi.fn()
-    controller.registerStatusListener(listener)
+    const subscriber = vi.fn()
+    controller.subscribe(subscriber)
     const view = await runThreadAction.getMockImplementation()?.()
     const ok = await controller.runAction('t1', 'jira.createIssue')
     expect(ok).toBe(true)
@@ -95,7 +122,7 @@ describe('controller.runAction', () => {
     // flag cleared after the request
     expect(actions.some((a) => a.type === 'ACTION_DONE' && a.id === 't1')).toBe(true)
     // status may have changed → panel reconciliation
-    expect(listener).toHaveBeenCalledWith('t1', 'resolved')
+    expect(subscriber).toHaveBeenCalledWith({ type: 'status', id: 't1', status: 'resolved' })
   })
 
   it('on failure clears the flag and returns false without leaving it running', async () => {
@@ -106,18 +133,18 @@ describe('controller.runAction', () => {
       isCached: () => true,
       isLoading: () => false,
     })
-    const listener = vi.fn()
-    controller.registerStatusListener(listener)
+    const subscriber = vi.fn()
+    controller.subscribe(subscriber)
     const ok = await controller.runAction('t1', 'jira.createIssue')
     expect(ok).toBe(false)
     expect(actions.some((a) => a.type === 'ACTION_DONE' && a.id === 't1')).toBe(true)
     expect(actions.some((a) => a.type === 'DETAIL_LOADED')).toBe(false)
-    expect(listener).not.toHaveBeenCalled()
+    expect(subscriber).not.toHaveBeenCalled()
   })
 })
 
 describe('controller.bumpCommentCount', () => {
-  it('fans out to the store, the runtime cache, and the panel listener', () => {
+  it('fans out to the store, the runtime cache, and a count event', () => {
     const { actions, controller } = make()
     const rt = {
       setStatus: vi.fn(),
@@ -125,39 +152,39 @@ describe('controller.bumpCommentCount', () => {
       removeItem: vi.fn(),
       refresh: vi.fn().mockResolvedValue(undefined),
     }
-    const listener = vi.fn()
+    const subscriber = vi.fn()
     controller.registerRuntime(rt)
-    controller.registerCommentCountListener(listener)
+    controller.subscribe(subscriber)
     controller.bumpCommentCount('t1', 1)
     expect(actions).toContainEqual({ type: 'BUMP_COMMENT_COUNT', id: 't1', delta: 1 })
     expect(rt.bumpCommentCount).toHaveBeenCalledWith('t1', 1)
-    expect(listener).toHaveBeenCalledWith('t1', 1)
+    expect(subscriber).toHaveBeenCalledWith({ type: 'count', id: 't1', delta: 1 })
   })
 
-  it('still updates the store when no runtime or listener is registered', () => {
+  it('still updates the store when no runtime or subscriber is registered', () => {
     const { actions, controller } = make()
     controller.bumpCommentCount('t1', -1)
     expect(actions).toContainEqual({ type: 'BUMP_COMMENT_COUNT', id: 't1', delta: -1 })
   })
 })
 
-describe('controller thread-created listener', () => {
-  it('notifies the registered listener on notifyThreadCreated', () => {
+describe('controller created event', () => {
+  it('delivers a created event to subscribers on emit', () => {
     const { controller } = make()
-    const listener = vi.fn()
-    controller.registerThreadCreatedListener(listener)
-    controller.notifyThreadCreated()
-    expect(listener).toHaveBeenCalledTimes(1)
+    const subscriber = vi.fn()
+    controller.subscribe(subscriber)
+    controller.emit({ type: 'created' })
+    expect(subscriber).toHaveBeenCalledTimes(1)
+    expect(subscriber).toHaveBeenCalledWith({ type: 'created' })
   })
 
-  it('does not throw and calls nothing when no listener is registered, or after deregistering', () => {
+  it('does not deliver after the subscriber unsubscribes', () => {
     const { controller } = make()
-    expect(() => controller.notifyThreadCreated()).not.toThrow()
-    const listener = vi.fn()
-    controller.registerThreadCreatedListener(listener)
-    controller.registerThreadCreatedListener(null)
-    controller.notifyThreadCreated()
-    expect(listener).not.toHaveBeenCalled()
+    const subscriber = vi.fn()
+    const unsubscribe = controller.subscribe(subscriber)
+    unsubscribe()
+    controller.emit({ type: 'created' })
+    expect(subscriber).not.toHaveBeenCalled()
   })
 })
 
@@ -216,17 +243,17 @@ describe('controller.deleteThread', () => {
     await expect(failing.deleteThread('t1')).resolves.toBe(false)
   })
 
-  it('notifies the registered delete listener after the delete persists', async () => {
+  it('emits a deleted event after the delete persists', async () => {
     const { controller, deleteThread } = make()
-    const listener = vi.fn()
-    controller.registerDeleteListener(listener)
+    const subscriber = vi.fn()
+    controller.subscribe(subscriber)
     const ok = await controller.deleteThread('t1')
     expect(ok).toBe(true)
     expect(deleteThread).toHaveBeenCalledWith('t1')
-    expect(listener).toHaveBeenCalledWith('t1')
+    expect(subscriber).toHaveBeenCalledWith({ type: 'deleted', id: 't1' })
   })
 
-  it('does not notify the delete listener when the delete fails', async () => {
+  it('does not emit a deleted event when the delete fails', async () => {
     const failing = createController(() => {}, {
       client: {
         getThread: vi.fn(),
@@ -235,10 +262,10 @@ describe('controller.deleteThread', () => {
       isCached: () => true,
       isLoading: () => false,
     })
-    const listener = vi.fn()
-    failing.registerDeleteListener(listener)
+    const subscriber = vi.fn()
+    failing.subscribe(subscriber)
     const ok = await failing.deleteThread('t1')
     expect(ok).toBe(false)
-    expect(listener).not.toHaveBeenCalled()
+    expect(subscriber).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'deleted' }))
   })
 })

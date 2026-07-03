@@ -36,7 +36,7 @@ the abstract operations a Jira-backed implementation would supply instead — is
 > picked up, fixed, and acknowledged. **Conflicts:** a PR that develops merge conflicts becomes
 > actionable — one autonomous merge-of-main attempt, then escalation to you. **Terminal:** a merge →
 > `done`, a close → `done`/`cancelled` (kill switch). The runbook parks anything it can't handle
-> with a note (it never silently drops work). See `docs/adr.md` (ADR-0042, ADR-0043, ADR-0048).
+> with a note (it never silently drops work). See `docs/adr.md` (ADR-0042, ADR-0043, ADR-0050).
 >
 > **Deferred (no observed need yet):** round-robin fairness across many simultaneously-active issues,
 > and a global `MAX_ACTIVE` ceiling — the `≤1 op/tick` invariant + the user-started loop already bound
@@ -301,7 +301,11 @@ issue this tick. **One autonomous attempt per conflict occurrence — no retry l
   autonomous attempt already ran and didn't clear it → phase **`blocked`** (label
   `state:blocked`) + an `airside-agent-note`: "merge conflict needs manual resolution — an
   automated merge of `main` didn't clear it." (The existing "blocked is a resting state the
-  owner un-blocks" machinery covers recovery.)
+  owner un-blocks" machinery covers recovery.) This guard is deliberately conservative: it
+  keys on the head commit, not the conflict occurrence, so a *new* conflict that appears
+  while the trailer commit is still the head (main moved again; the PR didn't) also parks as
+  `blocked` rather than getting a fresh attempt — a false positive we accept over risking an
+  unbounded merge loop; the owner un-blocking re-arms the attempt.
 - **Otherwise attempt it:** spawn `airside-fixer` (worktree — counts as the tick's one
   expensive subagent) with **`MODE: conflicts`** (contract below). It merges `origin/main`
   **into the PR branch** — merge, **not** rebase: never rewrite a pushed PR branch's history,
@@ -605,6 +609,6 @@ worktree branch-naming trap).
   hardening (merge/close → `done`/`cancelled`), and dropping the redundant PROGRESS.md (ADR-0043).
 - **#63** — repo-independence (§Config placeholders + the `references/github.md` recipes + the
   provider-seam design), the `conflicts` op, the `file` invocation mode, and `scripts/tick-scan.sh`
-  (ADR-0048). The de-brand rename to `air-agent` is a follow-up issue (owner-coordinated cutover).
+  (ADR-0050). The de-brand rename to `air-agent` is a follow-up issue (owner-coordinated cutover).
 - **Deferred** (no observed need): round-robin fairness across many concurrently-active issues, and a
   global `MAX_ACTIVE` ceiling — see the scope note at the top.

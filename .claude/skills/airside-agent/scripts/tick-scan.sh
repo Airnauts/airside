@@ -29,9 +29,12 @@ for n in $(jq -r '.[].number' <<<"$issues_json"); do
   issue=$(gh issue view "$n" --repo "$REPO" \
     --json number,title,state,stateReason,labels,body,updatedAt)
 
-  # load-state + evaluate-approval reads: every comment, with the REST numeric id
+  # load-state + evaluate-approval reads: every comment, with the REST numeric id.
+  # NDJSON + `jq -s`: with --paginate, an array-producing --jq would emit one array
+  # per page (invalid as a single JSON value); streaming objects and slurping yields
+  # exactly one array regardless of page count.
   comments=$(gh api "repos/$REPO/issues/$n/comments" --paginate \
-    --jq '[.[] | {id, createdAt: .created_at, login: .user.login, body}]')
+    --jq '.[] | {id, createdAt: .created_at, login: .user.login, body}' | jq -s '.')
 
   # reconcile-artifacts: branch probe
   branch_exists=false
@@ -58,7 +61,7 @@ for n in $(jq -r '.[].number' <<<"$issues_json"); do
       -F o="$OWNER_GRAPHQL" -F r="$NAME_GRAPHQL" -F p="$pr_number" \
       --jq '.data.repository.pullRequest.reviewThreads.nodes')
     pr_comments=$(gh api "repos/$REPO/issues/$pr_number/comments" --paginate \
-      --jq '[.[] | {id, createdAt: .created_at, login: .user.login, body}]')
+      --jq '.[] | {id, createdAt: .created_at, login: .user.login, body}' | jq -s '.')
   fi
 
   entry=$(jq -n \
