@@ -5,6 +5,7 @@ import { threadLink } from '../config'
 import { relativeTime } from '../threads/relativeTime'
 import { avatarColor, initials } from '../ui/avatar'
 import { Button } from '../ui/Button'
+import { AttachIcon, CheckIcon, ReopenIcon } from '../ui/icons'
 
 export type PanelRowProps = {
   item: ThreadListItem
@@ -60,7 +61,13 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
             )}
           </span>
           <span className="air:mt-0.5 air:block air:text-[13px] air:text-gray-900 air:truncate">
-            {rootText !== '' ? rootText : <span className="air:text-gray-400">📎 Attachment</span>}
+            {rootText !== '' ? (
+              rootText
+            ) : (
+              <span className="air:inline-flex air:items-center air:gap-1 air:text-gray-400">
+                <AttachIcon size={12} /> Attachment
+              </span>
+            )}
           </span>
           <span className="air:mt-0.5 air:block air:text-[11px] air:text-gray-400 air:truncate">
             {context}
@@ -87,9 +94,17 @@ export function PanelRow({ item, onSelect, onReply, onResolve }: PanelRowProps) 
           size="inline"
           onClick={onResolve}
           aria-label={item.status === 'resolved' ? 'Reopen thread' : 'Resolve thread'}
-          className="air:ml-3 air:text-[11px] air:font-semibold air:text-green-600"
+          className="air:ml-3 air:gap-1 air:text-[11px] air:font-semibold air:text-green-600"
         >
-          {item.status === 'resolved' ? '↺ Reopen' : '✓ Resolve'}
+          {item.status === 'resolved' ? (
+            <>
+              <ReopenIcon size={13} /> Reopen
+            </>
+          ) : (
+            <>
+              <CheckIcon size={13} /> Resolve
+            </>
+          )}
         </Button>
         <Button
           variant="link"

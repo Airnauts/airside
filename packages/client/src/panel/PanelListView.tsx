@@ -4,6 +4,7 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { cn } from '../lib/cn'
 import { useController, useShowResolved } from '../threads/useThreads'
 import { Button } from '../ui/Button'
+import { CloseIcon } from '../ui/icons'
 import { StatusNotice } from '../ui/StatusNotice'
 import { usePanelController, usePanelState } from './PanelProvider'
 import { PanelRow } from './PanelRow'
@@ -51,7 +52,7 @@ export function PanelListView({ onSelect }: PanelListViewProps) {
         </Dialog.Description>
         <Dialog.Close asChild>
           <Button variant="ghost" size="icon" aria-label="Close panel">
-            ✕
+            <CloseIcon />
           </Button>
         </Dialog.Close>
       </div>
