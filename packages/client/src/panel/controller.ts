@@ -28,13 +28,21 @@ export function createPanelController(
 ): PanelController {
   const statusParam = (filter: PanelFilter) => (filter === 'all' ? {} : { status: filter })
 
+  // Latest-wins guard. Focus, visibilitychange, and onConnect all trigger loads, so overlapping
+  // fetches are common; a slower earlier one must not resolve after a newer one and clobber the
+  // list — worse, LOAD_SUCCESS resets the live-applied-comment ledger, so a stale win would drop
+  // counts reconciled from the stream. Each load takes a token; only the latest may dispatch.
+  let loadSeq = 0
+
   async function load(filter: PanelFilter): Promise<void> {
+    const seq = ++loadSeq
     dispatch({ type: 'LOAD_START' })
     try {
       const [main, review] = await Promise.all([
         deps.client.listThreads({ sort: 'updatedAt', ...statusParam(filter) }),
         deps.client.listThreads({ status: 'open' }),
       ])
+      if (seq !== loadSeq) return // superseded by a newer load
       dispatch({
         type: 'LOAD_SUCCESS',
         list: main.threads,
@@ -42,6 +50,7 @@ export function createPanelController(
         needsReview: review.threads.filter((t) => t.anchorState === 'orphaned'),
       })
     } catch {
+      if (seq !== loadSeq) return // a stale error must not clobber a newer load either
       dispatch({ type: 'LOAD_ERROR' })
     }
   }

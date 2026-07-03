@@ -22,16 +22,26 @@ function fakeClient() {
   }
 }
 
-/** Capture scheduled timers so the test can run them deterministically. */
+type Timer = { fn: () => void; ms: number }
+
+/**
+ * Capture scheduled timers so the test can run them deterministically. `clearTimer` removes the
+ * timer from the queue (mirroring real `clearTimeout`), so a cancelled health timer doesn't leak
+ * into the queue and skew `runNext` ordering.
+ */
 function fakeTimers() {
-  const queue: { fn: () => void; ms: number }[] = []
+  const queue: Timer[] = []
   return {
     queue,
-    setTimer: (fn: () => void, ms: number) => {
-      queue.push({ fn, ms })
-      return queue.length - 1
+    setTimer: (fn: () => void, ms: number): Timer => {
+      const entry: Timer = { fn, ms }
+      queue.push(entry)
+      return entry
     },
-    clearTimer: vi.fn(),
+    clearTimer: (h: unknown) => {
+      const i = queue.indexOf(h as Timer)
+      if (i !== -1) queue.splice(i, 1)
+    },
     runNext: () => {
       const next = queue.shift()
       next?.fn()
@@ -58,7 +68,7 @@ describe('subscribeRealtime', () => {
     expect(onEvent).toHaveBeenCalledWith(event)
   })
 
-  it('fires onConnect on every (re)connect so the caller can full-refetch', () => {
+  it('fires onConnect only once the connection is proven healthy — the first event proves it', () => {
     const { client, conns } = fakeClient()
     const onConnect = vi.fn()
     const timers = fakeTimers()
@@ -70,15 +80,76 @@ describe('subscribeRealtime', () => {
       clearTimer: timers.clearTimer,
       random: () => 0,
     })
+    // A bare transport open (headers only) does NOT fire onConnect — it only arms the window.
     conns[0]!.handlers.onOpen?.()
+    expect(onConnect).not.toHaveBeenCalled()
+    // The first event proves the body is flowing → healthy → onConnect fires once.
+    conns[0]!.handlers.onEvent(event)
     expect(onConnect).toHaveBeenCalledTimes(1)
+    // Reconnect and prove healthy again → onConnect fires per healthy (re)connect.
     conns[0]!.handlers.onClose?.()
-    timers.runNext() // reconnect
+    timers.runNext()
     conns[1]!.handlers.onOpen?.()
+    conns[1]!.handlers.onEvent(event)
     expect(onConnect).toHaveBeenCalledTimes(2)
   })
 
-  it('reconnects with growing backoff that resets after a successful open', () => {
+  it('proves health by surviving the healthy window even with no event', () => {
+    const { client, conns } = fakeClient()
+    const onConnect = vi.fn()
+    const timers = fakeTimers()
+    subscribeRealtime({
+      client,
+      onEvent: vi.fn(),
+      onConnect,
+      minDelayMs: 1000,
+      healthyAfterMs: 1000,
+      setTimer: timers.setTimer,
+      clearTimer: timers.clearTimer,
+      random: () => 0,
+    })
+    conns[0]!.handlers.onOpen?.()
+    expect(timers.queue[0]!.ms).toBe(1000) // the health window
+    timers.runNext() // survive the window → healthy
+    expect(onConnect).toHaveBeenCalledTimes(1)
+    // Backoff was reset by proving health: the next drop schedules at the floor (500).
+    conns[0]!.handlers.onClose?.()
+    expect(timers.queue[0]!.ms).toBe(500)
+  })
+
+  it('does NOT reset backoff or refetch on a bare header-only accept loop (the storm bug)', () => {
+    const { client, conns } = fakeClient()
+    const onConnect = vi.fn()
+    const timers = fakeTimers()
+    subscribeRealtime({
+      client,
+      onEvent: vi.fn(),
+      onConnect,
+      minDelayMs: 1000,
+      maxDelayMs: 30000,
+      healthyAfterMs: 1000,
+      setTimer: timers.setTimer,
+      clearTimer: timers.clearTimer,
+      random: () => 0, // jitter floor: delay = base/2
+    })
+    // A proxy that accepts headers then immediately drops the body, over and over: onOpen (no
+    // event, window never survived) → onClose. Backoff must keep growing and never refetch.
+    conns[0]!.handlers.onOpen?.()
+    conns[0]!.handlers.onClose?.()
+    expect(timers.queue.map((t) => t.ms)).toEqual([500]) // attempt 0 → base 1000 → 500
+    timers.runNext()
+    conns[1]!.handlers.onOpen?.()
+    conns[1]!.handlers.onClose?.()
+    expect(timers.queue[0]!.ms).toBe(1000) // attempt 1 → base 2000 → 1000
+    timers.runNext()
+    conns[2]!.handlers.onOpen?.()
+    conns[2]!.handlers.onClose?.()
+    expect(timers.queue[0]!.ms).toBe(2000) // attempt 2 → base 4000 → 2000
+    // The whole point: a header-only accept loop never triggers the reconcile refetch.
+    expect(onConnect).not.toHaveBeenCalled()
+  })
+
+  it('reconnects with growing backoff that resets only after a proven-healthy open', () => {
     const { client, conns } = fakeClient()
     const timers = fakeTimers()
     subscribeRealtime({
@@ -86,6 +157,7 @@ describe('subscribeRealtime', () => {
       onEvent: vi.fn(),
       minDelayMs: 1000,
       maxDelayMs: 30000,
+      healthyAfterMs: 1000,
       setTimer: timers.setTimer,
       clearTimer: timers.clearTimer,
       random: () => 0, // jitter floor: delay = base/2
@@ -94,12 +166,13 @@ describe('subscribeRealtime', () => {
     conns[0]!.handlers.onClose?.()
     expect(timers.queue[0]!.ms).toBe(500)
     timers.runNext()
-    // Second consecutive drop without an open (attempt 1): base 2000 → delay 1000.
+    // Second consecutive drop without proving healthy (attempt 1): base 2000 → delay 1000.
     conns[1]!.handlers.onClose?.()
     expect(timers.queue[0]!.ms).toBe(1000)
     timers.runNext()
-    // A successful open resets the backoff; next drop is back to 500.
+    // A proven-healthy open (first event) resets the backoff; next drop is back to 500.
     conns[2]!.handlers.onOpen?.()
+    conns[2]!.handlers.onEvent(event)
     conns[2]!.handlers.onClose?.()
     expect(timers.queue[0]!.ms).toBe(500)
   })
@@ -119,5 +192,25 @@ describe('subscribeRealtime', () => {
     // A late close after unsubscribe must not schedule a reconnect.
     conns[0]!.handlers.onClose?.()
     expect(timers.queue).toHaveLength(0)
+  })
+
+  it('suppresses a pending health window that fires after unsubscribe', () => {
+    const { client, conns } = fakeClient()
+    const onConnect = vi.fn()
+    const timers = fakeTimers()
+    const stop = subscribeRealtime({
+      client,
+      onEvent: vi.fn(),
+      onConnect,
+      healthyAfterMs: 1000,
+      setTimer: timers.setTimer,
+      clearTimer: timers.clearTimer,
+      random: () => 0,
+    })
+    conns[0]!.handlers.onOpen?.() // arms the health window
+    stop()
+    // Even if the window timer fires late, onConnect must not run after unsubscribe.
+    timers.runNext()
+    expect(onConnect).not.toHaveBeenCalled()
   })
 })

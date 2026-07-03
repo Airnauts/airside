@@ -13,6 +13,13 @@ export type RealtimeListener = (event: RealtimeEvent) => void
  * The in-process concrete (`InProcessRealtimeChannel`) only fans out within a single
  * process, so it is best-effort on multi-instance/serverless hosts; an external
  * pub/sub backplane is the designed-but-deferred replacement (architecture §2).
+ *
+ * Delivery contract: implementations MUST be at-most-once — deliver each published event to a
+ * given subscriber no more than once (no replay, no Last-Event-ID re-send). The client's pin
+ * path (`INGEST_COMMENT`) counts a `comment.added` without a per-comment-id ledger, so a
+ * redelivering / at-least-once backplane would double-bump a pin's `commentCount`. (The panel
+ * path already dedupes by comment id; the in-process concrete never redelivers, so this is a
+ * constraint on custom backplanes plugged into this seam.)
  */
 export interface RealtimeChannel {
   /** Fan an event out to the all-pages subscribers, plus the matching page subscribers when `event.pageKey` is non-null. */
