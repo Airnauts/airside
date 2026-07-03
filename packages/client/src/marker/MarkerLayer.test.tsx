@@ -10,6 +10,7 @@ import { PanelProvider } from '../panel/PanelProvider'
 import { initSettings, resetSettings } from '../settings/store'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { ToastProvider } from '../ui/toast'
+import { WhatsNewProvider } from '../whatsnew/WhatsNewProvider'
 import { MarkerLayer } from './MarkerLayer'
 
 // MarkerLayer now seeds its pins-hidden state from the shared settings store, which caches its
@@ -358,19 +359,21 @@ function renderLayer(client: unknown) {
     <WidgetProvider>
       <ToastProvider>
         <IdentityProvider identity={null} requestIdentity={() => {}}>
-          <ThreadsProvider client={client as never}>
-            <PanelProvider client={client as never}>
-              <DraftsProvider>
-                <MarkerLayer
-                  client={client as never}
-                  pageKey="x.test/here"
-                  pageUrl="https://x.test/here"
-                  resolvePageKey={() => 'x.test/here'}
-                />
-                <PanelDrawer resolvePageKey={() => 'x.test/here'} client={client as never} />
-              </DraftsProvider>
-            </PanelProvider>
-          </ThreadsProvider>
+          <WhatsNewProvider>
+            <ThreadsProvider client={client as never}>
+              <PanelProvider client={client as never}>
+                <DraftsProvider>
+                  <MarkerLayer
+                    client={client as never}
+                    pageKey="x.test/here"
+                    pageUrl="https://x.test/here"
+                    resolvePageKey={() => 'x.test/here'}
+                  />
+                  <PanelDrawer resolvePageKey={() => 'x.test/here'} client={client as never} />
+                </DraftsProvider>
+              </PanelProvider>
+            </ThreadsProvider>
+          </WhatsNewProvider>
         </IdentityProvider>
       </ToastProvider>
     </WidgetProvider>,
@@ -538,14 +541,16 @@ function renderMarkerWithPanel(c: ReturnType<typeof client>) {
           identity={{ email: 'a@b.c', name: 'A' }}
           requestIdentity={(resume) => resume({ email: 'a@b.c', name: 'A' })}
         >
-          <ThreadsProvider client={c as never}>
-            <PanelProvider client={c as never}>
-              <DraftsProvider>
-                <MarkerLayer client={c as never} pageKey="k" pageUrl="https://x.test/p" />
-                <PanelDrawer resolvePageKey={() => 'k'} client={c as never} />
-              </DraftsProvider>
-            </PanelProvider>
-          </ThreadsProvider>
+          <WhatsNewProvider>
+            <ThreadsProvider client={c as never}>
+              <PanelProvider client={c as never}>
+                <DraftsProvider>
+                  <MarkerLayer client={c as never} pageKey="k" pageUrl="https://x.test/p" />
+                  <PanelDrawer resolvePageKey={() => 'k'} client={c as never} />
+                </DraftsProvider>
+              </PanelProvider>
+            </ThreadsProvider>
+          </WhatsNewProvider>
         </IdentityProvider>
       </ToastProvider>
     </WidgetProvider>,

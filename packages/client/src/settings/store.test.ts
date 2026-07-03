@@ -27,13 +27,14 @@ describe('settings store', () => {
     const storage = fakeStorage()
     initSettings(storage)
     // One getItem per known key during hydration.
-    expect(storage.getItem).toHaveBeenCalledTimes(4)
+    expect(storage.getItem).toHaveBeenCalledTimes(5)
     storage.getItem.mockClear()
     // Reads now come from the cache — no further storage access.
     getSetting('activationKey')
     getSetting('identity')
     getSetting('launcherPosition')
     getSetting('pinsHidden')
+    getSetting('whatsNewSeen')
     expect(storage.getItem).not.toHaveBeenCalled()
   })
 
@@ -43,6 +44,7 @@ describe('settings store', () => {
     expect(getSetting('identity')).toBeNull()
     expect(getSetting('launcherPosition')).toEqual(DEFAULT_LAUNCHER_POSITION)
     expect(getSetting('pinsHidden')).toBe(false)
+    expect(getSetting('whatsNewSeen')).toBeNull()
   })
 
   it('round-trips set/get for every key against localStorage', () => {
@@ -51,13 +53,16 @@ describe('settings store', () => {
     setSetting('identity', { email: 'a@b.com', name: 'Ada' })
     setSetting('launcherPosition', { edge: 'left', top: 40 })
     setSetting('pinsHidden', true)
+    setSetting('whatsNewSeen', '0.10.2')
     expect(getSetting('activationKey')).toBe('dev-key')
     expect(getSetting('identity')).toEqual({ email: 'a@b.com', name: 'Ada' })
     expect(getSetting('launcherPosition')).toEqual({ edge: 'left', top: 40 })
     expect(getSetting('pinsHidden')).toBe(true)
+    expect(getSetting('whatsNewSeen')).toBe('0.10.2')
     // Writes are persisted to the bound storage under the established on-disk keys.
     expect(localStorage.getItem('airside:key')).toBe(JSON.stringify('dev-key'))
     expect(localStorage.getItem('airside:pins-hidden')).toBe(JSON.stringify(true))
+    expect(localStorage.getItem('airside:whats-new-seen')).toBe(JSON.stringify('0.10.2'))
   })
 
   it('falls back to the per-key default on malformed JSON', () => {
@@ -67,12 +72,14 @@ describe('settings store', () => {
         'airside:identity': '{not json',
         'airside:launcher-position': '{not json',
         'airside:pins-hidden': '{not json',
+        'airside:whats-new-seen': '{not json',
       }),
     )
     expect(getSetting('activationKey')).toBeNull()
     expect(getSetting('identity')).toBeNull()
     expect(getSetting('launcherPosition')).toEqual(DEFAULT_LAUNCHER_POSITION)
     expect(getSetting('pinsHidden')).toBe(false)
+    expect(getSetting('whatsNewSeen')).toBeNull()
   })
 
   it('falls back to the per-key default on wrong-type values', () => {
@@ -81,11 +88,13 @@ describe('settings store', () => {
         'airside:key': JSON.stringify({ key: 'nope' }),
         'airside:identity': JSON.stringify({ name: 'no email' }),
         'airside:pins-hidden': JSON.stringify('yes'),
+        'airside:whats-new-seen': JSON.stringify(123),
       }),
     )
     expect(getSetting('activationKey')).toBeNull()
     expect(getSetting('identity')).toBeNull()
     expect(getSetting('pinsHidden')).toBe(false)
+    expect(getSetting('whatsNewSeen')).toBeNull()
   })
 
   it('clamps an out-of-range launcher top to the on-screen band', () => {
