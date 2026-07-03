@@ -49,6 +49,7 @@ export type Action =
   | { type: 'LOAD_MORE_SUCCESS'; list: ThreadListItem[]; nextCursor: string | null }
   | { type: 'LOAD_MORE_ERROR' }
   | { type: 'BUMP_COMMENT_COUNT'; id: string; delta: number }
+  | { type: 'REMOVE_THREAD'; id: string }
 
 /** Apply a comment-count delta to a matching list item, clamped at zero. */
 function bumpCount(list: ThreadListItem[], id: string, delta: number): ThreadListItem[] {
@@ -105,6 +106,19 @@ export function reducer(state: PanelState, action: Action): PanelState {
         list: bumpCount(state.list, action.id, action.delta),
         needsReview: bumpCount(state.needsReview, action.id, action.delta),
       }
+    case 'REMOVE_THREAD': {
+      // A thread was deleted (from a pin popover or the detail menu). Drop it from both lists in
+      // place — cheaper and flicker-free vs. a full refetch — and, if its detail is the open pane,
+      // fall back to the list (its live detail is already gone, so it'd render an empty dead end).
+      const closingDetail = state.detailThreadId === action.id
+      return {
+        ...state,
+        list: state.list.filter((t) => t.id !== action.id),
+        needsReview: state.needsReview.filter((t) => t.id !== action.id),
+        view: closingDetail ? 'list' : state.view,
+        detailThreadId: closingDetail ? null : state.detailThreadId,
+      }
+    }
     default:
       return state
   }

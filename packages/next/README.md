@@ -31,7 +31,7 @@ import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
 import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
+export const { GET, POST, PATCH, DELETE, OPTIONS } = createAirsideAppRoute({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
@@ -47,7 +47,7 @@ import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 import { createFileSystemStorage } from '@airnauts/airside-storage-fs'
 import { join } from 'node:path'
 
-export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
+export const { GET, POST, PATCH, DELETE, OPTIONS } = createAirsideAppRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
@@ -105,9 +105,9 @@ Accepts all [`CreateAirsideServerOptions`](https://github.com/Airnauts/airside/b
 |---|---|---|
 | `disabled` | `boolean` | When `true`, all handlers return `404` (useful for environment-gated deployments) |
 
-Returns `{ GET, POST, PATCH, OPTIONS, server? }`:
+Returns `{ GET, POST, PATCH, DELETE, OPTIONS, server? }`:
 
-- `GET`, `POST`, `PATCH`, `OPTIONS` — Next.js App Router route handlers; destructure and re-export directly.
+- `GET`, `POST`, `PATCH`, `DELETE`, `OPTIONS` — Next.js App Router route handlers; destructure and re-export directly.
 - `server` — the underlying `AirsideServer` instance (absent when `disabled: true`); useful for server-side reads, additional custom routes, or integration tests.
 
 ### `createAirsidePagesRoute(config)`

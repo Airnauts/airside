@@ -1,4 +1,5 @@
 // packages/client/src/ui/Attachment.tsx
+import { CloseIcon } from './icons'
 
 export type PendingStatus = 'uploading' | 'ready' | 'error'
 
@@ -60,7 +61,7 @@ export function PendingAttachment({
         onClick={onRemove}
         className="air:absolute air:top-0.5 air:right-0.5 air:w-4 air:h-4 air:rounded-full air:bg-gray-900 air:text-white air:text-[10px] air:border-none air:cursor-pointer air:flex air:items-center air:justify-center"
       >
-        ✕
+        <CloseIcon size={12} />
       </button>
     </div>
   )

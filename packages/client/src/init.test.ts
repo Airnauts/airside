@@ -1,10 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { init } from './index'
+import { resetSettings } from './settings/store'
 
 describe('airside.init', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
     localStorage.clear()
+    // Drop the settings-store cache so each case re-hydrates from its own seeded key
+    // (issue #32 read-once store; init() re-runs initSettings, but reset keeps cases isolated).
+    resetSettings()
   })
   afterEach(() => {
     history.replaceState({}, '', '/')

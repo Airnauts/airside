@@ -17,7 +17,7 @@ MongoDB repository adapter for the [Airside](https://github.com/Airnauts/airside
 ## Installation
 
 ```bash
-pnpm add @airnauts/airside-adapter-mongo mongodb
+pnpm add @airnauts/airside-adapter-mongo
 ```
 
 ## Quick start
@@ -67,7 +67,7 @@ Creates the required indexes on the `threads` and `attachments` collections. Saf
 
 - Node.js ≥ 18
 - MongoDB ≥ 5.0 (Atlas or self-hosted)
-- `mongodb` ^6.12.0 (peer dependency, installed separately)
+- `mongodb` ^6.12.0 — bundled as a regular dependency; no separate install needed
 
 ## Related packages
 

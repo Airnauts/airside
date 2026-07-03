@@ -1,6 +1,6 @@
 import { KEY_HEADER_NAME } from '@airnauts/airside-core'
 
-const ALLOWED_METHODS = 'GET, POST, PATCH, OPTIONS'
+const ALLOWED_METHODS = 'GET, POST, PATCH, DELETE, OPTIONS'
 const ALLOWED_HEADERS = `content-type, ${KEY_HEADER_NAME}`
 const MAX_AGE_SECONDS = '600'
 

@@ -13,7 +13,7 @@
 |---|---|---|
 | 1 | **Topology:** library-first, hosted-ready. Client talks HTTP to a configurable endpoint; integrator mounts the server in their app. Vercel/Next.js + Vercel Blob is the first-class v1 target. | ADR-0001 |
 | 2 | **Widget delivery:** self-contained vanilla `init()` engine with its own bundled React + a thin `<AirsideLayer/>` React wrapper (the wrapper ships as the separate `@airnauts/airside-integration-react` package). | ADR-0002, ADR-0040 |
-| 3 | **Adapter scope:** all seams designed; minimal concretes in v1 — **MongoDB** (Atlas/Vercel), **Vercel Blob + filesystem** storage, **Next.js/Web-standard** route handler. No auth adapter. PostgreSQL repository added in ADR-0035. | ADR-0003 |
+| 3 | **Adapter scope:** all seams designed; minimal concretes in v1 — **MongoDB** (Atlas/Vercel), **Vercel Blob + filesystem** storage, **Next.js/Web-standard** route handler. No auth adapter. PostgreSQL repository added in ADR-0035; S3/R2 storage added in ADR-0045. | ADR-0003 |
 | 4 | **Anchoring:** composite fingerprint + scored re-match; element anchor with optional additive text `selection`. | ADR-0004, ADR-0008 |
 | 5 | **UI stack:** shadcn/ui (Radix + Tailwind), bundled in the widget. | ADR-0005 |
 | 6 | **Isolation:** **light DOM** (`all: revert` + Tailwind no-preflight + scoped prefix + portal container) — *not* Shadow DOM. | ADR-0006 |
@@ -56,8 +56,8 @@ endpoint with no client change.
 - **`@airnauts/airside-adapter-postgres`** — PostgreSQL repository (hybrid columns +
   `jsonb`); driver-agnostic via a host-supplied `query()` executor, with a `pg`-based
   lazy convenience.
-- **`@airnauts/airside-storage-vercel-blob`**, **`@airnauts/airside-storage-fs`** — storage
-  concretes.
+- **`@airnauts/airside-storage-vercel-blob`**, **`@airnauts/airside-storage-s3`** (Amazon S3 /
+  Cloudflare R2), **`@airnauts/airside-storage-fs`** — storage concretes.
 - **`@airnauts/airside-extension-slack`**, **`@airnauts/airside-extension-email`** —
   notification extensions (Slack Incoming Webhook; pluggable email transport) that post
   new-comment notifications.

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ApiClient } from '../api/client'
+import { resetSettings } from '../settings/store'
 import { WidgetApp } from './app'
 
 function mockClient(): ApiClient {
@@ -42,7 +43,12 @@ function clickTarget() {
 }
 
 describe('WidgetApp', () => {
-  beforeEach(() => localStorage.clear())
+  // The settings store caches its first localStorage read; drop the cache between cases so
+  // each test re-hydrates from its own seed (issue #32 read-once store).
+  beforeEach(() => {
+    localStorage.clear()
+    resetSettings()
+  })
 
   it('creates a comment for a logged-in user without prompting again', async () => {
     login()

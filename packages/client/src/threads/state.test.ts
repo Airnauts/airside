@@ -164,6 +164,44 @@ describe('threads reducer', () => {
     expect(s.showResolved).toBe(true)
   })
 
+  it('REMOVE_THREAD drops the id from every map + order and leaves siblings intact', () => {
+    let s = reducer(initialState, {
+      type: 'INGEST_PLACEMENTS',
+      placements: [placed('a'), placed('b')],
+    })
+    s = reducer(s, { type: 'DETAIL_LOADED', id: 'a', thread: thread('a') })
+    s = reducer(s, { type: 'ACTION_RUNNING', id: 'a', actionId: 'jira.createIssue' })
+    s = reducer(s, { type: 'REMOVE_THREAD', id: 'a' })
+    expect(s.itemsById.a).toBeUndefined()
+    expect(s.placementsById.a).toBeUndefined()
+    expect(s.detailById.a).toBeUndefined()
+    expect(s.runningActionById.a).toBeUndefined()
+    expect(s.order).toEqual(['b'])
+    // sibling untouched
+    expect(s.itemsById.b.id).toBe('b')
+  })
+
+  it('REMOVE_THREAD clears dangling openId / focus / lost-open refs to the removed id', () => {
+    let s = reducer(initialState, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
+    s = reducer(s, { type: 'OPEN', id: 'a' })
+    s = { ...s, pendingFocusId: 'a', focusedId: 'a', lostOpenId: 'a' }
+    s = reducer(s, { type: 'REMOVE_THREAD', id: 'a' })
+    expect(s.openId).toBeNull()
+    expect(s.pendingFocusId).toBeNull()
+    expect(s.focusedId).toBeNull()
+    expect(s.lostOpenId).toBeNull()
+  })
+
+  it('REMOVE_THREAD leaves refs pointing at other threads alone', () => {
+    let s = reducer(initialState, {
+      type: 'INGEST_PLACEMENTS',
+      placements: [placed('a'), placed('b')],
+    })
+    s = reducer(s, { type: 'OPEN', id: 'b' })
+    s = reducer(s, { type: 'REMOVE_THREAD', id: 'a' })
+    expect(s.openId).toBe('b')
+  })
+
   it('ACTION_RUNNING sets the in-flight action id; ACTION_DONE clears it', () => {
     let s = reducer(initialState, { type: 'ACTION_RUNNING', id: 'a', actionId: 'jira.createIssue' })
     expect(s.runningActionById.a).toBe('jira.createIssue')

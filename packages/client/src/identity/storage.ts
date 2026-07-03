@@ -1,15 +1,24 @@
+// packages/client/src/identity/storage.ts
+
+import type { SettingEntry } from '../settings/entry'
+
+/** The logged-in reviewer's identity. Persisted (and validated) through the settings store via
+ *  {@link identitySetting}; the type itself is shared by the store and the UI. */
 export type Identity = {
   email: string
   name?: string
 }
 
-const STORAGE_KEY = 'airside:identity'
-
-export function loadIdentity(store: Storage = localStorage): Identity | null {
-  try {
-    const raw = store.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const parsed: unknown = JSON.parse(raw)
+/**
+ * Settings-store entry for the reviewer identity (`airside:identity`). Owns this setting's full
+ * storage wiring — on-disk key, absent default, and the parse guard that accepts only an object
+ * with a string `email` (and an optional string `name`) — which the settings store registers in
+ * its `ENTRIES` list.
+ */
+export const identitySetting: SettingEntry<Identity | null> = {
+  storageKey: 'airside:identity',
+  fallback: null,
+  validate: (parsed) => {
     if (
       parsed &&
       typeof parsed === 'object' &&
@@ -19,11 +28,5 @@ export function loadIdentity(store: Storage = localStorage): Identity | null {
       return { email, name: typeof name === 'string' ? name : undefined }
     }
     return null
-  } catch {
-    return null
-  }
-}
-
-export function saveIdentity(identity: Identity, store: Storage = localStorage): void {
-  store.setItem(STORAGE_KEY, JSON.stringify({ email: identity.email, name: identity.name }))
+  },
 }

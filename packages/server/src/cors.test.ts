@@ -22,6 +22,7 @@ describe('cors helpers', () => {
     expect(headers.get('vary')).toBe('Origin')
     expect(headers.get('access-control-allow-headers')).toContain('x-airside-key')
     expect(headers.get('access-control-allow-methods')).toContain('PATCH')
+    expect(headers.get('access-control-allow-methods')).toContain('DELETE')
   })
 
   it('buildCorsHeaders does not echo a disallowed origin', () => {

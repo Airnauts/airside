@@ -40,7 +40,7 @@ import { createAirsideAppRoute } from '@airnauts/airside-integration-next'
 import { mongoRepository } from '@airnauts/airside-adapter-mongo'
 import { createVercelBlobStorage } from '@airnauts/airside-storage-vercel-blob'
 
-export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
+export const { GET, POST, PATCH, DELETE, OPTIONS } = createAirsideAppRoute({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
@@ -72,7 +72,7 @@ Swap in the in-memory adapter:
 import { createMemoryRepository } from '@airnauts/airside-adapter-memory'
 import { createFileSystemStorage } from '@airnauts/airside-storage-fs'
 
-export const { GET, POST, PATCH, OPTIONS } = createAirsideAppRoute({
+export const { GET, POST, PATCH, DELETE, OPTIONS } = createAirsideAppRoute({
   secretKey: 'dev-key',
   projectId: 'my-app',
   allowedOrigins: ['http://localhost:3000'],
@@ -200,6 +200,7 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 | [`@airnauts/airside-adapter-postgres`](packages/adapter-postgres) | PostgreSQL repository adapter (hybrid columns + `jsonb`; driver-agnostic) |
 | [`@airnauts/airside-adapter-memory`](packages/adapter-memory) | In-memory repository for local development and tests |
 | [`@airnauts/airside-storage-vercel-blob`](packages/storage-vercel-blob) | Vercel Blob image-attachment storage |
+| [`@airnauts/airside-storage-s3`](packages/storage-s3) | Amazon S3 / Cloudflare R2 image-attachment storage |
 | [`@airnauts/airside-storage-fs`](packages/storage-fs) | Filesystem image-attachment storage |
 | [`@airnauts/airside-extension-slack`](packages/notifier-slack) | Slack Incoming Webhook notification extension |
 | [`@airnauts/airside-extension-email`](packages/notifier-email) | Email notification extension (SMTP via nodemailer or Resend HTTP API) |
@@ -218,15 +219,13 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 
 ## Roadmap
 
-None of these are committed releases — they're the directions we're considering. The full rationale for the parking-lot items lives in [`docs/ideas.md`](docs/ideas.md); known rough edges in already-shipped behavior are tracked in [`docs/issues.md`](docs/issues.md).
+None of these are committed releases — they're the directions we're considering. Every parking-lot item and known rough edge is tracked, with its full rationale, in [GitHub issues](https://github.com/Airnauts/airside/issues) (`enhancement` for features, `bug` for rough edges in shipped behavior).
 
 **Widget & UX**
 
 - Detail-view prev/next navigation — step through the filtered thread list from the detail header without returning to the list _(parking lot)_.
-- Re-navigate to a thread's pin from the open detail — click the page-context card in the sidebar to jump back to the anchor _(parking lot)_.
 - Per-comment overflow menu — edit / delete / copy a comment _(needs new `PATCH`/`DELETE` comment endpoints)_.
 - Emoji reactions on comments _(new `Comment` field + add/remove-reaction endpoints across both adapters)_.
-- Drag-and-drop and paste image upload onto the comment composer _(parking lot; a UX layer over the existing upload path)_.
 - Smooth, document-anchored pin positioning — drop the per-scroll-frame layout work for jank-free pins _(parking lot; a positioning-basis change that would get its own ADR)_.
 - Hide-all-pins toggle — temporarily hide the marker overlay while keeping the session active _(parking lot)_.
 - "Powered by Airside" logo mark in the widget chrome with a link back to the repo _(parking lot; host-configurable)_.
@@ -250,7 +249,6 @@ None of these are committed releases — they're the directions we're considerin
 **Adapters & hosts**
 
 - More persistence adapters — SQLite, MySQL.
-- More storage adapters — Amazon S3, Cloudflare R2.
 - More host-framework glue beyond Next.js — Remix, SvelteKit, Astro, and a generic `Request`-based handler for Hono / Express.
 
 **Managed cloud**
@@ -259,10 +257,6 @@ None of these are committed releases — they're the directions we're considerin
 
 **Bug fixes & known rough edges**
 
-- Selection highlight rects drift after scroll and window resize — Range rects are cached at match time and not recomputed on reposition _(open bug; see `docs/issues.md`)_.
-- Opening a thread does not surface its anchored text selection visually _(missing behavior)_.
-- Thread page-context card shows the URL on both lines because `pageTitle` is never captured at create time _(cosmetic; fix is a one-liner in the client)_.
-- Place mode drops a pin on the launcher and sidebar chrome instead of ignoring those clicks _(rebrand regression; stale attribute name in the place-mode click guard)_.
 - Cross-element text selections (spanning a tag boundary) anchor to a signal-less parent and are easily lost on re-render _(correctness bug; pairs with the two issues below)_.
 - A pin on a plain structural element can silently migrate to the wrong surviving sibling after the original is removed _(correctness bug; TDD fix deferred)_.
 - Signal-less elements (no `id`, class, or `data-*` attribute) cannot clear the re-anchor score threshold under structural mutations and always orphan _(known v1 scoring limitation)_.

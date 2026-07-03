@@ -142,6 +142,16 @@ export function createRuntime(opts: RuntimeOptions) {
     if (changed) emit()
   }
 
+  // Drop a thread from the retained set so the next reposition/rematch emit can't resurrect
+  // a pin for a thread the controller has optimistically deleted (before the server round-trip).
+  function removeItem(id: string) {
+    const next = placed.filter((p) => p.item.id !== id)
+    if (next.length === placed.length) return
+    placed = next
+    observeWinners()
+    emit()
+  }
+
   function dispose() {
     resizeObs?.disconnect()
   }
@@ -152,6 +162,7 @@ export function createRuntime(opts: RuntimeOptions) {
     rematchAll,
     setItemStatus,
     bumpCommentCount,
+    removeItem,
     dispose,
     get placed() {
       return placed

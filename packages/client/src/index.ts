@@ -1,7 +1,7 @@
-import { loadActivationKey, saveActivationKey } from './activation/storage'
 import { DEFAULT_KEY_PARAM, DEFAULT_THREAD_PARAM, type InitOptions } from './config'
 import { isActivated, isUrlActivation } from './gate'
 import { FOCUS_STORAGE_KEY } from './panel/navigate'
+import { getSetting, initSettings, setSetting } from './settings/store'
 
 export const packageName = '@airnauts/airside-client'
 
@@ -53,15 +53,19 @@ export function consumeThreadParam(param: string): void {
  */
 export async function init(options: InitOptions): Promise<AirsideHandle> {
   if (typeof window === 'undefined') return NOOP_HANDLE
+  // Read all persisted client settings once, here at startup (the store caches them).
+  initSettings()
   const keyParam = options.keyParam ?? DEFAULT_KEY_PARAM
   const search = window.location.search
 
-  if (!isActivated({ search, key: options.key, keyParam, storedKey: loadActivationKey() })) {
+  if (
+    !isActivated({ search, key: options.key, keyParam, storedKey: getSetting('activationKey') })
+  ) {
     return NOOP_HANDLE
   }
 
   if (isUrlActivation({ search, key: options.key, keyParam })) {
-    saveActivationKey(options.key)
+    setSetting('activationKey', options.key)
     stripKeyParam(keyParam)
   }
 

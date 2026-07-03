@@ -14,6 +14,7 @@ import type { StorageAdapter } from './storage/types'
 import { addComment } from './use-cases/add-comment'
 // Use-cases
 import { createThread } from './use-cases/create-thread'
+import { deleteThread } from './use-cases/delete-thread'
 import { getThread } from './use-cases/get-thread'
 import { listThreads } from './use-cases/list-threads'
 import { refreshAnchor } from './use-cases/refresh-anchor'
@@ -124,6 +125,7 @@ export function createAirsideServer(opts: CreateAirsideServerOptions): AirsideSe
     addComment: (input) => addComment(input as never, { repo: opts.repository, notifications }),
     setThreadStatus: (input) =>
       setThreadStatus(input as never, { repo: opts.repository, registry }),
+    deleteThread: (input) => deleteThread(input as never, { repo: opts.repository }),
     refreshAnchor: (input) => refreshAnchor(input as never, { repo: opts.repository, registry }),
     runThreadAction: (input) =>
       runThreadAction(input as never, { repo: opts.repository, registry }),

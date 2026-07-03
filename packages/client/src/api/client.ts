@@ -35,6 +35,7 @@ export interface ApiClient {
   addComment(id: string, body: AddCommentBody): Promise<Comment>
   setThreadStatus(id: string, body: SetThreadStatusBody): Promise<ThreadView>
   refreshAnchor(id: string, body: RefreshAnchorBody): Promise<ThreadListItem>
+  deleteThread(id: string): Promise<{ id: string }>
   upload(file: File): Promise<Attachment>
   runThreadAction(id: string, actionId: string): Promise<ThreadView>
 }
@@ -102,6 +103,7 @@ export function createApiClient(opts: ApiClientOptions): ApiClient {
       request<ThreadView>('PATCH', `/threads/${id(threadId)}`, body),
     refreshAnchor: (threadId, body) =>
       request<ThreadListItem>('PATCH', `/threads/${id(threadId)}/anchor`, body),
+    deleteThread: (threadId) => request<{ id: string }>('DELETE', `/threads/${id(threadId)}`),
     upload: (file) => {
       const fd = new FormData()
       fd.append('file', file)

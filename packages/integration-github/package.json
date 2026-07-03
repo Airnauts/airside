@@ -1,6 +1,6 @@
 {
   "name": "@airnauts/airside-extension-github",
-  "version": "0.9.1",
+  "version": "0.10.1",
   "description": "Create GitHub issues from comment threads (server extension).",
   "keywords": [
     "comments",

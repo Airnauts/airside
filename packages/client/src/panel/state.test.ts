@@ -114,4 +114,41 @@ describe('panel reducer', () => {
     }
     expect(mainListExcludingReview(state).map((t) => t.id)).toEqual(['a'])
   })
+
+  it('REMOVE_THREAD drops the id from both the list and needsReview', () => {
+    const state = {
+      ...initialState,
+      list: [item('a'), item('b')],
+      needsReview: [item('b')],
+    }
+    const next = reducer(state, { type: 'REMOVE_THREAD', id: 'b' })
+    expect(next.list.map((t) => t.id)).toEqual(['a'])
+    expect(next.needsReview).toEqual([])
+  })
+
+  it('REMOVE_THREAD falls back to the list when the deleted thread is the open detail', () => {
+    const state = {
+      ...initialState,
+      view: 'detail' as const,
+      detailThreadId: 'b',
+      list: [item('a'), item('b')],
+    }
+    const next = reducer(state, { type: 'REMOVE_THREAD', id: 'b' })
+    expect(next.view).toBe('list')
+    expect(next.detailThreadId).toBeNull()
+    expect(next.list.map((t) => t.id)).toEqual(['a'])
+  })
+
+  it('REMOVE_THREAD leaves an unrelated open detail untouched', () => {
+    const state = {
+      ...initialState,
+      view: 'detail' as const,
+      detailThreadId: 'a',
+      list: [item('a'), item('b')],
+    }
+    const next = reducer(state, { type: 'REMOVE_THREAD', id: 'b' })
+    expect(next.view).toBe('detail')
+    expect(next.detailThreadId).toBe('a')
+    expect(next.list.map((t) => t.id)).toEqual(['a'])
+  })
 })
