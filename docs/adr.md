@@ -1495,12 +1495,13 @@ tick may pass without promoting. One fewer artifact per branch and no repo-root 
 deferred items remain easy to add later (each is a localized op-selection/skip change) if real need
 appears. Tooling-only under `.claude/`/`docs/`, so no changeset.
 
-## ADR-0044 — GitHub Issues thread-action target: token auth + `fetch`, not Octokit
+## ADR-0049 — GitHub Issues thread-action target: token auth + `fetch`, not Octokit
 
 **Date:** 2026-06-19. **Status:** accepted.
 
-> Note: number assigned as the next free slot after ADR-0043 at authoring time. Another in-flight
-> spec (issue #17, real-time) may also claim 0044 — whichever lands second should renumber.
+> Note: renumbered to 0049 at merge time — `main` already runs through ADR-0047, and PR #70
+> claims 0048, so 0049 is the next free slot clear of both. If landing order shifts and 0049 is
+> taken first, whichever lands second should renumber again.
 
 **Context.** ADR-0034 anticipated GitHub Issues reusing the `thread-action` shape with no server
 change, and it does (`@airnauts/airside-extension-github` is structurally identical to the Jira

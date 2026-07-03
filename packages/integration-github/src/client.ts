@@ -40,7 +40,7 @@ const API_VERSION = '2022-11-28'
  *
  * Authenticates with `authorization: Bearer <token>`, which accepts a
  * fine-grained PAT today and a GitHub App installation token later with no
- * config-surface change (ADR-0044).
+ * config-surface change (ADR-0049).
  */
 export function createGitHubClient(cfg: GitHubConfig): GitHubClient {
   const base = (cfg.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, '')

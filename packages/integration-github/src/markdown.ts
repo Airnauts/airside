@@ -13,6 +13,13 @@ import type { Thread } from '@airnauts/airside-core'
 const TITLE_PREFIX = '[Page feedback] '
 const TITLE_MAX = 255
 
+// GitHub rejects issue bodies longer than 65,536 chars with a 422. Cap the body
+// comfortably under that limit and append a marker so an over-long thread still
+// creates an issue instead of permanently failing. Mirrors the title's hard-truncation.
+const BODY_MAX = 65_000
+const BODY_TRUNCATION_MARKER =
+  '\n\n_… description truncated (thread too long for a GitHub issue body)._'
+
 /**
  * Build a GitHub issue title: the prefix followed by the first comment's text,
  * hard-truncated so the total length never exceeds {@link TITLE_MAX}. Only the
@@ -73,5 +80,8 @@ export function buildMarkdownDescription(thread: Thread): string {
     lines.push('')
   }
 
-  return lines.join('\n')
+  const body = lines.join('\n')
+  if (body.length <= BODY_MAX) return body
+  // Hard-truncate then append the marker, keeping the total under GitHub's cap.
+  return body.slice(0, BODY_MAX - BODY_TRUNCATION_MARKER.length) + BODY_TRUNCATION_MARKER
 }

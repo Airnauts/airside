@@ -52,4 +52,16 @@ describe('buildMarkdownDescription', () => {
     expect(md).toContain('https://cdn/x.png') // attachment link
     expect(md).toContain('abc123') // commit sha provenance
   })
+  it('truncates very long bodies under GitHub 65,536 limit with a marker', () => {
+    const huge = {
+      ...thread,
+      comments: [{ ...thread.comments[0], text: 'x'.repeat(70_000) }],
+    } as never
+    const md = buildMarkdownDescription(huge)
+    expect(md.length).toBeLessThanOrEqual(65_536)
+    expect(md).toContain('truncated')
+  })
+  it('leaves normal-length bodies untouched (no marker)', () => {
+    expect(buildMarkdownDescription(thread)).not.toContain('truncated')
+  })
 })

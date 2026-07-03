@@ -46,7 +46,7 @@ The action appears in the thread toolbar. Once a GitHub issue has been created f
 
 Authenticate with a **fine-grained personal access token** (PAT) scoped to the single target repository with **Issues: write** — least privilege for v1. The token is sent as `authorization: Bearer <token>`.
 
-That same `Bearer` header also accepts a **GitHub App installation token** a host mints itself, so moving to App-based auth later is a host concern with **no configuration change** here (ADR-0044).
+That same `Bearer` header also accepts a **GitHub App installation token** a host mints itself, so moving to App-based auth later is a host concern with **no configuration change** here (ADR-0049).
 
 ## API reference
 
