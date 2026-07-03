@@ -13,6 +13,7 @@ import type { Identity } from '../identity/storage'
 import { cn } from '../lib/cn'
 import { PendingAttachment } from './Attachment'
 import { Button } from './Button'
+import { AttachIcon } from './icons'
 import { DropOverlay, useImageDrop } from './imageDrop'
 import {
   CLIENT_ALLOWED_IMAGE_TYPES,
@@ -187,9 +188,9 @@ export const Composer = forwardRef<ComposerHandle, ComposerProps>(function Compo
           size="icon"
           aria-label="Attach image"
           onClick={() => fileRef.current?.click()}
-          className="air:text-base air:text-gray-400"
+          className="air:text-gray-400"
         >
-          📎
+          <AttachIcon />
         </Button>
         <input
           ref={fileRef}

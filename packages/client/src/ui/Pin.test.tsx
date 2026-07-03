@@ -38,7 +38,8 @@ describe('Pin', () => {
   it('resolved pins show a check, not a count, and label as resolved', () => {
     render(<Pin item={item({ status: 'resolved' })} pin={{ x: 0, y: 0 }} onOpen={() => {}} />)
     const btn = screen.getByRole('button', { name: /resolved/i })
-    expect(btn).toHaveTextContent('✓')
+    // the resolved mark is now the CheckIcon svg (was the ✓ glyph), not the comment count
+    expect(btn.querySelector('svg')).toBeInTheDocument()
     expect(btn).not.toHaveTextContent('3')
   })
 
