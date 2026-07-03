@@ -11,7 +11,7 @@ export type SubscribeOptions = {
    * stream has stayed open for `healthyAfterMs` (whichever comes first) — NOT on the bare
    * transport open. The caller should do a full refetch here so any events missed while
    * disconnected — or between the surface's initial load and the stream opening — are
-   * reconciled (ADR-0045: full-refetch-on-reconnect, per surface). Gating on health means a
+   * reconciled (ADR-0050: full-refetch-on-reconnect, per surface). Gating on health means a
    * proxy that accepts the connection then drops the body can't trigger a refetch every cycle.
    */
   onConnect?: () => void

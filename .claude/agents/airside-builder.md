@@ -25,10 +25,11 @@ If any are missing, stop and emit a `failed` status block (below) — do not gue
    ```bash
    gh issue view <ISSUE> --repo Airnauts/airside --json title,body,labels
    ```
-   airside issues are deliberately thin (a pitch + a sketch + a link home). The footer usually
-   links a `docs/ideas.md` or `docs/issues.md` entry — **open that file and read the referenced
-   entry** for the actual intent before you write code. Read any concrete file paths the issue
-   names.
+   airside issues are self-contained — the body carries the pitch, the implementation sketch,
+   and (for bugs) the root cause and proposed fix. Read it in full for the actual intent before
+   you write code, and **open any concrete file paths the issue names** to ground it in the code.
+   (Older issues may still footer-link a now-removed `docs/ideas.md`/`docs/issues.md` entry; that
+   backlog was retired — ignore the dead link and work from the issue body.)
 
    **Is there an approved spec?** Check for spec comments:
    ```bash

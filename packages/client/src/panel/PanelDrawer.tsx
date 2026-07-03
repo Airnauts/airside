@@ -13,6 +13,7 @@ import { goToThread } from './navigate'
 import { PanelDetailView } from './PanelDetailView'
 import { PanelListView } from './PanelListView'
 import { usePanelController, usePanelState } from './PanelProvider'
+import { detailNeighbors } from './state'
 
 export type PanelDrawerProps = {
   resolvePageKey: (url: string) => string
@@ -20,33 +21,52 @@ export type PanelDrawerProps = {
     ApiClient,
     'getThread' | 'addComment' | 'setThreadStatus' | 'upload' | 'streamEvents'
   >
+  /** Show the "Powered by Airside" footer in the list pane (opt-in via init). Defaults to off. */
+  branding?: boolean
 }
 
 /** The right-hand comments drawer: a non-modal Dialog shell that shows either the
  *  cross-page thread list or a single thread's detail pane. */
-export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
+export function PanelDrawer({ resolvePageKey, client, branding = false }: PanelDrawerProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
   const container = usePortalContainer()
   const { identity } = useIdentity()
 
-  // Drawer-open reconciliation: when a status change persists, refetch the current filter.
+  // Drawer-open reconciliation: subscribe to controller thread events while the panel is open.
+  // status/created refetch the current filter; count keeps list rows in sync with an optimistic
+  // reply; deleted drops the row (and falls back to the list if its detail is the open pane). The
+  // returned unsubscribe runs on close, so events stop reaching the closed panel.
   useEffect(() => {
     if (!state.open) return
-    threads.registerStatusListener(() => void panel.refresh())
-    return () => threads.registerStatusListener(null)
+    return threads.subscribe((e) => {
+      switch (e.type) {
+        case 'status':
+        case 'created':
+          void panel.refresh()
+          break
+        case 'count':
+          panel.bumpCommentCount(e.id, e.delta)
+          break
+        case 'deleted':
+          panel.removeThread(e.id)
+          break
+      }
+    })
   }, [state.open, threads, panel])
 
-  // Keep the list rows' counts in sync with an optimistic reply posted from the open detail.
-  // This is the LOCAL optimistic path only; remote comments arrive via the all-pages stream below.
-  useEffect(() => {
-    if (!state.open) return
-    threads.registerCommentCountListener((id, delta) => panel.bumpCommentCount(id, delta))
-    return () => threads.registerCommentCountListener(null)
-  }, [state.open, threads, panel])
+  // Show a thread's detail in the sidebar and focus (pulse) its pin. Do NOT open the pin's popover
+  // (the sidebar is the surface) and do NOT close one that's already open — a pin thread the user
+  // opened stays open while they browse the sidebar. requestFocus pulses the pin and lazy-loads the
+  // detail (read by id); it leaves openId untouched. Shared by same-page row clicks and detail
+  // stepping so both stay in lockstep.
+  function showInSidebar(id: string) {
+    panel.openDetail(id)
+    threads.requestFocus(id)
+  }
 
-  // Live cross-page updates (ADR-0045): while the drawer is open, hold an all-pages /events
+  // Live cross-page updates (ADR-0050): while the drawer is open, hold an all-pages /events
   // stream so threads/comments/resolutions on ANY page reconcile into the list without a reload.
   // A thread.created on another page becomes a new row; comment counts and statuses update live.
   // The local author's own comment echo is suppressed — the optimistic bridge above already
@@ -89,12 +109,7 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
   function onSelect(row: { id: string; pageKey: string | null; pageUrl: string }) {
     const here = resolvePageKey(window.location.href)
     if (row.pageKey === here) {
-      // Same page: show the in-sidebar detail and focus (pulse) the pin. Do NOT open the pin's
-      // popover (the sidebar is the surface) and do NOT close one that's already open — a pin thread
-      // the user opened stays open while they browse the sidebar. requestFocus pulses the pin and
-      // lazy-loads the detail (read by id below); it leaves openId untouched.
-      panel.openDetail(row.id)
-      threads.requestFocus(row.id)
+      showInSidebar(row.id)
     } else {
       goToThread({ id: row.id, pageUrl: row.pageUrl, openDetail: true })
     }
@@ -106,6 +121,11 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
         state.needsReview.find((t) => t.id === state.detailThreadId) ??
         null)
       : null
+
+  // Step to a neighbouring thread from the detail header via the same in-sidebar surface as a
+  // same-page row click — but unconditional, so an off-page neighbour previews in place via the
+  // id-keyed detail rather than navigating away.
+  const { prevId, nextId } = detailNeighbors(state)
 
   return (
     <Dialog.Root open={state.open} modal={false} onOpenChange={(o) => !o && panel.closePanel()}>
@@ -123,11 +143,14 @@ export function PanelDrawer({ resolvePageKey, client }: PanelDrawerProps) {
             <PanelDetailView
               threadId={state.detailThreadId}
               listItem={detailItem}
+              resolvePageKey={resolvePageKey}
               client={client}
               onBack={() => panel.back()}
+              onPrev={prevId ? () => showInSidebar(prevId) : undefined}
+              onNext={nextId ? () => showInSidebar(nextId) : undefined}
             />
           ) : (
-            <PanelListView onSelect={onSelect} />
+            <PanelListView onSelect={onSelect} branding={branding} />
           )}
         </Dialog.Content>
       </Dialog.Portal>

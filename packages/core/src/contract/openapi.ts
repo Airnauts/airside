@@ -51,7 +51,7 @@ export function buildOpenApiDocument(): ReturnType<typeof createDocument> {
     }
 
     const openApiPath = toOpenApiPath(op.path)
-    const method = op.method.toLowerCase() as 'get' | 'post' | 'patch'
+    const method = op.method.toLowerCase() as 'get' | 'post' | 'patch' | 'delete'
     paths[openApiPath] = { ...(paths[openApiPath] ?? {}), [method]: operation }
   }
 

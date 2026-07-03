@@ -7,7 +7,7 @@ import type {
 } from '@airnauts/airside-core'
 
 /**
- * Own-echo rule (ADR-0045): the originating client suppresses the live echo of its own
+ * Own-echo rule (ADR-0050): the originating client suppresses the live echo of its own
  * `comment.added`, because its optimistic path already applied that comment (the panel bridge
  * counted it, the pin detail appended it). thread.created / thread.updated need no suppression —
  * their reducers are idempotent by id, so a self-echo is a harmless no-op.

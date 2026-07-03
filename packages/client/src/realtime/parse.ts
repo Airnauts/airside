@@ -1,7 +1,7 @@
 import type { RealtimeEvent } from '@airnauts/airside-core'
 
 /**
- * Minimal Server-Sent Events frame parser (ADR-0045). We consume `GET /events` with a
+ * Minimal Server-Sent Events frame parser (ADR-0050). We consume `GET /events` with a
  * fetch-streamed reader rather than native `EventSource` (which can't set the
  * `x-airside-key` header), so we hand-roll just enough of the SSE grammar:
  *

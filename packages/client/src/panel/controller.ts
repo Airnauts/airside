@@ -13,7 +13,9 @@ export type PanelController = {
   back(): void
   /** Optimistically adjust a list row's comment count (mirrors an optimistic reply in the detail). */
   bumpCommentCount(id: string, delta: number): void
-  // Live reconciliation from the all-pages stream (ADR-0045).
+  /** Drop a deleted thread from the list/needsReview and, if its detail is open, fall back to the list. */
+  removeThread(id: string): void
+  // Live reconciliation from the all-pages stream (ADR-0050).
   /** Insert/replace a thread row (a thread created/updated on any page appears without a refetch). */
   upsertThread(thread: ThreadListItem): void
   /** Patch a row's status + anchorState in place (idempotent). */
@@ -93,6 +95,9 @@ export function createPanelController(
     },
     bumpCommentCount(id, delta) {
       dispatch({ type: 'BUMP_COMMENT_COUNT', id, delta })
+    },
+    removeThread(id) {
+      dispatch({ type: 'REMOVE_THREAD', id })
     },
     upsertThread(thread) {
       dispatch({ type: 'UPSERT_THREAD', thread })

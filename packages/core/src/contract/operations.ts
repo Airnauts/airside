@@ -13,11 +13,11 @@ import {
   ThreadActionParam,
   ThreadIdParam,
 } from './requests'
-import { ThreadListResponse } from './responses'
+import { DeleteThreadResponse, ThreadListResponse } from './responses'
 
 export interface Operation {
   operationId: string
-  method: 'GET' | 'POST' | 'PATCH'
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE'
   path: string
   summary: string
   params?: z.ZodObject
@@ -82,6 +82,15 @@ export const operations: Operation[] = [
     body: SetThreadStatusBody,
     success: { status: 200, schema: ThreadView },
     errors: ['VALIDATION_FAILED', 'NOT_FOUND', 'CONFLICT', ...AUTH_ERRORS],
+  },
+  {
+    operationId: 'deleteThread',
+    method: 'DELETE',
+    path: '/threads/:id',
+    summary: 'Delete a thread (its pin, comments, and attachment metadata)',
+    params: ThreadIdParam,
+    success: { status: 200, schema: DeleteThreadResponse },
+    errors: ['NOT_FOUND', ...AUTH_ERRORS],
   },
   {
     operationId: 'refreshAnchor',

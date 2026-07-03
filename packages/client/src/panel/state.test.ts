@@ -1,7 +1,14 @@
 // packages/client/src/panel/state.test.ts
 import type { ThreadListItem } from '@airnauts/airside-core'
 import { describe, expect, it } from 'vitest'
-import { initialState, mainListExcludingReview, reducer, selectVisibleList } from './state'
+import {
+  detailNeighbors,
+  initialState,
+  mainListExcludingReview,
+  navigableList,
+  reducer,
+  selectVisibleList,
+} from './state'
 
 describe('detail view', () => {
   it('starts on the list view', () => {
@@ -85,6 +92,14 @@ describe('panel reducer', () => {
     expect(next.loadingMore).toBe(false)
   })
 
+  it('LOAD_MORE_SUCCESS drops ids already loaded so an overlapping cursor page does not duplicate rows', () => {
+    const next = reducer(
+      { ...initialState, list: [item('a'), item('b')], loadingMore: true },
+      { type: 'LOAD_MORE_SUCCESS', list: [item('b'), item('c'), item('c')], nextCursor: null },
+    )
+    expect(next.list.map((t) => t.id)).toEqual(['a', 'b', 'c'])
+  })
+
   it('BUMP_COMMENT_COUNT adjusts the matching row in list and needsReview, clamped at zero', () => {
     const withCount = (id: string, commentCount: number): ThreadListItem =>
       ({ ...item(id), commentCount }) as ThreadListItem
@@ -113,6 +128,96 @@ describe('panel reducer', () => {
       needsReview: [item('b')],
     }
     expect(mainListExcludingReview(state).map((t) => t.id)).toEqual(['a'])
+  })
+
+  it('REMOVE_THREAD drops the id from both the list and needsReview', () => {
+    const state = {
+      ...initialState,
+      list: [item('a'), item('b')],
+      needsReview: [item('b')],
+    }
+    const next = reducer(state, { type: 'REMOVE_THREAD', id: 'b' })
+    expect(next.list.map((t) => t.id)).toEqual(['a'])
+    expect(next.needsReview).toEqual([])
+  })
+
+  it('REMOVE_THREAD falls back to the list when the deleted thread is the open detail', () => {
+    const state = {
+      ...initialState,
+      view: 'detail' as const,
+      detailThreadId: 'b',
+      list: [item('a'), item('b')],
+    }
+    const next = reducer(state, { type: 'REMOVE_THREAD', id: 'b' })
+    expect(next.view).toBe('list')
+    expect(next.detailThreadId).toBeNull()
+    expect(next.list.map((t) => t.id)).toEqual(['a'])
+  })
+
+  it('REMOVE_THREAD leaves an unrelated open detail untouched', () => {
+    const state = {
+      ...initialState,
+      view: 'detail' as const,
+      detailThreadId: 'a',
+      list: [item('a'), item('b')],
+    }
+    const next = reducer(state, { type: 'REMOVE_THREAD', id: 'b' })
+    expect(next.view).toBe('detail')
+    expect(next.detailThreadId).toBe('a')
+    expect(next.list.map((t) => t.id)).toEqual(['a'])
+  })
+})
+
+describe('detail prev/next navigation', () => {
+  it('navigableList puts Needs-review rows before the de-duplicated main list', () => {
+    const state = {
+      ...initialState,
+      list: [item('a'), item('orph'), item('b')],
+      needsReview: [item('orph')],
+    }
+    expect(navigableList(state).map((t) => t.id)).toEqual(['orph', 'a', 'b'])
+  })
+
+  it('detailNeighbors returns both neighbours for a middle thread', () => {
+    const state = {
+      ...initialState,
+      detailThreadId: 'b',
+      list: [item('a'), item('b'), item('c')],
+    }
+    expect(detailNeighbors(state)).toEqual({ prevId: 'a', nextId: 'c' })
+  })
+
+  it('detailNeighbors has no prev at the first thread and no next at the last', () => {
+    const base = { ...initialState, list: [item('a'), item('b'), item('c')] }
+    expect(detailNeighbors({ ...base, detailThreadId: 'a' })).toEqual({
+      prevId: null,
+      nextId: 'b',
+    })
+    expect(detailNeighbors({ ...base, detailThreadId: 'c' })).toEqual({
+      prevId: 'b',
+      nextId: null,
+    })
+  })
+
+  it('detailNeighbors spans the Needs-review → main-list boundary in visible order', () => {
+    const state = {
+      ...initialState,
+      detailThreadId: 'orph',
+      list: [item('a'), item('orph')],
+      needsReview: [item('orph')],
+    }
+    // Order is [orph, a]; the open 'orph' is first, so its next is the main-list 'a'.
+    expect(detailNeighbors(state)).toEqual({ prevId: null, nextId: 'a' })
+  })
+
+  it('detailNeighbors yields no neighbours when the open thread is not in the loaded list', () => {
+    const state = { ...initialState, detailThreadId: 'ghost', list: [item('a'), item('b')] }
+    expect(detailNeighbors(state)).toEqual({ prevId: null, nextId: null })
+  })
+
+  it('detailNeighbors yields no neighbours when no detail is open', () => {
+    const state = { ...initialState, list: [item('a'), item('b')] }
+    expect(detailNeighbors(state)).toEqual({ prevId: null, nextId: null })
   })
 })
 

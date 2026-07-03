@@ -9,6 +9,7 @@
       "@airnauts/airside-adapter-postgres",
       "@airnauts/airside-client",
       "@airnauts/airside-core",
+      "@airnauts/airside-extension-github",
       "@airnauts/airside-extension-jira",
       "@airnauts/airside-integration-next",
       "@airnauts/airside-integration-react",
@@ -16,6 +17,7 @@
       "@airnauts/airside-extension-slack",
       "@airnauts/airside-server",
       "@airnauts/airside-storage-fs",
+      "@airnauts/airside-storage-s3",
       "@airnauts/airside-storage-vercel-blob"
     ]
   ],

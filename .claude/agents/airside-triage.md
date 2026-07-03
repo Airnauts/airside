@@ -17,8 +17,10 @@ written spec + the owner's approval before any code). You are **read-only**.
 ## Steps
 
 1. Read the issue and its rationale:
-   `gh issue view <ISSUE> --repo Airnauts/airside --json title,body,labels`. Follow the footer's
-   `docs/ideas.md` / `docs/issues.md` link and read that entry. Skim any files the issue names.
+   `gh issue view <ISSUE> --repo Airnauts/airside --json title,body,labels`. The issue body is
+   self-contained — read it in full. Skim any files the issue names. (Older issues may footer-link
+   a now-removed `docs/ideas.md`/`docs/issues.md` entry; that backlog was retired — ignore the
+   dead link and work from the issue body.)
 2. Judge the scope honestly against the criteria below. Look at how localized the change is, how
    much it's already specified, and whether there's a real design decision to make.
 

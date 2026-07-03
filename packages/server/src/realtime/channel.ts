@@ -5,7 +5,7 @@ import type { Scope } from '../repository/types'
 export type RealtimeListener = (event: RealtimeEvent) => void
 
 /**
- * Outbound port for pushing live updates to open widgets (ADR-0045). The server
+ * Outbound port for pushing live updates to open widgets (ADR-0050). The server
  * publishes after every successful write; the `GET /events` use-case subscribes a
  * stream to it. Dual-scope: `pageKey` string subscribes to one page (pins),
  * `pageKey` null subscribes to every page in the project/env (the cross-page panel).

@@ -15,6 +15,7 @@ import type { StorageAdapter } from './storage/types'
 import { addComment } from './use-cases/add-comment'
 // Use-cases
 import { createThread } from './use-cases/create-thread'
+import { deleteThread } from './use-cases/delete-thread'
 import { getThread } from './use-cases/get-thread'
 import { listThreads } from './use-cases/list-threads'
 import { refreshAnchor } from './use-cases/refresh-anchor'
@@ -41,7 +42,7 @@ export type CreateAirsideServerOptions = {
   /** Override the rate limiter implementation entirely. */
   rateLimiter?: RateLimiter
   /**
-   * Live-update channel for `GET /events` (ADR-0045). Defaults to an in-process bus, so
+   * Live-update channel for `GET /events` (ADR-0050). Defaults to an in-process bus, so
    * writes push to open widgets on a single instance out of the box. Pass `false` to
    * disable push entirely (the endpoint stays open but emits nothing; widgets fall back to
    * refetch), or inject your own `RealtimeChannel` (e.g. a cross-instance backplane).
@@ -152,6 +153,7 @@ export function createAirsideServer(opts: CreateAirsideServerOptions): AirsideSe
       }),
     setThreadStatus: (input) =>
       setThreadStatus(input as never, { repo: opts.repository, registry, realtime: realtimeDep }),
+    deleteThread: (input) => deleteThread(input as never, { repo: opts.repository }),
     refreshAnchor: (input) =>
       refreshAnchor(input as never, { repo: opts.repository, registry, realtime: realtimeDep }),
     runThreadAction: (input) =>

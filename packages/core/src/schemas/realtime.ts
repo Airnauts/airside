@@ -3,7 +3,7 @@ import { ThreadId } from '../ids'
 import { Comment } from './comment'
 import { AnchorState, ThreadListItemView, ThreadStatus } from './thread'
 
-/** The live-update events pushed over `GET /events` (architecture §2, ADR-0044). */
+/** The live-update events pushed over `GET /events` (architecture §2, ADR-0050). */
 export const RealtimeEventType = z.enum(['thread.created', 'comment.added', 'thread.updated'])
 export type RealtimeEventType = z.infer<typeof RealtimeEventType>
 

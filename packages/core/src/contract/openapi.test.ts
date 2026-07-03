@@ -29,6 +29,7 @@ describe('buildOpenApiDocument', () => {
     expect(paths['/threads']?.post).toBeDefined()
     expect(paths['/threads']?.get).toBeDefined()
     expect(paths['/threads/{id}']?.patch).toBeDefined()
+    expect(paths['/threads/{id}']?.delete).toBeDefined()
     expect(paths['/events']?.get).toBeDefined()
   })
 

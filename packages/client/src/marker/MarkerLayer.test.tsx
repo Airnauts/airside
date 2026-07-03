@@ -7,9 +7,18 @@ import { IdentityProvider } from '../identity/IdentityProvider'
 import { FOCUS_STORAGE_KEY, goToThread } from '../panel/navigate'
 import { PanelDrawer } from '../panel/PanelDrawer'
 import { PanelProvider } from '../panel/PanelProvider'
+import { initSettings, resetSettings } from '../settings/store'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { ToastProvider } from '../ui/toast'
 import { MarkerLayer } from './MarkerLayer'
+
+// MarkerLayer now seeds its pins-hidden state from the shared settings store, which caches its
+// first localStorage read. Drop both between cases so the pin-visibility toggle (which writes the
+// flag) and the persistence test (which seeds it) can't leak across tests (issue #32).
+beforeEach(() => {
+  localStorage.clear()
+  resetSettings()
+})
 
 function client() {
   return {
@@ -77,6 +86,54 @@ describe('MarkerLayer place mode', () => {
     // A successful create must not fire the "anchor lost" orphan toast.
     // (DetachedThread may render its banner for pinless threads; check for the toast element specifically.)
     expect(document.querySelector('[data-airside-toast]')).toBeNull()
+  })
+
+  it('captures the trimmed document.title as pageTitle when creating a thread (#56)', async () => {
+    document.body.innerHTML =
+      '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
+    mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 80, height: 16 })
+    const prevTitle = document.title
+    document.title = '  My Page  '
+    try {
+      const c = client()
+      renderMarker(props(c))
+      fireEvent.click(screen.getByTestId('airside-place'))
+      fireEvent.click(document.querySelector('#t') as Element, { clientX: 40, clientY: 8 })
+      expect(await screen.findByTestId('airside-draft')).toBeInTheDocument()
+      fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
+        target: { value: 'Looks off here' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: /send/i }))
+      await waitFor(() => expect(c.createThread).toHaveBeenCalled())
+      // The page-context card needs a real title so it stops falling back to the URL twice.
+      expect(c.createThread.mock.calls[0][0].pageTitle).toBe('My Page')
+    } finally {
+      document.title = prevTitle
+    }
+  })
+
+  it('omits pageTitle when document.title is blank, so the card never renders an empty title (#56)', async () => {
+    document.body.innerHTML =
+      '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
+    mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 80, height: 16 })
+    const prevTitle = document.title
+    document.title = '   '
+    try {
+      const c = client()
+      renderMarker(props(c))
+      fireEvent.click(screen.getByTestId('airside-place'))
+      fireEvent.click(document.querySelector('#t') as Element, { clientX: 40, clientY: 8 })
+      expect(await screen.findByTestId('airside-draft')).toBeInTheDocument()
+      fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
+        target: { value: 'No title here' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: /send/i }))
+      await waitFor(() => expect(c.createThread).toHaveBeenCalled())
+      // Sending '' would make the bold line render blank instead of falling back to the URL.
+      expect(c.createThread.mock.calls[0][0]).not.toHaveProperty('pageTitle')
+    } finally {
+      document.title = prevTitle
+    }
   })
 
   it('shows the just-posted comment in the popover immediately, with no extra getThread (BUG A)', async () => {
@@ -277,7 +334,7 @@ describe('MarkerLayer mutation wiring', () => {
     // Open it and resolve.
     fireEvent.click(pin)
     await waitFor(() => expect(screen.getByText('the comment')).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Resolve/ }))
     await waitFor(() => expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i))
     // Now simulate what the live app does: the popover's own content change is a DOM mutation
     // under document.body → rematchAll() re-emits from the runtime's cached list. Without the
@@ -285,9 +342,9 @@ describe('MarkerLayer mutation wiring', () => {
     spies.fireMutation()
     // Also exercise reposition (scroll/resize path), which re-emits the cached items too.
     spies.fireResize()
-    // The pin must STAY resolved (✓) — no clobber back to the blue "open" avatar.
+    // The pin must STAY resolved (CheckIcon) — no clobber back to the blue "open" avatar.
     await waitFor(() => expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i))
-    expect(screen.getByTestId('airside-pin')).toHaveTextContent('✓')
+    expect(screen.getByTestId('airside-pin').querySelector('svg')).toBeInTheDocument()
     // listThreads must not have been called again (no refetch; cache patch sufficed).
     expect(c.listThreads).toHaveBeenCalledTimes(1)
     spies.restore()
@@ -310,7 +367,11 @@ function renderLayer(client: unknown) {
                   pageUrl="https://x.test/here"
                   resolvePageKey={() => 'x.test/here'}
                 />
-                <PanelDrawer resolvePageKey={() => 'x.test/here'} client={client as never} />
+                <PanelDrawer
+                  resolvePageKey={() => 'x.test/here'}
+                  client={client as never}
+                  branding={false}
+                />
               </DraftsProvider>
             </PanelProvider>
           </ThreadsProvider>
@@ -378,5 +439,173 @@ describe('MarkerLayer panel integration', () => {
     )
     renderLayer(client())
     expect(await screen.findByRole('button', { name: /back/i })).toBeInTheDocument()
+  })
+})
+
+// One open thread anchored to #t (the "pin target text" paragraph below) so the runtime places it
+// and a pin renders — the fixture the visibility toggle acts on.
+function clientWithPin() {
+  const c = client()
+  c.listThreads = vi.fn().mockResolvedValue({
+    threads: [
+      {
+        id: 'th1',
+        status: 'open',
+        anchorState: 'anchored',
+        unresolvedCount: 1,
+        commentCount: 1,
+        createdBy: { email: 'a@b.c', name: 'Ann' },
+        anchor: {
+          schemaVersion: 1,
+          selectors: ['#t', '#t'],
+          signals: {
+            tag: 'p',
+            classes: ['lead'],
+            siblingIndex: 0,
+            ancestorTrail: ['main'],
+            textSnippet: 'pin target text',
+          },
+          offset: { fx: 0.5, fy: 0.5 },
+        },
+      },
+    ],
+    nextCursor: null,
+  })
+  return c
+}
+
+function seedPinPage() {
+  document.body.innerHTML = '<main><p id="t" class="lead">pin target text</p></main>'
+  mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 100, height: 20 })
+}
+
+describe('MarkerLayer pin-visibility toggle (#32)', () => {
+  it('hides the pin on toggle and restores it on a second toggle', async () => {
+    seedPinPage()
+    renderMarker(props(clientWithPin()))
+    expect(await screen.findByTestId('airside-pin')).toBeInTheDocument()
+    // Hide: the overlay unmounts, so the pin is gone.
+    fireEvent.click(screen.getByTestId('airside-toggle-pins'))
+    expect(screen.queryByTestId('airside-pin')).toBeNull()
+    // Show: the still-computed placement re-mounts the pin.
+    fireEvent.click(screen.getByTestId('airside-toggle-pins'))
+    expect(await screen.findByTestId('airside-pin')).toBeInTheDocument()
+  })
+
+  it('keeps the sidebar openable while pins are hidden', async () => {
+    const c = {
+      listThreads: vi.fn(async () => ({ threads: [], nextCursor: null })),
+      refreshAnchor: vi.fn(),
+      getThread: vi.fn(),
+    }
+    renderLayer(c)
+    fireEvent.click(screen.getByTestId('airside-toggle-pins'))
+    // The sidebar is a sibling, never gated by the overlay toggle — it still opens.
+    screen.getByTestId('airside-panel-open').click()
+    await waitFor(() => expect(screen.getByTestId('airside-panel')).toBeInTheDocument())
+  })
+
+  it('mounts with pins hidden when the persisted flag is true, then reveals them on toggle', async () => {
+    seedPinPage()
+    // Persisted hidden state from a prior session.
+    localStorage.setItem('airside:pins-hidden', JSON.stringify(true))
+    resetSettings()
+    initSettings()
+    const c = clientWithPin()
+    renderMarker(props(c))
+    await waitFor(() => expect(c.listThreads).toHaveBeenCalled())
+    // No pin despite a placement existing, because the persisted flag hides the overlay.
+    expect(screen.queryByTestId('airside-pin')).toBeNull()
+    expect(screen.getByTestId('airside-toggle-pins')).toHaveAttribute('aria-pressed', 'true')
+    // Showing pins reveals the placed pin — proving the flag, not the data, hid it.
+    fireEvent.click(screen.getByTestId('airside-toggle-pins'))
+    expect(await screen.findByTestId('airside-pin')).toBeInTheDocument()
+  })
+
+  it('disables placing while hidden so a page click opens no draft', async () => {
+    document.body.innerHTML = '<main><p id="t">place target</p></main>'
+    renderMarker(props(client()))
+    fireEvent.click(screen.getByTestId('airside-toggle-pins'))
+    expect(screen.getByTestId('airside-place')).toBeDisabled()
+    fireEvent.click(document.querySelector('#t') as Element, { clientX: 1, clientY: 1 })
+    expect(screen.queryByTestId('airside-draft')).toBeNull()
+  })
+})
+
+// Renders MarkerLayer + PanelDrawer together with a resolved identity (so the composer can submit
+// and create) — the harness needed to observe the open sidebar reacting to a fresh create.
+function renderMarkerWithPanel(c: ReturnType<typeof client>) {
+  return render(
+    <WidgetProvider>
+      <ToastProvider>
+        <IdentityProvider
+          identity={{ email: 'a@b.c', name: 'A' }}
+          requestIdentity={(resume) => resume({ email: 'a@b.c', name: 'A' })}
+        >
+          <ThreadsProvider client={c as never}>
+            <PanelProvider client={c as never}>
+              <DraftsProvider>
+                <MarkerLayer client={c as never} pageKey="k" pageUrl="https://x.test/p" />
+                <PanelDrawer resolvePageKey={() => 'k'} client={c as never} />
+              </DraftsProvider>
+            </PanelProvider>
+          </ThreadsProvider>
+        </IdentityProvider>
+      </ToastProvider>
+    </WidgetProvider>,
+  )
+}
+
+describe('MarkerLayer → open panel list sync (#59)', () => {
+  it('adds a freshly created thread to the already-open sidebar list without a reopen', async () => {
+    document.body.innerHTML =
+      '<main><p id="t" class="lead">target text</p></main><div id="widget"></div>'
+    mockRect(document.querySelector('#t') as Element, { left: 0, top: 0, width: 80, height: 16 })
+    const c = client()
+    // The panel list is empty until a thread exists; once createThread has run, listThreads returns
+    // the new thread (mirrors the server now holding it). Re-uses the captured anchor so the on-page
+    // runtime can also match it — same fixture shape as the BUG A test above.
+    c.listThreads = vi.fn().mockImplementation(async () => {
+      const created = c.createThread.mock.calls[0]?.[0]
+      if (!created) return { threads: [], nextCursor: null }
+      return {
+        threads: [
+          {
+            id: 'new1',
+            status: 'open',
+            anchorState: 'anchored',
+            unresolvedCount: 1,
+            commentCount: 1,
+            createdBy: { email: 'a@b.c', name: 'A' },
+            rootComment: { text: 'My new note', createdAt: new Date().toISOString() },
+            updatedAt: new Date().toISOString(),
+            pageUrl: 'https://x.test/p',
+            pageKey: 'k',
+            anchor: created.anchor,
+          },
+        ],
+        nextCursor: null,
+      }
+    })
+    renderMarkerWithPanel(c)
+
+    // Open the sidebar first — it lists nothing yet (no thread exists).
+    fireEvent.click(screen.getByTestId('airside-panel-open'))
+    await waitFor(() => expect(screen.getByTestId('airside-panel')).toBeInTheDocument())
+    expect(screen.queryByTestId('airside-panel-row')).toBeNull()
+
+    // With the sidebar still open, place a pin and submit the composer.
+    fireEvent.click(screen.getByTestId('airside-place'))
+    fireEvent.click(document.querySelector('#t') as Element, { clientX: 40, clientY: 8 })
+    expect(await screen.findByTestId('airside-draft')).toBeInTheDocument()
+    fireEvent.change(screen.getByPlaceholderText(/add a comment/i), {
+      target: { value: 'My new note' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /send/i }))
+    await waitFor(() => expect(c.createThread).toHaveBeenCalled())
+
+    // The new thread must appear in the open list immediately — the create notification triggers
+    // panel.refresh(). Before the fix, the list stayed empty until a close/reopen.
+    await waitFor(() => expect(screen.getByTestId('airside-panel-row')).toBeInTheDocument())
   })
 })

@@ -7,7 +7,12 @@ import {
   scoreCandidate,
 } from '@airnauts/airside-core'
 import { extractSignals } from './extract'
-import { buildSelectors, resolveUnique } from './selectors'
+import {
+  buildSelectors,
+  isIgnoredForAnchoring,
+  resolveStructural,
+  resolveUnique,
+} from './selectors'
 
 // Label format emitted by extractSignals.ancestorLabel: 'tag', 'tag#id', or 'tag[data-testid=v]'.
 // These forms are mutually exclusive; id takes priority so the combined form is never produced.
@@ -28,6 +33,7 @@ function findAncestorMatch(root: ParentNode, label: string): Element | null {
   const parsed = parseAncestorLabel(label)
   const candidates = Array.from(root.querySelectorAll(parsed.tag))
   for (const el of candidates) {
+    if (isIgnoredForAnchoring(el)) continue // skip our widget + host portals/placeholders (the first <div> trap)
     if (parsed.id && el.id === parsed.id) return el
     if (parsed.testid && el.getAttribute('data-testid') === parsed.testid) return el
     if (!parsed.id && !parsed.testid) return el
@@ -35,7 +41,10 @@ function findAncestorMatch(root: ParentNode, label: string): Element | null {
   return null
 }
 
-/** Scope candidates to the nearest surviving ancestor-landmark; fall back to all of the stored tag. */
+/** Scope candidates to the nearest surviving ancestor-landmark; fall back to all of the stored tag.
+ *  Ignored elements (our widget DOM + host overlay/portal/placeholder containers) are never
+ *  candidates — they hold many divs/spans that would otherwise pollute (or, for a bare-tag trail
+ *  entry, hijack) the scored search. */
 export function findCandidates(
   root: ParentNode,
   stored: { tag: string; ancestorTrail: string[] },
@@ -44,11 +53,13 @@ export function findCandidates(
   for (const label of stored.ancestorTrail) {
     const ancestor = findAncestorMatch(root, label)
     if (ancestor) {
-      return Array.from(ancestor.querySelectorAll(stored.tag))
+      return Array.from(ancestor.querySelectorAll(stored.tag)).filter(
+        (el) => !isIgnoredForAnchoring(el),
+      )
     }
   }
   // Fall back to all elements of the stored tag.
-  return Array.from(root.querySelectorAll(stored.tag))
+  return Array.from(root.querySelectorAll(stored.tag)).filter((el) => !isIgnoredForAnchoring(el))
 }
 
 export type Healed = { selectors: [string, string]; signals: Signals }
@@ -120,8 +131,11 @@ function rangeForOffsets(el: Element, start: number, end: number): Range | null 
 
 export function rematch(anchor: Anchor, root: ParentNode): RematchResult {
   // 1. Fast path: a unique selector hit whose signals agree -> anchored, no scoring, no heal.
-  for (const selector of anchor.selectors) {
-    const hit = resolveUnique(selector, root)
+  // selectors are [structural nth-of-type path, stable class/id path]. The structural path is
+  // resolved with the ignore-aware walker (not native :nth-of-type, which would miscount our root
+  // and host portals); the stable path resolves natively (ignore-filtered) via resolveUnique.
+  const [structural, stable] = anchor.selectors
+  for (const hit of [resolveStructural(structural, root), resolveUnique(stable, root)]) {
     if (hit && signalsAgree(anchor.signals, hit)) {
       return finishMatch(hit, anchor)
     }

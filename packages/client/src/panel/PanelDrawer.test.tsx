@@ -7,7 +7,7 @@ import { WidgetProvider } from '../app/providers'
 import { DraftsProvider } from '../drafts/DraftsProvider'
 import { IdentityProvider } from '../identity/IdentityProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
-import { useController, useDispatch } from '../threads/useThreads'
+import { useController, useDispatch, useThreadsState } from '../threads/useThreads'
 import { FOCUS_STORAGE_KEY } from './navigate'
 import { PanelDrawer } from './PanelDrawer'
 import { PanelProvider, usePanelController } from './PanelProvider'
@@ -54,6 +54,25 @@ function StatusProbe() {
   )
 }
 
+// Stands in for MarkerLayer.createThread firing the thread-created notification after a save.
+function CreateProbe() {
+  const threads = useController()
+  return (
+    <button type="button" onClick={() => threads.emit({ type: 'created' })}>
+      created
+    </button>
+  )
+}
+
+function DeleteProbe({ id }: { id: string }) {
+  const threads = useController()
+  return (
+    <button type="button" onClick={() => void threads.deleteThread(id)}>
+      delete {id}
+    </button>
+  )
+}
+
 // Simulates a cross-page / deep-link open: the thread is NOT in the loaded list, its detail is
 // seeded under its own id, and openId stays null. The detail view must fall back to the id-keyed
 // detail (not openId) or it renders blank.
@@ -91,11 +110,30 @@ function GhostOpener() {
   )
 }
 
+// Opens a thread's detail directly (no row click, so no requestFocus on this path) — lets a test
+// reach the open detail with a clean pendingFocusId, then exercise the page-context card alone.
+function DetailOpener({ id }: { id: string }) {
+  const panel = usePanelController()
+  return (
+    <button type="button" onClick={() => panel.openDetail(id)}>
+      open detail {id}
+    </button>
+  )
+}
+
+function FocusProbe() {
+  const state = useThreadsState()
+  return <span data-testid="pending-focus">{state.pendingFocusId ?? 'none'}</span>
+}
+
 function setup(opts: {
   threads: ThreadListItem[]
   review?: ThreadListItem[]
   resolvePageKey?: (url: string) => string
   withProbes?: boolean
+  branding?: boolean
+  detailOpenerId?: string
+  deleteProbeId?: string
 }) {
   // The main fetch carries `sort: 'updatedAt'`; the review fetch sends only `status`.
   // Distinguish the two by the presence of `sort`.
@@ -114,6 +152,7 @@ function setup(opts: {
       attachments: [],
       createdAt: new Date().toISOString(),
     }),
+    deleteThread: vi.fn().mockResolvedValue({ id: 'x' }),
     upload: vi.fn(),
   }
   const resolvePageKey = opts.resolvePageKey ?? (() => 'x.test/other')
@@ -128,7 +167,19 @@ function setup(opts: {
               <CloseProbe />
               <GhostOpener />
               {opts.withProbes && <StatusProbe />}
-              <PanelDrawer resolvePageKey={resolvePageKey} client={client as never} />
+              {opts.withProbes && <CreateProbe />}
+              {opts.detailOpenerId && (
+                <>
+                  <DetailOpener id={opts.detailOpenerId} />
+                  <FocusProbe />
+                </>
+              )}
+              {opts.deleteProbeId && <DeleteProbe id={opts.deleteProbeId} />}
+              <PanelDrawer
+                resolvePageKey={resolvePageKey}
+                client={client as never}
+                branding={opts.branding ?? false}
+              />
             </DraftsProvider>
           </PanelProvider>
         </ThreadsProvider>
@@ -183,6 +234,43 @@ describe('PanelDrawer', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument())
     expect(screen.queryByTestId('airside-panel')).toBeInTheDocument()
     expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBeNull()
+  })
+
+  it('open detail page-context card re-focuses the pin when the thread is on this page', async () => {
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/here' })],
+      resolvePageKey: () => 'x.test/here',
+      detailOpenerId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    // Open the detail directly (this path does not requestFocus) so pendingFocus starts clean,
+    // isolating the card's own re-trigger.
+    act(() => screen.getByText('open detail a').click())
+    await waitFor(() => screen.getByTestId('airside-detail-page-context'))
+    expect(screen.getByTestId('pending-focus')).toHaveTextContent('none')
+    act(() => screen.getByTestId('airside-detail-page-context').click())
+    // Same page → requestFocus (pulse/scroll the pin), no cross-page handoff.
+    expect(screen.getByTestId('pending-focus')).toHaveTextContent('a')
+    expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBeNull()
+  })
+
+  it('open detail page-context card navigates to the thread page when the pin is elsewhere', async () => {
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/pricing', pageUrl: 'https://x.test/pricing' })],
+      resolvePageKey: () => 'x.test/other',
+      detailOpenerId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    act(() => screen.getByText('open detail a').click())
+    await waitFor(() => screen.getByTestId('airside-detail-page-context'))
+    act(() => screen.getByTestId('airside-detail-page-context').click())
+    // Different page → stash the focus handoff and navigate; no in-place focus.
+    expect(window.sessionStorage.getItem(FOCUS_STORAGE_KEY)).toBe(
+      JSON.stringify({ id: 'a', openDetail: true }),
+    )
+    expect(screen.getByTestId('pending-focus')).toHaveTextContent('none')
   })
 
   it('detail view hides the list filters', async () => {
@@ -252,5 +340,138 @@ describe('PanelDrawer', () => {
     // Give any potential async cascade time to resolve before asserting.
     await new Promise((r) => setTimeout(r, 50))
     expect(client.listThreads).not.toHaveBeenCalled()
+  })
+
+  it('hides the "Powered by Airside" footer by default (opt-in branding)', async () => {
+    setup({ threads: [item({ id: 'a' })] })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getByTestId('airside-panel-row')).toBeInTheDocument())
+    expect(screen.queryByTestId('airside-powered-by')).not.toBeInTheDocument()
+  })
+
+  it('shows the "Powered by Airside" footer in the list pane when branding is enabled', async () => {
+    setup({ threads: [item({ id: 'a' })], branding: true })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getByTestId('airside-panel-row')).toBeInTheDocument())
+    expect(screen.getByTestId('airside-powered-by')).toBeInTheDocument()
+  })
+
+  it('hides the footer on the detail view even when branding is enabled', async () => {
+    setup({
+      threads: [item({ id: 'a', pageKey: 'x.test/here' })],
+      resolvePageKey: () => 'x.test/here',
+      branding: true,
+    })
+    screen.getByText('open').click()
+    await waitFor(() => screen.getByTestId('airside-panel-row'))
+    act(() => screen.getByTestId('airside-panel-row').click())
+    await waitFor(() => expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument())
+    expect(screen.queryByTestId('airside-powered-by')).not.toBeInTheDocument()
+  })
+
+  it('thread creation while panel is open triggers a refetch; closing removes the listener', async () => {
+    const { client } = setup({
+      threads: [item({ id: 'a' })],
+      withProbes: true,
+    })
+
+    // Open the panel and wait for the initial rows to render.
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(1))
+
+    // Clear the mock so only calls AFTER this point are counted.
+    client.listThreads.mockClear()
+
+    // Fire a thread-created notification (what MarkerLayer.createThread does after a save) — the
+    // registered listener calls panel.refresh() → listThreads again.
+    act(() => {
+      screen.getByText('created').click()
+    })
+    await waitFor(() => expect(client.listThreads).toHaveBeenCalled())
+
+    // Close the panel — the useEffect cleanup deregisters the listener.
+    client.listThreads.mockClear()
+    act(() => {
+      screen.getByText('close').click()
+    })
+    await waitFor(() => expect(screen.queryByTestId('airside-panel')).not.toBeInTheDocument())
+
+    // Another create notification must NOT trigger a refetch since the listener was removed.
+    client.listThreads.mockClear()
+    act(() => {
+      screen.getByText('created').click()
+    })
+    // Give any potential async cascade time to resolve before asserting.
+    await new Promise((r) => setTimeout(r, 50))
+    expect(client.listThreads).not.toHaveBeenCalled()
+  })
+
+  it('deleting a thread drops its row from the open list without a refetch', async () => {
+    const { client } = setup({
+      threads: [item({ id: 'a' }), item({ id: 'b' })],
+      deleteProbeId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(2))
+
+    // Count only calls AFTER the initial load — the drop must be reducer-driven, not a refetch.
+    client.listThreads.mockClear()
+    act(() => {
+      screen.getByText('delete a').click()
+    })
+    // The deleted row disappears (was stale-until-refresh before this fix).
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(1))
+    expect(client.listThreads).not.toHaveBeenCalled()
+  })
+
+  it('detail header steps to the next/previous thread and pulses its pin', async () => {
+    setup({
+      threads: [item({ id: 'a' }), item({ id: 'b' }), item({ id: 'c' })],
+      detailOpenerId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(3))
+
+    // Open the first thread's detail; at the top of the list, Previous is disabled.
+    act(() => screen.getByText('open detail a').click())
+    await waitFor(() => screen.getByRole('button', { name: 'Next thread' }))
+    expect(screen.getByRole('button', { name: 'Previous thread' })).toBeDisabled()
+
+    // Next → thread 'b'; its pin is focus-requested.
+    act(() => screen.getByRole('button', { name: 'Next thread' }).click())
+    await waitFor(() => expect(screen.getByTestId('pending-focus')).toHaveTextContent('b'))
+    expect(screen.getByRole('button', { name: 'Previous thread' })).not.toBeDisabled()
+
+    // Next → 'c', the last thread; Next is now disabled.
+    act(() => screen.getByRole('button', { name: 'Next thread' }).click())
+    await waitFor(() => expect(screen.getByTestId('pending-focus')).toHaveTextContent('c'))
+    expect(screen.getByRole('button', { name: 'Next thread' })).toBeDisabled()
+
+    // Previous → back to 'b'.
+    act(() => screen.getByRole('button', { name: 'Previous thread' }).click())
+    await waitFor(() => expect(screen.getByTestId('pending-focus')).toHaveTextContent('b'))
+  })
+
+  it('deleting the thread whose detail is open returns to the list', async () => {
+    setup({
+      threads: [item({ id: 'a' }), item({ id: 'b' })],
+      detailOpenerId: 'a',
+      deleteProbeId: 'a',
+    })
+    screen.getByText('open').click()
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(2))
+
+    // Open the deleted thread's detail pane, then delete it.
+    act(() => screen.getByText('open detail a').click())
+    await waitFor(() => screen.getByRole('button', { name: /back/i }))
+    act(() => {
+      screen.getByText('delete a').click()
+    })
+
+    // The drawer falls back to the list (no dead-end detail pane) and the 'a' row is gone.
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /back/i })).not.toBeInTheDocument(),
+    )
+    await waitFor(() => expect(screen.getAllByTestId('airside-panel-row')).toHaveLength(1))
   })
 })

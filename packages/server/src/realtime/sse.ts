@@ -1,7 +1,7 @@
 import type { RealtimeEvent } from '@airnauts/airside-core'
 
 /**
- * Server-Sent Events framing (ADR-0045). One event per `data:` line, terminated by a
+ * Server-Sent Events framing (ADR-0050). One event per `data:` line, terminated by a
  * blank line. The widget consumes these via a fetch-streamed reader (not `EventSource`,
  * which cannot set the `x-airside-key` header) with a hand-rolled parser.
  */

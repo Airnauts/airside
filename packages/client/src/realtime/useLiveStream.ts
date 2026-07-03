@@ -16,7 +16,7 @@ export type UseLiveStreamOptions = {
 
 /**
  * Hold a live `GET /events` subscription open for a surface, reconnecting across drops
- * (ADR-0045). No-op when streaming is unavailable (`enabled` false or the client lacks
+ * (ADR-0050). No-op when streaming is unavailable (`enabled` false or the client lacks
  * `streamEvents` — an older host), so the surface degrades gracefully to its refetch path.
  *
  * The subscription is recreated only when `client`, `enabled`, or `pageKey` change — the event

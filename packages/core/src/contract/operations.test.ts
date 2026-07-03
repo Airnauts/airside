@@ -9,6 +9,7 @@ const EXPECTED_IDS = [
   'getThread',
   'addComment',
   'setThreadStatus',
+  'deleteThread',
   'refreshAnchor',
   'uploadAttachment',
   'runThreadAction',

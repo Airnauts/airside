@@ -142,7 +142,7 @@ export function createRuntime(opts: RuntimeOptions) {
     if (changed) emit()
   }
 
-  // Add a thread that appeared live (a remote `thread.created` for this page, ADR-0045):
+  // Add a thread that appeared live (a remote `thread.created` for this page, ADR-0050):
   // match + report it like a freshly-listed thread and place its pin without a refetch.
   // Idempotent by id — a re-delivered create, or the author's own echo after the optimistic
   // create already placed it, is ignored rather than double-placed.
@@ -151,6 +151,16 @@ export function createRuntime(opts: RuntimeOptions) {
     const match = matchAndReport(item, item.anchor)
     if (!match) return
     placed = [...placed, match]
+    observeWinners()
+    emit()
+  }
+
+  // Drop a thread from the retained set so the next reposition/rematch emit can't resurrect
+  // a pin for a thread the controller has optimistically deleted (before the server round-trip).
+  function removeItem(id: string) {
+    const next = placed.filter((p) => p.item.id !== id)
+    if (next.length === placed.length) return
+    placed = next
     observeWinners()
     emit()
   }
@@ -166,6 +176,7 @@ export function createRuntime(opts: RuntimeOptions) {
     setItemStatus,
     bumpCommentCount,
     addItem,
+    removeItem,
     dispose,
     get placed() {
       return placed

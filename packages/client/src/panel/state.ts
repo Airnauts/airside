@@ -18,7 +18,7 @@ export type PanelState = {
   needsReview: ThreadListItem[]
   /**
    * Comment ids already counted into the list, so the two inbound paths for a current-page
-   * comment — the page-stream bridge and the all-pages stream (ADR-0045) — converge to a
+   * comment — the page-stream bridge and the all-pages stream (ADR-0050) — converge to a
    * single increment. Reset on every full (re)load, which re-reads authoritative counts.
    */
   appliedCommentIds: string[]
@@ -59,7 +59,8 @@ export type Action =
   | { type: 'LOAD_MORE_SUCCESS'; list: ThreadListItem[]; nextCursor: string | null }
   | { type: 'LOAD_MORE_ERROR' }
   | { type: 'BUMP_COMMENT_COUNT'; id: string; delta: number }
-  // Live reconciliation from the all-pages stream (ADR-0045).
+  | { type: 'REMOVE_THREAD'; id: string }
+  // Live reconciliation from the all-pages stream (ADR-0050).
   | { type: 'UPSERT_THREAD'; thread: ThreadListItem }
   | { type: 'PATCH_STATUS'; id: string; status: ThreadStatus; anchorState: AnchorState }
   | { type: 'APPLY_COMMENT'; id: string; commentId: string }
@@ -130,13 +131,24 @@ export function reducer(state: PanelState, action: Action): PanelState {
       return { ...state, loading: false, error: true }
     case 'LOAD_MORE_START':
       return { ...state, loadingMore: true }
-    case 'LOAD_MORE_SUCCESS':
+    case 'LOAD_MORE_SUCCESS': {
+      // Append the next page, dropping any ids already loaded (keep first occurrence). Guards
+      // against an overlapping cursor page seeding duplicate rows, which would make findIndex in
+      // detailNeighbors resolve to the wrong position and step prev/next around it.
+      const seen = new Set(state.list.map((t) => t.id))
+      const appended: ThreadListItem[] = []
+      for (const t of action.list) {
+        if (seen.has(t.id)) continue
+        seen.add(t.id)
+        appended.push(t)
+      }
       return {
         ...state,
         loadingMore: false,
-        list: [...state.list, ...action.list],
+        list: [...state.list, ...appended],
         nextCursor: action.nextCursor,
       }
+    }
     case 'LOAD_MORE_ERROR':
       return { ...state, loadingMore: false }
     case 'BUMP_COMMENT_COUNT':
@@ -177,6 +189,19 @@ export function reducer(state: PanelState, action: Action): PanelState {
         ),
       }
     }
+    case 'REMOVE_THREAD': {
+      // A thread was deleted (from a pin popover or the detail menu). Drop it from both lists in
+      // place — cheaper and flicker-free vs. a full refetch — and, if its detail is the open pane,
+      // fall back to the list (its live detail is already gone, so it'd render an empty dead end).
+      const closingDetail = state.detailThreadId === action.id
+      return {
+        ...state,
+        list: state.list.filter((t) => t.id !== action.id),
+        needsReview: state.needsReview.filter((t) => t.id !== action.id),
+        view: closingDetail ? 'list' : state.view,
+        detailThreadId: closingDetail ? null : state.detailThreadId,
+      }
+    }
     default:
       return state
   }
@@ -201,4 +226,29 @@ export function matchesFilter(status: ThreadStatus, filter: PanelFilter): boolea
  */
 export function selectVisibleList(state: PanelState): ThreadListItem[] {
   return mainListExcludingReview(state).filter((t) => matchesFilter(t.status, state.filter))
+}
+
+/** The threads the detail header steps through with prev/next, in the same order the list pane shows
+ *  them: the Needs-review rows first, then the de-duplicated main list. (Only loaded rows — the next
+ *  page behind `nextCursor` isn't navigable until it's fetched.) */
+export function navigableList(state: PanelState): ThreadListItem[] {
+  return [...state.needsReview, ...mainListExcludingReview(state)]
+}
+
+/** Prev/next thread ids around the open detail within {@link navigableList}; either is null at the
+ *  matching end of the list, or both when the open thread isn't in the loaded list (cross-page
+ *  deep-link). */
+export function detailNeighbors(state: PanelState): {
+  prevId: string | null
+  nextId: string | null
+} {
+  if (state.detailThreadId == null) return { prevId: null, nextId: null }
+  const list = navigableList(state)
+  const i = list.findIndex((t) => t.id === state.detailThreadId)
+  if (i === -1) return { prevId: null, nextId: null }
+  // `list[i ± 1]?.id ?? null` already yields null at either boundary, so no range guard is needed.
+  return {
+    prevId: list[i - 1]?.id ?? null,
+    nextId: list[i + 1]?.id ?? null,
+  }
 }

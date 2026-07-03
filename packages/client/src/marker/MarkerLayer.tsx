@@ -11,6 +11,7 @@ import { PinLayer } from '../positioning/layer'
 import { observeReposition } from '../positioning/lifecycle'
 import { reconcilePinEvent } from '../realtime/reconcile'
 import { useLiveStream } from '../realtime/useLiveStream'
+import { getSetting, setSetting } from '../settings/store'
 import {
   useController,
   useDispatch,
@@ -46,6 +47,9 @@ export function MarkerLayer({
   const state = useThreadsState()
   const placements = useVisiblePlacements()
   const { placing, setPlacing } = usePlacingMode(dispatch)
+  // Whether the on-page pin/highlight overlay is hidden — seeded from and persisted to the
+  // shared settings store so the choice survives reloads (issue #32).
+  const [pinsHidden, setPinsHidden] = useState(() => getSetting('pinsHidden'))
   const [activeKey, setActiveKey] = useState(pageKey)
   const toast = useToast()
   const { identity } = useIdentity()
@@ -91,6 +95,9 @@ export function MarkerLayer({
     controller.registerRuntime({
       setStatus: (id, status) => rt.setItemStatus(id, status),
       bumpCommentCount: (id, delta) => rt.bumpCommentCount(id, delta),
+      // Optimistic delete drops the pin from the retained set; rollback re-fetches the list.
+      removeItem: (id) => rt.removeItem(id),
+      refresh: () => rt.refresh(),
     })
     void rt
       .refresh()
@@ -135,7 +142,7 @@ export function MarkerLayer({
     }
   }, [state.lostOpenId, toast, dispatch])
 
-  // Live updates for this page's pins (ADR-0045): a remote thread.created places its pin, a
+  // Live updates for this page's pins (ADR-0050): a remote thread.created places its pin, a
   // comment.added appends to the open detail + bumps the count, a thread.updated flips status.
   // The author's own comment echo is suppressed (the optimistic reply path already applied it);
   // thread.created/updated are idempotent so their own-echoes are harmless.
@@ -177,9 +184,14 @@ export function MarkerLayer({
   const createThread = useCallback(
     async ({ text, attachmentIds, who }: ComposerSubmit, anchor: Anchor) => {
       try {
+        // Capture the page title for the thread's page-context card. Trim and omit when empty
+        // so the card never renders a blank title — it falls back to the URL (pageTitle ?? pageUrl)
+        // instead of showing an empty bold line.
+        const pageTitle = document.title.trim()
         const created = await client.createThread({
           pageUrl: window.location.href,
           pageKey: activeKey,
+          ...(pageTitle ? { pageTitle } : {}),
           anchor,
           comment: { text, attachmentIds: attachmentIds as AttachmentId[] },
           author: { email: who.email, name: who.name },
@@ -193,24 +205,46 @@ export function MarkerLayer({
         // openId and would leave detail null → "No comments yet" until a manual refetch.
         dispatch({ type: 'DETAIL_LOADED', id: created.id, thread: created })
         dispatch({ type: 'OPEN', id: created.id })
+        // Bridge the create into the open sidebar list: the panel's list store is separate from
+        // the on-page placements refreshed above, so it observes this to refetch its current
+        // filter and surface the new thread without a close/reopen.
+        controller.emit({ type: 'created' })
       } catch (err) {
         toast(err instanceof ApiError ? err.message : 'Failed to create comment')
       }
     },
-    [client, activeKey, provenance, toast, dispatch],
+    [client, activeKey, provenance, toast, dispatch, controller],
   )
+
+  const togglePins = useCallback(() => {
+    const next = !pinsHidden
+    setPinsHidden(next)
+    setSetting('pinsHidden', next)
+    // Placing an invisible pin is incoherent, so leave place mode when hiding.
+    if (next) setPlacing(false)
+  }, [pinsHidden, setPlacing])
 
   return (
     <>
-      <PinLayer placements={placements} client={client} />
-      <DetachedThread client={client} />
-      <DraftPopover client={client} onCreate={createThread} />
+      {/* While pins are hidden, unmount the on-page overlay (pins/highlights, the pin-anchored
+          popover, the detached-thread card, and the in-progress draft) rather than CSS-hiding it,
+          so no stale popover state lingers. The sidebar (PanelDrawer, a sibling in app.tsx) and
+          the Launcher are never gated. */}
+      {!pinsHidden && (
+        <>
+          <PinLayer placements={placements} client={client} />
+          <DetachedThread client={client} />
+          <DraftPopover client={client} onCreate={createThread} />
+        </>
+      )}
       <Launcher
         placing={placing}
         onTogglePlace={() => setPlacing((p) => !p)}
         openCount={openCount}
         panelOpen={panelOpen}
         onTogglePanel={() => void (panelOpen ? panel.closePanel() : panel.openPanel())}
+        pinsHidden={pinsHidden}
+        onTogglePins={togglePins}
       />
     </>
   )

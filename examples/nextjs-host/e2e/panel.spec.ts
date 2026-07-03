@@ -10,8 +10,9 @@ test.describe('cross-page panel', () => {
   }) => {
     const ns = 'panel'
 
-    // A thread on the pricing page — no other spec touches /pricing, so its panel row is
-    // unique even though the in-memory store is shared across the whole suite.
+    // A thread on the pricing page. The in-memory store is shared across the whole suite, so
+    // identify this test's rows by their unique comment body (the panel row renders the page
+    // title for context now, not the URL — see #56 — and every host page shares one title).
     await activate(page, '/pricing', ns)
     await login(page)
     await placeElementPin(page, 'Starter', 'Comment on the Starter plan')
@@ -22,14 +23,14 @@ test.describe('cross-page panel', () => {
     await placeElementPin(page, 'disambiguate near-matches', 'Comment on the article')
 
     // Open the panel. It lists threads across pages; the shared store means other specs'
-    // threads may also appear, so assert on this test's rows by page URL, not a total count.
+    // threads may also appear, so assert on this test's rows by their unique comment body.
     await page.getByTestId('airside-panel-open').click()
     await expect(page.getByTestId('airside-panel')).toBeVisible()
     const rows = page.getByTestId('airside-panel-row')
-    const pricingRow = rows.filter({ hasText: '/pricing' })
+    const pricingRow = rows.filter({ hasText: 'Comment on the Starter plan' })
     await expect(pricingRow).toHaveCount(1)
-    // The article page is represented too (at least this test's thread; maybe others').
-    await expect(rows.filter({ hasText: '/article' })).not.toHaveCount(0)
+    // The article page is represented too.
+    await expect(rows.filter({ hasText: 'Comment on the article' })).toHaveCount(1)
 
     // Select the pricing thread → navigate to /pricing and focus its pin (the focused pin
     // renders a pulse element).

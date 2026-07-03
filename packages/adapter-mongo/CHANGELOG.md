@@ -1,5 +1,22 @@
 # @airnauts/airside-adapter-mongo
 
+## 0.10.1
+
+### Patch Changes
+
+- Updated dependencies [29c37c2]
+  - @airnauts/airside-server@0.10.1
+  - @airnauts/airside-core@0.10.1
+
+## 0.10.0
+
+### Patch Changes
+
+- a7d40a9: Docs: corrected README to show that `mongodb` is a bundled dependency — consumers do not need to install it separately.
+- Updated dependencies [2535eb8]
+  - @airnauts/airside-server@0.10.0
+  - @airnauts/airside-core@0.10.0
+
 ## 0.9.1
 
 ### Patch Changes

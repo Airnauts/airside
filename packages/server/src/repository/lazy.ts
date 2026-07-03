@@ -55,6 +55,7 @@ export function lazyRepository(
       get().then((r) => r.addComment(scope, threadId, comment)),
     setStatus: (scope: Scope, threadId: ThreadId, status: ThreadStatus, now: string) =>
       get().then((r) => r.setStatus(scope, threadId, status, now)),
+    deleteThread: (scope: Scope, id: ThreadId) => get().then((r) => r.deleteThread(scope, id)),
     updateAnchor: (scope: Scope, threadId: ThreadId, patch: AnchorPatch, now: string) =>
       get().then((r) => r.updateAnchor(scope, threadId, patch, now)),
     upsertExternalLink: (scope: Scope, threadId: ThreadId, link: ExternalLink, now: string) =>

@@ -76,3 +76,12 @@ Nothing after it. Shape (findings may be empty):
 
 If the PR is clean, return `"findings": []`. Do not invent findings to look thorough — a clean
 draft should review clean so it can be promoted to ready.
+
+## Your findings are posted to the PR
+
+The orchestrator surfaces **every** finding you return — `critical`, `high`, `medium`, and `low` —
+as a visible top-level comment on the PR (not just the auto-fixed highs), so the review leaves a
+trace a human can read. Write each finding for that reader: a concise, specific `title`; a `note`
+that explains the problem in one or two sentences; and an accurate `path`/`line` so the location is
+clickable. Don't dump long prose into `note` — it lands in a table cell. (You still never post
+anything yourself; you remain read-only and return only the JSON block.)
