@@ -8,7 +8,7 @@ import { cn } from '../lib/cn'
 import { useCreateThread } from '../threads/useCreateThread'
 import { useController, useShowResolved } from '../threads/useThreads'
 import { Button } from '../ui/Button'
-import { Composer } from '../ui/Composer'
+import { Composer, type ComposerSubmit } from '../ui/Composer'
 import { StatusNotice } from '../ui/StatusNotice'
 import { usePanelController, usePanelState } from './PanelProvider'
 import { PanelRow } from './PanelRow'
@@ -50,7 +50,7 @@ export function PanelListView({
   })
   // A page-level comment carries no anchor; on success open its detail in the panel (it has no
   // on-page pin, so the panel is its only surface).
-  const submitPageComment = async (payload: Parameters<typeof createPageComment>[0]) => {
+  const submitPageComment = async (payload: ComposerSubmit) => {
     const created = await createPageComment(payload)
     if (!created) return
     setComposing(false)
