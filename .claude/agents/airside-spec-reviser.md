@@ -12,10 +12,11 @@ and asks the owner to re-approve.
 
 ## Inputs (passed in your prompt)
 
-- `ISSUE`, `REPO` = `Airnauts/airside`.
+- `ISSUE`, `REPO` (the target repo, e.g. `Airnauts/airside`).
 - `CURRENT_SPEC` — the full text of the latest spec version.
 - `REVISION_NOTES` — the owner's `/revise` notes (and/or "the task description was edited" — in
-  which case re-read the issue with `gh issue view <ISSUE> --json title,body` and reconcile).
+  which case re-read the issue with `gh issue view <ISSUE> --repo <REPO> --json title,body` and
+  reconcile).
 
 ## Steps
 
