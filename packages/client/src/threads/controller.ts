@@ -3,6 +3,17 @@ import type { ThreadStatus } from '@airnauts/airside-core'
 import type { ApiClient } from '../api/client'
 import type { Action } from './state'
 
+/**
+ * A change the open panel reacts to. The controller emits these from its mutation call sites so the
+ * panel's separate list store stays in sync; the per-event firing semantics (optimistic vs
+ * post-persist) live at the call sites, not here.
+ */
+export type ThreadEvent =
+  | { type: 'status'; id: string; status: ThreadStatus }
+  | { type: 'count'; id: string; delta: number }
+  | { type: 'created' }
+  | { type: 'deleted'; id: string }
+
 export type Controller = {
   openThread(id: string): void
   close(): void
@@ -58,20 +69,19 @@ export type Controller = {
   requestFocus(id: string): void
   /** Re-fetch a thread's detail by id without opening its popover (the sidebar detail's retry path). */
   refetch(id: string): void
-  /** The panel registers here to refetch its list when a status change persists (drawer-open reconciliation). */
-  registerStatusListener(fn: ((id: string, status: ThreadStatus) => void) | null): void
-  /** The panel registers here to keep its list rows' counts in sync with an optimistic reply. */
-  registerCommentCountListener(fn: ((id: string, delta: number) => void) | null): void
-  /** The panel registers here to refetch its list when a new thread is created while it's open. */
-  registerThreadCreatedListener(fn: (() => void) | null): void
   /**
-   * Notify the registered thread-created listener (the open panel) that a thread was just created.
-   * MarkerLayer fires this after a successful `client.createThread`. The panel's list store is
-   * separate from the on-page placements, so without this its rows stay stale until reopen.
+   * Subscribe to {@link ThreadEvent}s (the open panel's single sink). Returns an unsubscribe closure;
+   * backed by a `Set`, so multiple subscribers coexist and there's no last-writer-wins clobber. The
+   * panel switches on `e.type` to refetch (status/created), patch counts (count), or drop a row
+   * (deleted).
    */
-  notifyThreadCreated(): void
-  /** The panel registers here to drop a deleted thread from its list and, if it was the open detail, leave it. */
-  registerDeleteListener(fn: ((id: string) => void) | null): void
+  subscribe(fn: (e: ThreadEvent) => void): () => void
+  /**
+   * Emit a {@link ThreadEvent} to every subscriber. Public because `MarkerLayer` is an external
+   * emitter of `created` (it owns the create flow; the controller has no `createThread`). The
+   * internal mutation methods emit from their own call sites to preserve firing semantics.
+   */
+  emit(e: ThreadEvent): void
 }
 
 /**
@@ -93,10 +103,10 @@ export function createController(
     removeItem: (id: string) => void
     refresh: () => Promise<void>
   } | null = null
-  let statusListener: ((id: string, status: ThreadStatus) => void) | null = null
-  let commentCountListener: ((id: string, delta: number) => void) | null = null
-  let threadCreatedListener: (() => void) | null = null
-  let deleteListener: ((id: string) => void) | null = null
+  const subscribers = new Set<(e: ThreadEvent) => void>()
+  const emit = (e: ThreadEvent) => {
+    for (const fn of subscribers) fn(e)
+  }
 
   const lazyFetchDetail = (id: string) => {
     if (deps.isCached(id) || deps.isLoading(id)) return
@@ -120,7 +130,7 @@ export function createController(
   const bumpCommentCount = (id: string, delta: number) => {
     dispatch({ type: 'BUMP_COMMENT_COUNT', id, delta })
     runtime?.bumpCommentCount(id, delta)
-    commentCountListener?.(id, delta)
+    emit({ type: 'count', id, delta })
   }
 
   return {
@@ -146,7 +156,7 @@ export function createController(
       patchStatus(id, status)
       try {
         await deps.client.setThreadStatus(id, { status })
-        statusListener?.(id, status)
+        emit({ type: 'status', id, status })
         return true
       } catch {
         patchStatus(id, prev)
@@ -162,7 +172,7 @@ export function createController(
         await deps.client.deleteThread(id)
         // Notify the panel so its own list/detail state drops the gone thread (the panel keeps an
         // independent store the REMOVE_THREAD above doesn't touch).
-        deleteListener?.(id)
+        emit({ type: 'deleted', id })
         return true
       } catch {
         // Rollback: the thread still exists server-side, so re-fetch the list and re-place. We
@@ -177,7 +187,7 @@ export function createController(
         const view = await deps.client.runThreadAction(id, actionId)
         dispatch({ type: 'DETAIL_LOADED', id, thread: view }) // replaces actions + externalLinks
         dispatch({ type: 'ACTION_DONE', id })
-        statusListener?.(id, view.status) // keep panel in sync if status changed
+        emit({ type: 'status', id, status: view.status }) // keep panel in sync if status changed
         return true
       } catch {
         dispatch({ type: 'ACTION_DONE', id })
@@ -191,20 +201,12 @@ export function createController(
     refetch(id) {
       lazyFetchDetail(id)
     },
-    registerStatusListener(fn) {
-      statusListener = fn
+    subscribe(fn) {
+      subscribers.add(fn)
+      return () => {
+        subscribers.delete(fn)
+      }
     },
-    registerCommentCountListener(fn) {
-      commentCountListener = fn
-    },
-    notifyThreadCreated() {
-      threadCreatedListener?.()
-    },
-    registerThreadCreatedListener(fn) {
-      threadCreatedListener = fn
-    },
-    registerDeleteListener(fn) {
-      deleteListener = fn
-    },
+    emit,
   }
 }

@@ -68,7 +68,11 @@ your review findings, and the user's chatter:
 
 - `<!-- airside-agent-state {json} -->` — the authoritative structured state (one per issue).
 - `<!-- airside-agent-review {json} -->` — one per review round: the reviewer's findings keyed by
-  the head `sha` it reviewed. This (not a state field) is what drives the review→fix loop.
+  the head `sha` it reviewed. This (not a state field) is what drives the review→fix loop. Lives on
+  the **issue** (machine-only).
+- `<!-- airside-agent-review-report:<sha> -->` — the **human-readable** copy of that round's findings,
+  posted as a top-level comment on the **PR** (all severities) so review leaves a visible trace.
+  Keyed by the reviewed sha (its idempotency key); one per review round.
 - `<!-- airside-agent-spec v<n> -->` — the spec (complex path). The **highest version** is current;
   it is the `awaiting-approval` artifact and the builder's source of truth.
 - `<!-- airside-agent-note -->` — human-facing notes (escalations, review/promotion summaries,
@@ -329,9 +333,41 @@ gh api repos/Airnauts/airside/issues/<n>/comments \
 ```
 
 - **No review note for `HEAD`** (code is new or unreviewed) → **review** is the op. Spawn
-  `airside-reviewer` (read-only, no worktree). Post its findings as an `airside-agent-review` note
-  (machine JSON keyed by `sha=HEAD` + a human summary). Then **end the tick** — acting on the
-  findings happens next tick (keeps it one op/tick and crash-safe).
+  `airside-reviewer` (read-only, no worktree). Save its findings as an `airside-agent-review` note
+  **on the issue** (machine JSON keyed by `sha=HEAD` + a human summary — this note is what the loop
+  reads back; keep it). **Then, so the findings leave a visible trace on the PR itself, post them as
+  a top-level PR comment** — a human-readable report of **every** finding (`critical`/`high`/`medium`/
+  `low`), not just the auto-fixed highs. Without this the only record is an HTML-comment note on the
+  issue, so a PR reader sees no trace of what review found.
+
+  Build the report body with an idempotency marker carrying the reviewed sha, then post it:
+  ```bash
+  cat > /tmp/airside-review-report-<n>-<HEAD>.md <<'EOF'
+  <!-- airside-agent-review-report:<HEAD> -->
+  🤖 **airside-agent review** — `<HEAD:0:7>` · <N> finding(s)
+
+  | Sev | Location | Finding |
+  |-----|----------|---------|
+  | 🔴 critical | `path:line` | <title> |
+  | 🟠 high | `path:line` | <title> |
+  | 🟡 medium | `path:line` | <title> |
+  | ⚪ low | `path:line` | <title> |
+
+  <one-line summary; highs (if any) are being auto-fixed>
+  EOF
+  gh pr comment <pr> --repo Airnauts/airside --body-file /tmp/airside-review-report-<n>-<HEAD>.md
+  ```
+  Include one row per finding (drop the placeholder rows for severities with none). A **clean**
+  review (no findings) still posts a one-line sha-marked report (`✅ review clean — <HEAD:0:7>`) so a
+  clean round is traceable too. **Idempotency:** before posting, fetch the PR's comments and skip if
+  any already contains `airside-agent-review-report:<HEAD>` — this sha's report was already posted
+  (crash-safe: the report is keyed by the same sha as the review note):
+  ```bash
+  gh api repos/Airnauts/airside/issues/<pr>/comments \
+    --jq 'any(.[]; .body|contains("airside-agent-review-report:<HEAD>"))'
+  ```
+  Then **end the tick** — acting on the findings happens next tick (keeps it one op/tick and
+  crash-safe).
 - **A review note for `HEAD` exists** → act on it:
   - `highs` = its findings with severity `critical` or `high`.
   - **`highs` empty** → **CI-gate, then promote.** The reviewer reads the diff, not CI — so before
@@ -434,7 +470,11 @@ re-run and, for a thread, one manual resolve click).
 
 **End every tick — after the op, or after a no-op — with ONE compact markdown table** covering
 **all active** (open, non-terminal) agent issues: both the ones the **agent is working** and the ones
-**waiting on you**. No prose paragraphs, no per-item bullet list — the table is the whole report.
+**waiting on you**. **The header line + the table are the ENTIRE tick output — nothing else.** No
+lead-in sentence, no trailing narration, no summary ("N items waiting on you", "once the builder
+finishes…"), no per-item bullets, no prose paragraphs. The only exception is a genuinely exceptional
+event the table can't convey (a `blocked` reason needing detail, an error, or a `needs input:` /
+`failed:` line) — otherwise emit the header + table and stop.
 Recompute it from the phases you reconciled in §2 — **no extra subagents, no extra `gh` reads beyond
 what you already ran**.
 
