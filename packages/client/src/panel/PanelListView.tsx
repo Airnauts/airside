@@ -9,6 +9,8 @@ import { useCreateThread } from '../threads/useCreateThread'
 import { useController, useShowResolved } from '../threads/useThreads'
 import { Button } from '../ui/Button'
 import { Composer, type ComposerSubmit } from '../ui/Composer'
+import { CloseIcon } from '../ui/icons'
+import { PoweredBy } from '../ui/PoweredBy'
 import { StatusNotice } from '../ui/StatusNotice'
 import { usePanelController, usePanelState } from './PanelProvider'
 import { PanelRow } from './PanelRow'
@@ -27,6 +29,8 @@ export type PanelListViewProps = {
   /** Resolve the current URL to its page key so a page comment is scoped to this page. */
   resolvePageKey: (url: string) => string
   provenance?: Provenance
+  /** Show the "Powered by Airside" footer pinned to the bottom of the list pane. Defaults to off. */
+  branding?: boolean
 }
 
 /** The drawer's list pane: header, filter chips, resolved-pins toggle and thread rows. */
@@ -35,6 +39,7 @@ export function PanelListView({
   client,
   resolvePageKey,
   provenance,
+  branding = false,
 }: PanelListViewProps) {
   const state = usePanelState()
   const panel = usePanelController()
@@ -81,7 +86,7 @@ export function PanelListView({
         </Dialog.Description>
         <Dialog.Close asChild>
           <Button variant="ghost" size="icon" aria-label="Close panel">
-            ✕
+            <CloseIcon />
           </Button>
         </Dialog.Close>
       </div>
@@ -203,6 +208,8 @@ export function PanelListView({
           </Button>
         )}
       </div>
+
+      {branding && <PoweredBy />}
     </>
   )
 }

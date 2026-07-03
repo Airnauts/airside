@@ -51,7 +51,7 @@ export function useCreateThread({ client, pageKey, provenance }: UseCreateThread
         // the surface that opens it renders the comment immediately — no getThread round-trip.
         dispatch({ type: 'DETAIL_LOADED', id: created.id, thread: created })
         // Bridge the create into the open sidebar list so the new thread surfaces without a reopen.
-        controller.notifyThreadCreated()
+        controller.emit({ type: 'created' })
         return created
       } catch (err) {
         toast(err instanceof ApiError ? err.message : 'Failed to create comment')

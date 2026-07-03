@@ -10,6 +10,7 @@ behind [`docs/integration.md`](../../docs/integration.md).
    ```bash
    pnpm --filter @airnauts/airside-core \
      --filter @airnauts/airside-server \
+     --filter @airnauts/airside-integration-react \
      --filter @airnauts/airside-integration-next \
      --filter @airnauts/airside-client \
      --filter @airnauts/airside-adapter-memory \

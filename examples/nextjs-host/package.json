@@ -13,6 +13,7 @@
     "@airnauts/airside-adapter-memory": "workspace:*",
     "@airnauts/airside-adapter-mongo": "workspace:*",
     "@airnauts/airside-client": "workspace:*",
+    "@airnauts/airside-extension-github": "workspace:*",
     "@airnauts/airside-extension-jira": "workspace:*",
     "@airnauts/airside-integration-next": "workspace:*",
     "@airnauts/airside-extension-email": "workspace:*",

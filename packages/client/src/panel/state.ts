@@ -89,13 +89,24 @@ export function reducer(state: PanelState, action: Action): PanelState {
       return { ...state, loading: false, error: true }
     case 'LOAD_MORE_START':
       return { ...state, loadingMore: true }
-    case 'LOAD_MORE_SUCCESS':
+    case 'LOAD_MORE_SUCCESS': {
+      // Append the next page, dropping any ids already loaded (keep first occurrence). Guards
+      // against an overlapping cursor page seeding duplicate rows, which would make findIndex in
+      // detailNeighbors resolve to the wrong position and step prev/next around it.
+      const seen = new Set(state.list.map((t) => t.id))
+      const appended: ThreadListItem[] = []
+      for (const t of action.list) {
+        if (seen.has(t.id)) continue
+        seen.add(t.id)
+        appended.push(t)
+      }
       return {
         ...state,
         loadingMore: false,
-        list: [...state.list, ...action.list],
+        list: [...state.list, ...appended],
         nextCursor: action.nextCursor,
       }
+    }
     case 'LOAD_MORE_ERROR':
       return { ...state, loadingMore: false }
     case 'BUMP_COMMENT_COUNT':
@@ -129,4 +140,29 @@ export function mainListExcludingReview(state: PanelState): ThreadListItem[] {
   if (state.needsReview.length === 0) return state.list
   const review = new Set(state.needsReview.map((t) => t.id))
   return state.list.filter((t) => !review.has(t.id))
+}
+
+/** The threads the detail header steps through with prev/next, in the same order the list pane shows
+ *  them: the Needs-review rows first, then the de-duplicated main list. (Only loaded rows — the next
+ *  page behind `nextCursor` isn't navigable until it's fetched.) */
+export function navigableList(state: PanelState): ThreadListItem[] {
+  return [...state.needsReview, ...mainListExcludingReview(state)]
+}
+
+/** Prev/next thread ids around the open detail within {@link navigableList}; either is null at the
+ *  matching end of the list, or both when the open thread isn't in the loaded list (cross-page
+ *  deep-link). */
+export function detailNeighbors(state: PanelState): {
+  prevId: string | null
+  nextId: string | null
+} {
+  if (state.detailThreadId == null) return { prevId: null, nextId: null }
+  const list = navigableList(state)
+  const i = list.findIndex((t) => t.id === state.detailThreadId)
+  if (i === -1) return { prevId: null, nextId: null }
+  // `list[i ± 1]?.id ?? null` already yields null at either boundary, so no range guard is needed.
+  return {
+    prevId: list[i - 1]?.id ?? null,
+    nextId: list[i + 1]?.id ?? null,
+  }
 }

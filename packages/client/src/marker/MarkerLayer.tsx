@@ -143,6 +143,8 @@ export function MarkerLayer({
 
   const createThread = useCallback(
     async (submit: ComposerSubmit, anchor: Anchor) => {
+      // The hook captures pageTitle, seeds the detail cache from the create response, and
+      // emits `created` to the open panel; on failure it toasts and resolves null.
       const created = await create(submit, anchor)
       if (!created) return
       dispatch({ type: 'CLEAR_DRAFT' })

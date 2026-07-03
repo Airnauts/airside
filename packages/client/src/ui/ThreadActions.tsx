@@ -7,6 +7,7 @@ import { usePortalContainer } from '../app/providers'
 import type { Controller } from '../threads/controller'
 import { useThreadActions } from '../threads/useThreads'
 import { Button } from './Button'
+import { MoreIcon, resolveIcon, SpinnerIcon } from './icons'
 import { useToast } from './toast'
 
 /**
@@ -46,7 +47,7 @@ export function ThreadActions({
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <Button variant="ghost" size="icon" aria-label="More actions">
-            ⋯
+            <MoreIcon />
           </Button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Portal container={container ?? undefined}>
@@ -57,6 +58,9 @@ export function ThreadActions({
           >
             {toolbar.map((action) => {
               const running = runningActionId === action.id
+              // Resolve the descriptor's icon through the closed icon registry: an unknown or
+              // absent name renders nothing (never a raw glyph).
+              const ActionIcon = resolveIcon(action.presentation?.icon)
               return (
                 <DropdownMenu.Item
                   key={action.id}
@@ -67,14 +71,8 @@ export function ThreadActions({
                   }}
                   className="air:flex air:items-center air:gap-2 air:px-3 air:py-1.5 air:cursor-pointer air:outline-none air:hover:bg-gray-100 air:data-[highlighted]:bg-gray-100 air:data-[disabled]:opacity-50 air:data-[disabled]:cursor-default"
                 >
-                  {running && (
-                    <span aria-hidden="true" className="air:mr-0.5">
-                      …
-                    </span>
-                  )}
-                  {action.presentation?.icon && (
-                    <span aria-hidden="true">{action.presentation.icon}</span>
-                  )}
+                  {running && <SpinnerIcon size={14} />}
+                  {!running && ActionIcon && <ActionIcon size={14} />}
                   {action.label}
                 </DropdownMenu.Item>
               )

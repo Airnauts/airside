@@ -334,7 +334,7 @@ describe('MarkerLayer mutation wiring', () => {
     // Open it and resolve.
     fireEvent.click(pin)
     await waitFor(() => expect(screen.getByText('the comment')).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: /✓ Resolve/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Resolve/ }))
     await waitFor(() => expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i))
     // Now simulate what the live app does: the popover's own content change is a DOM mutation
     // under document.body → rematchAll() re-emits from the runtime's cached list. Without the
@@ -342,9 +342,9 @@ describe('MarkerLayer mutation wiring', () => {
     spies.fireMutation()
     // Also exercise reposition (scroll/resize path), which re-emits the cached items too.
     spies.fireResize()
-    // The pin must STAY resolved (✓) — no clobber back to the blue "open" avatar.
+    // The pin must STAY resolved (CheckIcon) — no clobber back to the blue "open" avatar.
     await waitFor(() => expect(screen.getByTestId('airside-pin')).toHaveAccessibleName(/resolved/i))
-    expect(screen.getByTestId('airside-pin')).toHaveTextContent('✓')
+    expect(screen.getByTestId('airside-pin').querySelector('svg')).toBeInTheDocument()
     // listThreads must not have been called again (no refetch; cache patch sufficed).
     expect(c.listThreads).toHaveBeenCalledTimes(1)
     spies.restore()
@@ -367,7 +367,11 @@ function renderLayer(client: unknown) {
                   pageUrl="https://x.test/here"
                   resolvePageKey={() => 'x.test/here'}
                 />
-                <PanelDrawer resolvePageKey={() => 'x.test/here'} client={client as never} />
+                <PanelDrawer
+                  resolvePageKey={() => 'x.test/here'}
+                  client={client as never}
+                  branding={false}
+                />
               </DraftsProvider>
             </PanelProvider>
           </ThreadsProvider>

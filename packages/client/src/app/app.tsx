@@ -69,6 +69,7 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
                         resolvePageKey={(url) => resolvePageKey(options, url)}
                         client={client}
                         provenance={options.provenance}
+                        branding={options.features?.branding === true}
                       />
                     </>
                   ) : (
