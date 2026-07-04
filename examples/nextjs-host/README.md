@@ -16,6 +16,7 @@ behind [`docs/integration.md`](../../docs/integration.md).
      --filter @airnauts/airside-adapter-memory \
      --filter @airnauts/airside-adapter-mongo \
      --filter @airnauts/airside-extension-email \
+     --filter @airnauts/airside-extension-github \
      --filter @airnauts/airside-extension-jira \
      --filter @airnauts/airside-extension-slack \
      --filter @airnauts/airside-storage-fs \
@@ -60,6 +61,9 @@ Run against `pnpm --filter @airnauts/airside-nextjs-host dev`:
 10. **Jira (optional):** set `JIRA_API_TOKEN`, `JIRA_SITE_URL`, `JIRA_EMAIL`, and
     `JIRA_PROJECT_KEY` → a **Create Jira issue** button appears in the thread toolbar;
     clicking it creates a linked issue and hides the button.
+11. **GitHub (optional):** set `AIRSIDE_GITHUB_TOKEN`, `AIRSIDE_GITHUB_OWNER`, and
+    `AIRSIDE_GITHUB_REPO` → a **Create GitHub issue** button appears in the thread toolbar;
+    clicking it opens a GitHub issue pre-filled with the thread content and hides the button.
 
 ## Optional env vars
 
@@ -74,3 +78,6 @@ Run against `pnpm --filter @airnauts/airside-nextjs-host dev`:
 | `JIRA_SITE_URL` | Jira Cloud base URL, e.g. `https://acme.atlassian.net` |
 | `JIRA_EMAIL` | Atlassian account email paired with `JIRA_API_TOKEN` |
 | `JIRA_PROJECT_KEY` | Jira project key, e.g. `PROJ` |
+| `AIRSIDE_GITHUB_TOKEN` | GitHub fine-grained PAT (Issues: write) for the GitHub thread-action extension |
+| `AIRSIDE_GITHUB_OWNER` | Repository owner / org, e.g. `acme` |
+| `AIRSIDE_GITHUB_REPO` | Repository name, e.g. `web` |

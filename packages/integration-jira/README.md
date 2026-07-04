@@ -93,6 +93,7 @@ type JiraConfig = {
 ## Related packages
 
 - **`@airnauts/airside-server`** — defines `ServerExtension` and `ThreadActionExtension`
+- **`@airnauts/airside-extension-github`** — GitHub Issues thread-action extension
 - **`@airnauts/airside-extension-slack`** — Slack notification extension
 - **`@airnauts/airside-extension-email`** — email notification extension
 

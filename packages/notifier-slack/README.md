@@ -87,6 +87,7 @@ Renders a `NotificationEvent` as a Slack Block Kit message with a plain-text fal
 - **`@airnauts/airside-server`** — defines `NotificationExtension` and `NotificationEvent`
 - **`@airnauts/airside-extension-email`** — email notification alternative
 - **`@airnauts/airside-extension-jira`** — Jira thread-action extension
+- **`@airnauts/airside-extension-github`** — GitHub Issues thread-action extension
 
 ## License
 

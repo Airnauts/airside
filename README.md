@@ -205,6 +205,7 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 | [`@airnauts/airside-extension-slack`](packages/notifier-slack) | Slack Incoming Webhook notification extension |
 | [`@airnauts/airside-extension-email`](packages/notifier-email) | Email notification extension (SMTP via nodemailer or Resend HTTP API) |
 | [`@airnauts/airside-extension-jira`](packages/integration-jira) | "Create Jira issue" thread-action extension for Jira Cloud |
+| [`@airnauts/airside-extension-github`](packages/integration-github) | "Create GitHub issue" thread-action extension for GitHub Issues |
 
 ---
 
@@ -242,7 +243,7 @@ None of these are committed releases — they're the directions we're considerin
 **Integrations & extensions**
 
 - Jira comment sync — mirror later thread replies into a linked Jira issue _(parking lot; needs `externalLinks` on the notification event)_.
-- More thread-action integrations — Linear, GitHub Issues.
+- More thread-action integrations — Linear.
 - More notifiers — Discord, Microsoft Teams, generic outbound webhook.
 
 **Adapters & hosts**

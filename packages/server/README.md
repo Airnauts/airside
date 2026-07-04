@@ -165,6 +165,7 @@ const { port } = await dev.listen()
 - **`@airnauts/airside-extension-slack`** — Slack notification extension
 - **`@airnauts/airside-extension-email`** — email notification extension
 - **`@airnauts/airside-extension-jira`** — Jira thread-action extension
+- **`@airnauts/airside-extension-github`** — GitHub Issues thread-action extension
 - **`@airnauts/airside-core`** — shared types and schemas (consumed transitively)
 
 See [docs/architecture.md](https://github.com/Airnauts/airside/blob/main/docs/architecture.md) and the [integration guide](https://github.com/Airnauts/airside/blob/main/docs/integration.md).

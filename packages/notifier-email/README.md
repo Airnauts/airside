@@ -152,6 +152,7 @@ Renders a `NotificationEvent` into an email. Exported for testing or custom disp
 - **`@airnauts/airside-server`** — defines `NotificationExtension` and `NotificationEvent`
 - **`@airnauts/airside-extension-slack`** — Slack notification alternative
 - **`@airnauts/airside-extension-jira`** — Jira thread-action extension
+- **`@airnauts/airside-extension-github`** — GitHub Issues thread-action extension
 
 ## License
 
