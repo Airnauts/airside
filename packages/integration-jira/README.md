@@ -32,12 +32,14 @@ createAirsideServer({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
-  extensions: jiraExtension({
-    siteUrl: 'https://your-org.atlassian.net',
-    email: process.env.JIRA_EMAIL!,
-    apiToken: process.env.JIRA_API_TOKEN!,
-    projectKey: 'PROJ',
-  }),
+  extensions: [
+    ...jiraExtension({
+      siteUrl: 'https://your-org.atlassian.net',
+      email: process.env.JIRA_EMAIL!,
+      apiToken: process.env.JIRA_API_TOKEN!,
+      projectKey: 'PROJ',
+    }),
+  ],
 })
 ```
 

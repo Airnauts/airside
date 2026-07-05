@@ -32,11 +32,13 @@ createAirsideServer({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
-  extensions: githubExtension({
-    token: process.env.AIRSIDE_GITHUB_TOKEN!,
-    owner: 'your-org',
-    repo: 'your-repo',
-  }),
+  extensions: [
+    ...githubExtension({
+      token: process.env.AIRSIDE_GITHUB_TOKEN!,
+      owner: 'your-org',
+      repo: 'your-repo',
+    }),
+  ],
 })
 ```
 

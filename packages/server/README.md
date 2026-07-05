@@ -91,7 +91,7 @@ import { jiraExtension } from '@airnauts/airside-extension-jira'
 
 createAirsideServer({
   // ...
-  extensions: jiraExtension({ siteUrl: '...', email: '...', apiToken: '...', projectKey: 'PROJ' }),
+  extensions: [...jiraExtension({ siteUrl: '...', email: '...', apiToken: '...', projectKey: 'PROJ' })],
 })
 ```
 

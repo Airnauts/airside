@@ -41,10 +41,12 @@ createAirsideServer({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
-  extensions: emailExtension({
-    transport: resendTransport({ apiKey: process.env.RESEND_API_KEY! }),
-    from: 'Airside <noreply@acme.com>',
-  }),
+  extensions: [
+    ...emailExtension({
+      transport: resendTransport({ apiKey: process.env.RESEND_API_KEY! }),
+      from: 'Airside <noreply@acme.com>',
+    }),
+  ],
 })
 ```
 
@@ -54,16 +56,18 @@ createAirsideServer({
 import { emailExtension } from '@airnauts/airside-extension-email'
 import { smtpTransport } from '@airnauts/airside-extension-email/smtp'
 
-extensions: emailExtension({
-  transport: smtpTransport({
-    host: 'smtp.example.com',
-    port: 587,
-    auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASS! },
+extensions: [
+  ...emailExtension({
+    transport: smtpTransport({
+      host: 'smtp.example.com',
+      port: 587,
+      auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASS! },
+    }),
+    from: 'noreply@acme.com',
+    replyTo: 'support@acme.com',
+    subjectPrefix: '[Acme] ',
   }),
-  from: 'noreply@acme.com',
-  replyTo: 'support@acme.com',
-  subjectPrefix: '[Acme] ',
-})
+]
 ```
 
 ## API reference

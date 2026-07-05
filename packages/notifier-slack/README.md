@@ -36,9 +36,9 @@ createAirsideServer({
   secretKey: process.env.AIRSIDE_SECRET!,
   projectId: 'my-app',
   allowedOrigins: ['https://my-app.example.com'],
-  extensions: slackExtension({
-    webhookUrl: process.env.AIRSIDE_SLACK_WEBHOOK_URL!,
-  }),
+  extensions: [
+    ...slackExtension({ webhookUrl: process.env.AIRSIDE_SLACK_WEBHOOK_URL! }),
+  ],
 })
 ```
 
