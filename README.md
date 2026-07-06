@@ -228,7 +228,6 @@ None of these are committed releases — they're the directions we're considerin
 - Emoji reactions on comments _(new `Comment` field + add/remove-reaction endpoints across both adapters)_.
 - Smooth, document-anchored pin positioning — drop the per-scroll-frame layout work for jank-free pins _(parking lot; a positioning-basis change that would get its own ADR)_.
 - Hide-all-pins toggle — temporarily hide the marker overlay while keeping the session active _(parking lot)_.
-- "Powered by Airside" logo mark in the widget chrome with a link back to the repo _(parking lot; host-configurable)_.
 - In-widget changelog popup surfacing recent user-facing changes to reviewers _(parking lot)_.
 - Page-level / unanchored comments — start a thread without placing a pin, for general page feedback _(parking lot; schema seam already designed in the architecture)_.
 - Rich-text / Markdown comment bodies.

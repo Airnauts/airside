@@ -59,6 +59,7 @@ const handle: AirsideHandle = await airside.init(options)
 | `threadParam` | `string` | URL param used for thread deep-links (default `"airside-thread"`) |
 | `features.screenshots` | `boolean` | Enable screenshot capture (default off) |
 | `features.textAnchors` | `boolean` | Enable text-selection anchoring (default off) |
+| `features.branding` | `boolean` | Show a "Powered by Airside" footer in the comments panel (default off; opt-in) |
 | `provenance` | `Provenance` | Optional deploy metadata attached to new threads (`commitSha`, `branch`, `deploymentId`) |
 
 #### `AirsideHandle`

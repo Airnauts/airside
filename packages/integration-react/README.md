@@ -64,6 +64,7 @@ All props from [`InitOptions`](https://github.com/Airnauts/airside/blob/main/pac
 | `threadParam` | `string` | | URL param used for thread deep-links (default `"airside-thread"`) |
 | `features.screenshots` | `boolean` | | Enable screenshot capture (default off) |
 | `features.textAnchors` | `boolean` | | Enable text-selection anchoring (default off) |
+| `features.branding` | `boolean` | | Show a "Powered by Airside" footer in the comments panel (default off; opt-in) |
 | `provenance` | `Provenance` | | Optional deploy metadata attached to new threads (`commitSha`, `branch`, `deploymentId`) |
 
 ## Peer dependencies & requirements
