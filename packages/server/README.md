@@ -161,6 +161,7 @@ const { port } = await dev.listen()
 - **`@airnauts/airside-adapter-postgres`** — PostgreSQL repository
 - **`@airnauts/airside-adapter-memory`** — in-memory repository for dev/tests
 - **`@airnauts/airside-storage-vercel-blob`** — Vercel Blob storage
+- **`@airnauts/airside-storage-s3`** — Amazon S3 / Cloudflare R2 storage
 - **`@airnauts/airside-storage-fs`** — filesystem storage
 - **`@airnauts/airside-extension-slack`** — Slack notification extension
 - **`@airnauts/airside-extension-email`** — email notification extension

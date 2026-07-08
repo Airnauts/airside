@@ -73,6 +73,7 @@ type FileSystemStorageOptions = {
 
 - **`@airnauts/airside-server`** — defines the `StorageAdapter` interface this adapter implements
 - **`@airnauts/airside-storage-vercel-blob`** — Vercel Blob storage for production / serverless deployments
+- **`@airnauts/airside-storage-s3`** — Amazon S3 / Cloudflare R2 storage for production
 
 ## License
 

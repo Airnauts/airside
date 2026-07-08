@@ -80,6 +80,7 @@ The token is passed explicitly to `createVercelBlobStorage({ token })` — the a
 ## Related packages
 
 - **`@airnauts/airside-server`** — defines the `StorageAdapter` interface
+- **`@airnauts/airside-storage-s3`** — Amazon S3 / Cloudflare R2 alternative for production
 - **`@airnauts/airside-storage-fs`** — filesystem alternative for local development
 
 ## License
