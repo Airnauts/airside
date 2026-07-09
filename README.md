@@ -213,7 +213,7 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 
 | Example | Description |
 |---|---|
-| [`examples/nextjs-host`](examples/nextjs-host) | Full Next.js App Router integration — MongoDB, Vercel Blob, Slack notifications, Jira integration, Playwright e2e tests |
+| [`examples/nextjs-host`](examples/nextjs-host) | Full Next.js App Router integration — MongoDB, Vercel Blob, Slack and email notifications, Jira and GitHub Issues thread-action extensions, Playwright e2e tests |
 | [`examples/playground`](examples/playground) | Minimal Vite + in-memory server sandbox for widget development |
 
 ---
