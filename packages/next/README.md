@@ -124,7 +124,11 @@ Accepts the same options as `createAirsideAppRoute`. Returns a single Node.js AP
 | `MONGODB_URI` | `mongoRepository` | MongoDB Atlas connection string |
 | `BLOB_READ_WRITE_TOKEN` | `createVercelBlobStorage` | Vercel Blob token |
 
-## Requirements
+## Peer dependencies & requirements
+
+| Peer | Required | Notes |
+|---|---|---|
+| `react` | `^19.0.0` | Provided by your Next.js app; no extra install needed |
 
 - Next.js ≥ 15 (App Router and Pages Router; Next 14 is supported at runtime)
 - Node.js ≥ 18
@@ -137,6 +141,7 @@ Accepts the same options as `createAirsideAppRoute`. Returns a single Node.js AP
 - **`@airnauts/airside-adapter-postgres`** — PostgreSQL persistence
 - **`@airnauts/airside-adapter-memory`** — in-memory persistence (dev/tests)
 - **`@airnauts/airside-storage-vercel-blob`** — Vercel Blob storage
+- **`@airnauts/airside-storage-s3`** — Amazon S3 / Cloudflare R2 storage
 - **`@airnauts/airside-storage-fs`** — filesystem storage
 
 See the [integration guide](https://github.com/Airnauts/airside/blob/main/docs/integration.md) and `examples/nextjs-host` for a complete worked example.
