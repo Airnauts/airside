@@ -47,6 +47,8 @@ For Next.js (App Router or Pages Router), prefer `@airnauts/airside-integration-
 
 Returns a `AirsideServer` with a single `handle(req: Request): Promise<Response>` method.
 
+Handles the full HTTP contract: create thread, list threads, get thread, add comment (reply), resolve/reopen thread, **delete thread** (`DELETE /threads/:id`), report-orphan / refresh-anchor, run a registered thread action (e.g. `POST /threads/:id/actions/:actionId`), and upload attachment.
+
 #### `CreateAirsideServerOptions`
 
 | Option | Type | Required | Description |

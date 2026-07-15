@@ -87,6 +87,7 @@ These types describe the wire API served by `@airnauts/airside-server` and consu
 | Export | Description |
 |---|---|
 | `ThreadListResponse` | `{ threads: ThreadListItem[]; nextCursor: string \| null }` |
+| `DeleteThreadResponse` | `{ id: ThreadId }` |
 
 **Domain types:**
 
