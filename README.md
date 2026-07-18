@@ -13,7 +13,7 @@ A self-contained, open-source commenting overlay you host yourself. Drop the wid
 - **Client-side:** a light-DOM widget with its own bundled React; no iframe, no Shadow DOM.
 - **Server-side:** a Web-standard `Request → Response` handler you mount inside your own app.
 - **Database:** MongoDB Atlas or PostgreSQL — you choose; the driver only enters builds that import the matching adapter.
-- **Storage:** Vercel Blob or local filesystem for image attachments.
+- **Storage:** Vercel Blob, Amazon S3 / Cloudflare R2, or local filesystem for image attachments.
 
 <p align="center">
   <img src="assets/airside-demo.gif" alt="Airside demo — log in, drop a pin to leave a comment, and triage threads from the side panel" width="640">
