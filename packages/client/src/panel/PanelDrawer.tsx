@@ -1,9 +1,13 @@
 // packages/client/src/panel/PanelDrawer.tsx
 
+import type { RealtimeEvent } from '@airnauts/airside-core'
 import * as Dialog from '@radix-ui/react-dialog'
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import type { ApiClient } from '../api/client'
 import { usePortalContainer } from '../app/providers'
+import { useIdentity } from '../identity/IdentityProvider'
+import { reconcilePanelEvent } from '../realtime/reconcile'
+import { useLiveStream } from '../realtime/useLiveStream'
 import { useController } from '../threads/useThreads'
 import { goToThread } from './navigate'
 import { PanelDetailView } from './PanelDetailView'
@@ -13,7 +17,10 @@ import { detailNeighbors } from './state'
 
 export type PanelDrawerProps = {
   resolvePageKey: (url: string) => string
-  client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
+  client: Pick<
+    ApiClient,
+    'getThread' | 'addComment' | 'setThreadStatus' | 'upload' | 'streamEvents'
+  >
   /** Show the "Powered by Airside" footer in the list pane (opt-in via init). Defaults to off. */
   branding?: boolean
 }
@@ -25,6 +32,7 @@ export function PanelDrawer({ resolvePageKey, client, branding = false }: PanelD
   const panel = usePanelController()
   const threads = useController()
   const container = usePortalContainer()
+  const { identity } = useIdentity()
 
   // Drawer-open reconciliation: subscribe to controller thread events while the panel is open.
   // status/created refetch the current filter; count keeps list rows in sync with an optimistic
@@ -57,6 +65,46 @@ export function PanelDrawer({ resolvePageKey, client, branding = false }: PanelD
     panel.openDetail(id)
     threads.requestFocus(id)
   }
+
+  // Live cross-page updates (ADR-0050): while the drawer is open, hold an all-pages /events
+  // stream so threads/comments/resolutions on ANY page reconcile into the list without a reload.
+  // A thread.created on another page becomes a new row; comment counts and statuses update live.
+  // The local author's own comment echo is suppressed — the optimistic bridge above already
+  // counted it; APPLY_COMMENT is id-idempotent so it would otherwise converge, but skipping it
+  // avoids relying on the real id reaching the ledger before the echo.
+  const onPanelEvent = useCallback(
+    (event: RealtimeEvent) => {
+      reconcilePanelEvent(event, identity?.email, {
+        upsertThread: (thread) => panel.upsertThread(thread),
+        applyComment: (threadId, commentId) => panel.applyComment(threadId, commentId),
+        patchStatus: (threadId, status, anchorState) =>
+          panel.patchStatus(threadId, status, anchorState),
+      })
+    },
+    [panel, identity?.email],
+  )
+  useLiveStream({
+    client,
+    enabled: state.open,
+    onEvent: onPanelEvent,
+    // On (re)connect, reload the current filter so missed cross-page events reconcile.
+    onConnect: () => void panel.refresh(),
+  })
+
+  // Fallback / freshness: while open, refetch when the tab regains focus or becomes visible —
+  // covers the stream being unavailable (older host, stream down) and reconciles after a sleep.
+  useEffect(() => {
+    if (!state.open) return
+    const refetch = () => {
+      if (document.visibilityState !== 'hidden') void panel.refresh()
+    }
+    window.addEventListener('focus', refetch)
+    document.addEventListener('visibilitychange', refetch)
+    return () => {
+      window.removeEventListener('focus', refetch)
+      document.removeEventListener('visibilitychange', refetch)
+    }
+  }, [state.open, panel])
 
   function onSelect(row: { id: string; pageKey: string | null; pageUrl: string }) {
     const here = resolvePageKey(window.location.href)

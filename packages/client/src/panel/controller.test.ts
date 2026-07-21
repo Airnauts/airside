@@ -58,6 +58,48 @@ describe('panel controller', () => {
     expect(listThreads).not.toHaveBeenCalled()
   })
 
+  it('drops a stale load so a slow earlier response cannot clobber newer state or the live ledger', async () => {
+    // Hand out a fresh deferred per listThreads call so the test controls resolution order.
+    const deferreds: { resolve: (v: ThreadListResponse) => void }[] = []
+    const listThreads = vi.fn(() => {
+      let resolve!: (v: ThreadListResponse) => void
+      const promise = new Promise<ThreadListResponse>((r) => {
+        resolve = r
+      })
+      deferreds.push({ resolve })
+      return promise
+    })
+    const h = harness(listThreads as never)
+
+    // Two overlapping loads (e.g. a focus refetch racing an onConnect refetch). Each load makes a
+    // main + review fetch: load A = calls 0,1 ; the newer load B = calls 2,3.
+    const loadA = h.controller.refresh()
+    const loadB = h.controller.refresh()
+    expect(listThreads).toHaveBeenCalledTimes(4)
+
+    // The newer load B resolves first with a fresh list.
+    deferreds[2]!.resolve({ threads: [item('new', { commentCount: 0 })], nextCursor: 'cB' })
+    deferreds[3]!.resolve({ threads: [], nextCursor: null })
+    await loadB
+
+    // A live comment reconciles onto the freshly loaded row via the all-pages stream.
+    h.controller.applyComment('new', 'c-live')
+    expect(h.get().list.find((t) => t.id === 'new')?.commentCount).toBe(1)
+    expect(h.get().appliedCommentIds).toEqual(['c-live'])
+
+    // The slow earlier load A resolves LAST with stale data — it must be dropped, not applied.
+    deferreds[0]!.resolve({ threads: [item('old', { commentCount: 0 })], nextCursor: 'cA' })
+    deferreds[1]!.resolve({ threads: [], nextCursor: null })
+    await loadA
+
+    // Newer state survives, and the live-applied comment ledger + count are preserved (a stale
+    // LOAD_SUCCESS would have replaced the list and reset appliedCommentIds to []).
+    expect(h.get().list.map((t) => t.id)).toEqual(['new'])
+    expect(h.get().nextCursor).toBe('cB')
+    expect(h.get().appliedCommentIds).toEqual(['c-live'])
+    expect(h.get().list.find((t) => t.id === 'new')?.commentCount).toBe(1)
+  })
+
   it('sets error when the fetch rejects', async () => {
     const h = harness(
       vi.fn(async () => {

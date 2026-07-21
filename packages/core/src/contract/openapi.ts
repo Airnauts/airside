@@ -20,9 +20,12 @@ export function buildOpenApiDocument(): ReturnType<typeof createDocument> {
     // ZodOpenApiResponsesObject only accepts keys matching `${1|2|3|4|5}${string}`,
     // so we cast via unknown to satisfy the template-literal index signature.
     const responses = {} as ZodOpenApiResponsesObject
+    // A streaming op pushes many `text/event-stream` frames; the success schema documents the
+    // per-event shape, so advertise it under that media type rather than application/json.
+    const successMediaType = op.stream ? 'text/event-stream' : 'application/json'
     ;(responses as Record<string, unknown>)[String(op.success.status)] = {
       description: `${op.operationId} success`,
-      content: { 'application/json': { schema: op.success.schema } },
+      content: { [successMediaType]: { schema: op.success.schema } },
     }
     for (const code of op.errors) {
       ;(responses as Record<string, unknown>)[String(ERROR_STATUS[code])] = {

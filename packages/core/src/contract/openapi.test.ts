@@ -23,12 +23,14 @@ describe('buildOpenApiDocument', () => {
         '/threads/{id}/anchor',
         '/threads/{id}/actions/{actionId}',
         '/uploads',
+        '/events',
       ].sort(),
     )
     expect(paths['/threads']?.post).toBeDefined()
     expect(paths['/threads']?.get).toBeDefined()
     expect(paths['/threads/{id}']?.patch).toBeDefined()
     expect(paths['/threads/{id}']?.delete).toBeDefined()
+    expect(paths['/events']?.get).toBeDefined()
   })
 
   it('registers component schemas and the key-header security scheme', () => {

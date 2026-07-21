@@ -30,6 +30,8 @@ export function ThreadsProvider({
         client,
         isCached: (id) => id in stateRef.current.detailById,
         isLoading: (id) => Boolean(stateRef.current.loadingDetail[id]),
+        hasComment: (id, commentId) =>
+          stateRef.current.detailById[id]?.comments.some((c) => c.id === commentId) ?? false,
       }),
     [client],
   )

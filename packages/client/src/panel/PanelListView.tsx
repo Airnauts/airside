@@ -4,12 +4,12 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { cn } from '../lib/cn'
 import { useController, useShowResolved } from '../threads/useThreads'
 import { Button } from '../ui/Button'
-import { PoweredBy } from '../ui/PoweredBy'
 import { CloseIcon } from '../ui/icons'
+import { PoweredBy } from '../ui/PoweredBy'
 import { StatusNotice } from '../ui/StatusNotice'
 import { usePanelController, usePanelState } from './PanelProvider'
 import { PanelRow } from './PanelRow'
-import { mainListExcludingReview, type PanelFilter } from './state'
+import { type PanelFilter, selectVisibleList } from './state'
 
 const FILTERS: { value: PanelFilter; label: string }[] = [
   { value: 'open', label: 'Open' },
@@ -29,7 +29,8 @@ export function PanelListView({ onSelect, branding = false }: PanelListViewProps
   const panel = usePanelController()
   const threads = useController()
   const showResolved = useShowResolved()
-  const mainList = mainListExcludingReview(state)
+  // Filter-aware so a live resolve (PATCH_STATUS) drops a row out of the open list without a refetch.
+  const mainList = selectVisibleList(state)
 
   const toggleResolve = (t: { id: string; status: string }) =>
     void threads.setStatus(t.id, t.status === 'resolved' ? 'open' : 'resolved')

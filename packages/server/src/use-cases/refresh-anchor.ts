@@ -7,10 +7,16 @@ import type {
 import type { Ctx } from '../ctx'
 import { NotFoundError } from '../errors'
 import type { ExtensionRegistry } from '../extensions/registry'
+import type { RealtimeChannel } from '../realtime/channel'
+import { publishRealtime } from '../realtime/publish'
 import type { Repository } from '../repository/types'
 import { withThreadActions } from './view'
 
-export type RefreshAnchorDeps = { repo: Repository; registry: ExtensionRegistry }
+export type RefreshAnchorDeps = {
+  repo: Repository
+  registry: ExtensionRegistry
+  realtime?: RealtimeChannel
+}
 
 export async function refreshAnchor(
   input: { ctx: Ctx; params: ThreadIdParam; query: undefined; body: RefreshAnchorBody },
@@ -31,5 +37,12 @@ export async function refreshAnchor(
     },
     ctx.now().toISOString(),
   )
+  publishRealtime(deps.realtime, scope, {
+    type: 'thread.updated',
+    pageKey: updated.pageKey,
+    threadId: updated.id,
+    status: updated.status,
+    anchorState: updated.anchorState,
+  })
   return withThreadActions(updated, deps.registry, scope)
 }
