@@ -97,6 +97,34 @@ createAirsideServer({
 })
 ```
 
+To implement a custom thread-action extension, import the context and result types:
+
+```ts
+import type {
+  ActionVisibilityContext, // ctx passed to visibleWhen — thread base fields + scope
+  ThreadActionContext,     // ctx passed to run       — full thread + scope
+  ThreadActionResult,      // run return type: { externalLink? }
+  ThreadActionExtension,
+  ServerExtension,
+} from '@airnauts/airside-server'
+
+const myAction: ThreadActionExtension = {
+  kind: 'thread-action',
+  id: 'my-ext.doThing',
+  provider: 'my-ext',
+  label: 'Do thing',
+  slot: 'thread-toolbar',
+  visibleWhen: ({ thread }: ActionVisibilityContext) =>
+    !thread.externalLinks?.some((l) => l.provider === 'my-ext'),
+  run: async ({ thread, scope }: ThreadActionContext): Promise<ThreadActionResult> => {
+    // call your service…
+    return { externalLink: { provider: 'my-ext', url: 'https://…', label: 'My ext #123' } }
+  },
+}
+```
+
+Throw `IntegrationError` (from `@airnauts/airside-server`) inside `run` to signal an upstream integration failure — the server maps it to a 502 and isolates it from the write.
+
 ### Adapter interfaces
 
 The types below are what custom adapters must implement:
