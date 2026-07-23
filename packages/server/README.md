@@ -168,6 +168,15 @@ app.use('/api/airside', async (req, res) => {
 })
 ```
 
+Exported symbols from `@airnauts/airside-server/node`:
+
+| Export | Description |
+|---|---|
+| `nodeRequestToWeb(req, url)` | Convert a Node `IncomingMessage` to a Web `Request` |
+| `webToNode(res, nodeRes)` | Write a Web `Response` back to a Node `ServerResponse` |
+| `readBody(req)` | Read the request body into a `Uint8Array` (or `undefined` if there is no body) |
+| `NodeRequestLike` | Type: `Pick<IncomingMessage, 'method' \| 'headers' \| 'on'>` |
+
 ### `@airnauts/airside-server/dev`
 
 Minimal Node `http` server that bridges Web `Request/Response` — for local development of non-Next.js consumers.

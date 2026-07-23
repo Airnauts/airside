@@ -45,6 +45,10 @@ createVercelBlobStorage({
 
 Each upload calls `@vercel/blob`'s `put` with `access: "public"` and `addRandomSuffix: true`.
 
+### `vercelBlobStorage`
+
+Alias for `createVercelBlobStorage` — both names accept the same options and return a `StorageAdapter`.
+
 ### `VercelBlobStorage`
 
 The underlying class, exported for direct construction:

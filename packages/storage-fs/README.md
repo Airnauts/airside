@@ -46,6 +46,10 @@ createFileSystemStorage({
 
 Files are written under `rootDir/<timestamp>/<random>-<safename>`. When `baseUrl` is set, `put` returns `${baseUrl}/<key>` so the browser can fetch the file from a static route; without it, it returns a `file://` absolute URL.
 
+### `fileSystemStorage`
+
+Alias for `createFileSystemStorage` — both names accept the same options and return a `StorageAdapter`.
+
 ### `FileSystemStorage`
 
 The underlying class, exported for subclassing or direct construction:

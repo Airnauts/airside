@@ -65,6 +65,7 @@ These are consumed by `@airnauts/airside-client` to implement re-matching. Integ
 | `locateQuote(haystack, ctx)` | Find character offsets for a `QuoteContext` within a text string; returns `QuoteOffsets { start, end }` or `null` |
 | `DEFAULT_WEIGHTS` | Default scoring weights (stable attr +0.40, text +0.25, class +0.15, role +0.10, sibling +0.05, ancestor +0.05) |
 | `DEFAULT_THRESHOLDS` | `{ accept: 0.60, margin: 0.10 }` |
+| `ANCHOR_SCHEMA_VERSION` | `1` — the current write-time anchor schema version; stored in every `Anchor` object |
 
 ### HTTP contract
 
@@ -81,17 +82,20 @@ These types describe the wire API served by `@airnauts/airside-server` and consu
 | `RefreshAnchorBody` | PATCH `/threads/:id/anchor` body |
 | `ThreadIdParam` | `:id` path param |
 | `ThreadActionParam` | `:id` + `:actionId` path params |
+| `UploadForm` | Multipart upload form shape (attachment upload) |
 
 **Responses:**
 
 | Export | Description |
 |---|---|
-| `ThreadListResponse` | `{ threads: ThreadListItem[]; nextCursor: string \| null }` |
+| `ThreadListResponse` | `{ threads: ThreadListItemView[]; nextCursor: string \| null }` |
 | `DeleteThreadResponse` | `{ id: ThreadId }` |
 
 **Domain types:**
 
-`Thread`, `Comment`, `Attachment`, `ThreadListItem`, `Anchor`, `Signals`, `Author`, `CaptureContext`, `Provenance`, `ExternalLink`, `ThreadStatus`, `AnchorState`, `ExtensionSlot`, `ThreadActionDescriptor`
+`Thread`, `ThreadView` (Thread + server-evaluated `actions`), `Comment`, `Attachment`, `ThreadListItem`, `ThreadListItemView` (ThreadListItem + server-evaluated `actions`), `Anchor`, `Signals`, `Author`, `CaptureContext`, `Provenance`, `ExternalLink`, `ThreadStatus`, `AnchorState`, `ExtensionSlot`, `ThreadActionDescriptor`
+
+`unresolvedCountOf(status: ThreadStatus) => number` — returns `1` for `"open"`, `0` for `"resolved"`.
 
 **OpenAPI:**
 

@@ -36,6 +36,10 @@ Pass `repository` to `createAirsideServer` from `@airnauts/airside-server` (or t
 
 Returns a fresh `Repository` backed by in-process Maps. No configuration, no connection.
 
+### `memoryRepository`
+
+Alias for `createMemoryRepository` — both names return an identical fresh `Repository`.
+
 ### `InMemoryRepository`
 
 The underlying class, exported for use in tests that need direct access to the store:

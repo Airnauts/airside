@@ -116,6 +116,26 @@ Accepts the same options as `createAirsideAppRoute`. Returns a single Node.js AP
 
 **`export const config = { api: { bodyParser: false } }` is required** in the route module — Next reads it statically and the helper cannot set it for you. The comments API parses `application/json` and `multipart/form-data` bodies itself, so the raw body must reach it unparsed.
 
+### Lower-level exports
+
+For callers that build and manage their own `AirsideServer` instance first:
+
+```ts
+import { createNextHandler, createNextPagesHandler } from '@airnauts/airside-integration-next'
+import { createAirsideServer } from '@airnauts/airside-server'
+
+const server = createAirsideServer(config)
+
+// App Router:
+export const { GET, POST, PATCH, DELETE, OPTIONS } = createNextHandler(server)
+
+// Pages Router:
+export const config = { api: { bodyParser: false } }
+export default createNextPagesHandler(server)
+```
+
+`NodePagesHandler` and `NodePagesRequest` are also exported as types for typing custom Pages Router wrappers.
+
 ## Configuration / env vars
 
 | Env var | Used by | Description |
