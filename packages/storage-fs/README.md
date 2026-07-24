@@ -48,7 +48,7 @@ Files are written under `rootDir/<timestamp>/<random>-<safename>`. When `baseUrl
 
 ### `fileSystemStorage`
 
-Alias for `createFileSystemStorage` — both names accept the same options and return a `StorageAdapter`.
+**Deprecated.** Renamed to `createFileSystemStorage`; kept for one release. Use `createFileSystemStorage()` instead.
 
 ### `FileSystemStorage`
 

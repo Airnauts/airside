@@ -47,7 +47,7 @@ Each upload calls `@vercel/blob`'s `put` with `access: "public"` and `addRandomS
 
 ### `vercelBlobStorage`
 
-Alias for `createVercelBlobStorage` — both names accept the same options and return a `StorageAdapter`.
+**Deprecated.** Renamed to `createVercelBlobStorage`; kept for one release. Use `createVercelBlobStorage()` instead.
 
 ### `VercelBlobStorage`
 

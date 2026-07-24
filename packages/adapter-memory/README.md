@@ -38,7 +38,7 @@ Returns a fresh `Repository` backed by in-process Maps. No configuration, no con
 
 ### `memoryRepository`
 
-Alias for `createMemoryRepository` — both names return an identical fresh `Repository`.
+**Deprecated.** Renamed to `createMemoryRepository`; kept for one release. Use `createMemoryRepository()` instead.
 
 ### `InMemoryRepository`
 
