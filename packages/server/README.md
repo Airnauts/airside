@@ -71,7 +71,7 @@ Handles the full HTTP contract: create thread, list threads, get thread, add com
 
 Extensions come in two kinds, both passed to `extensions: [...]`.
 
-**Notification extensions** (`NotificationExtension`) receive a `NotificationEvent` after each write (thread created or comment added). Failures are isolated — they never break the write.
+**Notification extensions** (`NotificationExtension`) receive a `NotificationEvent` after each write (thread created or comment added). Failures are isolated — they never break the write. `NotificationEvent.type` is typed as `NotificationEventType` (`'thread.created' | 'comment.added'`), also exported for custom extension authors.
 
 ```ts
 import { slackExtension } from '@airnauts/airside-extension-slack'
@@ -139,13 +139,15 @@ import type { Repository, StorageAdapter } from '@airnauts/airside-server'
 
 Other exported types: `NewThread`, `NewComment`, `AnchorPatch`, `ListQuery`, `ListResult`, `Scope`, `PutBlob`, `PutResult`. Utility functions: `readAllBytes`, `sanitizeName`.
 
+Constant: `ALLOWED_UPLOAD_TYPES` — the tuple of accepted MIME types (`'image/png'`, `'image/jpeg'`, `'image/webp'`, `'image/gif'`). Useful for client-side file-type validation to match server enforcement.
+
 ### `lazyRepository(connect, opts?)`
 
 Wraps a `() => Promise<Repository>` factory so it connects lazily on first use and optionally memoizes the connection under a `cacheKey` (useful for hot-reload / warm serverless environments).
 
 ### Rate limiting
 
-`InMemoryRateLimiter` is exported for use with the `rateLimiter` option or in tests. Implement the `RateLimiter` interface to plug in Redis or any other store.
+`InMemoryRateLimiter` is exported for use with the `rateLimiter` option or in tests. Implement the `RateLimiter` interface to plug in Redis or any other store. The return type of `check()` is `CheckResult` (also exported): `{ ok: true } | { ok: false; retryAfterSec: number }`.
 
 ### Error classes
 
