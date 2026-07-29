@@ -1,5 +1,6 @@
 // packages/client/src/panel/PanelDrawer.tsx
 
+import type { Provenance } from '@airnauts/airside-core'
 import * as Dialog from '@radix-ui/react-dialog'
 import { useEffect } from 'react'
 import type { ApiClient } from '../api/client'
@@ -13,14 +14,24 @@ import { detailNeighbors } from './state'
 
 export type PanelDrawerProps = {
   resolvePageKey: (url: string) => string
-  client: Pick<ApiClient, 'getThread' | 'addComment' | 'setThreadStatus' | 'upload'>
+  client: Pick<
+    ApiClient,
+    'getThread' | 'addComment' | 'setThreadStatus' | 'upload' | 'createThread'
+  >
+  /** Threaded through to the page-comment composer so page-level threads carry provenance too. */
+  provenance?: Provenance
   /** Show the "Powered by Airside" footer in the list pane (opt-in via init). Defaults to off. */
   branding?: boolean
 }
 
 /** The right-hand comments drawer: a non-modal Dialog shell that shows either the
  *  cross-page thread list or a single thread's detail pane. */
-export function PanelDrawer({ resolvePageKey, client, branding = false }: PanelDrawerProps) {
+export function PanelDrawer({
+  resolvePageKey,
+  client,
+  provenance,
+  branding = false,
+}: PanelDrawerProps) {
   const state = usePanelState()
   const panel = usePanelController()
   const threads = useController()
@@ -102,7 +113,13 @@ export function PanelDrawer({ resolvePageKey, client, branding = false }: PanelD
               onNext={nextId ? () => showInSidebar(nextId) : undefined}
             />
           ) : (
-            <PanelListView onSelect={onSelect} branding={branding} />
+            <PanelListView
+              onSelect={onSelect}
+              client={client}
+              resolvePageKey={resolvePageKey}
+              provenance={provenance}
+              branding={branding}
+            />
           )}
         </Dialog.Content>
       </Dialog.Portal>

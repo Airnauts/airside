@@ -15,7 +15,12 @@ export function unresolvedCountOf(status: ThreadStatus): number {
   return status === 'open' ? 1 : 0
 }
 
-export const AnchorState = z.enum(['anchored', 'orphaned'])
+// `'unanchored'` marks a thread born without a pin (a page-level comment). It is distinct
+// from `'orphaned'` (had an anchor, then lost it): page comments opt out of the anchoring
+// machinery entirely, so they must never trip re-match, self-heal, or the "anchor lost" warning.
+// Invariant (documented, not refine-enforced pre-1.0): `anchor` is present iff the state is
+// `anchored`/`orphaned`, and absent iff `unanchored`.
+export const AnchorState = z.enum(['anchored', 'orphaned', 'unanchored'])
 export type AnchorState = z.infer<typeof AnchorState>
 
 const ThreadBase = z.object({
@@ -24,7 +29,7 @@ const ThreadBase = z.object({
   pageKey: z.string().nullable(),
   pageUrl: HttpUrl,
   pageTitle: z.string().optional(),
-  anchor: Anchor,
+  anchor: Anchor.optional(),
   status: ThreadStatus,
   anchorState: AnchorState,
   selectionLost: z.boolean().optional(),

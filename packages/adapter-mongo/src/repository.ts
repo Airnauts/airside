@@ -89,7 +89,9 @@ export function createMongoRepository({ db }: { db: Db }): Repository {
         pageKey: input.pageKey,
         pageUrl: input.pageUrl,
         ...(input.pageTitle !== undefined ? { pageTitle: input.pageTitle } : {}),
-        anchor: input.anchor,
+        // Omit `anchor` entirely for a page-level (unanchored) thread rather than writing
+        // `anchor: undefined` — mirrors the pageTitle/selectionLost handling above.
+        ...(input.anchor !== undefined ? { anchor: input.anchor } : {}),
         status: input.status,
         anchorState: input.anchorState,
         ...(input.selectionLost !== undefined ? { selectionLost: input.selectionLost } : {}),

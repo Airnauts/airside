@@ -27,6 +27,9 @@ export async function createThread(
   const nowIso = ctx.now().toISOString()
   const threadId = ctx.ids.thread()
   const commentId = ctx.ids.comment()
+  // A page-level comment arrives without an anchor; it is born 'unanchored' and opts out of
+  // the anchoring machinery. A pin-anchored comment carries its anchor and is 'anchored'.
+  const anchored = body.anchor !== undefined
   const attachments = await resolveAttachments(deps.repo, scope, body.comment.attachmentIds)
   const firstComment = {
     id: commentId,
@@ -45,7 +48,7 @@ export async function createThread(
     pageTitle: body.pageTitle,
     anchor: body.anchor,
     status: 'open',
-    anchorState: 'anchored',
+    anchorState: anchored ? 'anchored' : 'unanchored',
     captureContext: body.captureContext,
     provenance: body.provenance,
     createdBy: body.author,

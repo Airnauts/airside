@@ -58,6 +58,19 @@ export function makeCreateThreadBody(overrides: Partial<CreateThreadBody> = {}):
   }
 }
 
+/**
+ * Build a page-level (pinless) NewThread: no `anchor`, `anchorState: 'unanchored'`. Mirrors a
+ * thread created via the "comment on this page" affordance, which opts out of anchoring entirely.
+ */
+export function makePageNewThread(
+  overrides: Omit<Partial<NewThread>, 'firstComment' | 'anchor' | 'anchorState'> & {
+    firstComment?: Partial<NewComment>
+  } = {},
+): NewThread {
+  const { anchor: _anchor, ...base } = makeNewThread(overrides)
+  return { ...base, anchorState: 'unanchored' }
+}
+
 export function makeAttachment(overrides: Partial<Attachment> = {}): Attachment {
   const id = overrides.id ?? (`at_${seq()}` as AttachmentId)
   return {
