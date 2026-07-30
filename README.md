@@ -187,7 +187,7 @@ URL). Use it from any bundler, or from a `<script type="module">` on a plain HTM
 
 ## Packages
 
-This is a pnpm monorepo. All packages under `packages/*` are published to npm under the `@airnauts` scope.
+This is a pnpm monorepo. The following packages are published to npm under the `@airnauts` scope:
 
 | Package | Description |
 |---|---|
