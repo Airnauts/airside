@@ -220,7 +220,7 @@ This is a pnpm monorepo. All packages under `packages/*` are published to npm un
 
 ## Roadmap
 
-None of these are committed releases — they're the directions we're considering. Enhancement ideas are catalogued in [`docs/ideas.md`](docs/ideas.md); known rough edges in shipped behavior are logged in [`docs/issues.md`](docs/issues.md).
+None of these are committed releases — they're the directions we're considering.
 
 **Widget & UX**
 
