@@ -4,6 +4,7 @@ import { activationKeySetting } from '../activation/storage'
 import { identitySetting } from '../identity/storage'
 import { launcherPositionSetting } from '../launcher/storage'
 import { pinsHiddenSetting } from '../marker/storage'
+import { whatsNewSeenSetting } from '../whatsnew/storage'
 import type { SettingEntry } from './entry'
 
 /**
@@ -24,6 +25,7 @@ const ENTRIES = {
   identity: identitySetting,
   launcherPosition: launcherPositionSetting,
   pinsHidden: pinsHiddenSetting,
+  whatsNewSeen: whatsNewSeenSetting,
 } satisfies Record<string, SettingEntry<unknown>>
 
 /** A known setting's name — the keys of {@link ENTRIES}, the single registration point. */

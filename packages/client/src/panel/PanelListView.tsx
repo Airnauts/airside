@@ -4,9 +4,10 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { cn } from '../lib/cn'
 import { useController, useShowResolved } from '../threads/useThreads'
 import { Button } from '../ui/Button'
+import { CloseIcon, SparkleIcon } from '../ui/icons'
 import { PoweredBy } from '../ui/PoweredBy'
-import { CloseIcon } from '../ui/icons'
 import { StatusNotice } from '../ui/StatusNotice'
+import { useWhatsNew } from '../whatsnew/WhatsNewProvider'
 import { usePanelController, usePanelState } from './PanelProvider'
 import { PanelRow } from './PanelRow'
 import { mainListExcludingReview, type PanelFilter } from './state'
@@ -29,6 +30,7 @@ export function PanelListView({ onSelect, branding = false }: PanelListViewProps
   const panel = usePanelController()
   const threads = useController()
   const showResolved = useShowResolved()
+  const { openWhatsNew } = useWhatsNew()
   const mainList = mainListExcludingReview(state)
 
   const toggleResolve = (t: { id: string; status: string }) =>
@@ -53,11 +55,16 @@ export function PanelListView({ onSelect, branding = false }: PanelListViewProps
         <Dialog.Description className="air:sr-only">
           Comment threads across all pages
         </Dialog.Description>
-        <Dialog.Close asChild>
-          <Button variant="ghost" size="icon" aria-label="Close panel">
-            <CloseIcon />
+        <div className="air:flex air:items-center air:gap-1">
+          <Button variant="ghost" size="icon" aria-label="What's new" onClick={openWhatsNew}>
+            <SparkleIcon />
           </Button>
-        </Dialog.Close>
+          <Dialog.Close asChild>
+            <Button variant="ghost" size="icon" aria-label="Close panel">
+              <CloseIcon />
+            </Button>
+          </Dialog.Close>
+        </div>
       </div>
 
       <fieldset className="air:m-0 air:p-0 air:border-0 air:min-w-0">

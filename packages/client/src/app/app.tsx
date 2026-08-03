@@ -13,6 +13,7 @@ import { getSetting, setSetting } from '../settings/store'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { LoginLauncher } from '../ui/LoginLauncher'
 import { ToastProvider } from '../ui/toast'
+import { WhatsNewProvider } from '../whatsnew/WhatsNewProvider'
 import { WidgetProvider } from './providers'
 
 export type WidgetAppProps = {
@@ -53,38 +54,40 @@ export function WidgetApp({ options, client: injected }: WidgetAppProps) {
       <WidgetProvider>
         <ToastProvider>
           <IdentityProvider identity={identity} requestIdentity={requestIdentity}>
-            <ThreadsProvider client={client}>
-              <PanelProvider client={client}>
-                <DraftsProvider>
-                  {identity ? (
-                    <>
-                      <MarkerLayer
-                        client={client}
-                        pageKey={pageKey}
-                        pageUrl={pageUrl}
-                        resolvePageKey={(url) => resolvePageKey(options, url)}
-                        provenance={options.provenance}
-                      />
-                      <PanelDrawer
-                        resolvePageKey={(url) => resolvePageKey(options, url)}
-                        client={client}
-                        branding={options.features?.branding === true}
-                      />
-                    </>
-                  ) : (
-                    <LoginLauncher onLogIn={() => setModalOpen(true)} />
-                  )}
-                </DraftsProvider>
-              </PanelProvider>
-              <IdentityModal
-                open={modalOpen}
-                onOpenChange={(open) => {
-                  if (!open) resumeRef.current = null
-                  setModalOpen(open)
-                }}
-                onSubmit={onSubmitIdentity}
-              />
-            </ThreadsProvider>
+            <WhatsNewProvider>
+              <ThreadsProvider client={client}>
+                <PanelProvider client={client}>
+                  <DraftsProvider>
+                    {identity ? (
+                      <>
+                        <MarkerLayer
+                          client={client}
+                          pageKey={pageKey}
+                          pageUrl={pageUrl}
+                          resolvePageKey={(url) => resolvePageKey(options, url)}
+                          provenance={options.provenance}
+                        />
+                        <PanelDrawer
+                          resolvePageKey={(url) => resolvePageKey(options, url)}
+                          client={client}
+                          branding={options.features?.branding === true}
+                        />
+                      </>
+                    ) : (
+                      <LoginLauncher onLogIn={() => setModalOpen(true)} />
+                    )}
+                  </DraftsProvider>
+                </PanelProvider>
+                <IdentityModal
+                  open={modalOpen}
+                  onOpenChange={(open) => {
+                    if (!open) resumeRef.current = null
+                    setModalOpen(open)
+                  }}
+                  onSubmit={onSubmitIdentity}
+                />
+              </ThreadsProvider>
+            </WhatsNewProvider>
           </IdentityProvider>
         </ToastProvider>
       </WidgetProvider>

@@ -9,6 +9,7 @@ import {
   MoreIcon,
   ReopenIcon,
   resolveIcon,
+  SparkleIcon,
   SpinnerIcon,
 } from './index'
 
@@ -19,6 +20,7 @@ const ICONS: Array<[string, IconComponent]> = [
   ['AttachIcon', AttachIcon],
   ['ExternalLinkIcon', ExternalLinkIcon],
   ['ReopenIcon', ReopenIcon],
+  ['SparkleIcon', SparkleIcon],
 ]
 
 describe('icons', () => {

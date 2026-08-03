@@ -109,6 +109,17 @@ export const ReopenIcon: IconComponent = (props) => (
   </Icon>
 )
 
+/** Four-point sparkle (the former `✦` what's-new glyph). Filled so it reads at 16px. */
+export const SparkleIcon: IconComponent = (props) => (
+  <Icon {...props}>
+    <path
+      d="M12 3c.9 4.5 2.7 6.75 8 9-5.3 2.25-7.1 4.5-8 9-.9-4.5-2.7-6.75-8-9 5.3-2.25 7.1-4.5 8-9Z"
+      fill="currentColor"
+      stroke="none"
+    />
+  </Icon>
+)
+
 /**
  * A spinning progress indicator. Rendered as the widget's established border-spinner (same
  * markup as the attachment upload spinner) rather than an SVG, so it inherits `currentColor`
