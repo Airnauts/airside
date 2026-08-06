@@ -1697,3 +1697,60 @@ later. Zero new dependencies. Failures (non-2xx, network, abort) surface as `Int
 return 410, already handled by the non-2xx path. The concurrent-duplicate window documented in
 ADR-0034 still applies. Markdown body building lives locally in the package (YAGNI); hoisting it into
 a shared workspace alongside the Linear target is that issue's (#47) work, not a decision here.
+
+## ADR-0050 — airside-agent generalization: config-sourced repo, recipe extraction, provider seam, conflicts op, filing mode
+
+- **Date:** 2026-07-03
+- **Status:** accepted (refines ADR-0042 / ADR-0043)
+
+> Note: renumbered from 0048 to 0050 at merge time — ADR-0049 landed on `main` first and PR #70
+> still claims 0048, so 0050 is the next free slot clear of both.
+
+**Context.** The `airside-agent` orchestrator only ran against one hardcoded repo:
+`Airnauts/airside` was inlined at ~40 `gh` call sites across `SKILL.md` and the six
+`.claude/agents/airside-*.md` files, the 600-line runbook tangled the algorithm with inline
+`gh`/`graphql`/`jq` snippets, and GitHub was assumed end-to-end with no seam for a future Jira
+tracker. Two process gaps rode along: the agent could consume issues but not *create* them, and a
+PR that developed merge conflicts was invisible to the loop. Three agent files also still told
+subagents to ignore dead links to the retired `docs/ideas.md`/`docs/issues.md` backlogs.
+
+**Decision.** (1) **Repo/owner come from config**: `SKILL.md` §Config is the single source of
+`REPO`/`OWNER`/`PICKUP_LABEL`/`BRANCH_PREFIX`/`REVIEW_CAP`; every call site uses the placeholder
+form (`--repo <REPO>`, `<BRANCH_PREFIX><n>`), the GraphQL owner/name split is derived from `REPO`,
+and the six subagents read `REPO`/`BRANCH` from their spawn inputs instead of literals.
+(2) **The GitHub command surface is extracted** into `references/github.md` — copy-pasteable
+recipes lifted verbatim, keyed by orchestrator operation; the runbook keeps the algorithm and
+links each op to its recipe by name. (3) **A provider seam is designed, not implemented**:
+`references/providers.md` names the abstract operations (`listActionableTasks`, `createTask`,
+`readMergeability`, …) with GitHub as the one implementation, so a Jira tracker + VCS host can
+slot in later — no code, no switch. (4) **Merge-conflict PRs become actionable**: reconcile reads
+PR mergeability (`UNKNOWN` = async, retry next tick — never treated as conflicting);
+`CONFLICTING` triggers a `conflicts` op that outranks the phase's normal op and spawns the fixer
+in a new `MODE: conflicts` — merge `main` into the branch (never rebase, never force-push), lint +
+tests, push, with the merge commit trailer `Airside-Agent-Conflicts: true` as the one-attempt
+guard. One autonomous attempt per conflict occurrence; a semantic conflict (or a failed attempt)
+escalates to `state:blocked` with an owner note rather than guessing. (5) **Issue creation is an
+inline invocation mode** — `/airside-agent file <description>` files one issue and never runs a
+tick. It runs subagent-less because the `filing-github-issues` conventions require interviewing
+the owner, which only the top-level invocation can do; the pickup label is added only on the
+owner's explicit opt-in, so filing never accidentally feeds the loop. (6) **Reads are scripted,
+writes are not**: `scripts/tick-scan.sh <REPO>` performs the whole per-tick read fan-out as one
+consolidated JSON (the recipes remain the spec; the script is their executable form), while write
+operations stay individual recipes — each is conditional on reasoning, and their commit-last
+ordering is the crash-recovery design (ADR-0043); batching them would hide partial-failure states.
+The **de-brand rename is deferred** to a follow-up issue: the markers are persisted idempotency
+keys on live issues/PRs and `/loop` + `subagent_type` resolve by name, so the cutover needs an
+owner-coordinated pause → merge → restart with a dual-read drain window. The chosen neutral
+namespace is **`air-agent`** (owner-decided), recorded here so the rationale and the name live
+together.
+
+**Consequences.** Pointing the loop at another repo is now a one-table config edit, and the
+runbook reads as algorithm-plus-named-recipes instead of 600 tangled lines. Conflicted PRs
+self-heal in the mechanical case and park visibly (`blocked` + note) in the semantic case, at the
+cost of one guarded fixer attempt; mergeability's async `UNKNOWN` means detection can lag a tick —
+acceptable at the 5-minute cadence. The script/recipe split trades a second copy of the read
+queries for ~4–6 fewer tool calls per issue per tick; the recipes are canonical and the script
+gets fixed on any disagreement. Everything ships under `.claude/` + `docs/` with the skill name
+and every persisted `airside-agent-*` marker byte-identical, so live in-flight issues are
+untouched and no changeset is needed. The rename remains the one breaking migration, isolated in
+its own issue.
