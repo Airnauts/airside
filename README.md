@@ -227,7 +227,6 @@ None of these are committed releases — they're the directions we're considerin
 - Per-comment overflow menu — edit / delete / copy a comment _(needs new `PATCH`/`DELETE` comment endpoints)_.
 - Emoji reactions on comments _(new `Comment` field + add/remove-reaction endpoints across both adapters)_.
 - Smooth, document-anchored pin positioning — drop the per-scroll-frame layout work for jank-free pins _(parking lot; a positioning-basis change that would get its own ADR)_.
-- Hide-all-pins toggle — temporarily hide the marker overlay while keeping the session active _(parking lot)_.
 - In-widget changelog popup surfacing recent user-facing changes to reviewers _(parking lot)_.
 - Page-level / unanchored comments — start a thread without placing a pin, for general page feedback _(parking lot; schema seam already designed in the architecture)_.
 - Rich-text / Markdown comment bodies.
@@ -256,7 +255,6 @@ None of these are committed releases — they're the directions we're considerin
 
 **Bug fixes & known rough edges**
 
-- Cross-element text selections (spanning a tag boundary) anchor to a signal-less parent and are easily lost on re-render _(correctness bug; pairs with the two issues below)_.
 - A pin on a plain structural element can silently migrate to the wrong surviving sibling after the original is removed _(correctness bug; TDD fix deferred)_.
 - Signal-less elements (no `id`, class, or `data-*` attribute) cannot clear the re-anchor score threshold under structural mutations and always orphan _(known v1 scoring limitation)_.
 - MongoDB adapter emits a cosmetic webpack `aws4` warning when bundled by Next.js — build succeeds and runtime is unaffected _(deferred; fix is a lazy-import change in the adapter)_.
