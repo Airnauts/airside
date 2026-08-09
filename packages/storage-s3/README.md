@@ -97,6 +97,20 @@ import { S3Storage } from '@airnauts/airside-storage-s3'
 const storage = new S3Storage({ bucket: 'my-bucket', publicBaseUrl: 'https://cdn.example.com' })
 ```
 
+### Types
+
+| Export | Description |
+|---|---|
+| `S3StorageOptions` | Full options type for `createS3Storage` |
+| `R2StorageOptions` | Options type for `createR2Storage` — `S3StorageOptions` minus `region`/`endpoint`, plus `accountId` |
+| `S3ClientLike` | Narrow client interface for custom/test injection: `{ send(command: unknown): Promise<unknown> }` |
+
+Import any for TypeScript type annotations:
+
+```ts
+import type { S3StorageOptions, R2StorageOptions, S3ClientLike } from '@airnauts/airside-storage-s3'
+```
+
 ## Configuration / env vars
 
 The adapter reads no environment variables itself — values are passed explicitly. Typical sources:
