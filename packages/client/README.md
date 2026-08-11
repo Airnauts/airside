@@ -92,7 +92,8 @@ Reads a `?airside-thread=<id>` deep-link param from the current URL, stores the 
 Low-level DOM capture functions used by the widget's anchoring engine; available if you need to build custom anchoring logic.
 
 ```ts
-import { captureElement, extractSignals, buildSelectors } from '@airnauts/airside-client'
+import { captureElement, extractSignals, buildSelectors, resolveUnique } from '@airnauts/airside-client'
+import type { Point } from '@airnauts/airside-client'
 ```
 
 | Export | Description |
@@ -101,6 +102,9 @@ import { captureElement, extractSignals, buildSelectors } from '@airnauts/airsid
 | `extractSignals(el)` | Extract the signals bag (`tag`, `role`, `textSnippet`, `classes`, `siblingIndex`, `stableAttrs`, `ancestorTrail`) |
 | `buildSelectors(el)` | Build the dual `[structuralPath, classPath]` selector tuple |
 | `resolveUnique(selector, root)` | Resolve a structural selector to a single element, or null if ambiguous |
+| `clamp01(n)` | Clamp a number to `[0, 1]` (used for anchor offset coordinates) |
+| `offsetWithin(coord, extent)` | Compute a fractional offset within a `{ start, size }` range |
+| `Point` | Type: `{ x: number; y: number }` — pixel coordinate passed to `captureElement` |
 
 ## Requirements
 
