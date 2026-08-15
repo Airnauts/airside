@@ -86,7 +86,7 @@ createAirsideServer({
 })
 ```
 
-**Thread-action extensions** (`ThreadActionExtension`) add reviewer-triggered actions to the thread toolbar (e.g. "Create Jira issue"). Each action declares an `id`, `label`, `slot`, optional `visibleWhen` predicate, and a `run` handler that may persist an `externalLink` back on the thread.
+**Thread-action extensions** (`ThreadActionExtension`) add reviewer-triggered actions to the thread toolbar (e.g. "Create Jira issue"). Each action declares a `provider`, `id`, `label`, `slot` (`'thread-toolbar' | 'thread-metadata' | 'panel-row-actions'`), an optional `presentation` for icon/style hints, an optional `visibleWhen` predicate, and a `run` handler that may persist an `externalLink` back on the thread.
 
 ```ts
 import { jiraExtension } from '@airnauts/airside-extension-jira'
@@ -114,11 +114,20 @@ const myAction: ThreadActionExtension = {
   provider: 'my-ext',
   label: 'Do thing',
   slot: 'thread-toolbar',
+  presentation: { style: 'primary' },   // optional; icon?: string, style?: 'primary' | 'secondary' | 'link'
   visibleWhen: ({ thread }: ActionVisibilityContext) =>
     !thread.externalLinks?.some((l) => l.provider === 'my-ext'),
   run: async ({ thread, scope }: ThreadActionContext): Promise<ThreadActionResult> => {
     // call your service…
-    return { externalLink: { provider: 'my-ext', url: 'https://…', label: 'My ext #123' } }
+    return {
+      externalLink: {
+        provider: 'my-ext',
+        externalId: 'ext-123',                // required: unique ID from the external system
+        label: 'My Ext #123',
+        url: 'https://ext.example.com/issues/123',
+        createdAt: new Date().toISOString(),  // required ISO-8601 timestamp
+      },
+    }
   },
 }
 ```
