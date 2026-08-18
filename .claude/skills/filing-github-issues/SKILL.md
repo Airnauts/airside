@@ -17,7 +17,7 @@ own**: the full rationale lives in the issue body, not in a doc it links back to
 
 An issue is a pitch + an implementation sketch + (for bugs) a root cause + the load-bearing
 detail someone would need to pick it up later. Keep it concrete but not a full design doc —
-deeper design still graduates to `docs/adr.md` + a milestone if and when the item is
+deeper design still graduates to `ADR.md` + a milestone if and when the item is
 committed to.
 
 Use the authenticated `gh` CLI. Default repo: `Airnauts/airside`.

@@ -2,8 +2,8 @@
 
 - **Status:** Approved (brainstorm complete)
 - **Date:** 2026-05-27
-- **Inputs:** [`docs/prd.md`](prd.md) · [`docs/adr.md`](adr.md) · reference: [`docs/reference/vercel-comments-payloads.md`](reference/vercel-comments-payloads.md), [`docs/reference/vercel-widget-dom.md`](reference/vercel-widget-dom.md)
-- **Scope:** the v1 system architecture. Product requirements are in the PRD; this document is the system shape that realizes them. Decision rationale is captured per-decision in `adr.md` (ADR-0001…0010); this spec is the integrated picture.
+- **Inputs:** [`docs/prd.md`](prd.md) · [`ADR.md`](../ADR.md) · reference: [`docs/reference/vercel-comments-payloads.md`](reference/vercel-comments-payloads.md), [`docs/reference/vercel-widget-dom.md`](reference/vercel-widget-dom.md)
+- **Scope:** the v1 system architecture. Product requirements are in the PRD; this document is the system shape that realizes them. Decision rationale is captured per-decision in `ADR.md` (ADR-0001…0010); this spec is the integrated picture.
 
 ---
 

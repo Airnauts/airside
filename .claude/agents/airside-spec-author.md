@@ -22,7 +22,7 @@ comment for the owner to `/approve` or `/revise`, so write it for that reader.
    `docs/ideas.md`/`docs/issues.md` entry; that backlog was retired — ignore the dead link and work
    from the issue body.)
 2. **Ground it in the project.** This repo's design is the source of truth — read what's relevant
-   in `docs/architecture.md`, `docs/prd.md`, `docs/adr.md`, and `CLAUDE.md`. Read the actual code
+   in `docs/architecture.md`, `docs/prd.md`, `ADR.md`, and `CLAUDE.md`. Read the actual code
    the change would touch (Grep for the seams, Read the files). Note the rules that apply: backend
    (`core`/`server`/adapters) is **TDD**; publishable-package changes need a **changeset**;
    `pnpm lint` (biome) must pass. Web-research only if genuinely needed (an external API/library).

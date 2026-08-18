@@ -2,7 +2,7 @@
 
 - **Status:** Proposed
 - **Date:** 2026-05-27
-- **Source of truth:** [`docs/architecture.md`](architecture.md) + ADRs in [`docs/adr.md`](adr.md)
+- **Source of truth:** [`docs/architecture.md`](architecture.md) + ADRs in [`ADR.md`](../ADR.md)
 
 ## How to use this document
 

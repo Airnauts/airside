@@ -28,7 +28,7 @@ once, by hand, to run a single tick (this is how you test it).
 > **In review:** the comments you leave — **inline review threads and top-level PR comments** — are
 > picked up, fixed, and acknowledged. **Terminal:** a merge → `done`, a close → `done`/`cancelled`
 > (kill switch). The runbook parks anything it can't handle with a note (it never silently drops
-> work). See `docs/adr.md` (ADR-0042, ADR-0043).
+> work). See `ADR.md` (ADR-0042, ADR-0043).
 >
 > **Deferred (no observed need yet):** round-robin fairness across many simultaneously-active issues,
 > and a global `MAX_ACTIVE` ceiling — the `≤1 op/tick` invariant + the user-started loop already bound
@@ -127,7 +127,7 @@ Mirror the computed phase to exactly one `state:*` label (mutually exclusive): `
 - `gh auth status` succeeds; default repo resolves to `Airnauts/airside`.
 - Ensure labels exist (idempotent upsert — safe to run every tick):
   `gh label create "agent" --color 5319e7 --force` … and the five `agent:simple` / `state:*`
-  labels (see `docs/adr.md` for the full list). Skip if you confirmed them this session.
+  labels (see `ADR.md` for the full list). Skip if you confirmed them this session.
 
 ### 1. Scan
 
@@ -520,7 +520,7 @@ Spawn with the **Agent tool**, `subagent_type: "airside-spec-reviser"` (no workt
 ## Builder spawn contract
 
 Spawn with the **Agent tool**, `isolation: "worktree"` (verified to give a real, locally-built
-worktree — see `docs/adr.md`), and `subagent_type: "airside-builder"`. If that subagent type is
+worktree — see `ADR.md`), and `subagent_type: "airside-builder"`. If that subagent type is
 not yet registered in this session, fall back to `subagent_type: "general-purpose"` and pass the
 **full contents of `.claude/agents/airside-builder.md`** as the prompt preamble.
 
