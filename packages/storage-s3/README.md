@@ -97,6 +97,32 @@ import { S3Storage } from '@airnauts/airside-storage-s3'
 const storage = new S3Storage({ bucket: 'my-bucket', publicBaseUrl: 'https://cdn.example.com' })
 ```
 
+### `S3ClientLike`
+
+The injection seam for the `client` option — any object with a compatible `send` method satisfies it (the real `S3Client` from `@aws-sdk/client-s3` does; tests inject an in-memory fake without matching the SDK's full overloaded signature):
+
+```ts
+interface S3ClientLike {
+  send(command: unknown): Promise<unknown>
+}
+```
+
+### `S3StorageOptions` / `R2StorageOptions`
+
+Named type exports for callers that import them explicitly:
+
+```ts
+import type { S3StorageOptions, R2StorageOptions } from '@airnauts/airside-storage-s3'
+```
+
+`S3StorageOptions` describes all fields accepted by `createS3Storage` (see table above). `R2StorageOptions` is `S3StorageOptions` omitting `region` and `endpoint`, plus a required `accountId`:
+
+```ts
+type R2StorageOptions = Omit<S3StorageOptions, 'region' | 'endpoint'> & {
+  accountId: string
+}
+```
+
 ## Configuration / env vars
 
 The adapter reads no environment variables itself — values are passed explicitly. Typical sources:
