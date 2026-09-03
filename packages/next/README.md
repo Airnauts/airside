@@ -156,12 +156,18 @@ export default createNextPagesHandler(server)
 ## Related packages
 
 - **`@airnauts/airside-client`** — widget to mount on the front end
+- **`@airnauts/airside-integration-react`** — `<AirsideLayer/>` React mount (re-exported from `/client`)
 - **`@airnauts/airside-server`** — lower-level server API (use this for non-Next.js frameworks)
 - **`@airnauts/airside-adapter-mongo`** — MongoDB persistence
 - **`@airnauts/airside-adapter-postgres`** — PostgreSQL persistence
 - **`@airnauts/airside-adapter-memory`** — in-memory persistence (dev/tests)
 - **`@airnauts/airside-storage-vercel-blob`** — Vercel Blob storage
+- **`@airnauts/airside-storage-s3`** — Amazon S3 / Cloudflare R2 storage
 - **`@airnauts/airside-storage-fs`** — filesystem storage
+- **`@airnauts/airside-extension-slack`** — Slack notification extension
+- **`@airnauts/airside-extension-email`** — email notification extension
+- **`@airnauts/airside-extension-jira`** — Jira thread-action extension
+- **`@airnauts/airside-extension-github`** — GitHub Issues thread-action extension
 
 See the [integration guide](https://github.com/Airnauts/airside/blob/main/docs/integration.md) and `examples/nextjs-host` for a complete worked example.
 

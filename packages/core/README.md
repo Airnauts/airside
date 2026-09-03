@@ -128,11 +128,13 @@ These types describe the wire API served by `@airnauts/airside-server` and consu
 
 This is the shared contract layer for the `@airnauts/airside-*` suite:
 
-- **`@airnauts/airside-client`** — widget engine and React wrapper
+- **`@airnauts/airside-client`** — widget engine (`init()` and DOM anchoring runtime)
+- **`@airnauts/airside-integration-react`** — `<AirsideLayer/>` React host mount
 - **`@airnauts/airside-server`** — HTTP server, use cases, and adapter interfaces
 - **`@airnauts/airside-adapter-mongo`** — MongoDB persistence
 - **`@airnauts/airside-adapter-postgres`** — PostgreSQL persistence
 - **`@airnauts/airside-storage-vercel-blob`** — Vercel Blob file storage
+- **`@airnauts/airside-storage-s3`** — Amazon S3 / Cloudflare R2 file storage
 - **`@airnauts/airside-storage-fs`** — filesystem file storage
 
 See [docs/architecture.md](https://github.com/Airnauts/airside/blob/main/docs/architecture.md) for the full system design.
