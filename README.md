@@ -220,7 +220,7 @@ This is a pnpm monorepo. The packages below are published to npm under the `@air
 
 ## Roadmap
 
-None of these are committed releases — they're the directions we're considering.
+None of these are committed releases — they're the directions we're considering. See [`docs/ideas.md`](docs/ideas.md) for the full idea parking lot and [`docs/issues.md`](docs/issues.md) for known rough edges in shipped behavior.
 
 **Widget & UX**
 
