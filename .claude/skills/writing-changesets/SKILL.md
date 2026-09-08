@@ -8,7 +8,7 @@ description: Use when recording package changes for a release in the commeting-t
 ## Overview
 
 Changelogs in this repo are **generated from changeset files**, never hand-edited
-(see CLAUDE.md → "Changelog: managed by Changesets"). A changeset is a small
+(see AGENTS.md → "Changelog: managed by Changesets"). A changeset is a small
 markdown file under `.changeset/` that names the affected publishable packages, a
 semver bump for each, and a user-facing summary. `pnpm version-packages` later turns
 those files into version bumps + `CHANGELOG.md` entries.
@@ -38,7 +38,7 @@ These eight are publishable:
 
 Under `^0.1.0`, npm already treats a `0.2.0` as breaking. So while we are pre-1.0 we
 **stay in 0.x**: a breaking change is a `minor`, not a `major` (a `major` would jump to
-`1.0.0`). Revisit when we intentionally cut 1.0 (tied to CLAUDE.md's beta note).
+`1.0.0`). Revisit when we intentionally cut 1.0 (tied to AGENTS.md's beta note).
 
 | Change to the package's own public API | Bump now (0.x) | After 1.0 |
 |---|---|---|

@@ -47,7 +47,7 @@ If any are missing, stop and emit a `failed` status block (below) — do not gue
    `git rev-parse --show-toplevel`. Deps are already installed. Work on the current (auto-named
    `worktree-*`) branch; you publish to `BRANCH` at push time.
 
-3. **Build it the airside way** (these are project rules from `CLAUDE.md`, not optional):
+3. **Build it the airside way** (these are project rules from `AGENTS.md`, not optional):
    - **TDD for backend** — for `core`, `server`, and persistence/storage adapters, write the
      failing test or fixture **first**, then make it pass. Client/widget work follows the repo's
      normal testing, not strict TDD.

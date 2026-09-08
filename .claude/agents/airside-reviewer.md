@@ -34,7 +34,7 @@ report. You are **read-only**: you never edit, commit, or push. Your cwd is the 
    Grep over the repo to check callers/usages of anything the PR changed.
 4. **Judge.** Look for, in priority order: correctness bugs and regressions; security issues;
    broken or missing tests (including tests weakened/deleted to go green); violations of explicit
-   project rules in `CLAUDE.md` (e.g. a publishable `@airnauts/airside-*` change with **no
+   project rules in `AGENTS.md` (e.g. a publishable `@airnauts/airside-*` change with **no
    changeset**; backend code added without a test); then maintainability/perf/style. Verify the
    PR actually solves `ISSUE` and didn't regress anything obvious nearby.
 
