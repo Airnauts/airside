@@ -325,7 +325,7 @@ mocked-rect positioning tests, Playwright e2e); this record governs the backend.
 **Context.** Architecture §2 fixed pnpm workspaces, TypeScript project
 references, tsup, and ESM-first, but left the surrounding tooling open: task
 orchestration, lint/format, the test runner, the bundle-size budget tool, the
-module format, and version pins. `CLAUDE.md` requires an ADR when we choose a
+module format, and version pins. `AGENTS.md` requires an ADR when we choose a
 framework or establish coding standards — this records those choices for M1.
 
 **Decision.**
