@@ -64,6 +64,10 @@ git log: describe the user-visible effect, not the internal refactor.
 For the per-change mechanics (file format, the pre-1.0 bump policy, which packages to
 include), use the `writing-changesets` skill in `.claude/skills/`.
 
+When cutting a release with user-facing changes, also prepend a `HIGHLIGHTS` entry in
+`packages/client/src/whatsnew/highlights.ts` — it feeds the widget's in-app "what's new"
+popup (see `RELEASING.md`).
+
 ## Architecture decision records
 
 `docs/adr.md` is the running log of architecture decisions for this project. Whenever an architecturally significant choice is made or changed.

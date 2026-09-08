@@ -8,6 +8,7 @@ import { DraftsProvider } from '../drafts/DraftsProvider'
 import { IdentityProvider } from '../identity/IdentityProvider'
 import { ThreadsProvider } from '../threads/ThreadsProvider'
 import { useController, useDispatch, useThreadsState } from '../threads/useThreads'
+import { WhatsNewProvider } from '../whatsnew/WhatsNewProvider'
 import { FOCUS_STORAGE_KEY } from './navigate'
 import { PanelDrawer } from './PanelDrawer'
 import { PanelProvider, usePanelController } from './PanelProvider'
@@ -160,29 +161,31 @@ function setup(opts: {
   render(
     <WidgetProvider>
       <IdentityProvider identity={identity} requestIdentity={(resume) => resume(identity)}>
-        <ThreadsProvider client={client as never}>
-          <PanelProvider client={client as never}>
-            <DraftsProvider>
-              <Opener />
-              <CloseProbe />
-              <GhostOpener />
-              {opts.withProbes && <StatusProbe />}
-              {opts.withProbes && <CreateProbe />}
-              {opts.detailOpenerId && (
-                <>
-                  <DetailOpener id={opts.detailOpenerId} />
-                  <FocusProbe />
-                </>
-              )}
-              {opts.deleteProbeId && <DeleteProbe id={opts.deleteProbeId} />}
-              <PanelDrawer
-                resolvePageKey={resolvePageKey}
-                client={client as never}
-                branding={opts.branding ?? false}
-              />
-            </DraftsProvider>
-          </PanelProvider>
-        </ThreadsProvider>
+        <WhatsNewProvider>
+          <ThreadsProvider client={client as never}>
+            <PanelProvider client={client as never}>
+              <DraftsProvider>
+                <Opener />
+                <CloseProbe />
+                <GhostOpener />
+                {opts.withProbes && <StatusProbe />}
+                {opts.withProbes && <CreateProbe />}
+                {opts.detailOpenerId && (
+                  <>
+                    <DetailOpener id={opts.detailOpenerId} />
+                    <FocusProbe />
+                  </>
+                )}
+                {opts.deleteProbeId && <DeleteProbe id={opts.deleteProbeId} />}
+                <PanelDrawer
+                  resolvePageKey={resolvePageKey}
+                  client={client as never}
+                  branding={opts.branding ?? false}
+                />
+              </DraftsProvider>
+            </PanelProvider>
+          </ThreadsProvider>
+        </WhatsNewProvider>
       </IdentityProvider>
     </WidgetProvider>,
   )

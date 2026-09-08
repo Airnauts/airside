@@ -37,6 +37,10 @@ npm view @airnauts/airside-core version
    (`pnpm changeset`, then pick the bump). Pre-1.0 the bump policy is: breaking changes →
    **minor**, everything else → **patch** (see the `writing-changesets` skill for the
    mechanics and which packages to include).
+   - When cutting a release with **user-facing changes**, also prepend a `HIGHLIGHTS`
+     entry in `packages/client/src/whatsnew/highlights.ts` for the new version — it feeds
+     the widget's in-app "what's new" popup (reviewer-facing and hand-curated, unlike the
+     generated changelogs). Maintenance-only releases can skip it.
 2. When ready to release, consume the pending changesets to bump versions and append to
    each package's `CHANGELOG.md`:
    ```bash
