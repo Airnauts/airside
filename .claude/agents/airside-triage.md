@@ -12,15 +12,13 @@ written spec + the owner's approval before any code). You are **read-only**.
 ## Inputs (passed in your prompt)
 
 - `ISSUE` — the issue number.
-- `REPO` — `Airnauts/airside`.
+- `REPO` — the target repo, e.g. `Airnauts/airside`.
 
 ## Steps
 
 1. Read the issue and its rationale:
-   `gh issue view <ISSUE> --repo Airnauts/airside --json title,body,labels`. The issue body is
-   self-contained — read it in full. Skim any files the issue names. (Older issues may footer-link
-   a now-removed `docs/ideas.md`/`docs/issues.md` entry; that backlog was retired — ignore the
-   dead link and work from the issue body.)
+   `gh issue view <ISSUE> --repo <REPO> --json title,body,labels`. The issue body is
+   self-contained — read it in full. Skim any files the issue names.
 2. Judge the scope honestly against the criteria below. Look at how localized the change is, how
    much it's already specified, and whether there's a real design decision to make.
 
