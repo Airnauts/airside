@@ -34,6 +34,14 @@ for uploads in production, `BLOB_READ_WRITE_TOKEN`) before starting — the serv
 module switches to MongoDB + Vercel Blob automatically. Uploads in the default
 mode are written to a gitignored `public/uploads/` and served by Next.
 
+A `docker-compose.yml` is included for running MongoDB locally without an Atlas
+account:
+
+```bash
+docker compose up -d
+MONGODB_URI="mongodb://localhost:27017/airside" pnpm --filter @airnauts/airside-nextjs-host dev
+```
+
 ## Manual smoke checklist
 
 Run against `pnpm --filter @airnauts/airside-nextjs-host dev`:
