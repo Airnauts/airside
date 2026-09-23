@@ -146,7 +146,7 @@ import type { Repository, StorageAdapter } from '@airnauts/airside-server'
 
 **`StorageAdapter`** — file storage; implement `put(blob: PutBlob): Promise<PutResult>`.
 
-Other exported types: `NewThread`, `NewComment`, `AnchorPatch`, `ListQuery`, `ListResult`, `Scope`, `PutBlob`, `PutResult`. Utility functions: `readAllBytes`, `sanitizeName`.
+Other exported types: `NewThread`, `NewComment`, `AnchorPatch`, `ListQuery`, `ListResult`, `Scope`, `PutBlob`, `PutResult`. Utility functions: `readAllBytes`, `sanitizeName`. Cursor helpers: `decodeCursor(cursor: string)` / `encodeCursor(value: object): string` — decode / encode the opaque pagination cursors passed through `ListQuery.cursor` and returned in `ListResult.cursor`; custom `Repository` implementations that implement paginated `listThreads` use these.
 
 Constant: `ALLOWED_UPLOAD_TYPES` — the tuple of accepted MIME types (`'image/png'`, `'image/jpeg'`, `'image/webp'`, `'image/gif'`). Useful for client-side file-type validation to match server enforcement.
 
