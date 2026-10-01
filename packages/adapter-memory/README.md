@@ -50,6 +50,15 @@ import { InMemoryRepository } from '@airnauts/airside-adapter-memory'
 const repo = new InMemoryRepository()
 ```
 
+#### `repo.reset()`
+
+Clears all threads and attachments from the store. Useful in `beforeEach` hooks to isolate test cases that share a repository instance:
+
+```ts
+const repo = new InMemoryRepository()
+afterEach(() => repo.reset())
+```
+
 ## Requirements
 
 - Node.js ≥ 18
