@@ -162,6 +162,41 @@ Wraps a `() => Promise<Repository>` factory so it connects lazily on first use a
 
 `AuthInvalidKeyError`, `ConflictError`, `NotFoundError`, `OriginNotAllowedError`, `RateLimitedError`, `UploadTooLargeError`, `ValidationError`, `DomainError`, `IntegrationError`, `toResponse`.
 
+### `VERSION`
+
+The package version string. Useful for runtime diagnostics.
+
+### Cursor utilities (custom adapter authors)
+
+Custom `Repository` implementations that support pagination can use these helpers to encode/decode the opaque cursor token that `listThreads` uses:
+
+```ts
+import { encodeCursor, decodeCursor } from '@airnauts/airside-server'
+
+// encode: { updatedAt: string, id: string } → opaque base64url string
+const cursor = encodeCursor({ updatedAt: row.updated_at.toISOString(), id: row.id })
+
+// decode: opaque token → { updatedAt, id } | undefined (undefined on invalid input)
+const payload = decodeCursor(token)
+```
+
+### Server context (advanced / testing)
+
+The internal server context — useful when building deeply custom integrations, test helpers, or alternative server entrypoints:
+
+```ts
+import type { Ctx, CtxInit, IdFactory } from '@airnauts/airside-server'
+import { makeCtx, defaultIds } from '@airnauts/airside-server'
+```
+
+| Export | Description |
+|---|---|
+| `Ctx` | Runtime server context (projectId, env, threadParam, now, ids) |
+| `CtxInit` | Partial init shape accepted by `makeCtx` |
+| `IdFactory` | Interface for the ID generators (`thread()`, `comment()`, `author()`, `attachment()`) |
+| `defaultIds()` | Returns the default `IdFactory` (nanoid-based prefixed IDs) |
+| `makeCtx(init)` | Builds a `Ctx` from a `CtxInit`, filling in defaults |
+
 ## Subpath exports
 
 ### `@airnauts/airside-server/node`
@@ -199,6 +234,13 @@ const dev = createDevServer((req) => server.handle(req), { port: 4321 })
 const { port } = await dev.listen()
 // dev.close() to shut down
 ```
+
+Exported symbols from `@airnauts/airside-server/dev`:
+
+| Export | Description |
+|---|---|
+| `createDevServer(handler, opts?)` | Create a dev server; `opts.port` defaults to `4321`. Returns a `DevServerHandle`. |
+| `DevServerHandle` | Type: `{ listen(): Promise<{ port: number }>; close(): Promise<void> }` |
 
 ## Requirements
 
