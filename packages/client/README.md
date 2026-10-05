@@ -78,7 +78,7 @@ import { consumeThreadParam, DEFAULT_THREAD_PARAM } from '@airnauts/airside-clie
 consumeThreadParam(DEFAULT_THREAD_PARAM)
 ```
 
-Reads a `?airside-thread=<id>` deep-link param from the current URL, stores the thread ID in `sessionStorage` so the widget opens that thread's panel on load, then strips the param from the address bar. Call this before `init` if you need to handle deep-links in a vanilla (non-React) context; the React `<AirsideLayer>` (now in `@airnauts/airside-integration-react`) handles it automatically.
+Reads a `?airside-thread=<id>` deep-link param from the current URL, stores the thread ID in `sessionStorage` so the widget opens that thread's panel on load, then strips the param from the address bar. Call this before `init` if you need to handle deep-links in a vanilla (non-React) context; the React `<AirsideLayer>` from `@airnauts/airside-integration-react` handles it automatically.
 
 ### Constants
 
