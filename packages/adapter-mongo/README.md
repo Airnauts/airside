@@ -59,7 +59,7 @@ const repository = createMongoRepository({ db })
 
 ### `ensureIndexes(db)`
 
-Creates the required indexes on the `threads` and `attachments` collections. Safe to call on every startup (`createIndexes` is idempotent). Call once during app boot when using `createMongoRepository`.
+Creates the required indexes on the `airside_threads` and `airside_attachments` collections. Safe to call on every startup (`createIndexes` is idempotent). Call once during app boot when using `createMongoRepository`.
 
 > The `mongoRepository` convenience calls `ensureIndexes` automatically the first time it connects.
 
