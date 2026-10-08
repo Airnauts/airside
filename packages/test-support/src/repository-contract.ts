@@ -6,7 +6,7 @@ import {
 } from '@airnauts/airside-core'
 import type { Repository } from '@airnauts/airside-server'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { makeAttachment, makeComment, makeNewThread } from './fixtures'
+import { makeAttachment, makeComment, makeNewThread, makePageNewThread } from './fixtures'
 
 function makeExternalLink(overrides: Partial<ExternalLink> = {}): ExternalLink {
   return {
@@ -64,6 +64,29 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
         await repo.createThread(input)
         const fromOther = await repo.getThread({ projectId: 'proj_a', env: 'staging' }, input.id)
         expect(fromOther).toBeNull()
+      })
+
+      it('round-trips a page-level (unanchored) thread with no anchor', async () => {
+        const input = makePageNewThread({ pageKey: '/page' })
+        const created = await repo.createThread(input)
+        expect(created.anchorState).toBe('unanchored')
+        // The anchor field must survive the round-trip absent (undefined by value) — memory
+        // keeps the key with an undefined value while mongo/postgres omit it, so assert on value.
+        expect(created.anchor).toBeUndefined()
+
+        const fetched = await repo.getThread({ projectId: input.projectId }, input.id)
+        expect(fetched?.anchorState).toBe('unanchored')
+        expect(fetched?.anchor).toBeUndefined()
+
+        const listed = await repo.listThreads({
+          projectId: input.projectId,
+          pageKey: '/page',
+          sort: 'updatedAt',
+          limit: 50,
+        })
+        expect(listed.threads).toHaveLength(1)
+        expect(listed.threads[0]?.anchorState).toBe('unanchored')
+        expect(listed.threads[0]?.anchor).toBeUndefined()
       })
     })
 
@@ -358,7 +381,7 @@ export function repositoryContract(name: string, makeRepo: () => Promise<Reposit
         expect(item.updatedAt).toBe('2026-06-03T00:00:00.000Z')
 
         const refetched = await repo.getThread({ projectId: input.projectId }, input.id)
-        expect(refetched?.anchor.selectors).toEqual(['main > h2', '.hero > .subtitle'])
+        expect(refetched?.anchor?.selectors).toEqual(['main > h2', '.hero > .subtitle'])
       })
 
       it('updateAnchor returns a ThreadListItem carrying rootComment', async () => {

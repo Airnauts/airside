@@ -51,6 +51,34 @@ describe('createThread use-case', () => {
     expect(stored?.id).toBe(thread.id)
   })
 
+  it('persists an anchor-carrying body as an anchored thread', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({ projectId: 'proj_x' })
+    const body = makeCreateThreadBody()
+    const thread = await createThread(
+      { ctx, params: undefined, query: undefined, body },
+      { repo, registry },
+    )
+    expect(thread.anchorState).toBe('anchored')
+    expect(thread.anchor).toEqual(body.anchor)
+  })
+
+  it('creates a page-level (unanchored) thread when the body carries no anchor', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({ projectId: 'proj_x' })
+    const { anchor: _anchor, ...pageBody } = makeCreateThreadBody()
+    const thread = await createThread(
+      { ctx, params: undefined, query: undefined, body: pageBody },
+      { repo, registry },
+    )
+    expect(thread.anchorState).toBe('unanchored')
+    expect(thread.anchor).toBeUndefined()
+
+    const stored = await repo.getThread({ projectId: 'proj_x' }, thread.id)
+    expect(stored?.anchorState).toBe('unanchored')
+    expect(stored?.anchor).toBeUndefined()
+  })
+
   it('resolves the first comment attachmentIds (image-only first comment allowed)', async () => {
     const repo = new InMemoryRepository()
     const ctx = makeCtx({ projectId: 'proj_x' })

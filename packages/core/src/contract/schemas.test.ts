@@ -33,6 +33,15 @@ describe('request schemas', () => {
         .attachmentIds,
     ).toEqual(['at_1'])
   })
+  it('CreateThreadBody parses with anchor omitted (page-level comment)', () => {
+    const body = {
+      pageUrl: 'https://x.com/a',
+      comment: { text: 'general feedback' },
+      author: { email: 'a@b.com' },
+      captureContext: { viewportW: 1, viewportH: 1, devicePixelRatio: 1, userAgent: 'x' },
+    }
+    expect(CreateThreadBody.parse(body).anchor).toBeUndefined()
+  })
   it('CreateThreadBody rejects non-http(s) pageUrl schemes', () => {
     const body = {
       anchor,

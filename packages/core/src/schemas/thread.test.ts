@@ -41,6 +41,22 @@ describe('thread schemas', () => {
   it('rejects an unknown status', () => {
     expect(() => ThreadListItem.parse({ ...base, status: 'archived' })).toThrow()
   })
+  it('parses a page-level (unanchored) thread with no anchor', () => {
+    const { anchor: _anchor, ...pageless } = base
+    const item = ThreadListItem.parse({ ...pageless, anchorState: 'unanchored' })
+    expect(item.anchorState).toBe('unanchored')
+    expect(item.anchor).toBeUndefined()
+  })
+  it('accepts anchor omitted on the full Thread too', () => {
+    const { anchor: _anchor, ...pageless } = base
+    const full = {
+      ...pageless,
+      anchorState: 'unanchored' as const,
+      comments: [],
+      captureContext: { viewportW: 1, viewportH: 1, devicePixelRatio: 1, userAgent: 'x' },
+    }
+    expect(Thread.parse(full).anchor).toBeUndefined()
+  })
   it('ThreadListItem carries a nullable rootComment preview', () => {
     const withRoot = ThreadListItem.parse({
       ...base,
