@@ -40,6 +40,11 @@ export const ListThreadsQuery = z
   .meta({ id: 'ListThreadsQuery' })
 export type ListThreadsQuery = z.infer<typeof ListThreadsQuery>
 
+// Live-update stream query. `pageKey` is OPTIONAL (mirrors ListThreadsQuery.pageKey):
+// present → page-scoped subscribe (pins); absent → project/env all-pages subscribe (panel).
+export const EventsQuery = z.object({ pageKey: z.string().optional() }).meta({ id: 'EventsQuery' })
+export type EventsQuery = z.infer<typeof EventsQuery>
+
 export const ThreadIdParam = z.object({ id: ThreadId })
 export type ThreadIdParam = z.infer<typeof ThreadIdParam>
 

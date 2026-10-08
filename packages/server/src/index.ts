@@ -26,6 +26,8 @@ export { IntegrationError } from './extensions/types'
 export type { NotificationEvent, NotificationEventType, Notifier } from './notify/types'
 export type { CheckResult, RateLimitConfig, RateLimiter } from './rate-limit'
 export { InMemoryRateLimiter } from './rate-limit'
+export type { RealtimeChannel, RealtimeListener } from './realtime/channel'
+export { InProcessRealtimeChannel } from './realtime/channel'
 export { lazyRepository } from './repository/lazy'
 export type {
   AnchorPatch,

@@ -168,6 +168,59 @@ describe('controller.bumpCommentCount', () => {
   })
 })
 
+describe('controller.ingestRemoteComment', () => {
+  const comment = {
+    id: 'c1',
+    author: { email: 'b@b.c' },
+    text: 'hi',
+    attachments: [],
+    createdAt: '2026-01-01T00:00:00.000Z',
+  }
+
+  function makeIngest(hasComment: boolean) {
+    const actions: Action[] = []
+    const controller = createController((a) => actions.push(a), {
+      client: { getThread: vi.fn(), setThreadStatus: vi.fn(), runThreadAction: vi.fn() } as never,
+      isCached: () => true,
+      isLoading: () => false,
+      hasComment: () => hasComment,
+    })
+    return { actions, controller }
+  }
+
+  it('dispatches INGEST_COMMENT, bumps the runtime cache, and does NOT notify the panel', () => {
+    const { actions, controller } = makeIngest(false)
+    const rt = {
+      setStatus: vi.fn(),
+      bumpCommentCount: vi.fn(),
+      removeItem: vi.fn(),
+      refresh: vi.fn().mockResolvedValue(undefined),
+    }
+    const panelSubscriber = vi.fn()
+    controller.registerRuntime(rt)
+    controller.subscribe(panelSubscriber)
+    controller.ingestRemoteComment('t1', comment)
+    expect(actions).toContainEqual({ type: 'INGEST_COMMENT', id: 't1', comment })
+    expect(rt.bumpCommentCount).toHaveBeenCalledWith('t1', 1)
+    // The panel gets remote comments from its own all-pages stream; bridging here would double-count.
+    expect(panelSubscriber).not.toHaveBeenCalled()
+  })
+
+  it('is a no-op when the comment id is already in the loaded detail (dedupe)', () => {
+    const { actions, controller } = makeIngest(true)
+    const rt = {
+      setStatus: vi.fn(),
+      bumpCommentCount: vi.fn(),
+      removeItem: vi.fn(),
+      refresh: vi.fn().mockResolvedValue(undefined),
+    }
+    controller.registerRuntime(rt)
+    controller.ingestRemoteComment('t1', comment)
+    expect(actions).toEqual([])
+    expect(rt.bumpCommentCount).not.toHaveBeenCalled()
+  })
+})
+
 describe('controller created event', () => {
   it('delivers a created event to subscribers on emit', () => {
     const { controller } = make()

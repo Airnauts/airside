@@ -8,14 +8,17 @@ import type { ExtensionRegistry } from '../extensions/registry'
 import type { NotificationExtension } from '../extensions/types'
 import { buildNotificationEvent } from '../notify/build-event'
 import { dispatchNotifications } from '../notify/dispatch'
+import type { RealtimeChannel } from '../realtime/channel'
+import { publishRealtime } from '../realtime/publish'
 import type { Repository } from '../repository/types'
 import { resolveAttachments } from './resolve-attachments'
-import { withThreadActions } from './view'
+import { toListItemView, withThreadActions } from './view'
 
 export type CreateThreadDeps = {
   repo: Repository
   registry: ExtensionRegistry
   notifications?: NotificationExtension[]
+  realtime?: RealtimeChannel
 }
 
 export async function createThread(
@@ -59,5 +62,10 @@ export async function createThread(
     deps.notifications,
     buildNotificationEvent('thread.created', scope, thread, firstComment, ctx.threadParam),
   )
+  publishRealtime(deps.realtime, scope, {
+    type: 'thread.created',
+    pageKey: thread.pageKey,
+    thread: toListItemView(thread, firstComment, deps.registry, scope),
+  })
   return withThreadActions(thread, deps.registry, scope)
 }

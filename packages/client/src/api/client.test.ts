@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { FetchLike } from './client'
 import { createApiClient } from './client'
 import { ApiError } from './errors'
@@ -83,5 +83,85 @@ describe('createApiClient', () => {
     const headers = calls[0]?.init?.headers as Record<string, string>
     expect(headers['x-airside-key']).toBe('k')
     expect(result).toEqual(threadView)
+  })
+
+  describe('streamEvents', () => {
+    function sseResponse(frames: string[]): Response {
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          const enc = new TextEncoder()
+          for (const f of frames) controller.enqueue(enc.encode(f))
+          controller.close()
+        },
+      })
+      return new Response(stream, {
+        status: 200,
+        headers: { 'content-type': 'text/event-stream' },
+      })
+    }
+
+    it('opens GET /events with the key header + pageKey and decodes data frames', async () => {
+      const calls: { url: string; init?: RequestInit }[] = []
+      const event = {
+        type: 'comment.added',
+        pageKey: '/docs',
+        threadId: 't1',
+        comment: {
+          id: 'c1',
+          author: { email: 'a@b.com' },
+          text: 'hi',
+          attachments: [],
+          createdAt: '2026-01-01T00:00:00.000Z',
+        },
+      }
+      const fakeFetch: FetchLike = async (url, init) => {
+        calls.push({ url, init })
+        return sseResponse([': open\n\n', `data: ${JSON.stringify(event)}\n\n`])
+      }
+      const client = createApiClient({ endpoint: 'http://x/api', key: 'k', fetch: fakeFetch })
+      const events: unknown[] = []
+      const opened = await new Promise<boolean>((resolve) => {
+        client.streamEvents(
+          { pageKey: '/docs' },
+          {
+            onEvent: (e) => events.push(e),
+            onOpen: () => resolve(true),
+          },
+        )
+      })
+      // Let the reader drain.
+      await new Promise((r) => setTimeout(r, 0))
+      expect(opened).toBe(true)
+      expect(calls[0]?.url).toBe('http://x/api/events?pageKey=%2Fdocs')
+      const headers = calls[0]?.init?.headers as Record<string, string>
+      expect(headers['x-airside-key']).toBe('k')
+      expect(events).toEqual([event])
+    })
+
+    it('calls onClose when the stream ends (server closed)', async () => {
+      const fakeFetch: FetchLike = async () => sseResponse([': open\n\n'])
+      const client = createApiClient({ endpoint: 'http://x', key: 'k', fetch: fakeFetch })
+      const closed = await new Promise<boolean>((resolve) => {
+        client.streamEvents({}, { onEvent: () => {}, onClose: () => resolve(true) })
+      })
+      expect(closed).toBe(true)
+    })
+
+    it('does NOT call onClose when the caller unsubscribes (abort)', async () => {
+      let resolveBody: (() => void) | null = null
+      const fakeFetch: FetchLike = (_url, init) =>
+        new Promise((resolve, reject) => {
+          // Never produce a body; reject when aborted (mirrors fetch abort semantics).
+          init?.signal?.addEventListener('abort', () => reject(new Error('aborted')))
+          resolveBody = () => resolve(new Response(new ReadableStream(), { status: 200 }))
+        })
+      const client = createApiClient({ endpoint: 'http://x', key: 'k', fetch: fakeFetch })
+      const onClose = vi.fn()
+      const stop = client.streamEvents({}, { onEvent: () => {}, onClose })
+      stop()
+      await new Promise((r) => setTimeout(r, 0))
+      void resolveBody
+      expect(onClose).not.toHaveBeenCalled()
+    })
   })
 })

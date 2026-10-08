@@ -1,7 +1,7 @@
 import { InMemoryRepository } from '@airnauts/airside-adapter-memory'
 import type { ThreadId } from '@airnauts/airside-core'
 import { makeNewThread } from '@airnauts/airside-test-support'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { makeCtx } from '../ctx'
 import { NotFoundError } from '../errors'
 import { buildExtensionRegistry } from '../extensions/registry'
@@ -59,5 +59,28 @@ describe('setThreadStatus use-case', () => {
         { repo, registry },
       ),
     ).rejects.toBeInstanceOf(NotFoundError)
+  })
+
+  it('publishes a thread.updated realtime event with the new status + anchorState', async () => {
+    const repo = new InMemoryRepository()
+    const t = await repo.createThread(makeNewThread({ projectId: 'proj_x' }))
+    const publish = vi.fn()
+    const realtime = { publish, subscribe: vi.fn(() => () => {}) }
+    await setThreadStatus(
+      {
+        ctx: ctx('2026-06-01T00:00:00.000Z'),
+        params: { id: t.id },
+        query: undefined,
+        body: { status: 'resolved' },
+      },
+      { repo, registry, realtime },
+    )
+    expect(publish).toHaveBeenCalledOnce()
+    const [, event] = publish.mock.calls[0]!
+    expect(event.type).toBe('thread.updated')
+    expect(event.threadId).toBe(t.id)
+    expect(event.status).toBe('resolved')
+    expect(event.anchorState).toBe(t.anchorState)
+    expect(event.pageKey).toBe(t.pageKey)
   })
 })

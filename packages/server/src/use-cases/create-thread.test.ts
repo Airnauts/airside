@@ -106,4 +106,25 @@ describe('createThread use-case', () => {
     )
     expect(thread.id).toBeDefined()
   })
+
+  it('publishes a thread.created realtime event carrying the list-item view', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({ projectId: 'proj_x' })
+    const publish = vi.fn()
+    const realtime = { publish, subscribe: vi.fn(() => () => {}) }
+    const body = makeCreateThreadBody()
+    await createThread(
+      { ctx, params: undefined, query: undefined, body },
+      { repo, registry, realtime },
+    )
+    expect(publish).toHaveBeenCalledOnce()
+    const [scope, event] = publish.mock.calls[0]!
+    expect(scope).toEqual({ projectId: 'proj_x', env: undefined })
+    expect(event.type).toBe('thread.created')
+    expect(event.pageKey).toBe(body.pageKey ?? null)
+    // The payload is a list-item view: collapsed rootComment + actions, no full comments array.
+    expect(event.thread.rootComment.text).toBe('first comment')
+    expect(event.thread.actions).toEqual([])
+    expect('comments' in event.thread).toBe(false)
+  })
 })

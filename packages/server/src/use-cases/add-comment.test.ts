@@ -113,4 +113,27 @@ describe('addComment use-case', () => {
     expect(event.threadId).toBe(thread.id)
     expect(event.pageUrl).toBe('https://example.com/about')
   })
+
+  it('publishes a comment.added realtime event with the thread page context + saved comment', async () => {
+    const repo = new InMemoryRepository()
+    const ctx = makeCtx({ projectId: 'proj_x' })
+    const thread = await repo.createThread(makeNewThread({ projectId: 'proj_x' }))
+    const publish = vi.fn()
+    const realtime = { publish, subscribe: vi.fn(() => () => {}) }
+    const saved = await addComment(
+      {
+        ctx,
+        params: { id: thread.id },
+        query: undefined,
+        body: { text: 'reply', author: makeAuthor() },
+      },
+      { repo, realtime },
+    )
+    expect(publish).toHaveBeenCalledOnce()
+    const [, event] = publish.mock.calls[0]!
+    expect(event.type).toBe('comment.added')
+    expect(event.threadId).toBe(thread.id)
+    expect(event.pageKey).toBe(thread.pageKey)
+    expect(event.comment.id).toBe(saved.id)
+  })
 })

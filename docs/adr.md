@@ -1697,3 +1697,58 @@ later. Zero new dependencies. Failures (non-2xx, network, abort) surface as `Int
 return 410, already handled by the non-2xx path. The concurrent-duplicate window documented in
 ADR-0034 still applies. Markdown body building lives locally in the package (YAGNI); hoisting it into
 a shared workspace alongside the Linear target is that issue's (#47) work, not a decision here.
+
+## ADR-0050 — Real-time live updates via SSE over a pluggable RealtimeChannel
+
+- **Date:** 2026-06-19
+- **Status:** accepted
+
+**Context.** Open widgets only saw other reviewers' work on a reload: on-page pins load once in
+`MarkerLayer`'s mount effect and re-key on SPA route change; the cross-page panel full-loads on
+open and otherwise reconciles only the local user's optimistic edits. A second reviewer's new
+thread, comment, or resolve on *any* page was invisible until the surface was reopened, and there
+was no focus/`visibilitychange` refetch. We need server→client push within ~1–2s, on **both**
+surfaces, without regressing the widget when the live channel is unavailable.
+
+**Decision.** Push live updates over **Server-Sent Events on a long-lived `GET /events`**,
+consumed via a fetch-streamed `ReadableStream` (not native `EventSource`). SSE because the flow is
+one-directional server→client (WebSocket bidirectionality is unused and Next.js App Router
+serverless route handlers can't do the WS upgrade), and plain HTTP composes with the existing
+Request→Response core, the operations/dispatch router, and the key+origin+CORS pipeline. Fetch-
+streamed rather than `EventSource` because the secret must travel in the `x-airside-key` **header**
+(architecture §4 forbids the query string) and `EventSource` cannot set headers; fetch-SSE over
+HTTP/2 also sidesteps the ~6-connections-per-host cap, enabling two concurrent scoped streams.
+Client polling is kept only as the degraded fallback.
+
+The server gains an injectable **`RealtimeChannel`** port (`createAirsideServer({ realtime })`,
+mirroring `rateLimiter`/`extensions`), with a **dual-scope in-process** concrete: one map keyed
+`projectId:env`, each entry holding an all-pages listener set plus a `Map<pageKey, Set<listener>>`.
+Every write publishes its event carrying the thread's nullable `pageKey`; the bus notifies the
+all-pages set (the panel) plus, when `pageKey` is non-null, the matching page set (the pins).
+`GET /events?pageKey=` subscribes page-scoped (pins); `GET /events` with no `pageKey` subscribes
+all-pages (panel) — authorized by the same key+origin pipeline (the panel's existing unfiltered
+`listThreads` already exposes the whole project/env, so the all-pages stream leaks nothing new).
+The stream heartbeats (~25s), has a server max-lifetime, is exempt from the read rate-limit (one
+held connection per page would otherwise exhaust the per-IP window), and tears down its
+subscription on disconnect. `realtime: false` disables push (endpoint stays open but silent).
+
+The widget runs **two scoped streams**, each owning its scope, lifecycle, and reconnect: the pin
+layer keeps its page-scoped subscription; the panel opens an all-pages stream on drawer-open and
+closes it on drawer-close. Reconciliation is **idempotent by id on both surfaces** — thread.created
+is insert-or-replace by thread id, comment.added bumps a count once per comment id — because on the
+current page a remote event reaches the panel store by two paths (page stream → threads store →
+existing bridges, and the all-pages stream). On every (re)connect each surface does a full refetch
+(pins page-scoped, panel all-pages); no Last-Event-ID in v1. When streaming is unavailable the
+widget falls back to load/refetch plus a focus/`visibilitychange` refetch.
+
+**Consequences.** Single-instance hosts get live updates out of the box; the in-process bus only
+fans out **within one process**, so on multi-instance/serverless (e.g. Vercel) push degrades from
+best-effort to inert and the widget relies on its refetch fallback — an external pub/sub backplane
+is the designed-but-deferred replacement (inject a `RealtimeChannel`). App Router is the v1 stream
+target (`export const dynamic = 'force-dynamic'`); the Pages Router can't stream. Two streams cost
+two connections (a non-issue over HTTP/2) in exchange for independent, independently-testable
+surfaces; the single all-pages stream multiplexed to both is a recorded, deferred optimization.
+Also deferred: presence, typing indicators, cursors, Last-Event-ID, and WebSocket. Live
+`needsReview` shuffling is left to the next full refresh (in-place status/anchorState patch only),
+since an orphan re-shuffle on a remote page is low-value churn. Touches the publishable
+core/server/client/integration-next group → one minor changeset.

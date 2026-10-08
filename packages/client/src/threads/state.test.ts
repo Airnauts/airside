@@ -159,6 +159,42 @@ describe('threads reducer', () => {
     expect(reducer(s, { type: 'BUMP_COMMENT_COUNT', id: 'missing', delta: 1 })).toBe(s)
   })
 
+  it('INGEST_COMMENT bumps the pin count and appends to the loaded detail, deduped by comment id', () => {
+    const remote: Comment = {
+      id: 'cr',
+      author: { email: 'b@b.c' },
+      text: 'live',
+      attachments: [],
+      createdAt: '2026-01-01T00:00:00.000Z',
+    }
+    let s = reducer(initialState, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
+    s = reducer(s, {
+      type: 'DETAIL_LOADED',
+      id: 'a',
+      thread: { id: 'a', status: 'open', comments: [], actions: [] } as unknown as ThreadView,
+    })
+    s = reducer(s, { type: 'INGEST_COMMENT', id: 'a', comment: remote })
+    expect(s.itemsById.a.commentCount).toBe(2)
+    expect(s.detailById.a.comments.map((c) => c.id)).toEqual(['cr'])
+    // Re-delivery of the same comment id is a no-op (no double count / double append).
+    const again = reducer(s, { type: 'INGEST_COMMENT', id: 'a', comment: remote })
+    expect(again).toBe(s)
+  })
+
+  it('INGEST_COMMENT bumps the count even when the detail is not loaded', () => {
+    const remote: Comment = {
+      id: 'cr2',
+      author: { email: 'b@b.c' },
+      text: 'live',
+      attachments: [],
+      createdAt: '2026-01-01T00:00:00.000Z',
+    }
+    const s = reducer(initialState, { type: 'INGEST_PLACEMENTS', placements: [placed('a')] })
+    const next = reducer(s, { type: 'INGEST_COMMENT', id: 'a', comment: remote })
+    expect(next.itemsById.a.commentCount).toBe(2)
+    expect(next.detailById.a).toBeUndefined()
+  })
+
   it('SET_SHOW_RESOLVED toggles the flag', () => {
     const s = reducer(initialState, { type: 'SET_SHOW_RESOLVED', value: true })
     expect(s.showResolved).toBe(true)
