@@ -143,6 +143,16 @@ Renders a `NotificationEvent` into an email. Exported for testing or custom disp
 | `ResendTransportOptions` | `./resend` | Options for `resendTransport` |
 | `SmtpTransportOptions` | `./smtp` | Options for `smtpTransport` |
 
+## Configuration / env vars
+
+The adapter reads no environment variables automatically — values are passed explicitly. Typical sources:
+
+| Env var | Transport | Description |
+|---|---|---|
+| `RESEND_API_KEY` | Resend | API key from the [Resend dashboard](https://resend.com/) |
+| `SMTP_HOST` / `SMTP_PORT` | SMTP | SMTP server host and port |
+| `SMTP_USER` / `SMTP_PASS` | SMTP | SMTP authentication credentials |
+
 ## Peer dependencies & requirements
 
 | Peer | Required | Notes |
