@@ -128,14 +128,27 @@ These types describe the wire API served by `@airnauts/airside-server` and consu
 
 This is the shared contract layer for the `@airnauts/airside-*` suite:
 
+**Widget & server**
 - **`@airnauts/airside-client`** — widget engine (`init()` and DOM anchoring runtime)
 - **`@airnauts/airside-integration-react`** — `<AirsideLayer/>` React host mount
+- **`@airnauts/airside-integration-next`** — one-call Next.js App Router and Pages Router integration
 - **`@airnauts/airside-server`** — HTTP server, use cases, and adapter interfaces
-- **`@airnauts/airside-adapter-mongo`** — MongoDB persistence
-- **`@airnauts/airside-adapter-postgres`** — PostgreSQL persistence
+
+**Persistence adapters**
+- **`@airnauts/airside-adapter-memory`** — in-memory repository for local development and tests
+- **`@airnauts/airside-adapter-mongo`** — MongoDB Atlas / self-hosted persistence
+- **`@airnauts/airside-adapter-postgres`** — PostgreSQL persistence (hybrid columns + `jsonb`)
+
+**Storage adapters**
 - **`@airnauts/airside-storage-vercel-blob`** — Vercel Blob file storage
 - **`@airnauts/airside-storage-s3`** — Amazon S3 / Cloudflare R2 file storage
-- **`@airnauts/airside-storage-fs`** — filesystem file storage
+- **`@airnauts/airside-storage-fs`** — filesystem file storage (local dev)
+
+**Extensions**
+- **`@airnauts/airside-extension-slack`** — Slack Incoming Webhook notification extension
+- **`@airnauts/airside-extension-email`** — email notification extension (SMTP or Resend)
+- **`@airnauts/airside-extension-jira`** — "Create Jira issue" thread-action extension
+- **`@airnauts/airside-extension-github`** — "Create GitHub issue" thread-action extension
 
 See [docs/architecture.md](https://github.com/Airnauts/airside/blob/main/docs/architecture.md) for the full system design.
 
